@@ -192,10 +192,10 @@
         "mask": "assets/mockups/tee-mask.png",
         "shade": "assets/mockups/tee-shade.jpg",
         "area": [
-          36.0,
-          30.0,
-          28.0,
-          36.0
+          36,
+          30,
+          28,
+          36
         ]
       },
       "materials": [
@@ -224,7 +224,7 @@
             "en": "Recycled blend",
             "de": "Recycling-Mischgewebe"
           },
-          "delta_eur": 1.0
+          "delta_eur": 1
         }
       ],
       "eco_tags": [
@@ -282,10 +282,10 @@
         "mask": "assets/mockups/hoodie-mask.png",
         "shade": "assets/mockups/hoodie-shade.jpg",
         "area": [
-          37.0,
-          34.0,
-          26.0,
-          26.0
+          37,
+          34,
+          26,
+          26
         ]
       },
       "materials": [
@@ -314,7 +314,7 @@
             "en": "Recycled blend",
             "de": "Recycling-Mischgewebe"
           },
-          "delta_eur": 1.0
+          "delta_eur": 1
         }
       ],
       "eco_tags": [
@@ -370,9 +370,9 @@
         "shade": "assets/mockups/polo_emb-shade.jpg",
         "area": [
           56.5,
-          30.0,
-          11.0,
-          11.0
+          30,
+          11,
+          11
         ]
       },
       "materials": [
@@ -401,7 +401,7 @@
             "en": "Recycled blend",
             "de": "Recycling-Mischgewebe"
           },
-          "delta_eur": 1.0
+          "delta_eur": 1
         }
       ],
       "eco_tags": [
@@ -452,10 +452,10 @@
         "mask": "assets/mockups/cap_emb-mask.png",
         "shade": "assets/mockups/cap_emb-shade.jpg",
         "area": [
-          40.0,
-          38.0,
-          20.0,
-          10.0
+          40,
+          38,
+          20,
+          10
         ]
       },
       "materials": [
@@ -484,7 +484,7 @@
             "en": "Recycled blend",
             "de": "Recycling-Mischgewebe"
           },
-          "delta_eur": 1.0
+          "delta_eur": 1
         }
       ],
       "eco_tags": [
@@ -505,7 +505,7 @@
         90
       ],
       "default_mode": "contain",
-      "base_cost_eur": 24.0,
+      "base_cost_eur": 24,
       "price_ceiling_eur": 89,
       "ship_class": "medium",
       "facilities": [
@@ -538,10 +538,10 @@
         "mask": "assets/mockups/fleece-mask.png",
         "shade": "assets/mockups/fleece-shade.jpg",
         "area": [
-          56.0,
-          30.0,
-          11.0,
-          11.0
+          56,
+          30,
+          11,
+          11
         ]
       },
       "materials": [
@@ -570,7 +570,7 @@
             "en": "Recycled blend",
             "de": "Recycling-Mischgewebe"
           },
-          "delta_eur": 1.0
+          "delta_eur": 1
         }
       ],
       "eco_tags": [
@@ -624,10 +624,10 @@
         "mask": "assets/mockups/windbreaker-mask.png",
         "shade": "assets/mockups/windbreaker-shade.jpg",
         "area": [
-          53.0,
-          30.0,
-          17.0,
-          22.0
+          53,
+          30,
+          17,
+          22
         ]
       },
       "materials": [
@@ -656,7 +656,7 @@
             "en": "Recycled blend",
             "de": "Recycling-Mischgewebe"
           },
-          "delta_eur": 1.0
+          "delta_eur": 1
         }
       ],
       "eco_tags": [
@@ -710,9 +710,9 @@
         "mask": "assets/mockups/leggings-mask.png",
         "shade": "assets/mockups/leggings-shade.jpg",
         "area": [
-          35.0,
-          11.0,
-          30.0,
+          35,
+          11,
+          30,
           79.5
         ]
       },
@@ -742,7 +742,7 @@
             "en": "Recycled blend",
             "de": "Recycling-Mischgewebe"
           },
-          "delta_eur": 1.0
+          "delta_eur": 1
         }
       ],
       "eco_tags": [
@@ -792,10 +792,10 @@
         "mask": "assets/mockups/apron-mask.png",
         "shade": "assets/mockups/apron-shade.jpg",
         "area": [
-          32.0,
-          40.0,
-          36.0,
-          19.0
+          32,
+          40,
+          36,
+          19
         ]
       },
       "materials": [
@@ -824,7 +824,7 @@
             "en": "Recycled blend",
             "de": "Recycling-Mischgewebe"
           },
-          "delta_eur": 1.0
+          "delta_eur": 1
         }
       ],
       "eco_tags": [
@@ -876,10 +876,10 @@
         "mask": "assets/mockups/baby_body-mask.png",
         "shade": "assets/mockups/baby_body-shade.jpg",
         "area": [
-          39.0,
-          33.0,
-          22.0,
-          22.0
+          39,
+          33,
+          22,
+          22
         ]
       },
       "materials": [
@@ -908,7 +908,7 @@
             "en": "Recycled blend",
             "de": "Recycling-Mischgewebe"
           },
-          "delta_eur": 1.0
+          "delta_eur": 1
         }
       ],
       "eco_tags": [
@@ -929,7 +929,7 @@
         600
       ],
       "default_mode": "tile",
-      "base_cost_eur": 26.0,
+      "base_cost_eur": 26,
       "price_ceiling_eur": 79,
       "ship_class": "medium",
       "facilities": [
@@ -962,10 +962,10 @@
         "mask": "assets/mockups/xmas_sweater-mask.png",
         "shade": "assets/mockups/xmas_sweater-shade.jpg",
         "area": [
-          29.0,
-          28.0,
-          42.0,
-          52.0
+          29,
+          28,
+          42,
+          52
         ]
       },
       "materials": [
@@ -994,7 +994,7 @@
             "en": "Recycled blend",
             "de": "Recycling-Mischgewebe"
           },
-          "delta_eur": 1.0
+          "delta_eur": 1
         }
       ],
       "eco_tags": [
@@ -1045,10 +1045,10 @@
         "mask": "assets/mockups/pet_bandana-mask.png",
         "shade": "assets/mockups/pet_bandana-shade.jpg",
         "area": [
-          25.0,
-          27.0,
-          50.0,
-          33.0
+          25,
+          27,
+          50,
+          33
         ]
       },
       "materials": [
@@ -1087,7 +1087,7 @@
         450
       ],
       "default_mode": "cover",
-      "base_cost_eur": 22.0,
+      "base_cost_eur": 22,
       "price_ceiling_eur": 79,
       "ship_class": "heavy",
       "facilities": [
@@ -1110,10 +1110,10 @@
         "mask": "assets/mockups/pet_bed-mask.png",
         "shade": "assets/mockups/pet_bed-shade.jpg",
         "area": [
-          21.0,
-          37.0,
-          58.0,
-          36.0
+          21,
+          37,
+          58,
+          36
         ]
       },
       "materials": [
@@ -1177,10 +1177,10 @@
         "mask": "assets/mockups/pet_bowl-mask.png",
         "shade": "assets/mockups/pet_bowl-shade.jpg",
         "area": [
-          30.0,
-          60.0,
-          40.0,
-          13.0
+          30,
+          60,
+          40,
+          13
         ]
       },
       "materials": [
@@ -1494,10 +1494,10 @@
         "mask": "assets/mockups/tumbler-mask.png",
         "shade": "assets/mockups/tumbler-shade.jpg",
         "area": [
-          39.0,
-          34.0,
-          22.0,
-          44.0
+          39,
+          34,
+          22,
+          44
         ]
       },
       "materials": [
@@ -1562,10 +1562,10 @@
         "mask": "assets/mockups/bottle-mask.png",
         "shade": "assets/mockups/bottle-shade.jpg",
         "area": [
-          40.0,
-          40.0,
-          20.0,
-          38.0
+          40,
+          40,
+          20,
+          38
         ]
       },
       "materials": [
@@ -1621,9 +1621,9 @@
         "shade": "assets/mockups/thermos-shade.jpg",
         "area": [
           41.5,
-          40.0,
-          17.0,
-          38.0
+          40,
+          17,
+          38
         ]
       },
       "materials": [
@@ -1681,9 +1681,9 @@
         "mask": "assets/mockups/poster-mask.png",
         "shade": "assets/mockups/poster-shade.jpg",
         "area": [
-          30.0,
-          15.0,
-          40.0,
+          30,
+          15,
+          40,
           53.3
         ]
       },
@@ -1713,7 +1713,7 @@
             "en": "Fine-art cotton rag",
             "de": "Hahnemühle-Baumwollpapier"
           },
-          "delta_eur": 4.0
+          "delta_eur": 4
         }
       ],
       "eco_tags": [
@@ -1735,7 +1735,7 @@
         400
       ],
       "default_mode": "cover",
-      "base_cost_eur": 16.0,
+      "base_cost_eur": 16,
       "price_ceiling_eur": 79,
       "ship_class": "heavy",
       "facilities": [
@@ -1752,9 +1752,9 @@
         "mask": "assets/mockups/canvas-mask.png",
         "shade": "assets/mockups/canvas-shade.jpg",
         "area": [
-          30.0,
-          15.0,
-          40.0,
+          30,
+          15,
+          40,
           53.3
         ]
       },
@@ -1775,7 +1775,7 @@
             "en": "Cotton canvas",
             "de": "Baumwoll-Leinwand"
           },
-          "delta_eur": 3.0
+          "delta_eur": 3
         }
       ],
       "eco_tags": []
@@ -1794,7 +1794,7 @@
         400
       ],
       "default_mode": "cover",
-      "base_cost_eur": 21.0,
+      "base_cost_eur": 21,
       "price_ceiling_eur": 95,
       "ship_class": "heavy",
       "facilities": [
@@ -1811,9 +1811,9 @@
         "mask": "assets/mockups/framed-mask.png",
         "shade": "assets/mockups/framed-shade.jpg",
         "area": [
-          30.0,
-          15.0,
-          40.0,
+          30,
+          15,
+          40,
           53.3
         ]
       },
@@ -1843,7 +1843,7 @@
             "en": "Fine-art cotton rag",
             "de": "Hahnemühle-Baumwollpapier"
           },
-          "delta_eur": 4.0
+          "delta_eur": 4
         }
       ],
       "eco_tags": []
@@ -1862,7 +1862,7 @@
         400
       ],
       "default_mode": "cover",
-      "base_cost_eur": 24.0,
+      "base_cost_eur": 24,
       "price_ceiling_eur": 119,
       "ship_class": "heavy",
       "facilities": [
@@ -1878,9 +1878,9 @@
         "mask": "assets/mockups/metal-mask.png",
         "shade": "assets/mockups/metal-shade.jpg",
         "area": [
-          30.0,
-          15.0,
-          40.0,
+          30,
+          15,
+          40,
           53.3
         ]
       },
@@ -1910,7 +1910,7 @@
             "en": "Fine-art cotton rag",
             "de": "Hahnemühle-Baumwollpapier"
           },
-          "delta_eur": 4.0
+          "delta_eur": 4
         }
       ],
       "eco_tags": []
@@ -1929,7 +1929,7 @@
         400
       ],
       "default_mode": "cover",
-      "base_cost_eur": 26.0,
+      "base_cost_eur": 26,
       "price_ceiling_eur": 129,
       "ship_class": "heavy",
       "facilities": [
@@ -1946,9 +1946,9 @@
         "mask": "assets/mockups/acrylic_wall-mask.png",
         "shade": "assets/mockups/acrylic_wall-shade.jpg",
         "area": [
-          30.0,
-          15.0,
-          40.0,
+          30,
+          15,
+          40,
           53.3
         ]
       },
@@ -1969,7 +1969,7 @@
             "en": "Frosted acrylic 5 mm",
             "de": "Satiniertes Acryl 5 mm"
           },
-          "delta_eur": 3.0
+          "delta_eur": 3
         },
         {
           "id": "mirror",
@@ -1978,7 +1978,7 @@
             "en": "Gold mirror",
             "de": "Goldspiegel"
           },
-          "delta_eur": 6.0
+          "delta_eur": 6
         }
       ],
       "eco_tags": [
@@ -2016,10 +2016,10 @@
         "mask": "assets/mockups/tapestry-mask.png",
         "shade": "assets/mockups/tapestry-shade.jpg",
         "area": [
-          17.0,
-          17.0,
-          66.0,
-          70.0
+          17,
+          17,
+          66,
+          70
         ]
       },
       "materials": [
@@ -2076,10 +2076,10 @@
         "mask": "assets/mockups/puzzle-mask.png",
         "shade": "assets/mockups/puzzle-shade.jpg",
         "area": [
-          17.0,
-          26.0,
-          66.0,
-          50.0
+          17,
+          26,
+          66,
+          50
         ]
       },
       "materials": [
@@ -2118,7 +2118,7 @@
         800
       ],
       "default_mode": "cover",
-      "base_cost_eur": 39.0,
+      "base_cost_eur": 39,
       "price_ceiling_eur": 149,
       "ship_class": "heavy",
       "facilities": [
@@ -2132,10 +2132,10 @@
         "mask": "assets/mockups/rug-mask.png",
         "shade": "assets/mockups/rug-shade.jpg",
         "area": [
-          15.0,
-          26.0,
-          70.0,
-          48.0
+          15,
+          26,
+          70,
+          48
         ]
       },
       "materials": [
@@ -2193,10 +2193,10 @@
         "mask": "assets/mockups/pillow-mask.png",
         "shade": "assets/mockups/pillow-shade.jpg",
         "area": [
-          22.0,
-          25.0,
-          56.0,
-          55.0
+          22,
+          25,
+          56,
+          55
         ]
       },
       "materials": [
@@ -2254,9 +2254,9 @@
         "shade": "assets/mockups/candle-shade.jpg",
         "area": [
           35.5,
-          48.0,
-          29.0,
-          23.0
+          48,
+          29,
+          23
         ]
       },
       "materials": [
@@ -2312,10 +2312,10 @@
         "mask": "assets/mockups/ornament-mask.png",
         "shade": "assets/mockups/ornament-shade.jpg",
         "area": [
-          37.0,
-          37.0,
-          26.0,
-          26.0
+          37,
+          37,
+          26,
+          26
         ]
       },
       "materials": [
@@ -2390,10 +2390,10 @@
         "mask": "assets/mockups/stocking-mask.png",
         "shade": "assets/mockups/stocking-shade.jpg",
         "area": [
-          39.0,
-          28.0,
-          23.0,
-          34.0
+          39,
+          28,
+          23,
+          34
         ]
       },
       "materials": [
@@ -2467,10 +2467,10 @@
         "mask": "assets/mockups/wrap_paper-mask.png",
         "shade": "assets/mockups/wrap_paper-shade.jpg",
         "area": [
-          12.0,
-          20.0,
-          62.0,
-          60.0
+          12,
+          20,
+          62,
+          60
         ]
       },
       "materials": [
@@ -2529,7 +2529,7 @@
         500
       ],
       "default_mode": "cover",
-      "base_cost_eur": 14.0,
+      "base_cost_eur": 14,
       "price_ceiling_eur": 49,
       "ship_class": "medium",
       "facilities": [
@@ -2544,10 +2544,10 @@
         "mask": "assets/mockups/banner-mask.png",
         "shade": "assets/mockups/banner-shade.jpg",
         "area": [
-          10.0,
-          37.0,
-          80.0,
-          26.0
+          10,
+          37,
+          80,
+          26
         ]
       },
       "materials": [
@@ -2863,10 +2863,10 @@
         "mask": "assets/mockups/notebook-mask.png",
         "shade": "assets/mockups/notebook-shade.jpg",
         "area": [
-          35.0,
-          17.0,
-          35.0,
-          66.0
+          35,
+          17,
+          35,
+          66
         ]
       },
       "materials": [
@@ -3153,10 +3153,10 @@
         "mask": "assets/mockups/phone_case-mask.png",
         "shade": "assets/mockups/phone_case-shade.jpg",
         "area": [
-          33.0,
-          11.0,
-          34.0,
-          78.0
+          33,
+          11,
+          34,
+          78
         ]
       },
       "eco_tags": []
@@ -3193,10 +3193,10 @@
         "mask": "assets/mockups/mousepad_xl-mask.png",
         "shade": "assets/mockups/mousepad_xl-shade.jpg",
         "area": [
-          7.0,
-          31.0,
-          86.0,
-          38.0
+          7,
+          31,
+          86,
+          38
         ]
       },
       "eco_tags": []
@@ -3243,10 +3243,10 @@
         "mask": "assets/mockups/tote-mask.png",
         "shade": "assets/mockups/tote-shade.jpg",
         "area": [
-          32.0,
-          40.0,
-          36.0,
-          42.0
+          32,
+          40,
+          36,
+          42
         ]
       },
       "materials": [
@@ -3312,10 +3312,10 @@
         "mask": "assets/mockups/lanyard-mask.png",
         "shade": "assets/mockups/lanyard-shade.jpg",
         "area": [
-          33.0,
-          6.0,
-          34.0,
-          58.0
+          33,
+          6,
+          34,
+          58
         ]
       },
       "eco_tags": []
@@ -3334,7 +3334,7 @@
         240
       ],
       "default_mode": "cover",
-      "base_cost_eur": 12.0,
+      "base_cost_eur": 12,
       "price_ceiling_eur": 45,
       "ship_class": "medium",
       "facilities": [
@@ -3351,10 +3351,10 @@
         "mask": "assets/mockups/laptop_sleeve-mask.png",
         "shade": "assets/mockups/laptop_sleeve-shade.jpg",
         "area": [
-          19.0,
-          32.0,
-          62.0,
-          36.0
+          19,
+          32,
+          62,
+          36
         ]
       },
       "eco_tags": []
@@ -3373,7 +3373,7 @@
         240
       ],
       "default_mode": "contain",
-      "base_cost_eur": 29.0,
+      "base_cost_eur": 29,
       "price_ceiling_eur": 99,
       "ship_class": "heavy",
       "facilities": [
@@ -3389,10 +3389,10 @@
         "mask": "assets/mockups/backpack-mask.png",
         "shade": "assets/mockups/backpack-shade.jpg",
         "area": [
-          37.0,
-          56.0,
-          26.0,
-          27.0
+          37,
+          56,
+          26,
+          27
         ]
       },
       "eco_tags": []
@@ -3430,8 +3430,8 @@
         "area": [
           39.5,
           17.5,
-          21.0,
-          56.0
+          21,
+          56
         ]
       },
       "materials": [
@@ -3451,7 +3451,7 @@
             "en": "Frosted acrylic 5 mm",
             "de": "Satiniertes Acryl 5 mm"
           },
-          "delta_eur": 3.0
+          "delta_eur": 3
         },
         {
           "id": "mirror",
@@ -3460,7 +3460,7 @@
             "en": "Gold mirror",
             "de": "Goldspiegel"
           },
-          "delta_eur": 6.0
+          "delta_eur": 6
         }
       ],
       "eco_tags": [
@@ -3501,8 +3501,8 @@
         "area": [
           37.5,
           15.5,
-          25.0,
-          60.0
+          25,
+          60
         ]
       },
       "materials": [
@@ -3522,7 +3522,7 @@
             "en": "Frosted acrylic 5 mm",
             "de": "Satiniertes Acryl 5 mm"
           },
-          "delta_eur": 3.0
+          "delta_eur": 3
         },
         {
           "id": "mirror",
@@ -3531,7 +3531,7 @@
             "en": "Gold mirror",
             "de": "Goldspiegel"
           },
-          "delta_eur": 6.0
+          "delta_eur": 6
         }
       ],
       "eco_tags": []
@@ -3550,7 +3550,7 @@
         600
       ],
       "default_mode": "cover",
-      "base_cost_eur": 28.0,
+      "base_cost_eur": 28,
       "price_ceiling_eur": 99,
       "ship_class": "heavy",
       "facilities": [
@@ -3569,8 +3569,8 @@
         "area": [
           30.5,
           9.5,
-          39.0,
-          61.0
+          39,
+          61
         ]
       },
       "materials": [
@@ -3590,7 +3590,7 @@
             "en": "Frosted acrylic 5 mm",
             "de": "Satiniertes Acryl 5 mm"
           },
-          "delta_eur": 3.0
+          "delta_eur": 3
         },
         {
           "id": "mirror",
@@ -3599,7 +3599,7 @@
             "en": "Gold mirror",
             "de": "Goldspiegel"
           },
-          "delta_eur": 6.0
+          "delta_eur": 6
         }
       ],
       "eco_tags": [
@@ -3638,10 +3638,10 @@
         "mask": "assets/mockups/photo_frame-mask.png",
         "shade": "assets/mockups/photo_frame-shade.jpg",
         "area": [
-          32.0,
-          22.0,
-          36.0,
-          52.0
+          32,
+          22,
+          36,
+          52
         ]
       },
       "materials": [
@@ -3661,7 +3661,7 @@
             "en": "Frosted acrylic 5 mm",
             "de": "Satiniertes Acryl 5 mm"
           },
-          "delta_eur": 3.0
+          "delta_eur": 3
         },
         {
           "id": "mirror",
@@ -3670,7 +3670,7 @@
             "en": "Gold mirror",
             "de": "Goldspiegel"
           },
-          "delta_eur": 6.0
+          "delta_eur": 6
         }
       ],
       "eco_tags": [
@@ -3691,7 +3691,7 @@
         25
       ],
       "default_mode": "contain",
-      "base_cost_eur": 11.0,
+      "base_cost_eur": 11,
       "price_ceiling_eur": 49,
       "ship_class": "light",
       "facilities": [
@@ -3708,10 +3708,10 @@
         "mask": "assets/mockups/engraved_jewelry-mask.png",
         "shade": "assets/mockups/engraved_jewelry-shade.jpg",
         "area": [
-          42.0,
-          45.0,
-          16.0,
-          16.0
+          42,
+          45,
+          16,
+          16
         ]
       },
       "eco_tags": [
@@ -3749,10 +3749,10 @@
         "mask": "assets/mockups/luggage_tag-mask.png",
         "shade": "assets/mockups/luggage_tag-shade.jpg",
         "area": [
-          41.0,
-          36.0,
-          18.0,
-          44.0
+          41,
+          36,
+          18,
+          44
         ]
       },
       "eco_tags": []
@@ -3788,10 +3788,10 @@
         "mask": "assets/mockups/gift_box-mask.png",
         "shade": "assets/mockups/gift_box-shade.jpg",
         "area": [
-          33.0,
-          47.0,
-          34.0,
-          30.0
+          33,
+          47,
+          34,
+          30
         ]
       },
       "eco_tags": [
@@ -3829,8 +3829,8 @@
         "area": [
           39.5,
           39.5,
-          21.0,
-          21.0
+          21,
+          21
         ]
       },
       "eco_tags": []
@@ -3874,10 +3874,10 @@
         "mask": "assets/mockups/neck_gaiter-mask.png",
         "shade": "assets/mockups/neck_gaiter-shade.jpg",
         "area": [
-          34.0,
-          17.0,
-          32.0,
-          67.0
+          34,
+          17,
+          32,
+          67
         ]
       },
       "materials": [
@@ -3940,10 +3940,10 @@
         "mask": "assets/mockups/ski_case-mask.png",
         "shade": "assets/mockups/ski_case-shade.jpg",
         "area": [
-          28.0,
-          39.0,
-          44.0,
-          22.0
+          28,
+          39,
+          44,
+          22
         ]
       },
       "materials": [
@@ -4015,14 +4015,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/sweatshirt.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/sweatshirt-mask.png",
-        "shade": "assets/mockups/sweatshirt-shade.jpg"
+        "shade": "assets/mockups/sweatshirt-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4072,14 +4072,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/zip_hoodie.jpg",
+        "mask": "assets/mockups/zip_hoodie-mask.png",
+        "shade": "assets/mockups/zip_hoodie-shade.jpg",
         "area": [
           30,
-          20,
+          30,
           40,
-          50
-        ],
-        "mask": "assets/mockups/zip_hoodie-mask.png",
-        "shade": "assets/mockups/zip_hoodie-shade.jpg"
+          40
+        ]
       }
     },
     {
@@ -4131,14 +4131,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/long_sleeve.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/long_sleeve-mask.png",
-        "shade": "assets/mockups/long_sleeve-shade.jpg"
+        "shade": "assets/mockups/long_sleeve-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4187,14 +4187,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/joggers.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/joggers-mask.png",
-        "shade": "assets/mockups/joggers-shade.jpg"
+        "shade": "assets/mockups/joggers-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4239,14 +4239,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/beanie.jpg",
-        "area": [
-          35,
-          35,
-          30,
-          25
-        ],
         "mask": "assets/mockups/beanie-mask.png",
-        "shade": "assets/mockups/beanie-shade.jpg"
+        "shade": "assets/mockups/beanie-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4291,14 +4291,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/bucket_hat.jpg",
-        "area": [
-          35,
-          35,
-          30,
-          25
-        ],
         "mask": "assets/mockups/bucket_hat-mask.png",
-        "shade": "assets/mockups/bucket_hat-shade.jpg"
+        "shade": "assets/mockups/bucket_hat-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4341,14 +4341,14 @@
       "eco_tags": [],
       "mockup_photo": {
         "src": "assets/mockups/snapback.jpg",
-        "area": [
-          35,
-          35,
-          30,
-          25
-        ],
         "mask": "assets/mockups/snapback-mask.png",
-        "shade": "assets/mockups/snapback-shade.jpg"
+        "shade": "assets/mockups/snapback-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4394,14 +4394,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/socks.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/socks-mask.png",
-        "shade": "assets/mockups/socks-shade.jpg"
+        "shade": "assets/mockups/socks-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4448,14 +4448,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/slides.jpg",
-        "area": [
-          20,
-          15,
-          60,
-          70
-        ],
         "mask": "assets/mockups/slides-mask.png",
-        "shade": "assets/mockups/slides-shade.jpg"
+        "shade": "assets/mockups/slides-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4506,14 +4506,14 @@
       "eco_tags": [],
       "mockup_photo": {
         "src": "assets/mockups/canvas_shoes.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/canvas_shoes-mask.png",
-        "shade": "assets/mockups/canvas_shoes-shade.jpg"
+        "shade": "assets/mockups/canvas_shoes-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4547,14 +4547,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/glass_cup.jpg",
-        "area": [
-          38,
-          30,
-          24,
-          40
-        ],
         "mask": "assets/mockups/glass_cup-mask.png",
-        "shade": "assets/mockups/glass_cup-shade.jpg"
+        "shade": "assets/mockups/glass_cup-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4598,14 +4598,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/travel_mug.jpg",
-        "area": [
-          38,
-          30,
-          24,
-          40
-        ],
         "mask": "assets/mockups/travel_mug-mask.png",
-        "shade": "assets/mockups/travel_mug-shade.jpg"
+        "shade": "assets/mockups/travel_mug-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4647,14 +4647,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/straw_tumbler.jpg",
-        "area": [
-          38,
-          30,
-          24,
-          40
-        ],
         "mask": "assets/mockups/straw_tumbler-mask.png",
-        "shade": "assets/mockups/straw_tumbler-shade.jpg"
+        "shade": "assets/mockups/straw_tumbler-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4696,14 +4696,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/drawstring_bag.jpg",
+        "mask": "assets/mockups/drawstring_bag-mask.png",
+        "shade": "assets/mockups/drawstring_bag-shade.jpg",
         "area": [
           30,
-          25,
+          30,
           40,
-          45
-        ],
-        "mask": "assets/mockups/drawstring_bag-mask.png",
-        "shade": "assets/mockups/drawstring_bag-shade.jpg"
+          40
+        ]
       }
     },
     {
@@ -4745,14 +4745,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/duffle_bag.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/duffle_bag-mask.png",
-        "shade": "assets/mockups/duffle_bag-shade.jpg"
+        "shade": "assets/mockups/duffle_bag-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4794,14 +4794,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/fanny_pack.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/fanny_pack-mask.png",
-        "shade": "assets/mockups/fanny_pack-shade.jpg"
+        "shade": "assets/mockups/fanny_pack-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4843,14 +4843,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/pouch.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/pouch-mask.png",
-        "shade": "assets/mockups/pouch-shade.jpg"
+        "shade": "assets/mockups/pouch-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4890,14 +4890,14 @@
       "eco_tags": [],
       "mockup_photo": {
         "src": "assets/mockups/airpods_case.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/airpods_case-mask.png",
-        "shade": "assets/mockups/airpods_case-shade.jpg"
+        "shade": "assets/mockups/airpods_case-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4939,14 +4939,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/tablet_sleeve.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/tablet_sleeve-mask.png",
-        "shade": "assets/mockups/tablet_sleeve-shade.jpg"
+        "shade": "assets/mockups/tablet_sleeve-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -4988,14 +4988,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/cable_pouch.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/cable_pouch-mask.png",
-        "shade": "assets/mockups/cable_pouch-shade.jpg"
+        "shade": "assets/mockups/cable_pouch-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5032,14 +5032,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/save_date.jpg",
-        "area": [
-          20,
-          15,
-          60,
-          70
-        ],
         "mask": "assets/mockups/save_date-mask.png",
-        "shade": "assets/mockups/save_date-shade.jpg"
+        "shade": "assets/mockups/save_date-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5076,14 +5076,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/rsvp_card.jpg",
-        "area": [
-          20,
-          15,
-          60,
-          70
-        ],
         "mask": "assets/mockups/rsvp_card-mask.png",
-        "shade": "assets/mockups/rsvp_card-shade.jpg"
+        "shade": "assets/mockups/rsvp_card-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5119,14 +5119,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/place_card.jpg",
-        "area": [
-          20,
-          15,
-          60,
-          70
-        ],
         "mask": "assets/mockups/place_card-mask.png",
-        "shade": "assets/mockups/place_card-shade.jpg"
+        "shade": "assets/mockups/place_card-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5162,14 +5162,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/table_number.jpg",
-        "area": [
-          20,
-          15,
-          60,
-          70
-        ],
         "mask": "assets/mockups/table_number-mask.png",
-        "shade": "assets/mockups/table_number-shade.jpg"
+        "shade": "assets/mockups/table_number-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5204,14 +5204,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/calendar.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/calendar-mask.png",
-        "shade": "assets/mockups/calendar-shade.jpg"
+        "shade": "assets/mockups/calendar-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5253,14 +5253,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/blanket.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/blanket-mask.png",
-        "shade": "assets/mockups/blanket-shade.jpg"
+        "shade": "assets/mockups/blanket-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5302,14 +5302,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/towel.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/towel-mask.png",
-        "shade": "assets/mockups/towel-shade.jpg"
+        "shade": "assets/mockups/towel-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5344,14 +5344,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/coaster.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/coaster-mask.png",
-        "shade": "assets/mockups/coaster-shade.jpg"
+        "shade": "assets/mockups/coaster-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5386,14 +5386,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/name_badge.jpg",
-        "area": [
-          20,
-          15,
-          60,
-          70
-        ],
         "mask": "assets/mockups/name_badge-mask.png",
-        "shade": "assets/mockups/name_badge-shade.jpg"
+        "shade": "assets/mockups/name_badge-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5426,14 +5426,14 @@
       "eco_tags": [],
       "mockup_photo": {
         "src": "assets/mockups/pin.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/pin-mask.png",
-        "shade": "assets/mockups/pin-shade.jpg"
+        "shade": "assets/mockups/pin-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5466,14 +5466,14 @@
       "eco_tags": [],
       "mockup_photo": {
         "src": "assets/mockups/keychain.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/keychain-mask.png",
-        "shade": "assets/mockups/keychain-shade.jpg"
+        "shade": "assets/mockups/keychain-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5508,14 +5508,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/photo_book.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/photo_book-mask.png",
-        "shade": "assets/mockups/photo_book-shade.jpg"
+        "shade": "assets/mockups/photo_book-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5564,14 +5564,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/sports_bra.jpg",
+        "mask": "assets/mockups/sports_bra-mask.png",
+        "shade": "assets/mockups/sports_bra-shade.jpg",
         "area": [
           30,
-          20,
+          30,
           40,
-          50
-        ],
-        "mask": "assets/mockups/sports_bra-mask.png",
-        "shade": "assets/mockups/sports_bra-shade.jpg"
+          40
+        ]
       }
     },
     {
@@ -5621,14 +5621,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/team_jersey.jpg",
+        "mask": "assets/mockups/team_jersey-mask.png",
+        "shade": "assets/mockups/team_jersey-shade.jpg",
         "area": [
           30,
-          20,
+          30,
           40,
-          50
-        ],
-        "mask": "assets/mockups/team_jersey-mask.png",
-        "shade": "assets/mockups/team_jersey-shade.jpg"
+          40
+        ]
       }
     },
     {
@@ -5663,14 +5663,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/yoga_mat.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/yoga_mat-mask.png",
-        "shade": "assets/mockups/yoga_mat-shade.jpg"
+        "shade": "assets/mockups/yoga_mat-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5712,14 +5712,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/sports_towel.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/sports_towel-mask.png",
-        "shade": "assets/mockups/sports_towel-shade.jpg"
+        "shade": "assets/mockups/sports_towel-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5757,14 +5757,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/hang_tag.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/hang_tag-mask.png",
-        "shade": "assets/mockups/hang_tag-shade.jpg"
+        "shade": "assets/mockups/hang_tag-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5802,14 +5802,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/packaging_insert.jpg",
-        "area": [
-          20,
-          15,
-          60,
-          70
-        ],
         "mask": "assets/mockups/packaging_insert-mask.png",
-        "shade": "assets/mockups/packaging_insert-shade.jpg"
+        "shade": "assets/mockups/packaging_insert-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5845,14 +5845,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/mailer_bag.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/mailer_bag-mask.png",
-        "shade": "assets/mockups/mailer_bag-shade.jpg"
+        "shade": "assets/mockups/mailer_bag-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     },
     {
@@ -5888,14 +5888,14 @@
       ],
       "mockup_photo": {
         "src": "assets/mockups/tissue_paper.jpg",
-        "area": [
-          28,
-          22,
-          44,
-          52
-        ],
         "mask": "assets/mockups/tissue_paper-mask.png",
-        "shade": "assets/mockups/tissue_paper-shade.jpg"
+        "shade": "assets/mockups/tissue_paper-shade.jpg",
+        "area": [
+          30,
+          30,
+          40,
+          40
+        ]
       }
     }
   ],
@@ -5953,7 +5953,7 @@
         "hotspots": [
           [
             30.5,
-            56.0
+            56
           ],
           [
             69.5,
@@ -6029,15 +6029,15 @@
         "src": "assets/scenes/community.jpg",
         "hotspots": [
           [
-            24.0,
+            24,
             57.4
           ],
           [
-            50.0,
+            50,
             53.1
           ],
           [
-            76.0,
+            76,
             57.9
           ]
         ]
@@ -6113,15 +6113,15 @@
         "src": "assets/scenes/corporate.jpg",
         "hotspots": [
           [
-            24.0,
-            59.0
+            24,
+            59
           ],
           [
-            50.0,
+            50,
             53.1
           ],
           [
-            76.0,
+            76,
             53.1
           ]
         ]
@@ -6260,15 +6260,15 @@
         "src": "assets/scenes/gifts.jpg",
         "hotspots": [
           [
-            24.0,
+            24,
             57.1
           ],
           [
-            50.0,
-            58.0
+            50,
+            58
           ],
           [
-            76.0,
+            76,
             56.7
           ]
         ]
@@ -6332,7 +6332,7 @@
           ],
           [
             69.5,
-            56.0
+            56
           ]
         ]
       },
@@ -6347,20 +6347,20 @@
         "days": 2
       },
       "EU": {
-        "base": 12.0,
-        "per_kg": 3.0,
+        "base": 12,
+        "per_kg": 3,
         "days": 4
       },
       "US": {
-        "base": 22.0,
-        "per_kg": 8.0,
+        "base": 22,
+        "per_kg": 8,
         "days": 7
       }
     },
     "EU": {
       "EU": {
         "base": 4.9,
-        "per_kg": 1.0,
+        "per_kg": 1,
         "days": 3
       },
       "CH": {
@@ -6369,8 +6369,8 @@
         "days": 4
       },
       "US": {
-        "base": 15.0,
-        "per_kg": 6.0,
+        "base": 15,
+        "per_kg": 6,
         "days": 7
       }
     },
@@ -6381,13 +6381,13 @@
         "days": 3
       },
       "EU": {
-        "base": 16.0,
-        "per_kg": 7.0,
+        "base": 16,
+        "per_kg": 7,
         "days": 8
       },
       "CH": {
-        "base": 18.0,
-        "per_kg": 8.0,
+        "base": 18,
+        "per_kg": 8,
         "days": 8
       }
     }
