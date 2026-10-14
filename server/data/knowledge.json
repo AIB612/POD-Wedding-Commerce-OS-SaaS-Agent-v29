@@ -1,0 +1,61 @@
+[
+  {
+    "id": "pricing",
+    "title": "数量价格",
+    "text": "1–9件标准价；10–29件95折；30–49件9折；50件以上85折。材质价格增量先加入基础单价，再应用数量折扣。",
+    "tags": [
+      "pricing",
+      "cream",
+      "french",
+      "botanical",
+      "beach",
+      "modern",
+      "rustic"
+    ]
+  },
+  {
+    "id": "proof",
+    "title": "效果确认与交付",
+    "text": "最终效果图和材质会在支付后2小时内确认并发送到客户邮箱；确认后进入生产与配送流程，预计14天内送达。",
+    "tags": [
+      "delivery",
+      "order"
+    ]
+  },
+  {
+    "id": "paper",
+    "title": "纸品材质",
+    "text": "纸品支持棉纹艺术纸、珠光纸、牛皮纸和半透明硫酸纸，适用于邀请卡、菜单、席位卡等。",
+    "tags": [
+      "material",
+      "paper"
+    ]
+  },
+  {
+    "id": "sign",
+    "title": "标识材质",
+    "text": "标识支持透明亚克力、磨砂亚克力、天然木板、轻质硬板。",
+    "tags": [
+      "material",
+      "signage"
+    ]
+  },
+  {
+    "id": "upload",
+    "title": "设计上传",
+    "text": "支持PNG、JPG、JPEG、WEBP、SVG、PDF、AI、PSD、EPS多文件上传。生产环境需做文件安全、分辨率、颜色和印刷尺寸校验。",
+    "tags": [
+      "design",
+      "upload"
+    ]
+  },
+  {
+    "id": "agent",
+    "title": "Agent架构",
+    "text": "业务Agent使用意图路由、RAG检索、规划与工具调用、Connector Registry、订单状态机和人工兜底。真实订单与物流事实必须通过工具/API读取。",
+    "tags": [
+      "agent",
+      "rag"
+    ]
+  }
+]

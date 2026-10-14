@@ -1,0 +1,4 @@
+import crypto from "node:crypto";import {addRecord,listForTenant,updateRecord} from "../saas-store.js";
+export async function createTask(tenantId,{type,title,risk="low",payload={}}){const writeRisk=["campaign_publish","refund","order_update","budget_change","supplier_purchase"].includes(type);return addRecord("tasks",{id:`task_${crypto.randomBytes(5).toString("hex")}`,tenant_id:tenantId,type,title,status:writeRisk?"needs_approval":"queued",risk:writeRisk?"high":risk,payload,created_at:new Date().toISOString()});}
+export async function tasks(tenantId){return listForTenant("tasks",tenantId);}
+export async function approveTask(tenantId,id){const rows=await listForTenant("tasks",tenantId);if(!rows.find(x=>x.id===id))return null;return updateRecord("tasks",id,{status:"approved",approved_at:new Date().toISOString()});}

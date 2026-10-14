@@ -1,0 +1,1647 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>POD Wedding Scene Studio</title>
+<style>
+:root{
+  --paper:#fffdf9;--ink:#28231f;--muted:#7c746c;--line:rgba(45,36,30,.12);
+  --accent:#9a6d57;--scene1:#d8cec2;--scene2:#eadfd4;--scene3:#c8b9ac;--arch:#c7b29c;
+  --shadow:0 24px 70px rgba(58,43,34,.17);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;overflow-y:auto;overflow-x:hidden;color:var(--ink);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
+  "Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
+  background:linear-gradient(135deg,#eee7df,#f8f4ef);
+}
+button,input,textarea{font:inherit}
+button{color:inherit}
+.app{min-height:100vh;height:auto;display:grid;grid-template-rows:68px minmax(720px,calc(100vh - 68px))}
+.topbar{
+  position:sticky;top:0;
+  display:flex;align-items:center;justify-content:space-between;padding:0 22px;
+  border-bottom:1px solid var(--line);background:rgba(255,253,249,.86);backdrop-filter:blur(18px);z-index:50
+}
+.brand{display:flex;gap:11px;align-items:center}
+.logo{width:38px;height:38px;border-radius:13px;background:#292622;color:#fff;display:grid;place-items:center;font-weight:800}
+.brand b{display:block;font-size:13px;letter-spacing:.05em}
+.brand span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.actions{display:flex;gap:8px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 13px;cursor:pointer;font-size:12px}
+.btn.dark{background:#292622;color:#fff;border-color:#292622}
+.layout{min-height:720px;height:calc(100vh - 68px);display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:14px;padding:14px}
+.stage{
+  min-width:0;min-height:0;position:relative;border:1px solid var(--line);
+  border-radius:28px;box-shadow:var(--shadow);background:#d8cdc1;
+  overflow:visible;
+}
+.scene{
+  position:absolute;inset:0;border-radius:28px;overflow:hidden;
+  perspective:1100px;transform-style:preserve-3d;
+  background:
+    radial-gradient(circle at 50% 7%,rgba(255,255,255,.92),transparent 30%),
+    linear-gradient(160deg,var(--scene1),var(--scene2) 45%,var(--scene3));
+  transition:background .35s,transform .15s ease-out;
+}
+.floor{
+  position:absolute;left:-8%;right:-8%;bottom:-15%;height:49%;
+  background:
+    repeating-linear-gradient(90deg,rgba(90,72,57,.09) 0 1px,transparent 1px 118px),
+    linear-gradient(180deg,rgba(255,255,255,.12),rgba(105,81,62,.12));
+  transform:rotateX(63deg);transform-origin:bottom
+}
+.wall-line{position:absolute;top:0;bottom:28%;width:1px;background:rgba(80,65,54,.07)}
+.wall-line.a{left:18%}.wall-line.b{left:50%}.wall-line.c{left:82%}
+.arch{
+  position:absolute;left:50%;top:15%;width:34%;height:59%;transform:translateX(-50%) translateZ(20px);
+  border:16px solid var(--arch);border-bottom:0;border-radius:50% 50% 0 0;
+  box-shadow:0 20px 42px rgba(72,52,38,.12);transition:border-color .35s
+}
+.arch:before,.arch:after{
+  content:"";position:absolute;width:39%;height:45%;bottom:12%;
+  background:
+    radial-gradient(circle at 40% 28%,rgba(112,137,103,.95) 0 6%,transparent 7%),
+    radial-gradient(circle at 73% 43%,rgba(93,124,87,.95) 0 7%,transparent 8%),
+    radial-gradient(circle at 33% 67%,rgba(156,129,105,.95) 0 6%,transparent 7%),
+    radial-gradient(circle at 70% 72%,rgba(111,139,103,.95) 0 7%,transparent 8%);
+  filter:drop-shadow(0 7px 8px rgba(0,0,0,.12))
+}
+.arch:before{left:-24%;transform:rotate(-14deg)}
+.arch:after{right:-24%;transform:scaleX(-1) rotate(-14deg)}
+.names{position:absolute;left:50%;top:31%;transform:translateX(-50%) translateZ(60px);text-align:center;color:#5d4d41}
+.names strong{display:block;font:italic clamp(28px,4.2vw,66px) Georgia,serif;font-weight:400}
+.names span{font-size:10px;letter-spacing:.32em}
+.table{
+  position:absolute;left:50%;bottom:12%;width:42%;height:22%;
+  transform:translateX(-50%) translateZ(80px);background:linear-gradient(180deg,#f0e4d8,#d6c4b5);
+  border-radius:50% 50% 18% 18%;box-shadow:0 42px 44px rgba(68,50,38,.20)
+}
+.table:before{content:"";position:absolute;left:-3%;right:-3%;top:-12px;height:28px;border-radius:50%;background:#f6eee6}
+.runner{position:absolute;left:50%;top:-16px;width:22%;height:126%;transform:translateX(-50%);background:rgba(163,135,112,.58)}
+.card{position:absolute;left:35%;bottom:37%;width:92px;height:58px;transform:rotateY(-8deg) translateZ(120px);background:#fbf4ed;border:1px solid #d8c9bb;border-radius:4px;box-shadow:0 10px 18px rgba(62,47,37,.14);display:grid;place-items:center;font:italic 13px Georgia;color:#756052;text-align:center}
+.cake{position:absolute;left:57%;bottom:35%;width:58px;height:78px;transform:translateZ(120px)}
+.cake i{position:absolute;left:50%;transform:translateX(-50%);display:block;background:#fffaf1;border:1px solid #e5d8cd;border-radius:7px}
+.cake .a{bottom:0;width:58px;height:30px}.cake .b{bottom:28px;width:43px;height:26px}.cake .c{bottom:52px;width:29px;height:22px}
+.plinth{position:absolute;right:10%;bottom:14%;width:9%;height:34%;background:linear-gradient(90deg,#d8c7b8,#efe3d8,#cab7a6);border-radius:8px;box-shadow:0 22px 26px rgba(62,44,34,.15)}
+.welcome{position:absolute;right:8.7%;bottom:42%;width:11.5%;height:18%;background:rgba(255,255,255,.40);border:1px solid rgba(255,255,255,.75);border-radius:14px;backdrop-filter:blur(4px);display:grid;place-items:center;text-align:center;font:italic 14px Georgia;color:#645447;box-shadow:0 12px 24px rgba(57,42,31,.10)}
+.gift{position:absolute;left:9.5%;bottom:15%;width:11%;height:13%;background:#b79b83;border-radius:8px;box-shadow:0 18px 24px rgba(70,50,37,.16);transform:rotate(-4deg)}
+.gift:before{content:"";position:absolute;left:47%;top:0;bottom:0;width:10%;background:#e5d4c6}
+.gift:after{content:"";position:absolute;left:0;right:0;top:44%;height:12%;background:#e5d4c6}
+
+.scene-toolbar{position:absolute;left:18px;top:18px;z-index:14;display:flex;align-items:center;gap:8px}
+.scene-switch{position:relative}
+.scene-current{
+  border:1px solid rgba(255,255,255,.82);background:rgba(255,255,255,.78);backdrop-filter:blur(14px);
+  border-radius:999px;padding:9px 12px;cursor:pointer;font-size:10.5px;display:flex;gap:7px;align-items:center
+}
+.scene-current b{font-weight:700}
+.scene-menu{
+  position:absolute;left:0;top:43px;width:260px;padding:8px;background:rgba(255,253,249,.98);
+  border:1px solid var(--line);border-radius:17px;box-shadow:0 18px 45px rgba(54,40,31,.18);
+  display:none
+}
+.scene-menu.open{display:block}
+.scene-option{
+  width:100%;border:0;background:transparent;border-radius:11px;padding:9px 10px;text-align:left;cursor:pointer
+}
+.scene-option:hover,.scene-option.active{background:#f5eee8}
+.scene-option b{display:block;font-size:10.5px}.scene-option span{display:block;font-size:9px;color:var(--muted);margin-top:2px}
+.meta-pill{background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.8);backdrop-filter:blur(14px);padding:8px 10px;border-radius:999px;font-size:10px}
+.scene-note{position:absolute;left:20px;bottom:18px;z-index:10;width:min(360px,55%);background:rgba(38,34,31,.83);color:#fff;border-radius:17px;padding:12px 14px;backdrop-filter:blur(14px)}
+.scene-note b{font-size:12px;display:block}.scene-note span{font-size:10px;line-height:1.5;color:rgba(255,255,255,.68);display:block;margin-top:4px}
+
+.hotspot{
+  position:absolute;width:32px;height:32px;border-radius:50%;border:0;background:#fff;
+  display:grid;place-items:center;cursor:pointer;z-index:15;box-shadow:0 9px 28px rgba(42,31,24,.28);
+  transition:.18s
+}
+.hotspot:hover,.hotspot.active{transform:scale(1.13)}
+.hotspot:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.hotspot:after{content:"";position:absolute;inset:-8px;border:1px solid rgba(255,255,255,.9);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%{transform:scale(.75);opacity:.9}100%{transform:scale(1.45);opacity:0}}
+.hotspot[data-slot="0"]{left:27%;top:57%}
+.hotspot[data-slot="1"]{left:61%;top:35%}
+.hotspot[data-slot="2"]{left:14%;bottom:25%}
+.hotspot[data-slot="3"]{left:55%;top:50%}
+.hotspot-label{position:absolute;z-index:14;white-space:nowrap;padding:6px 9px;border-radius:999px;background:rgba(38,34,31,.84);color:#fff;font-size:10px;opacity:0;pointer-events:none;transition:.18s}
+.hotspot[data-slot="0"] + .hotspot-label{left:calc(27% + 38px);top:57%}
+.hotspot[data-slot="1"] + .hotspot-label{left:calc(61% + 38px);top:35%}
+.hotspot[data-slot="2"] + .hotspot-label{left:calc(14% + 38px);bottom:25%}
+.hotspot[data-slot="3"] + .hotspot-label{left:calc(55% + 38px);top:50%}
+.hotspot:hover + .hotspot-label,.hotspot.active + .hotspot-label{opacity:1}
+
+/* 热点右下 10px 的统一弹层 */
+.popover{
+  position:fixed;z-index:40;width:360px;
+  max-height:min(680px,calc(100vh - 24px));min-height:0;
+  border:1px solid var(--line);border-radius:20px;background:rgba(255,253,249,.985);
+  box-shadow:0 22px 62px rgba(52,39,31,.24);backdrop-filter:blur(18px);
+  opacity:0;pointer-events:none;transform:scale(.98);transform-origin:top left;transition:.18s;
+  overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr)
+}
+.popover.open{opacity:1;pointer-events:auto;transform:scale(1)}
+.pop-head{display:flex;justify-content:space-between;gap:10px;padding:15px 16px 11px;border-bottom:1px solid var(--line);background:rgba(255,253,249,.98);z-index:2}
+.pop-head small{display:block;font-size:9px;color:var(--muted);letter-spacing:.13em}.pop-head h3{margin:4px 0 0;font:18px Georgia,serif;font-weight:500}
+.pop-close{width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:50%;cursor:pointer}
+.pop-body{
+  padding:13px 16px 16px;overflow-y:auto;overflow-x:hidden;min-height:0;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable
+}
+.pop-body::-webkit-scrollbar{width:7px}
+.pop-body::-webkit-scrollbar-thumb{background:rgba(70,56,47,.20);border-radius:999px}
+.pop-body::-webkit-scrollbar-track{background:transparent}
+.price-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}
+.price-row span{font-size:10px;color:var(--muted)}.price-row strong{font:21px Georgia,serif}
+.mode-label{font-size:10px;font-weight:700;margin:12px 0 7px}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mode{
+  border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 7px;cursor:pointer;
+  text-align:left;font-size:9.5px;line-height:1.35
+}
+.mode.active{outline:2px solid #2b2825;outline-offset:-2px}
+.config-panel{margin-top:10px;border:1px solid var(--line);border-radius:13px;padding:10px;background:#fff}
+.field{display:grid;gap:5px;margin-bottom:9px}.field:last-child{margin-bottom:0}
+.field label{font-size:9.5px;color:var(--muted)}
+.field textarea,.field input[type="text"]{
+  width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:#fff;resize:vertical;font-size:10.5px;outline:none
+}
+.upload{
+  border:1px dashed rgba(45,36,30,.24);border-radius:11px;padding:11px;text-align:center;background:#faf7f3;cursor:pointer
+}
+.upload b{display:block;font-size:10px}.upload span{display:block;font-size:8.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+.upload input{display:none}
+.files{font-size:9px;color:#5f554f;margin-top:6px;line-height:1.45;word-break:break-all}
+.qty-row{display:grid;grid-template-columns:92px 1fr;gap:9px;margin-top:11px}
+.qty-box{border:1px solid var(--line);border-radius:11px;padding:8px;background:#fff}
+.qty-box label{font-size:8.5px;color:var(--muted);display:block}.qty-box input{width:100%;border:0;outline:none;font-weight:700;margin-top:3px}
+.tier{border:1px solid var(--line);border-radius:11px;padding:8px;background:#fff}
+.tier b{font-size:9.5px;display:block}.tier span{font-size:8.5px;color:var(--muted);display:block;margin-top:3px}
+.tier-list{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px}
+.tier-pill{font-size:8px;text-align:center;border:1px solid var(--line);padding:5px 2px;border-radius:8px;background:#fff}
+.tier-pill.active{background:#2b2825;color:#fff;border-color:#2b2825}
+.total{display:flex;justify-content:space-between;align-items:center;margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
+.total span{font-size:10px;color:var(--muted)}.total strong{font:22px Georgia,serif}
+.pop-actions{
+  display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:11px;
+  position:sticky;bottom:-16px;background:linear-gradient(180deg,rgba(255,253,249,0),#fffdf9 24%);
+  padding-top:14px;padding-bottom:16px;z-index:3
+}
+.add{border:0;border-radius:12px;background:#292622;color:#fff;padding:11px 13px;cursor:pointer;font-weight:700;font-size:11px}
+.secondary{border:1px solid var(--line);background:#fff;border-radius:12px;padding:11px 13px;cursor:pointer;font-size:10.5px}
+
+
+.material-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.material-option{
+  border:1px solid var(--line);background:#fff;border-radius:12px;padding:5px;cursor:pointer;text-align:left;
+}
+.material-option.active{outline:2px solid #292622;outline-offset:-2px}
+.material-photo{
+  width:100%;aspect-ratio:1.18/1;object-fit:cover;border-radius:8px;display:block;background:#eee;
+}
+.material-option b{display:block;font-size:8.8px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.material-option span{display:block;font-size:7.8px;color:var(--muted);margin-top:2px}
+.material-hint{font-size:8.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+.material-lightbox{
+  position:fixed;inset:0;z-index:100;background:rgba(24,20,18,.72);display:none;place-items:center;padding:24px;
+  backdrop-filter:blur(8px)
+}
+.material-lightbox.open{display:grid}
+.material-lightbox-card{
+  width:min(760px,92vw);max-height:90vh;background:#fffdf9;border-radius:22px;overflow:hidden;
+  box-shadow:0 28px 90px rgba(0,0,0,.34)
+}
+.material-lightbox-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--line)}
+.material-lightbox-head b{font-size:12px}
+.material-lightbox-image{width:100%;max-height:68vh;object-fit:cover;display:block;background:#eee}
+.material-lightbox-foot{padding:12px 15px;font-size:10px;color:var(--muted);line-height:1.55}
+
+/* 右侧目录 */
+.catalog{min-height:0;display:grid;grid-template-rows:auto 1fr;background:rgba(255,253,249,.88);border:1px solid var(--line);border-radius:26px;overflow:hidden;backdrop-filter:blur(16px)}
+.catalog-head{padding:18px;border-bottom:1px solid var(--line)}
+.catalog-head small{font-size:9px;letter-spacing:.16em;color:var(--muted)}.catalog-head h2{font:23px Georgia,serif;font-weight:500;margin:5px 0}
+.catalog-head p{font-size:10.5px;color:var(--muted);line-height:1.5;margin:0}
+.catalog-scroll{overflow:auto;padding:12px}
+.group{padding:5px 0 11px}.group-title{display:flex;justify-content:space-between;padding:0 5px 7px}.group-title b{font-size:11px}.group-title span{font-size:9px;color:var(--muted)}
+.product{width:100%;display:grid;grid-template-columns:68px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;border:1px solid transparent;background:transparent;border-radius:15px;padding:8px;cursor:pointer;margin-bottom:6px}
+.product:hover,.product.active{background:#fff;border-color:var(--line);box-shadow:0 9px 24px rgba(60,45,35,.07)}
+.prod-img{height:56px;border-radius:11px;background:linear-gradient(145deg,#e9ddd2,#f9f5f0);position:relative;overflow:hidden}
+.prod-img:before{content:"";position:absolute;left:17px;top:8px;width:34px;height:40px;background:#fff8ef;border:1px solid #dfd0c3;border-radius:4px;box-shadow:0 5px 9px rgba(0,0,0,.10)}
+.prod-img.sign:before{left:11px;top:10px;width:46px;height:34px;background:rgba(255,255,255,.45);border-radius:8px}
+.prod-img.gift:before{left:13px;top:13px;width:42px;height:30px;background:#b79b83;border-radius:5px}
+.prod-img.table:before{left:14px;top:11px;width:40px;height:34px;background:#fffdf9}
+.product b{display:block;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.product span{display:block;font-size:9px;color:var(--muted);margin-top:4px}.product strong{font:14px Georgia,serif;font-weight:500}
+
+
+/* Continuous sections: intentionally reuse the visual language of the first scene */
+.continuation{
+  padding:0 14px 14px;
+  background:linear-gradient(180deg,#f2ece6 0%,#f3eee8 100%);
+}
+.continuation-shell{
+  border:1px solid var(--line);border-radius:28px;overflow:hidden;
+  background:rgba(255,253,249,.72);box-shadow:var(--shadow)
+}
+.continuation-stage{
+  display:grid;grid-template-columns:minmax(0,1fr) 390px;min-height:680px;
+}
+.continuation-scene{
+  position:relative;overflow:hidden;min-height:680px;
+  background:
+    radial-gradient(circle at 48% 10%,rgba(255,255,255,.9),transparent 30%),
+    linear-gradient(160deg,#d8cec2 0%,#eadfd4 45%,#c8b9ac 100%);
+}
+.continuation-scene:after{
+  content:"";position:absolute;left:-8%;right:-8%;bottom:-17%;height:45%;
+  transform:rotateX(63deg);transform-origin:bottom;
+  background:repeating-linear-gradient(90deg,rgba(90,72,57,.08) 0 1px,transparent 1px 118px),
+  linear-gradient(180deg,rgba(255,255,255,.12),rgba(105,81,62,.12))
+}
+.continuation-copy{position:absolute;left:7%;top:13%;z-index:4;max-width:520px}
+.continuation-copy small{font-size:9px;letter-spacing:.18em;color:#6d6159}
+.continuation-copy h2{font:clamp(34px,4vw,58px) Georgia,serif;font-weight:500;margin:8px 0 12px;color:#4f433a}
+.continuation-copy p{font-size:12px;line-height:1.75;color:#71665f;margin:0}
+.continuation-list{
+  background:rgba(255,253,249,.88);padding:18px;display:grid;align-content:center;gap:9px;border-left:1px solid var(--line)
+}
+.scene-card{
+  border:1px solid transparent;background:transparent;border-radius:16px;text-align:left;padding:14px;cursor:pointer;transition:.18s
+}
+.scene-card:hover{background:#fff;border-color:var(--line);box-shadow:0 10px 24px rgba(60,45,35,.07);transform:translateY(-1px)}
+.scene-card b{display:block;font-size:12px}.scene-card span{display:block;color:var(--muted);font-size:10px;margin-top:4px}
+.scene-card em{display:block;font-style:normal;font-size:9px;color:var(--accent);margin-top:7px}
+.mini-arch{position:absolute;left:50%;bottom:7%;width:36%;height:55%;transform:translateX(-50%);border:18px solid #c5b09a;border-bottom:0;border-radius:50% 50% 0 0}
+.mini-floral{position:absolute;bottom:12%;width:26%;height:38%;filter:drop-shadow(0 8px 12px rgba(0,0,0,.1));background:
+ radial-gradient(circle at 30% 30%,#7d8b72 0 7%,transparent 8%),
+ radial-gradient(circle at 62% 24%,#b59a84 0 7%,transparent 8%),
+ radial-gradient(circle at 74% 58%,#6f8268 0 8%,transparent 9%),
+ radial-gradient(circle at 38% 67%,#9b846e 0 7%,transparent 8%)}
+.mini-floral.left{left:18%;transform:rotate(-9deg)}.mini-floral.right{right:18%;transform:scaleX(-1) rotate(-9deg)}
+.product-scene{background:radial-gradient(circle at 50% 10%,rgba(255,255,255,.9),transparent 32%),linear-gradient(160deg,#dad0c7,#eee4da 45%,#c8b9ac)}
+.material-stack{position:absolute;left:50%;bottom:13%;width:310px;height:300px;transform:translateX(-50%)}
+.material-sheet{position:absolute;width:210px;height:260px;border-radius:10px;box-shadow:0 28px 48px rgba(60,45,35,.18);border:1px solid rgba(255,255,255,.6)}
+.material-sheet.s1{left:0;top:25px;transform:rotate(-12deg);background:linear-gradient(145deg,#e9dfd2,#c7b29c)}
+.material-sheet.s2{left:55px;top:8px;transform:rotate(1deg);background:linear-gradient(145deg,#fbf7f1,#e3d5c7)}
+.material-sheet.s3{right:0;top:36px;transform:rotate(13deg);background:linear-gradient(145deg,rgba(255,255,255,.72),rgba(202,218,221,.72))}
+.agent-scene{background:radial-gradient(circle at 50% 52%,rgba(255,255,255,.82),transparent 15%),linear-gradient(160deg,#d8cec2,#e9dfd5 50%,#c7baae)}
+.agent-core{position:absolute;left:50%;bottom:22%;transform:translateX(-50%);width:110px;height:110px;border-radius:50%;background:#292622;color:#fff;display:grid;place-items:center;font:38px Georgia,serif;z-index:3;box-shadow:0 28px 60px rgba(40,32,27,.28)}
+.agent-orbit{position:absolute;left:50%;bottom:15%;border:1px solid rgba(76,63,54,.18);border-radius:50%;transform:translateX(-50%)}
+.agent-orbit.o1{width:330px;height:220px}.agent-orbit.o2{width:500px;height:330px}
+.architecture-grid{padding:18px;background:rgba(255,253,249,.9);display:grid;align-content:center;gap:9px;border-left:1px solid var(--line)}
+.architecture-card{border:1px solid var(--line);border-radius:15px;padding:12px;background:#fff}
+.architecture-card span{font:16px Georgia,serif;color:var(--accent)}.architecture-card b{font-size:10.5px;margin-left:8px}
+.architecture-card p{font-size:9px;line-height:1.5;color:var(--muted);margin:6px 0 0}
+
+/* Floating business agent */
+.agent-launcher{
+  position:fixed;right:22px;bottom:22px;z-index:90;width:58px;height:58px;border:0;border-radius:50%;
+  background:#292622;color:#fff;cursor:pointer;box-shadow:0 16px 40px rgba(38,31,27,.28);
+  display:grid;place-items:center;font:18px Georgia,serif
+}
+.agent-launcher:after{content:"";position:absolute;inset:-5px;border:1px solid rgba(41,38,34,.18);border-radius:50%}
+.agent-panel{
+  position:fixed;right:22px;bottom:92px;z-index:89;width:min(430px,calc(100vw - 30px));height:min(690px,calc(100vh - 120px));
+  border:1px solid var(--line);border-radius:24px;background:rgba(255,253,249,.985);box-shadow:0 26px 80px rgba(47,36,29,.28);
+  display:none;grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden;backdrop-filter:blur(18px)
+}
+.agent-panel.open{display:grid}
+.agent-head{display:flex;align-items:center;justify-content:space-between;padding:14px 15px;border-bottom:1px solid var(--line)}
+.agent-identity{display:flex;gap:10px;align-items:center}.agent-avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#292622;color:#fff;font:13px Georgia,serif}
+.agent-identity b{display:block;font-size:11px}.agent-identity span{display:block;font-size:9px;color:var(--muted);margin-top:2px}
+.agent-quick{display:flex;gap:6px;overflow:auto;padding:9px 12px;border-bottom:1px solid var(--line)}
+.agent-quick button{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 9px;font-size:9px;cursor:pointer}
+.agent-messages{overflow:auto;padding:13px;display:flex;flex-direction:column;gap:9px}
+.msg{max-width:86%;border-radius:15px;padding:10px 11px;font-size:10.5px;line-height:1.6;white-space:pre-wrap}
+.msg.user{align-self:flex-end;background:#292622;color:#fff;border-bottom-right-radius:5px}
+.msg.agent{align-self:flex-start;background:#f2ebe5;border:1px solid rgba(60,45,35,.08);border-bottom-left-radius:5px}
+.msg .tool-result{margin-top:8px;border-top:1px solid rgba(60,45,35,.12);padding-top:7px;font-size:9.5px;color:#675d57}
+.agent-input{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px;border-top:1px solid var(--line);background:#fffdf9}
+.agent-input textarea{border:1px solid var(--line);border-radius:13px;padding:10px;resize:none;outline:none;font-size:10.5px;min-height:42px;max-height:100px}
+.agent-send{border:0;border-radius:13px;background:#292622;color:#fff;padding:0 14px;cursor:pointer;font-size:10px}
+@media(max-width:1000px){
+  .continuation{padding:0 10px 10px}.continuation-stage{grid-template-columns:1fr}.continuation-list,.architecture-grid{border-left:0;border-top:1px solid var(--line)}
+  .continuation-scene{min-height:520px}.continuation-stage{min-height:auto}
+  .agent-panel{right:10px;bottom:82px}.agent-launcher{right:12px;bottom:14px}
+}
+
+
+.checkout-row{padding:0 14px 14px;border-top:1px solid var(--line);background:#fffdf9}
+.checkout-btn{width:100%;border:0;border-radius:13px;padding:12px 14px;background:#0070ba;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(0,112,186,.16)}
+.checkout-note{font-size:8px;color:var(--muted);text-align:center;margin-top:6px;line-height:1.4}
+.checkout-modal{position:fixed;inset:0;z-index:110;background:rgba(31,26,23,.58);display:none;place-items:center;padding:16px;backdrop-filter:blur(8px)}
+.checkout-modal.open{display:grid}.checkout-card{width:min(520px,94vw);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:22px;border:1px solid var(--line);box-shadow:0 28px 80px rgba(35,28,24,.25)}
+.checkout-head{padding:15px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.checkout-head h3{font:20px Georgia,serif;margin:0}
+.checkout-body{padding:14px 16px}.checkout-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.checkout-field{display:grid;gap:4px}.checkout-field.full{grid-column:1/-1}.checkout-field label{font-size:8.5px;color:var(--muted)}.checkout-field input,.checkout-field select{border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff;outline:none;font-size:10px}
+.checkout-summary{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:10px;background:#faf7f3;font-size:9.5px;line-height:1.6}.checkout-actions{display:flex;gap:8px;margin-top:12px}.paypal-pay{flex:1;border:0;border-radius:12px;padding:11px;background:#0070ba;color:#fff;font-weight:700;cursor:pointer}
+
+
+.cart-shipping{margin:0 12px 10px;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+.cart-shipping-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.cart-shipping-title b{font-size:10.5px}.cart-shipping-title span{font-size:8.5px;color:var(--muted)}
+.cart-shipping-grid{display:grid;grid-template-columns:90px 1fr 110px auto;gap:6px}.cart-shipping-grid select,.cart-shipping-grid input{min-width:0;border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:9px;background:#fff}
+.cart-shipping-grid button{border:0;background:#2b2825;color:#fff;border-radius:8px;padding:0 10px;font-size:9px}
+.cart-shipping-result{margin-top:8px;font-size:9px;line-height:1.55;color:var(--muted)}.cart-shipping-result strong{color:var(--ink)}
+.checkout-summary .quote-breakdown{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);line-height:1.65}
+
+/* 购物车 */
+.cart-panel{
+  position:fixed;right:18px;top:78px;width:390px;max-height:calc(100vh - 96px);z-index:60;
+  background:#fffdf9;border:1px solid var(--line);border-radius:22px;box-shadow:0 24px 70px rgba(50,38,30,.24);
+  display:none;grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden
+}
+.cart-panel.open{display:grid}
+.cart-head{display:flex;justify-content:space-between;align-items:center;padding:15px 16px;border-bottom:1px solid var(--line)}
+.cart-head h3{margin:0;font:20px Georgia,serif}.cart-list{overflow:auto;padding:10px 12px}
+.cart-empty{padding:40px 15px;text-align:center;color:var(--muted);font-size:11px}
+.cart-item{border:1px solid var(--line);border-radius:13px;padding:10px;margin-bottom:8px;background:#fff}
+.cart-item b{font-size:10.5px;display:block}.cart-item span{font-size:9px;color:var(--muted);display:block;margin-top:3px;line-height:1.4}
+.cart-item strong{display:block;margin-top:6px;font:15px Georgia,serif}
+.cart-foot{padding:12px 14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.cart-foot span{font-size:10px;color:var(--muted)}.cart-foot strong{font:20px Georgia,serif}
+
+.order-flow{
+  margin:10px 12px 0;padding:11px 12px;border:1px solid var(--line);
+  border-radius:14px;background:#faf7f3;display:grid;grid-template-columns:34px 1fr;gap:10px
+}
+.order-flow-icon{
+  width:34px;height:34px;border-radius:50%;background:#292622;color:#fff;
+  display:grid;place-items:center;font-size:16px;font-weight:700
+}
+.order-flow b{display:block;font-size:10.5px;margin-bottom:4px}
+.order-flow p{margin:0;font-size:9.5px;line-height:1.55;color:var(--muted)}
+.toast{position:absolute;left:50%;bottom:22px;z-index:70;transform:translate(-50%,14px);background:#28231f;color:#fff;border-radius:999px;padding:9px 13px;font-size:10px;opacity:0;pointer-events:none;transition:.2s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+.extra-screen{
+  min-height:auto;
+  padding:46px 7vw 72px;
+  border-top:0;
+  background:linear-gradient(180deg,#f4eee8 0%,#f8f4ef 45%,#efe7df 100%);
+  display:grid;
+  align-content:start;
+}
+.extra-screen:first-of-type{
+  margin-top:-2px;
+  padding-top:30px;
+  background:linear-gradient(180deg,#f3ede7 0%,#f6f1ec 32%,#f8f4ef 68%,#efe7df 100%);
+}
+.extra-screen.alt{
+  background:linear-gradient(180deg,#efe7df 0%,#f8f4ef 100%);
+}
+.extra-kicker{font-size:10px;letter-spacing:.18em;color:var(--muted);margin-bottom:8px}
+.extra-screen h2{font:38px Georgia,serif;font-weight:500;margin:0 0 10px}
+.extra-screen>p{max-width:760px;margin:0 0 22px;color:var(--muted);font-size:13px;line-height:1.7}
+.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.info-card{
+  min-height:210px;border:1px solid var(--line);border-radius:22px;background:rgba(255,253,249,.88);
+  padding:20px;box-shadow:0 14px 36px rgba(60,45,35,.07)
+}
+.info-card b{display:block;font:22px Georgia,serif;font-weight:500;margin-bottom:8px}
+.info-card span{display:block;color:var(--muted);font-size:11px;line-height:1.65}
+.info-card small{display:block;margin-top:18px;font-size:9px;letter-spacing:.12em;color:var(--accent)}
+.process-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.process-step{border-top:2px solid #2b2825;padding-top:16px}
+.process-step em{font:28px Georgia,serif;font-style:normal}
+.process-step b{display:block;font-size:12px;margin:8px 0 5px}
+.process-step span{font-size:10.5px;line-height:1.55;color:var(--muted)}
+@media(max-width:1000px){
+  .extra-screen{padding:34px 22px 54px}
+  .extra-screen:first-of-type{padding-top:22px}
+  .card-grid,.process-row{grid-template-columns:1fr}
+}
+
+@media(max-width:1000px){
+  body{overflow:auto}.app{height:auto;min-height:100vh}.layout{grid-template-columns:1fr;grid-template-rows:70vh auto}
+  .catalog{min-height:520px}.popover{width:min(360px,88vw)}.cart-panel{right:10px;width:min(390px,calc(100vw - 20px))}
+}
+
+.wedding-site-btn{
+  background:linear-gradient(135deg,#8d6554,#b9856d)!important;color:#fff!important;
+  border-color:transparent!important;box-shadow:0 8px 24px rgba(137,91,69,.20)
+}
+.site-builder{
+  position:fixed;inset:0;z-index:120;background:rgba(35,29,25,.62);backdrop-filter:blur(10px);
+  display:none;padding:18px
+}
+.site-builder.open{display:grid}
+.site-builder-shell{
+  width:min(1480px,100%);height:100%;margin:auto;background:#f8f4ef;border-radius:26px;
+  border:1px solid rgba(255,255,255,.46);box-shadow:0 35px 100px rgba(30,24,20,.30);
+  overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr)
+}
+.site-builder-head{
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+  padding:13px 16px;border-bottom:1px solid var(--line);background:rgba(255,253,249,.94)
+}
+.site-builder-head b{font:20px Georgia,serif;font-weight:500}.site-builder-head span{font-size:9px;color:var(--muted);margin-left:8px}
+.site-builder-actions{display:flex;gap:7px;flex-wrap:wrap}
+.site-builder-body{min-height:0;display:grid;grid-template-columns:370px minmax(0,1fr)}
+.site-controls{overflow:auto;padding:14px;border-right:1px solid var(--line);background:#fffdf9}
+.control-section{border-bottom:1px solid var(--line);padding:0 0 14px;margin-bottom:14px}
+.control-section:last-child{border-bottom:0}
+.control-section h4{font-size:10px;letter-spacing:.08em;margin:0 0 9px}
+.control-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.control-field{display:grid;gap:5px;margin-bottom:8px}
+.control-field.full{grid-column:1/-1}
+.control-field label{font-size:8.5px;color:var(--muted)}
+.control-field input,.control-field textarea,.control-field select{
+  width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 9px;
+  outline:none;font-size:10px;color:var(--ink)
+}
+.control-field textarea{resize:vertical;min-height:66px}
+.photo-upload{
+  border:1px dashed rgba(45,36,30,.23);border-radius:11px;background:#faf6f1;padding:9px;text-align:center;cursor:pointer
+}
+.photo-upload input{display:none}.photo-upload b{font-size:9.5px;display:block}.photo-upload span{font-size:8px;color:var(--muted);display:block;margin-top:3px}
+.photo-status{font-size:8px;color:var(--muted);margin-top:5px;word-break:break-all}
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.feature-toggle{display:flex;gap:7px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff;font-size:9px}
+.feature-toggle input{accent-color:#292622}
+.builder-preview-wrap{min-width:0;min-height:0;background:#d9d0c8;padding:16px;display:grid;place-items:center}
+.builder-preview{
+  width:100%;height:100%;border:0;border-radius:18px;background:#fff;box-shadow:0 20px 55px rgba(50,38,31,.16)
+}
+.builder-note{font-size:8.5px;line-height:1.5;color:var(--muted);padding:8px 0 0}
+@media(max-width:1000px){
+  .site-builder{padding:7px}.site-builder-shell{border-radius:18px}
+  .site-builder-body{grid-template-columns:1fr;grid-template-rows:minmax(410px,52vh) minmax(480px,1fr)}
+  .site-controls{border-right:0;border-bottom:1px solid var(--line)}
+  .builder-preview-wrap{grid-row:1}.site-controls{grid-row:2}
+  .wedding-site-btn{max-width:152px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
+
+
+.lang-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;background:#f2f1ee;border:1px solid #e7e4de;border-radius:8px}
+.lang-switch button{height:28px;min-width:34px;padding:0 9px;border:0;background:transparent;border-radius:6px;color:#77736d;font-size:11px;font-weight:600;cursor:pointer}
+.lang-switch button.active{background:#fff;color:#171717;box-shadow:0 1px 3px rgba(30,26,20,.08)}
+
+
+/* v17 clean background replacement — original V11 layout preserved */
+.scene.home-photo-scene{
+  background-image:
+    linear-gradient(180deg,rgba(255,252,248,.08) 0%,rgba(255,252,248,0) 35%,rgba(31,24,20,.08) 100%),
+    url("assets/scenes/cream.webp") !important;
+  background-size:cover !important;
+  background-position:50% 50% !important;
+  background-repeat:no-repeat !important;
+  transform:none !important;
+}
+.scene.home-photo-scene .wall-line,
+.scene.home-photo-scene .floor,
+.scene.home-photo-scene .arch,
+.scene.home-photo-scene .table,
+.scene.home-photo-scene .card,
+.scene.home-photo-scene .cake,
+.scene.home-photo-scene .plinth,
+.scene.home-photo-scene .welcome,
+.scene.home-photo-scene .gift{
+  display:none !important;
+}
+.scene.home-photo-scene::after{
+  content:"";
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 51% 30%,rgba(255,255,255,.07),transparent 52%),
+    linear-gradient(90deg,rgba(31,24,20,.03),transparent 22%,transparent 78%,rgba(31,24,20,.03));
+}
+.scene.home-photo-scene .names,
+.scene.home-photo-scene .scene-toolbar,
+.scene.home-photo-scene .scene-note,
+.scene.home-photo-scene #hotspots{z-index:3}
+.scene.home-photo-scene .hotspot,
+.scene.home-photo-scene .hotspot-label{z-index:4}
+@media(max-width:900px){
+  .scene.home-photo-scene{background-position:52% 50% !important}
+}
+
+
+/* v18: POD Studio entry (scenario → design one-stop flow) */
+.btn.studio-entry{display:inline-flex;align-items:center;gap:4px;text-decoration:none;color:#fff;background:linear-gradient(135deg,#292622,#4a3a30);border-color:#292622;box-shadow:0 0 0 2px rgba(154,109,87,.35)}
+.btn.studio-entry:hover{box-shadow:0 0 0 3px rgba(154,109,87,.55)}
+@media(max-width:720px){.actions{flex-wrap:wrap;justify-content:flex-end}}
+
+/* v23: generated scene images (same scenes as POD Studio) */
+.scene.generated-scene{background-size:cover!important;background-position:50% 50%!important;background-repeat:no-repeat!important}
+.scene.generated-scene .wall-line,.scene.generated-scene .floor,.scene.generated-scene .arch,.scene.generated-scene .table,.scene.generated-scene .card,.scene.generated-scene .cake,.scene.generated-scene .plinth,.scene.generated-scene .welcome,.scene.generated-scene .gift{display:none!important}
+.scene.studio-scene .names{display:none!important}
+.prod-img.studio{background:#efe8df center/cover no-repeat;border-radius:14px}.prod-img.studio:before{display:none}
+.scene-menu-head{padding:10px 14px 4px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7c746c}
+.scene-option.custom{border-top:1px solid rgba(45,36,30,.12);margin-top:4px}
+.showcase-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.showcase-grid figure{margin:0;border-radius:22px;overflow:hidden;background:#efe8df;box-shadow:0 18px 40px rgba(58,43,34,.10)}
+.showcase-grid img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.showcase-grid figcaption{padding:10px 14px;font-size:12px;color:#7c746c;background:#fffdf9}
+.promise{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 22px}
+.promise span{border:1px solid rgba(45,36,30,.14);background:#fff;border-radius:999px;padding:7px 12px;font-size:12px}
+.promise span b{color:#3f7d55}
+@media(max-width:900px){.showcase-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* v24 focused storefront — one wedding scene, studio CTA on the first screen */
+.hero-studio-card{display:block;margin-top:14px;padding:16px 16px 15px;border-radius:18px;background:#292622;color:#fff;text-decoration:none;box-shadow:0 14px 34px rgba(41,38,34,.16);transition:.18s}
+.hero-studio-card:hover{transform:translateY(-1px);box-shadow:0 18px 40px rgba(41,38,34,.22)}
+.hero-studio-card small{display:block;color:rgba(255,255,255,.58);font-size:9px;letter-spacing:.14em}.hero-studio-card strong{display:block;font:21px Georgia,serif;font-weight:400;margin-top:6px}.hero-studio-card span{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:8px;font-size:10px;color:rgba(255,255,255,.72)}
+.scene-current.static{cursor:default}.scene-current.static span{display:none}
+.focus-section{padding:14px;background:#f2ece6}.focus-shell{border:1px solid var(--line);border-radius:28px;background:#fffdf9;box-shadow:var(--shadow);overflow:hidden}
+.focus-grid{display:grid;grid-template-columns:minmax(320px,.82fr) minmax(0,1.18fr);min-height:620px}.focus-copy{padding:70px 6vw 62px;display:flex;flex-direction:column;justify-content:center}.focus-kicker{font-size:10px;letter-spacing:.18em;color:var(--muted)}.focus-copy h2{font:clamp(36px,4vw,58px) Georgia,serif;font-weight:400;line-height:1.05;margin:12px 0 16px}.focus-copy p{font-size:13px;line-height:1.8;color:var(--muted);max-width:540px;margin:0}.focus-steps{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}.focus-steps span{border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:#fff;font-size:10px;color:#655b54}
+.product-wall{padding:26px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;background:#eee6de}.product-shot{position:relative;border-radius:22px;overflow:hidden;background:#f3ece4;min-height:250px}.product-shot img{width:100%;height:100%;object-fit:cover;display:block}.product-shot figcaption{position:absolute;left:12px;right:12px;bottom:12px;padding:9px 11px;border-radius:12px;background:rgba(255,253,249,.9);backdrop-filter:blur(10px);font-size:10px;display:flex;justify-content:space-between;gap:10px}.product-shot figcaption b{font-size:11px}.product-shot figcaption span{color:var(--muted)}
+.studio-story{background:#ede5dc}.studio-story .focus-grid{grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr)}.studio-visual{padding:34px;display:grid;place-items:center;background:linear-gradient(145deg,#d9cec3,#f2ece5)}.studio-stack{position:relative;width:min(720px,100%);aspect-ratio:1.3}.studio-stack img{position:absolute;width:48%;border-radius:20px;box-shadow:0 22px 48px rgba(58,43,34,.18);border:7px solid rgba(255,253,249,.9)}.studio-stack img:nth-child(1){left:3%;top:12%;transform:rotate(-5deg)}.studio-stack img:nth-child(2){right:3%;top:5%;transform:rotate(4deg)}.studio-stack img:nth-child(3){left:28%;bottom:2%;width:44%;transform:rotate(-1deg)}
+.workflow-list{margin-top:24px;display:grid;gap:9px}.workflow-item{display:grid;grid-template-columns:34px 1fr;gap:11px;align-items:start;padding:11px 0;border-top:1px solid var(--line)}.workflow-item i{font-style:normal;width:28px;height:28px;border-radius:50%;background:#292622;color:#fff;display:grid;place-items:center;font-size:10px}.workflow-item b{display:block;font-size:12px}.workflow-item span{display:block;color:var(--muted);font-size:10px;line-height:1.55;margin-top:3px}.studio-cta{margin-top:22px;align-self:flex-start;padding:12px 18px!important;font-size:13px!important}
+@media(max-width:900px){.focus-grid,.studio-story .focus-grid{grid-template-columns:1fr}.focus-copy{padding:46px 28px}.product-wall{min-height:620px}.studio-visual{min-height:520px}}
+@media(max-width:620px){.product-wall{grid-template-columns:1fr;grid-template-rows:none}.product-shot{min-height:240px}.studio-stack{aspect-ratio:1}.studio-stack img{width:58%}.studio-stack img:nth-child(3){left:22%;width:56%}}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">P</div>
+      <div><b>POD WEDDING STUDIO</b><span>场景式选品 · 定制 · 阶梯价 · 购物车</span></div>
+    </div>
+    <div class="actions"><div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div>
+      <button class="btn wedding-site-btn" id="weddingSiteBtn">生成专属婚礼网站</button>
+      <button class="btn" id="resetBtn">重置</button>
+      <button class="btn dark" id="cartBtn">购物车 <span id="cartCount">0</span></button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="stage" id="stage">
+      <div class="scene" id="scene">
+        <div class="wall-line a"></div><div class="wall-line b"></div><div class="wall-line c"></div>
+        <div class="floor"></div><div class="arch"></div>
+        <div class="names"><strong id="coupleNames">Amelia & Noah</strong><span id="sceneDate">06 · 18 · 2027</span></div>
+        <div class="table"><div class="runner"></div></div>
+        <div class="card">A & N<br><span style="font:9px system-ui">MENU</span></div>
+        <div class="cake"><i class="a"></i><i class="b"></i><i class="c"></i></div>
+        <div class="plinth"></div><div class="welcome">Welcome<br>to our wedding</div><div class="gift"></div>
+
+        <div class="scene-toolbar">
+          <div class="scene-switch">
+            <div class="scene-current" id="sceneCurrent"><b id="sceneTitle">Wedding &amp; personalised gifts</b><span>▾</span></div>
+            <div class="scene-menu" id="sceneMenu"></div>
+          </div>
+          <div class="meta-pill" id="hotspotCount">4 Hotspots</div>
+        </div>
+
+        <div id="hotspots"></div>
+
+        <div class="scene-note">
+          <b id="sceneNoteTitle">Wedding &amp; personalised gifts</b>
+          <span id="sceneNoteText">Wedding, anniversary &amp; birthday gift buyers</span>
+        </div>
+      </div>
+
+      <aside class="popover" id="popover">
+        <div class="pop-head">
+          <div><small id="popGroup">POD PRODUCT</small><h3 id="popName"></h3></div>
+          <button class="pop-close" id="popClose">×</button>
+        </div>
+        <div class="pop-body">
+          <div class="price-row"><span>单价会根据数量自动变化</span><strong id="unitPrice">¥0.00</strong></div>
+
+          <div class="mode-label">选择材质</div>
+          <div class="material-grid" id="materialGrid"></div>
+          <div class="material-hint">点击材质照片可放大查看纹理；选择材质会同步更新价格，并记录到购物车。</div>
+
+          <div class="mode-label">定制方式</div>
+          <div class="modes">
+            <button class="mode active" data-mode="text">直接填写内容</button>
+            <button class="mode" data-mode="upload">上传设计文件</button>
+            <button class="mode" data-mode="later">购物车后填写</button>
+          </div>
+
+          <div class="config-panel" id="configPanel">
+            <div class="field" id="textField">
+              <label>个性化内容</label>
+              <textarea id="customText" rows="3" placeholder="例如：Amelia & Noah / 18 June 2027 / Welcome to our wedding"></textarea>
+            </div>
+            <div class="field" id="uploadField" style="display:none">
+              <label>上传设计文件</label>
+              <label class="upload">
+                <b>点击上传设计</b>
+                <span>支持 PNG / JPG / JPEG / WEBP / SVG / PDF / AI / PSD / EPS，可多文件上传</span>
+                <input id="fileInput" type="file" multiple accept=".png,.jpg,.jpeg,.webp,.svg,.pdf,.ai,.psd,.eps"/>
+              </label>
+              <div class="files" id="fileList">尚未选择文件</div>
+            </div>
+            <div id="laterField" style="display:none;font-size:10px;line-height:1.55;color:var(--muted)">
+              先加入购物车，结算前再填写定制文字或上传设计文件。
+            </div>
+          </div>
+
+          <div class="qty-row">
+            <div class="qty-box"><label>数量</label><input id="qty" type="number" min="1" value="1"/></div>
+            <div class="tier"><b>当前价格档</b><span id="tierText">1–9 件 · 标准价</span></div>
+          </div>
+
+          <div class="tier-list">
+            <div class="tier-pill" data-tier="0">1–9<br>标准价</div>
+            <div class="tier-pill" data-tier="1">10–29<br>-5%</div>
+            <div class="tier-pill" data-tier="2">30–49<br>-10%</div>
+            <div class="tier-pill" data-tier="3">50+<br>-15%</div>
+          </div>
+
+          <div class="total"><span>商品小计</span><strong id="totalPrice">¥0.00</strong></div>
+          <div class="pop-actions">
+            <button class="add" id="addCart">加入购物车</button>
+            <button class="secondary" id="detailBtn">完整详情</button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="toast" id="toast"></div>
+    </section>
+
+    <aside class="catalog">
+      <div class="catalog-head">
+        <small>PRODUCT SELECTION</small>
+        <h2 id="catalogTitle">Wedding &amp; personalised gifts</h2>
+        <p id="catalogAudience">★ Recommended for you · Wedding, anniversary &amp; birthday gift buyers</p>
+        <a class="hero-studio-card" id="studioStartBtn" href="studio.html?scenario=gifts"><strong>开始设计</strong></a>
+      </div>
+      <div class="catalog-scroll" id="catalog"></div>
+    </aside>
+  </main>
+</div>
+
+
+
+
+<div class="site-builder" id="siteBuilder">
+  <div class="site-builder-shell">
+    <div class="site-builder-head">
+      <div><b>专属婚礼邀请网站生成器</b><span id="builderSceneLabel">Scene</span></div>
+      <div class="site-builder-actions">
+        <button class="btn" id="builderSaveDraft">保存草稿</button>
+        <button class="btn" id="builderRefresh">更新预览</button>
+        <button class="btn" id="builderPublish">保存为专属链接</button>
+        <button class="btn dark" id="builderDownload">下载独立 HTML</button>
+        <button class="pop-close" id="builderClose">×</button>
+      </div>
+    </div>
+    <div class="site-builder-body">
+      <div class="site-controls">
+        <div class="control-section">
+          <h4>新人和婚礼信息</h4>
+          <div class="control-grid">
+            <div class="control-field full"><label>新人姓名</label><input id="wbNames" value="Amelia & Noah"/></div>
+            <div class="control-field"><label>婚礼日期</label><input id="wbDate" type="date" value="2027-06-18"/></div>
+            <div class="control-field"><label>开始时间</label><input id="wbTime" type="time" value="15:00"/></div>
+            <div class="control-field full"><label>场地名称</label><input id="wbVenue" value="The Garden House"/></div>
+            <div class="control-field full"><label>详细地址</label><input id="wbAddress" value="123 Celebration Avenue"/></div>
+            <div class="control-field full"><label>地图 / 导航链接（可手动替换）</label><input id="wbMapUrl" placeholder="Google Maps / Apple Maps / 高德 / 百度地图分享链接"/></div>
+            <div class="control-field full"><label>欢迎语</label><textarea id="wbIntro">With joyful hearts, we invite you to celebrate our wedding with us.</textarea></div>
+          </div>
+        </div>
+
+        <div class="control-section">
+          <h4>婚纱照与图片</h4>
+          <label class="photo-upload"><b>替换主婚纱照</b><span>JPG / PNG / WEBP</span><input id="wbHeroPhoto" type="file" accept="image/*"/></label>
+          <div class="photo-status" id="wbHeroStatus">未上传，将使用极简场景占位视觉</div>
+          <div style="height:7px"></div>
+          <label class="photo-upload"><b>添加相册图片</b><span>支持多张上传，点击相册图片可放大</span><input id="wbGallery" type="file" multiple accept="image/*"/></label>
+          <div class="photo-status" id="wbGalleryStatus">未上传相册</div>
+        </div>
+
+        <div class="control-section">
+          <h4>活动流程</h4>
+          <div class="control-field full">
+            <label>每行：时间 | 标题 | 说明</label>
+            <textarea id="wbSchedule" rows="7">14:30 | Guest Arrival | Welcome drinks & photo time
+15:30 | Ceremony | Wedding vows and ring exchange
+16:30 | Cocktail Hour | Drinks, music and garden photos
+18:00 | Dinner | Dinner and speeches
+20:00 | First Dance | Dance floor opens
+22:30 | Farewell | Thank you for celebrating with us</textarea>
+          </div>
+        </div>
+
+        <div class="control-section">
+          <h4>RSVP 与联系</h4>
+          <div class="control-grid">
+            <div class="control-field full"><label>RSVP 邮箱</label><input id="wbRsvpEmail" type="email" value="wedding@example.com"/></div>
+            <div class="control-field full"><label>外部 RSVP 链接（可选，有值时优先使用）</label><input id="wbRsvpUrl" placeholder="https://..."/></div>
+            <div class="control-field full"><label>备注</label><textarea id="wbNote">Dress code: Garden formal. Please let us know about dietary requirements in your RSVP.</textarea></div>
+          </div>
+        </div>
+
+        <div class="control-section">
+          <h4>手动调整视觉</h4>
+          <div class="control-grid">
+            <div class="control-field"><label>主题强调色</label><input id="wbAccent" type="color" value="#9a6d57"/></div>
+            <div class="control-field"><label>版式密度</label><select id="wbDensity"><option value="airy">浪漫留白</option><option value="normal">标准</option><option value="compact">紧凑</option></select></div>
+            <div class="control-field"><label>Hero 对齐</label><select id="wbHeroAlign"><option value="center">居中</option><option value="left">左对齐</option><option value="right">右对齐</option></select></div>
+            <div class="control-field"><label>圆角风格</label><select id="wbRadius"><option value="soft">柔和圆角</option><option value="minimal">小圆角</option><option value="pill">更圆润</option></select></div>
+          </div>
+        </div>
+
+        <div class="control-section">
+          <h4>网站工具</h4>
+          <div class="feature-grid">
+            <label class="feature-toggle"><input id="ftCountdown" type="checkbox" checked/>婚礼倒计时</label>
+            <label class="feature-toggle"><input id="ftTimeline" type="checkbox" checked/>活动流程</label>
+            <label class="feature-toggle"><input id="ftMap" type="checkbox" checked/>地图/导航</label>
+            <label class="feature-toggle"><input id="ftGallery" type="checkbox" checked/>婚纱照相册</label>
+            <label class="feature-toggle"><input id="ftRsvp" type="checkbox" checked/>RSVP</label>
+            <label class="feature-toggle"><input id="ftShare" type="checkbox" checked/>分享</label>
+            <label class="feature-toggle"><input id="ftCalendar" type="checkbox" checked/>加入日历</label>
+            <label class="feature-toggle"><input id="ftAddressCopy" type="checkbox" checked/>复制地址</label>
+          </div>
+          <div class="builder-note">生成的网站是独立 HTML。地图默认使用你填写的地图链接；如果未填写，会根据地址生成通用 Google Maps 搜索导航链接。</div>
+        </div>
+      </div>
+
+      <div class="builder-preview-wrap">
+        <iframe class="builder-preview" id="builderPreview" title="Wedding invitation preview"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="agent-launcher" id="agentLauncher" aria-label="打开婚礼定制 Agent">AI</button>
+<aside class="agent-panel" id="agentPanel">
+  <div class="agent-head">
+    <div class="agent-identity">
+      <div class="agent-avatar">AI</div>
+      <div><b>Wedding POD Agent</b><span>定制 · 生成 · 订单 · 物流 · 交付</span></div>
+    </div>
+    <button class="pop-close" id="agentClose">×</button>
+  </div>
+  <div class="agent-quick"><button data-agent-prompt="查看多店铺订单、物流、营销和待办任务">运营任务</button>
+    <button data-agent-prompt="帮我定制这个婚礼产品">定制助手</button>
+    <button data-agent-prompt="帮我生成一套婚礼文案和设计需求">生成需求</button>
+    <button data-agent-prompt="查询订单 POD-2026-1008">订单查询</button>
+    <button data-agent-prompt="查询物流 TRK-DEMO-8821">物流查询</button>
+    
+  </div>
+  <div class="agent-messages" id="agentMessages"></div>
+  <div class="agent-input">
+    <textarea id="agentInput" rows="1" placeholder="例如：我想做50份法式婚礼菜单，用珠光纸；或者查询订单/物流"></textarea>
+    <button class="agent-send" id="agentSend">发送</button>
+  </div>
+</aside>
+
+<div class="material-lightbox" id="materialLightbox">
+  <div class="material-lightbox-card">
+    <div class="material-lightbox-head">
+      <b id="materialLightboxTitle">材质预览</b>
+      <button class="pop-close" id="materialLightboxClose">×</button>
+    </div>
+    <img class="material-lightbox-image" id="materialLightboxImage" alt="材质大图"/>
+    <div class="material-lightbox-foot" id="materialLightboxDesc"></div>
+  </div>
+</div>
+
+<aside class="cart-panel" id="cartPanel">
+  <div class="cart-head"><h3>购物车</h3><button class="pop-close" id="cartClose">×</button></div>
+  <div>
+    <div class="order-flow">
+      <div class="order-flow-icon">✓</div>
+      <div>
+        <b>订购流程</b>
+        <p>最终效果图和材质会在支付后 2 小时内确认，并发送到您的邮箱。确认后进入生产与配送流程，预计 14 天内送达。</p>
+      </div>
+    </div>
+  </div>
+  <div class="cart-list" id="cartList"></div>
+  <div class="cart-shipping">
+    <div class="cart-shipping-title"><b>配送 / 税费试算</b><span>按区域实时计算</span></div>
+    <div class="cart-shipping-grid">
+      <select id="cartCountry"><option value="CH">CH</option><option value="DE">DE</option><option value="FR">FR</option><option value="GB">GB</option><option value="US">US</option><option value="CA">CA</option></select>
+      <input id="cartPostal" placeholder="邮编" value="4051"/>
+      <select id="cartShippingMethod"><option value="standard">Standard</option><option value="express">Express</option></select>
+      <button id="cartQuoteBtn">计算</button>
+    </div>
+    <div class="cart-shipping-result" id="cartShippingResult">选择配送区域后查看 Standard / Express 运费与预计税费。</div>
+  </div>
+  <div class="cart-foot"><span id="cartTotalLabel">商品小计</span><strong id="cartTotal">¥0.00</strong></div>
+  <div class="checkout-row">
+    <button class="checkout-btn" id="checkoutBtn">使用 PayPal 安全支付</button>
+    <div class="checkout-note">支付金额会由服务端根据 SKU、材质和数量重新计算，浏览器价格仅用于展示。</div>
+  </div>
+</aside>
+
+<div class="checkout-modal" id="checkoutModal">
+  <div class="checkout-card">
+    <div class="checkout-head"><h3>确认订单与配送信息</h3><button class="pop-close" id="checkoutClose">×</button></div>
+    <div class="checkout-body">
+      <div class="checkout-grid">
+        <div class="checkout-field"><label>姓名</label><input id="coName" autocomplete="name"/></div>
+        <div class="checkout-field"><label>邮箱 *</label><input id="coEmail" type="email" autocomplete="email"/></div>
+        <div class="checkout-field full"><label>地址</label><input id="coAddress" autocomplete="street-address"/></div>
+        <div class="checkout-field"><label>城市</label><input id="coCity" autocomplete="address-level2"/></div>
+        <div class="checkout-field"><label>邮编</label><input id="coPostal" autocomplete="postal-code"/></div>
+        <div class="checkout-field"><label>国家/地区代码</label><input id="coCountry" value="CH" maxlength="2"/></div>
+        <div class="checkout-field"><label>配送方式</label><select id="coShippingMethod"><option value="standard">Standard</option><option value="express">Express</option></select></div><div class="checkout-field"><label>币种</label><select id="coCurrency"><option value="CNY">CNY</option></select></div>
+      </div>
+      <div class="checkout-summary" id="checkoutSummary"></div>
+      <div class="checkout-actions"><button class="paypal-pay" id="paypalPayBtn">前往 PayPal 支付</button><button class="secondary" id="checkoutCancel">返回</button></div>
+    </div>
+  </div>
+</div>
+
+<script src="studio-data.js"></script>
+<script src="i18n.js"></script>
+<script>
+const HOME_SCENARIO_ORDER = ["gifts","seasonal","creator","community","corporate","art"];
+const HOME_RECOMMENDED = new Set(["gifts","seasonal"]);
+const studioCatalog = window.STUDIO_DATA || {scenarios:[],products:[]};
+const studioProductsById = Object.fromEntries((studioCatalog.products||[]).map(x=>[x.id,x]));
+
+function homeProduct(id){
+  const x=studioProductsById[id]||{id,name:{en:id},base_cost_eur:0};
+  return {
+    id:x.id,
+    name:x.name?.en||x.name?.zh||x.id,
+    price:Number(x.base_cost_eur||0),
+    type:"studio",
+    desc:[x.technique,(x.sizes||[]).slice(0,4).join(" / ")].filter(Boolean).join(" · "),
+    moq:"POD",
+    lead:"Studio",
+    custom:"POD Design Studio",
+    studio:true,
+    thumb:x.mockup_photo?.src||"",
+    technique:x.technique||"POD",
+    eco:Array.isArray(x.eco_tags)&&x.eco_tags.length>0
+  };
+}
+
+const sceneData = Object.fromEntries(HOME_SCENARIO_ORDER.map(id=>{
+  const sc=(studioCatalog.scenarios||[]).find(x=>x.id===id);
+  if(!sc) return [id,{name:id,subtitle:"",note:"",groups:[],hotspots:[],image:"",colors:["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"]}];
+  return [id,{
+    id,
+    name:sc.name?.en||sc.name?.zh||id,
+    subtitle:sc.name?.zh||sc.name?.en||id,
+    note:sc.audience?.en||sc.audience?.zh||"",
+    recommended:HOME_RECOMMENDED.has(id),
+    image:sc.scene_image?.src||"",
+    hotspots:sc.scene_image?.hotspots||[],
+    colors:["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"],
+    groups:(sc.kits||[]).map(k=>[k.name?.en||k.name?.zh||k.id,(k.items||[]).map(homeProduct),k.id])
+  }];
+}));
+
+
+const materialPhotos = {
+  cotton:'/assets/materials/cotton.jpg',
+  pearl:'/assets/materials/pearl.jpg',
+  kraft:'/assets/materials/kraft.jpg',
+  vellum:'/assets/materials/vellum.jpg',
+  clear:'/assets/materials/clear.jpg',
+  frosted:'/assets/materials/frosted.jpg',
+  wood:'/assets/materials/wood.jpg',
+  canvas:'/assets/materials/canvas.jpg',
+  ceramic:'/assets/materials/ceramic.jpg'
+};
+
+const materialsByType = {
+  invite:[
+    {id:"cotton",name:"棉纹艺术纸",delta:0,desc:"细腻棉纹，触感柔和，适合邀请卡、感谢卡与高端纸品。"},
+    {id:"pearl",name:"珠光纸",delta:2.5,desc:"轻微珠光反射，适合浪漫、法式与正式婚礼。"},
+    {id:"kraft",name:"牛皮纸",delta:-1.2,desc:"自然纤维与暖棕色调，适合乡村、户外与复古主题。"},
+    {id:"vellum",name:"半透明硫酸纸",delta:3.2,desc:"半透明磨砂效果，常用于覆层邀请卡与叠层设计。"}
+  ],
+  table:[
+    {id:"cotton",name:"棉纹艺术纸",delta:0,desc:"适合菜单、席位卡和桌号卡。"},
+    {id:"pearl",name:"珠光纸",delta:2.0,desc:"更精致的反光质感，适合正式晚宴。"},
+    {id:"kraft",name:"牛皮纸",delta:-1.0,desc:"适合乡村、谷仓和自然风格。"},
+    {id:"vellum",name:"半透明硫酸纸",delta:2.8,desc:"适合叠层菜单与透明桌卡。"}
+  ],
+  sign:[
+    {id:"clear",name:"透明亚克力",delta:0,desc:"清透现代，适合迎宾牌、桌号牌和酒水牌。"},
+    {id:"frosted",name:"磨砂亚克力",delta:8,desc:"柔和雾面效果，减少反光并提升高级感。"},
+    {id:"wood",name:"天然木板",delta:12,desc:"真实木纹，适合户外、谷仓与乡村婚礼。"},
+    {id:"kraft",name:"轻质硬板",delta:-6,desc:"轻便经济，适合大尺寸座位图与临时标识。"}
+  ],
+  gift:[
+    {id:"canvas",name:"棉帆布",delta:0,desc:"适合 Tote Bag 与布艺伴手礼。"},
+    {id:"ceramic",name:"陶瓷",delta:4.5,desc:"光滑釉面，适合杯子和纪念器皿。"},
+    {id:"kraft",name:"牛皮纸包装",delta:-1.5,desc:"适合礼盒、标签和环保包装。"},
+    {id:"pearl",name:"珠光包装纸",delta:1.8,desc:"适合精致礼盒与高级伴手礼包装。"}
+  ]
+};
+let currentMaterialIndex=0;
+
+let sceneKey=sessionStorage.getItem("pod-home-scenario")||"gifts",currentGroup=0,currentProduct=0,currentMode="text",cart=[],cartShippingQuote=null;
+const scene=document.getElementById("scene"),stage=document.getElementById("stage"),popover=document.getElementById("popover");
+
+// ---- v25: storefront and POD Studio share the exact same 6 scenario records. ----
+function renderSceneMenu(){
+  const menu=document.getElementById("sceneMenu");
+  menu.innerHTML=HOME_SCENARIO_ORDER.map(key=>{
+    const s=sceneData[key];
+    return `<button class="scene-option ${key===sceneKey?"active":""}" data-scene="${key}"><b>${s.name}</b>${s.recommended?`<span>★ Recommended for you</span>`:""}<span>${s.note}</span></button>`;
+  }).join("");
+  menu.querySelectorAll("[data-scene]").forEach(b=>b.onclick=e=>{e.stopPropagation();switchScene(b.dataset.scene);menu.classList.remove("open")});
+}
+async function openStudio(productId="") {
+  // 临时关闭强制登录，部署时再启用
+  // try { await window.PODAuth?.require?.(); location.href=studioHref(productId); }
+  // catch(e) { /* user cancelled or server required */ }
+  location.href=studioHref(productId);
+}
+function studioHref(productId=""){
+  const q=new URLSearchParams({scenario:sceneKey,entry:"home"});
+  if(productId)q.set("product",productId);
+  return `studio.html?${q.toString()}`;
+}
+function switchScene(key=sceneKey){
+  sceneKey=sceneData[key]?key:"gifts";currentGroup=0;currentProduct=0;
+  sessionStorage.setItem("pod-home-scenario",sceneKey);
+  const s=sceneData[sceneKey];
+  scene.classList.remove("home-photo-scene");scene.classList.add("generated-scene","studio-scene");
+  scene.style.backgroundImage=s.image?`url("${s.image}")`:"";
+  document.getElementById("sceneTitle").textContent=s.name;
+  document.getElementById("catalogTitle").textContent=s.name;
+  document.getElementById("catalogAudience").textContent=(s.recommended?"★ Recommended for you · ":"")+s.note;
+  document.getElementById("sceneNoteTitle").textContent=s.name;
+  document.getElementById("sceneNoteText").textContent=s.note;
+  document.getElementById("hotspotCount").textContent=s.groups.length+" Kits";
+  document.getElementById("studioStartBtn").href=studioHref();
+  renderSceneMenu();renderHotspots();renderCatalog();popover.classList.remove("open");
+}
+document.getElementById("studioStartBtn").onclick=e=>{e.preventDefault();openStudio();};
+function focusKit(gi){
+  currentGroup=gi;
+  document.querySelectorAll(".hotspot").forEach(h=>h.classList.toggle("active",+h.dataset.group===gi));
+  const group=document.querySelector(`.group[data-group="${gi}"]`);
+  group?.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function renderHotspots(){
+  const wrap=document.getElementById("hotspots");
+  const s=sceneData[sceneKey];
+  const pos=i=>s.hotspots&&s.hotspots[i]?[` style="left:${s.hotspots[i][0]}%;top:${s.hotspots[i][1]}%;bottom:auto;transform:translate(-50%,-50%)"`,` style="left:calc(${s.hotspots[i][0]}% + 26px);top:${s.hotspots[i][1]}%;bottom:auto"`]:["",""];
+  wrap.innerHTML=s.groups.map((g,i)=>`
+    <button class="hotspot" data-slot="${i}" data-group="${i}" aria-label="${g[0]}"${pos(i)[0]}></button>
+    <div class="hotspot-label"${pos(i)[1]}>${g[0]}</div>`).join("");
+  wrap.querySelectorAll(".hotspot").forEach(h=>h.onclick=()=>focusKit(+h.dataset.group));
+}
+function renderCatalog(){
+  const s=sceneData[sceneKey],cat=document.getElementById("catalog");
+  cat.innerHTML=s.groups.map((g,gi)=>`
+    <section class="group" data-group="${gi}">
+      <div class="group-title"><b>${g[0]}</b><span>${g[1].length} PRODUCTS</span></div>
+      ${g[1].map((p,pi)=>`
+        <button class="product" data-g="${gi}" data-p="${pi}" data-product="${p.id}">
+          <div class="prod-img studio"${p.thumb?` style="background-image:url('${p.thumb}')"`:""}></div>
+          <div><b>${p.name}</b><span>${p.technique}${p.eco?" · ♻ Eco":""}</span></div>
+          <strong>€${p.price.toFixed(2)}</strong>
+        </button>`).join("")}
+    </section>`).join("");
+  cat.querySelectorAll(".product").forEach(b=>b.onclick=()=>openStudio(b.dataset.product));
+}
+function current(){return sceneData[sceneKey].groups[currentGroup][1][currentProduct]}
+
+function materialOptions(){
+  const type=current().type;
+  return materialsByType[type] || materialsByType.invite;
+}
+function currentMaterial(){
+  return materialOptions()[currentMaterialIndex] || materialOptions()[0];
+}
+function renderMaterials(){
+  currentMaterialIndex=0;
+  const grid=document.getElementById("materialGrid");
+  const options=materialOptions();
+  grid.innerHTML=options.map((m,i)=>`
+    <button class="material-option ${i===0?"active":""}" data-index="${i}">
+      <img class="material-photo" src="${materialPhotos[m.id]}" alt="${m.name}" data-preview="${i}">
+      <b>${m.name}</b>
+      <span>${m.delta===0?"基础价":(m.delta>0?"+¥"+m.delta.toFixed(2):"-¥"+Math.abs(m.delta).toFixed(2))}</span>
+    </button>
+  `).join("");
+
+  grid.querySelectorAll(".material-option").forEach(btn=>{
+    btn.addEventListener("click",e=>{
+      const i=+btn.dataset.index;
+      currentMaterialIndex=i;
+      grid.querySelectorAll(".material-option").forEach(x=>x.classList.toggle("active",x===btn));
+      updatePrice();
+    });
+  });
+
+  grid.querySelectorAll(".material-photo").forEach(img=>{
+    img.addEventListener("click",e=>{
+      e.stopPropagation();
+      const i=+img.dataset.preview;
+      const m=options[i];
+      document.getElementById("materialLightboxTitle").textContent=m.name;
+      document.getElementById("materialLightboxImage").src=materialPhotos[m.id];
+      document.getElementById("materialLightboxDesc").textContent=m.desc;
+      document.getElementById("materialLightbox").classList.add("open");
+    });
+  });
+}
+
+function openProduct(gi,pi,anchor){
+  const sc=sceneData[sceneKey];
+  currentGroup=gi;currentProduct=pi;currentMode="text";
+  document.querySelectorAll(".hotspot").forEach(h=>h.classList.toggle("active",+h.dataset.group===gi));
+  document.querySelectorAll(".product").forEach(p=>p.classList.toggle("active",+p.dataset.g===gi&&+p.dataset.p===pi));
+  const group=sceneData[sceneKey].groups[gi],prod=group[1][pi];
+  document.getElementById("popGroup").textContent=group[0].toUpperCase();
+  document.getElementById("popName").textContent=prod.name;
+  document.getElementById("customText").value="";
+  document.getElementById("fileInput").value="";
+  document.getElementById("fileList").textContent="尚未选择文件";
+  document.getElementById("qty").value=1;
+  renderMaterials();setMode("text");updatePrice();positionPopover(anchor);popover.classList.add("open");
+}
+function positionPopover(anchor){
+  if(!anchor)return;
+
+  const ar=anchor.getBoundingClientRect();
+  const margin=12;
+
+  // Keep the user's viewport in place.
+  // Default anchor: popup left-top = hotspot right-bottom + 10px.
+  const desiredLeft=ar.right+10;
+  const desiredTop=ar.bottom+10;
+
+  const preferredWidth=Math.min(360,Math.max(290,window.innerWidth-24));
+  popover.style.width=preferredWidth+"px";
+
+  let left=desiredLeft;
+  const top=desiredTop;
+
+  // Only correct horizontal overflow. Do not move the page vertically.
+  if(left+preferredWidth>window.innerWidth-margin){
+    const leftSide=ar.left-preferredWidth-10;
+    left=leftSide>=margin
+      ? leftSide
+      : Math.max(margin,window.innerWidth-preferredWidth-margin);
+  }
+
+  // The popup becomes shorter when the point is lower in the viewport.
+  // Its body scrolls internally, so opening it never pushes the page down.
+  const availableBelow=Math.max(120,window.innerHeight-top-margin);
+  popover.style.maxHeight=Math.min(680,availableBelow)+"px";
+
+  popover.style.left=Math.round(left)+"px";
+  popover.style.top=Math.round(top)+"px";
+
+  requestAnimationFrame(()=>{
+    const body=popover.querySelector(".pop-body");
+    if(body)body.scrollTop=0;
+  });
+}
+function setMode(mode){
+  currentMode=mode;
+  document.querySelectorAll(".mode").forEach(m=>m.classList.toggle("active",m.dataset.mode===mode));
+  document.getElementById("textField").style.display=mode==="text"?"grid":"none";
+  document.getElementById("uploadField").style.display=mode==="upload"?"grid":"none";
+  document.getElementById("laterField").style.display=mode==="later"?"block":"none";
+}
+function priceInfo(qty){
+  const material=currentMaterial();
+  const base=Math.max(0,current().price + (material ? material.delta : 0));
+  let discount=0,tier=0,label="1–9 件 · 标准价";
+  if(qty>=50){discount=.15;tier=3;label="50+ 件 · 85 折"}
+  else if(qty>=30){discount=.10;tier=2;label="30–49 件 · 9 折"}
+  else if(qty>=10){discount=.05;tier=1;label="10–29 件 · 95 折"}
+  const unit=base*(1-discount);
+  return {unit,total:unit*qty,tier,label}
+}
+function updatePrice(){
+  const qty=Math.max(1,parseInt(document.getElementById("qty").value)||1),info=priceInfo(qty);
+  document.getElementById("unitPrice").textContent="¥"+info.unit.toFixed(2);
+  document.getElementById("totalPrice").textContent="¥"+info.total.toFixed(2);
+  document.getElementById("tierText").textContent=info.label;
+  document.querySelectorAll(".tier-pill").forEach(x=>x.classList.toggle("active",+x.dataset.tier===info.tier));
+}
+function addCart(){
+  const qty=Math.max(1,parseInt(document.getElementById("qty").value)||1),prod=current(),info=priceInfo(qty);
+  const files=[...document.getElementById("fileInput").files].map(f=>f.name);
+  let customization="";
+  if(currentMode==="text") customization=document.getElementById("customText").value.trim()||"未填写文字";
+  if(currentMode==="upload"){
+    if(files.length===0){showToast("请先上传设计文件");return}
+    customization="设计文件："+files.join("、");
+  }
+  if(currentMode==="later") customization="购物车后填写";
+  const material=currentMaterial();
+  const sku=prod.name.toUpperCase().replace(/[^A-Z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,48);
+  cart.push({scene:sceneData[sceneKey].name,sku,name:prod.name,qty,unit:info.unit,total:info.total,mode:currentMode,customization,material:material.name,materialId:material.id});
+  cartShippingQuote=null;document.getElementById("cartShippingResult").textContent="购物车已变化，请重新计算配送和税费。";renderCart();showToast("已加入购物车："+prod.name);
+}
+function renderCart(){
+  document.getElementById("cartCount").textContent=cart.reduce((a,b)=>a+b.qty,0);
+  const list=document.getElementById("cartList");
+  if(!cart.length)list.innerHTML='<div class="cart-empty">购物车暂无商品</div>';
+  else list.innerHTML=cart.map(i=>`
+    <div class="cart-item">
+      <b>${escHtml(i.name)}</b>
+      <span>${escHtml(i.scene)} · ${i.qty} 件 · ¥${i.unit.toFixed(2)}/件</span>
+      <span>材质：${escHtml(i.material || "默认材质")}</span>
+      <span>${escHtml(i.customization)}</span>
+      <strong>¥${i.total.toFixed(2)}</strong>
+    </div>`).join("");
+  const subtotal=cart.reduce((a,b)=>a+b.total,0);
+  document.getElementById("cartTotalLabel").textContent=cartShippingQuote?"预计总计":"商品小计";
+  document.getElementById("cartTotal").textContent="¥"+(cartShippingQuote?cartShippingQuote.grand_total:subtotal).toFixed(2);
+}
+function escHtml(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function showToast(t){
+  const el=document.getElementById("toast");el.textContent=t;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),1800)
+}
+
+document.getElementById("popClose").onclick=()=>popover.classList.remove("open");
+document.querySelectorAll(".mode").forEach(m=>m.onclick=()=>setMode(m.dataset.mode));
+document.getElementById("qty").oninput=updatePrice;
+document.getElementById("fileInput").onchange=e=>{
+  const names=[...e.target.files].map(f=>f.name);
+  document.getElementById("fileList").textContent=names.length?names.join(" · "):"尚未选择文件";
+};
+document.getElementById("addCart").onclick=addCart;
+document.getElementById("detailBtn").onclick=()=>showToast("这里可连接 Shopify / WooCommerce / 自建商品详情");
+document.getElementById("cartBtn").onclick=()=>document.getElementById("cartPanel").classList.add("open");
+document.getElementById("cartClose").onclick=()=>document.getElementById("cartPanel").classList.remove("open");
+document.getElementById("materialLightboxClose").onclick=()=>document.getElementById("materialLightbox").classList.remove("open");
+document.getElementById("materialLightbox").addEventListener("click",e=>{
+  if(e.target.id==="materialLightbox") document.getElementById("materialLightbox").classList.remove("open");
+});
+document.getElementById("resetBtn").onclick=()=>{popover.classList.remove("open");document.querySelectorAll(".hotspot,.product").forEach(x=>x.classList.remove("active"));scene.style.transform=""};
+
+stage.addEventListener("mousemove",e=>{
+  if(window.innerWidth<1000||sceneKey==="cream")return;
+  const r=stage.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+  scene.style.transform=`rotateY(${x*1.3}deg) rotateX(${-y*.8}deg) scale(1.004)`;
+});
+stage.addEventListener("mouseleave",()=>scene.style.transform="");
+
+function repositionOpenPopover(){
+  if(!popover.classList.contains("open"))return;
+  const anchor=document.querySelector(`.hotspot[data-group="${currentGroup}"]`);
+  if(anchor) positionPopover(anchor);
+}
+window.addEventListener("resize",repositionOpenPopover);
+window.addEventListener("scroll",repositionOpenPopover,{passive:true});
+
+
+const agentKB = [
+  {keys:["材质","纸","棉纹","珠光","牛皮纸","硫酸纸"],text:"纸品默认可选棉纹艺术纸、珠光纸、牛皮纸、半透明硫酸纸。不同材质会改变单价，弹窗中的材质卡可以查看纹理大图。"},
+  {keys:["亚克力","迎宾牌","标识","木板"],text:"标识类可选透明亚克力、磨砂亚克力、天然木板和轻质硬板。透明适合现代与海边，磨砂减少反光，木板适合户外和Rustic场景。"},
+  {keys:["数量","价格","折扣"],text:"演示价格规则：1–9件标准价；10–29件95折；30–49件9折；50件以上85折。材质增量先加入基础价，再应用数量折扣。"},
+  {keys:["上传","设计","文件","格式"],text:"设计上传支持 PNG/JPG/JPEG/WEBP/SVG/PDF/AI/PSD/EPS，可多文件上传。生产环境应增加文件病毒扫描、色彩空间/分辨率校验和对象存储。"},
+  {keys:["效果图","支付","交付","14天","2小时"],text:"业务承诺示例：支付后2小时内确认最终效果图和材质，并发送到客户邮箱；确认后进入生产和配送流程，预计14天内送达。"},
+  {keys:["rag","架构","agent","原理"],text:"Agent采用 Router → RAG Retrieval → Planner/Tool Calling → Connector Registry → State Store 的结构。模型只负责理解和生成；产品、价格、订单、物流等事实来自检索和业务API。"},
+  {keys:["场景","garden","studio","工作室"],text:"首页第一屏与 POD 工作室共用同一组 6 个业务场景；切换场景后，场景图、推荐套装和商品列表会同步更新，并把当前场景带入工作室。"}
+];
+
+const demoOrders = {
+  "POD-2026-1008":{status:"Proofing",items:"Acrylic Welcome Sign × 1",material:"磨砂亚克力",next:"预计在支付后2小时内发送最终效果图和材质确认邮件。"},
+  "POD-2026-1009":{status:"Production",items:"Menu Card × 50",material:"珠光纸",next:"效果已确认，当前生产中。"}
+};
+const demoTracking = {
+  "TRK-DEMO-8821":{carrier:"DHL",status:"In transit",eta:"预计 3–5 天内送达",last:"Basel Distribution Center · 已完成分拣"},
+  "TRK-DEMO-9912":{carrier:"UPS",status:"Delivered",eta:"已送达",last:"已签收"}
+};
+
+function agentRetrieve(query){
+  const q=query.toLowerCase();
+  return agentKB
+    .map(d=>({d,score:d.keys.reduce((s,k)=>s+(q.includes(k.toLowerCase())?1:0),0)}))
+    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3).map(x=>x.d.text);
+}
+function agentRoute(query){
+  const q=query.toLowerCase();
+  if(q.includes("订单") || q.includes("pod-")) return "order";
+  if(q.includes("物流") || q.includes("trk-") || q.includes("快递")) return "tracking";
+  if(q.includes("架构") || q.includes("rag") || q.includes("原理")) return "docs";
+  if(q.includes("生成") || q.includes("文案") || q.includes("设计需求")) return "generate";
+  if(q.includes("定制") || q.includes("材质") || q.includes("产品") || q.includes("婚礼")) return "customize";
+  return "rag";
+}
+function addAgentMessage(role,text,toolHtml=""){
+  const box=document.getElementById("agentMessages");
+  const el=document.createElement("div"); el.className="msg "+role;
+  el.textContent=text;
+  if(toolHtml){
+    const tool=document.createElement("div");tool.className="tool-result";tool.innerHTML=toolHtml;el.appendChild(tool);
+  }
+  box.appendChild(el);box.scrollTop=box.scrollHeight;
+}
+function extractToken(query,prefix){
+  const m=query.toUpperCase().match(new RegExp(prefix+"[A-Z0-9\\-]*"));
+  return m?m[0]:null;
+}
+async function runAgent(query){
+  addAgentMessage("user",query);
+  const route=agentRoute(query),rag=agentRetrieve(query);
+  // Production integration point: if /api/agent/chat exists, backend can override local demo.
+  try{
+    const r=await fetch("/api/agent/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:query,scene:sceneKey,cart})});
+    // fallback:true = backend has no LLM configured → use the built-in demo answers below.
+    if(r.ok){const data=await r.json();if(!data.fallback){addAgentMessage("agent",data.answer||"已处理。",escHtml(data.tool_summary||"").replace(/\n/g,"<br>"));return}}
+  }catch(e){}
+  if(route==="order"){
+    const id=extractToken(query,"POD-")||"POD-2026-1008";const o=demoOrders[id];
+    if(o) addAgentMessage("agent","已从订单工具读取到订单状态。",`订单：${id}<br>状态：${o.status}<br>商品：${o.items}<br>材质：${o.material}<br>下一步：${o.next}`);
+    else addAgentMessage("agent","没有找到这个演示订单。接入 Shopify/WooCommerce/ERP 后，这里会调用真实订单 API。");
+    return;
+  }
+  if(route==="tracking"){
+    const id=extractToken(query,"TRK-")||"TRK-DEMO-8821";const t=demoTracking[id];
+    if(t) addAgentMessage("agent","已从物流工具读取最新节点。",`运单：${id}<br>承运商：${t.carrier}<br>状态：${t.status}<br>最新节点：${t.last}<br>${t.eta}`);
+    else addAgentMessage("agent","没有找到这个演示运单。生产环境可通过 AfterShip / Shippo / 17TRACK 或承运商 API 查询。");
+    return;
+  }
+  if(route==="docs"){
+    addAgentMessage("agent","系统架构、前端/后端/数据架构与 Agent 设计已经放在项目 docs/ARCHITECTURE.md 中。对话只处理业务任务，不在会话里展开系统内部架构。");
+    return;
+  }
+  if(route==="generate"){
+    const context=rag.join("\n");
+    addAgentMessage("agent","我先把需求整理成可生产的设计 Brief：\n• 婚礼主题："+sceneData[sceneKey].name+"\n• 建议保持当前场景的字体、色彩和材质语言\n• 输出：主标题 / 新人姓名 / 日期 / 场地 / 可选二维码\n• 文件：印刷版 + 预览图\n• 生产前检查：尺寸、出血、分辨率、字体转曲/嵌入\n\n如果接入图像生成或模板渲染 API，下一步可以直接生成预览，再写回订单 Proofing 状态。"+(context?"\n\n检索到的业务知识：\n"+context:""));
+    return;
+  }
+  if(route==="customize"){
+    const ctx=rag.length?rag.join("\n"):"建议先选场景，再选对应 SKU、材质、数量和定制方式。";
+    addAgentMessage("agent","可以。我会按“场景 → 产品 → 材质 → 数量 → 设计内容 → 效果确认 → 生产/配送”来辅助定制。\n\n"+ctx+"\n\n你也可以直接在当前产品热点弹窗里选材质、上传设计并加入购物车。");
+    return;
+  }
+  addAgentMessage("agent",rag.length?rag.join("\n\n"):"我可以处理婚礼POD定制、材质/价格、设计需求、订单状态、效果确认和物流查询。");
+}
+document.getElementById("agentLauncher").onclick=()=>{
+  const p=document.getElementById("agentPanel");p.classList.toggle("open");
+  if(p.classList.contains("open") && !document.getElementById("agentMessages").children.length){
+    addAgentMessage("agent","我是这个 POD 婚礼业务的会话 Agent。可以帮你选场景和材质、整理定制内容、生成设计需求、查看订单以及查询物流。");
+  }
+};
+document.getElementById("agentClose").onclick=()=>document.getElementById("agentPanel").classList.remove("open");
+document.getElementById("agentSend").onclick=()=>{
+  const input=document.getElementById("agentInput"),q=input.value.trim();if(!q)return;input.value="";runAgent(q);
+};
+document.getElementById("agentInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();document.getElementById("agentSend").click();}
+});
+document.querySelectorAll("[data-agent-prompt]").forEach(b=>b.addEventListener("click",()=>{
+  document.getElementById("agentPanel").classList.add("open");runAgent(b.dataset.agentPrompt);
+}));
+document.querySelectorAll("[data-jump-scene]").forEach(b=>b.addEventListener("click",()=>{
+  switchScene(b.dataset.jumpScene);window.scrollTo({top:0,behavior:"smooth"});
+}));
+
+
+document.getElementById("sceneCurrent").addEventListener("click",e=>{e.stopPropagation();document.getElementById("sceneMenu").classList.toggle("open")});
+document.addEventListener("click",()=>document.getElementById("sceneMenu").classList.remove("open"));
+
+
+function cartPayload(){
+  return cart.map(i=>({sku:i.sku,name:i.name,quantity:i.qty,material:i.material,material_id:i.materialId,customization:i.customization}));
+}
+
+async function estimateCartShipping(country=document.getElementById("cartCountry").value,postal=document.getElementById("cartPostal").value,shippingMethod=document.getElementById("cartShippingMethod")?.value||"standard"){
+  if(!cart.length){showToast("购物车暂无商品");return null}
+  const result=document.getElementById("cartShippingResult");result.textContent="计算中…";
+  try{
+    const r=await fetch("/api/storefront/shipping/quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cart:cartPayload(),country,postal_code:postal,currency:"CNY",shipping_method:shippingMethod})});
+    const d=await r.json();if(!r.ok)throw new Error(d.message||d.error||"配送试算失败");
+    cartShippingQuote=d;
+    const lg=window.WeddingI18n?.lang?.()||"zh";const T=lg==="de"?{tax:"Geschätzte Steuer",total:"Geschätzte Summe"}:lg==="en"?{tax:"Estimated tax",total:"Estimated total"}:{tax:"预计税费",total:"预计总计"};
+    result.innerHTML=`${escHtml(d.zone.name)} · ${d.shipping_options.map(o=>`${o.id===d.selected_shipping?"<b>":""}${escHtml(o.label)} ¥${o.amount} (${escHtml(o.eta_days)})${o.id===d.selected_shipping?"</b>":""}`).join("<br>")}<br>${T.tax} ¥${d.tax.amount} · ${escHtml(d.tax.mode)} · ${escHtml(d.tax.engine||"regional_rules")}<br><strong>${T.total} ¥${d.grand_total}</strong><br><span style="font-size:10px;color:var(--muted)">Rate engine: ${escHtml(d.rate_engine||"regional_rules")}</span>`;
+    renderCart();return d;
+  }catch(e){cartShippingQuote=null;result.textContent=e.message;renderCart();return null}
+}
+async function refreshCheckoutQuote(){
+  const country=document.getElementById("coCountry").value.trim().toUpperCase()||"CH",postal=document.getElementById("coPostal").value.trim();
+  const method=document.getElementById("coShippingMethod")?.value||"standard";const d=await estimateCartShipping(country,postal,method);
+  if(d){
+    const lg=window.WeddingI18n?.lang?.()||"zh";const T=lg==="de"?{qty:"Artikelmenge",sub:"Server-Zwischensumme",ship:"Versand",tax:"Geschätzte Steuer",total:"Geschätzter Zahlbetrag",note:"Der endgültige Betrag wird vor der PayPal-Erstellung serverseitig erneut berechnet."}:lg==="en"?{qty:"Item quantity",sub:"Server subtotal",ship:"Shipping",tax:"Estimated tax",total:"Estimated payment total",note:"The final amount is recalculated by the server before PayPal order creation."}:{qty:"商品数量",sub:"服务端商品小计",ship:"运费",tax:"预计税费",total:"预计支付总额",note:"最终金额会在 PayPal 创建前由服务端再次计算。"};
+    document.getElementById("checkoutSummary").innerHTML=`${T.qty}：${cart.reduce((a,b)=>a+b.qty,0)}<br>${T.sub}：¥${d.subtotal.toFixed(2)}<div class="quote-breakdown">${T.ship}（${escHtml((d.shipping_options.find(o=>o.id===d.selected_shipping)||{}).label||d.selected_shipping)}）：¥${d.shipping_amount.toFixed(2)}<br>${T.tax}：¥${d.tax.amount.toFixed(2)} (${escHtml(d.tax.mode)})<br><b>${T.total}：¥${d.grand_total.toFixed(2)}</b><br><span style="color:var(--muted)">${T.note}</span></div>`;
+  }
+  return d;
+}
+document.getElementById("cartQuoteBtn").onclick=()=>estimateCartShipping();
+
+function openCheckout(){
+  if(!cart.length){showToast("购物车暂无商品");return}
+  document.getElementById("coCountry").value=document.getElementById("cartCountry").value;
+  document.getElementById("coPostal").value=document.getElementById("cartPostal").value;document.getElementById("coShippingMethod").value=document.getElementById("cartShippingMethod")?.value||"standard";
+  document.getElementById("checkoutSummary").innerHTML="正在由服务端计算商品、运费和税费…";
+  document.getElementById("checkoutModal").classList.add("open");
+  refreshCheckoutQuote();
+}
+document.getElementById("checkoutBtn").onclick=openCheckout;
+document.getElementById("checkoutClose").onclick=()=>document.getElementById("checkoutModal").classList.remove("open");
+document.getElementById("checkoutCancel").onclick=()=>document.getElementById("checkoutModal").classList.remove("open");
+document.getElementById("coCountry").addEventListener("change",refreshCheckoutQuote);
+document.getElementById("coPostal").addEventListener("blur",refreshCheckoutQuote);document.getElementById("coShippingMethod").addEventListener("change",refreshCheckoutQuote);document.getElementById("cartShippingMethod").addEventListener("change",()=>estimateCartShipping());
+document.getElementById("paypalPayBtn").onclick=async()=>{
+  const email=document.getElementById("coEmail").value.trim();
+  if(!email){showToast("请填写邮箱");return}
+  const btn=document.getElementById("paypalPayBtn");btn.disabled=true;btn.textContent="创建支付中…";
+  try{
+    const r=await fetch("/api/payments/paypal/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+      cart:cartPayload(),
+      customer:{name:document.getElementById("coName").value.trim(),email},
+      shipping:{
+        address1:document.getElementById("coAddress").value.trim(),
+        city:document.getElementById("coCity").value.trim(),
+        postal_code:document.getElementById("coPostal").value.trim(),
+        country:document.getElementById("coCountry").value.trim().toUpperCase()
+      },
+      currency:document.getElementById("coCurrency").value,
+      shipping_method:document.getElementById("coShippingMethod").value
+    })});
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.message||data.error||"支付创建失败");
+    if(data.approval_url){location.href=data.approval_url;return}
+    throw new Error("PayPal 未返回 approval URL");
+  }catch(e){showToast(e.message)}
+  finally{btn.disabled=false;btn.textContent="前往 PayPal 支付"}
+};
+
+renderSceneMenu();renderCart();switchScene(sceneKey);
+</script>
+
+
+
+
+<section class="focus-section">
+  <div class="focus-shell">
+    <div class="focus-grid">
+      <div class="focus-copy">
+        <div class="focus-kicker">FROM SCENE TO PRODUCTS</div>
+        <h2>婚礼不是一个单品，<br>而是一整套视觉系统</h2>
+        <p>第一屏负责让你看到完整婚礼场景；第二屏只展示真正会进入生产的核心物品。邀请卡、桌面纸品、迎宾标识与伴手礼共享同一套视觉语言，不再让用户在几十个分类里迷路。</p>
+        <div class="focus-steps"><span>01 场景</span><span>02 套装</span><span>03 商品</span><span>04 设计</span><span>05 寄送</span></div>
+      </div>
+      <div class="product-wall">
+        <figure class="product-shot"><img src="assets/mockups/invitation.jpg" alt="Invitation"><figcaption><b>邀请卡</b><span>Stationery</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/mockups/welcome_sign.jpg" alt="Welcome sign"><figcaption><b>迎宾标识</b><span>Signage</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/mockups/tote.jpg" alt="Tote bag"><figcaption><b>伴手礼包</b><span>Gift & bag</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/mockups/mug.jpg" alt="Mug"><figcaption><b>纪念杯具</b><span>Drinkware</span></figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="focus-section studio-story" id="showcase">
+  <div class="focus-shell">
+    <div class="focus-grid">
+      <div class="studio-visual">
+        <div class="studio-stack">
+          <img src="assets/showcase/invitation-monogram.jpg" alt="Invitation design">
+          <img src="assets/showcase/tote-leaves.jpg" alt="Tote design">
+          <img src="assets/showcase/hoodie-wave.jpg" alt="Hoodie design">
+        </div>
+      </div>
+      <div class="focus-copy">
+        <div class="focus-kicker">ONE DESIGN · MANY PRODUCTS</div>
+        <h2>上传一次设计，<br>整套商品同步完成</h2>
+        <p>工作室只保留六个真正有用的业务场景。选一个 Kit 后，直接进入设计、定价、寄送和确认，不再重复切换场景页或分类页。</p>
+        <div class="workflow-list">
+          <div class="workflow-item"><i>1</i><div><b>选一个场景 Kit</b><span>Creator、Community、Corporate、Art、Wedding & Gifts、Seasonal。</span></div></div>
+          <div class="workflow-item"><i>2</i><div><b>统一设计整套商品</b><span>上传一次图案，逐件微调位置、颜色和材质。</span></div></div>
+          <div class="workflow-item"><i>3</i><div><b>确认利润与寄送</b><span>商家按单生产；企业支持批量与多地址；婚礼按活动日期倒推交期。</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<script>
+
+let wbHeroData="";
+let wbGalleryData=[];
+
+function escapeSiteText(value=""){
+  return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function deriveCustomizedNames(){
+  for(let i=cart.length-1;i>=0;i--){
+    const s=String(cart[i].customization||"");
+    const first=s.split(/\n|\//)[0].trim();
+    if(first.length<80 && (first.includes("&") || first.includes("和") || first.includes("+"))){
+      return first.replace(/^设计文件：/,"").trim();
+    }
+  }
+  return document.getElementById("coupleNames").textContent || "Amelia & Noah";
+}
+function readFileAsDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);
+  });
+}
+function parseSchedule(text){
+  return String(text).split("\n").map(x=>x.trim()).filter(Boolean).map(line=>{
+    const parts=line.split("|").map(x=>x.trim());
+    return {time:parts[0]||"",title:parts[1]||"",desc:parts.slice(2).join(" | ")||""};
+  });
+}
+function weddingProfile(){
+  return {
+    sceneKey,
+    sceneName:sceneData[sceneKey]?.name||sceneKey,
+    sceneColors:sceneData[sceneKey]?.colors||["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"],
+    names:document.getElementById("wbNames").value.trim(),
+    date:document.getElementById("wbDate").value,
+    time:document.getElementById("wbTime").value,
+    venue:document.getElementById("wbVenue").value.trim(),
+    address:document.getElementById("wbAddress").value.trim(),
+    mapUrl:document.getElementById("wbMapUrl").value.trim(),
+    intro:document.getElementById("wbIntro").value.trim(),
+    schedule:parseSchedule(document.getElementById("wbSchedule").value),
+    rsvpEmail:document.getElementById("wbRsvpEmail").value.trim(),
+    rsvpUrl:document.getElementById("wbRsvpUrl").value.trim(),
+    note:document.getElementById("wbNote").value.trim(),
+    accent:document.getElementById("wbAccent").value,
+    density:document.getElementById("wbDensity").value,
+    heroAlign:document.getElementById("wbHeroAlign").value,
+    radius:document.getElementById("wbRadius").value,
+    heroPhoto:wbHeroData,
+    gallery:wbGalleryData,
+    features:{
+      countdown:document.getElementById("ftCountdown").checked,
+      timeline:document.getElementById("ftTimeline").checked,
+      map:document.getElementById("ftMap").checked,
+      gallery:document.getElementById("ftGallery").checked,
+      rsvp:document.getElementById("ftRsvp").checked,
+      share:document.getElementById("ftShare").checked,
+      calendar:document.getElementById("ftCalendar").checked,
+      addressCopy:document.getElementById("ftAddressCopy").checked
+    }
+  };
+}
+function buildWeddingSite(p){
+  const e=escapeSiteText;
+  const dateObj=new Date((p.date||"2027-06-18")+"T"+(p.time||"15:00")+":00");
+  const readable=isNaN(dateObj)?e(p.date):dateObj.toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const mapUrl=p.mapUrl || ("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(p.address||p.venue));
+  const heroStyle=p.heroPhoto?`background-image:linear-gradient(180deg,rgba(25,20,17,.14),rgba(25,20,17,.54)),url("${p.heroPhoto}")`:"";
+  const gap=p.density==="compact"?"54px":p.density==="normal"?"78px":"108px";
+  const radius=p.radius==="minimal"?"12px":p.radius==="pill"?"32px":"22px";
+  const align=p.heroAlign||"center";
+  
+const inviteMessages={
+en:{count_title:'Until we say “I do”',count_desc:'We cannot wait to celebrate this day with you.',schedule:'Wedding schedule',schedule_desc:'A simple guide to the celebration.',join:'Join us here',moments:'Moments we love',gallery_desc:'Click any photo to view it larger.',rsvp_title:'Will you join us?',rsvp_desc:'Please RSVP and let us know if there is anything we should know before the celebration.',name:'Your name',guests:'Number of guests'},
+zh:{count_title:'距离我们说“我愿意”',count_desc:'期待与你一起庆祝这一天。',schedule:'婚礼流程',schedule_desc:'当天活动安排。',join:'婚礼地点',moments:'我们的故事',gallery_desc:'点击照片可放大查看。',rsvp_title:'你会来参加吗？',rsvp_desc:'请回复是否出席，也欢迎告诉我们饮食或其他需求。',name:'您的姓名',guests:'出席人数'},
+de:{count_title:'Bis wir „Ja“ sagen',count_desc:'Wir freuen uns darauf, diesen Tag mit euch zu feiern.',schedule:'Tagesablauf',schedule_desc:'Ein kurzer Überblick über unseren Hochzeitstag.',join:'Hier feiern wir',moments:'Unsere Geschichte',gallery_desc:'Klicken Sie auf ein Foto, um es größer anzusehen.',rsvp_title:'Seid ihr dabei?',rsvp_desc:'Bitte gebt uns Bescheid, ob ihr kommt, und teilt uns besondere Wünsche mit.',name:'Ihr Name',guests:'Anzahl Gäste'}
+};
+
+const gallery=p.gallery||[];
+  const schedule=p.schedule||[];
+  const sceneColors=p.sceneColors||["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"];
+  const galleryHtml=gallery.length?gallery.map((src,i)=>`<button class="gallery-item" onclick="openLightbox(${i})"><img src="${src}" alt="Wedding photo ${i+1}"/></button>`).join(""):`<div class="gallery-placeholder">Upload wedding photos in the editor to replace this placeholder.</div>`;
+  const timelineHtml=schedule.map(x=>`<div class="event"><time>${e(x.time)}</time><div><b>${e(x.title)}</b><p>${e(x.desc)}</p></div></div>`).join("");
+  const calendarStart=(p.date||"2027-06-18").replaceAll("-","") + "T" + (p.time||"1500").replace(":","") + "00";
+  const calendarEnd=(p.date||"2027-06-18").replaceAll("-","") + "T235900";
+
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${e(p.names)} — Wedding Invitation</title>
+<style>
+:root{--accent:${e(p.accent)};--c1:${sceneColors[0]};--c2:${sceneColors[1]};--c3:${sceneColors[2]};--radius:${radius};--gap:${gap}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:#292521;background:#f8f4ef;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:inherit}.hero{min-height:100vh;padding:28px;display:grid;place-items:center;background:${heroStyle||`radial-gradient(circle at 50% 16%,rgba(255,255,255,.88),transparent 28%),linear-gradient(155deg,var(--c1),var(--c2) 48%,var(--c3))`};background-size:cover;background-position:center;position:relative;overflow:hidden}
+.hero:before{content:"";position:absolute;width:38vw;height:58vw;max-height:600px;max-width:400px;border:18px solid rgba(255,255,255,.36);border-bottom:0;border-radius:50% 50% 0 0;left:50%;bottom:-80px;transform:translateX(-50%)}
+.hero-card{position:relative;z-index:2;text-align:${align};width:min(860px,94vw);color:${p.heroPhoto?"#fff":"#57483e"}}
+.eyebrow{font-size:10px;letter-spacing:.28em;text-transform:uppercase;margin-bottom:18px}.hero h1{font:italic clamp(52px,9vw,124px) Georgia,serif;font-weight:400;line-height:.92;margin:0}.hero .date{font-size:12px;letter-spacing:.22em;margin-top:24px}.hero .intro{max-width:620px;margin:24px ${align==="left"?"auto 0":align==="right"?"0 0 0 auto":"auto"};line-height:1.8;font-size:14px}
+.scroll-note{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.16em;opacity:.75}
+.section{padding:var(--gap) 7vw;max-width:1280px;margin:auto}.section-title small{font-size:9px;letter-spacing:.2em;color:#8a7669}.section-title h2{font:44px Georgia,serif;font-weight:500;margin:8px 0 12px}.section-title p{color:#7e746d;line-height:1.75;max-width:700px;font-size:13px}
+.countdown{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:26px}.count{border:1px solid rgba(50,40,34,.12);border-radius:var(--radius);background:#fff;padding:20px;text-align:center}.count b{font:36px Georgia,serif}.count span{display:block;font-size:9px;color:#8a7d75;margin-top:5px}
+.timeline{display:grid;gap:0;margin-top:26px}.event{display:grid;grid-template-columns:90px 1fr;gap:20px;padding:18px 0;border-bottom:1px solid rgba(50,40,34,.12)}.event time{font:18px Georgia,serif;color:var(--accent)}.event b{font-size:13px}.event p{margin:6px 0 0;color:#7e746d;font-size:11px;line-height:1.6}
+.venue-card{margin-top:26px;border-radius:var(--radius);overflow:hidden;display:grid;grid-template-columns:1.05fr .95fr;min-height:350px;border:1px solid rgba(50,40,34,.11);background:#fff}.map-art{background:linear-gradient(135deg,var(--c2),var(--c1));position:relative;overflow:hidden}.map-art:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(32deg,transparent 0 35px,rgba(255,255,255,.28) 36px 38px),repeating-linear-gradient(112deg,transparent 0 48px,rgba(77,66,59,.08) 49px 51px)}.map-pin{position:absolute;left:52%;top:48%;width:30px;height:30px;background:var(--accent);border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 10px 22px rgba(40,30,24,.2)}.venue-info{padding:34px;display:flex;flex-direction:column;justify-content:center}.venue-info h3{font:30px Georgia,serif;margin:0 0 8px}.venue-info p{font-size:12px;line-height:1.65;color:#776d67}.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.tool{border:1px solid rgba(50,40,34,.13);background:#fff;border-radius:999px;padding:10px 13px;text-decoration:none;font-size:10px;cursor:pointer}
+.gallery{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:26px}.gallery-item{border:0;padding:0;background:none;cursor:zoom-in;border-radius:var(--radius);overflow:hidden;min-height:250px}.gallery-item:first-child{grid-row:span 2;min-height:510px}.gallery-item img{width:100%;height:100%;object-fit:cover;display:block}.gallery-placeholder{grid-column:1/-1;min-height:300px;border:1px dashed rgba(50,40,34,.18);border-radius:var(--radius);display:grid;place-items:center;color:#8a7f77;font-size:11px;background:#fff}
+.rsvp{background:#2d2926;color:#fff;border-radius:32px;margin:var(--gap) auto;max-width:1180px;padding:54px}.rsvp h2{font:44px Georgia,serif;margin:0 0 10px}.rsvp p{color:rgba(255,255,255,.68);font-size:12px;line-height:1.7}.rsvp-form{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:20px}.rsvp input{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;border-radius:12px;padding:12px;outline:none}.rsvp button{border:0;border-radius:12px;padding:12px 18px;background:#fff;color:#292521;cursor:pointer}.note{font-size:10px;margin-top:12px!important}
+.footer{text-align:center;padding:50px 20px 70px;color:#837770}.footer b{font:italic 28px Georgia,serif;color:#5d4f46}
+.invite-lang{position:fixed;right:18px;top:18px;z-index:25;display:flex;gap:2px;padding:3px;border-radius:9px;background:rgba(255,255,255,.9);backdrop-filter:blur(12px)}
+.invite-lang button{border:0;background:transparent;padding:7px 9px;border-radius:7px;font-size:10px;cursor:pointer;color:#766d66}.invite-lang button.active{background:#292521;color:#fff}
+.floating{position:fixed;right:18px;bottom:18px;z-index:20;display:flex;gap:7px}.floating button,.floating a{width:42px;height:42px;border-radius:50%;border:1px solid rgba(60,45,35,.12);background:rgba(255,255,255,.88);display:grid;place-items:center;text-decoration:none;cursor:pointer;box-shadow:0 8px 20px rgba(40,30,24,.12);font-size:12px}
+.lightbox{position:fixed;inset:0;z-index:30;background:rgba(20,17,15,.84);display:none;place-items:center;padding:24px}.lightbox.open{display:grid}.lightbox img{max-width:94vw;max-height:90vh;border-radius:16px}
+@media(max-width:760px){.section{padding:70px 20px}.countdown{grid-template-columns:repeat(2,1fr)}.venue-card{grid-template-columns:1fr}.map-art{min-height:250px}.gallery{grid-template-columns:1fr 1fr}.gallery-item:first-child{grid-column:1/-1;grid-row:auto;min-height:380px}.rsvp{margin:70px 14px;padding:34px 22px;border-radius:24px}.rsvp-form{grid-template-columns:1fr}.hero{padding:18px}.hero:before{width:70vw;height:90vw}}
+</style>
+</head>
+<body>
+<div class="invite-lang"><button data-invite-lang="zh">中文</button><button data-invite-lang="en">EN</button><button data-invite-lang="de">DE</button></div>
+<section class="hero">
+  <div class="hero-card">
+    <div class="eyebrow">${e(p.sceneName)} · Wedding Invitation</div>
+    <h1>${e(p.names)}</h1>
+    <div class="date">${e(readable)} · ${e(p.time)}</div>
+    <div class="intro">${e(p.intro)}</div>
+  </div>
+  <div class="scroll-note">SCROLL TO DISCOVER</div>
+</section>
+
+${p.features.countdown?`<section class="section"><div class="section-title"><small>COUNTDOWN</small><h2><span data-wi="count_title">Until we say “I do”</span></h2><p><span data-wi="count_desc">We cannot wait to celebrate this day with you.</span></p></div><div class="countdown"><div class="count"><b id="cdD">--</b><span>DAYS</span></div><div class="count"><b id="cdH">--</b><span>HOURS</span></div><div class="count"><b id="cdM">--</b><span>MINUTES</span></div><div class="count"><b id="cdS">--</b><span>SECONDS</span></div></div></section>`:""}
+
+${p.features.timeline?`<section class="section"><div class="section-title"><small>THE DAY</small><h2><span data-wi="schedule">Wedding schedule</span></h2><p><span data-wi="schedule_desc">A simple guide to the celebration.</span></p></div><div class="timeline">${timelineHtml}</div></section>`:""}
+
+${p.features.map?`<section class="section"><div class="section-title"><small>VENUE</small><h2><span data-wi="join">Join us here</span></h2><p>${e(p.venue)} · ${e(p.address)}</p></div><div class="venue-card"><div class="map-art"><div class="map-pin"></div></div><div class="venue-info"><h3>${e(p.venue)}</h3><p>${e(p.address)}</p><div class="tools"><a class="tool" href="${e(mapUrl)}" target="_blank" rel="noopener">Open Map</a>${p.features.addressCopy?`<button class="tool" onclick="copyAddress()">Copy Address</button>`:""}${p.features.calendar?`<button class="tool" onclick="downloadICS()">Add to Calendar</button>`:""}${p.features.share?`<button class="tool" onclick="shareSite()">Share</button>`:""}</div></div></div></section>`:""}
+
+${p.features.gallery?`<section class="section"><div class="section-title"><small>OUR STORY</small><h2><span data-wi="moments">Moments we love</span></h2><p><span data-wi="gallery_desc">Click any photo to view it larger.</span></p></div><div class="gallery">${galleryHtml}</div></section>`:""}
+
+${p.features.rsvp?`<section class="rsvp" id="rsvp"><h2><span data-wi="rsvp_title">Will you join us?</span></h2><p><span data-wi="rsvp_desc">Please RSVP and let us know if there is anything we should know before the celebration.</span></p><div class="rsvp-form"><input id="rName" placeholder="Your name" data-wi-placeholder="name"/><input id="rGuests" placeholder="Number of guests" data-wi-placeholder="guests"/><button onclick="sendRSVP()">RSVP</button></div><p class="note">${e(p.note)}</p></section>`:""}
+
+<footer class="footer"><b>${e(p.names)}</b><div>${e(readable)}</div></footer>
+
+<div class="floating">
+  ${p.features.map?`<a href="${e(mapUrl)}" target="_blank" title="Map">⌖</a>`:""}
+  ${p.features.rsvp?`<a href="#rsvp" title="RSVP">R</a>`:""}
+  ${p.features.share?`<button onclick="shareSite()" title="Share">↗</button>`:""}
+</div>
+
+<div class="lightbox" id="photoLightbox" onclick="this.classList.remove('open')"><img id="photoLightboxImage"/></div>
+<script>
+const inviteMessages=${JSON.stringify(inviteMessages).replace(/</g,"\\u003c")};
+function setInviteLang(l){if(!inviteMessages[l])l='en';try{localStorage.setItem('wedding-commerce-language',l)}catch(e){}document.documentElement.lang=l==='zh'?'zh-CN':l;document.querySelectorAll('[data-wi]').forEach(e=>{const k=e.dataset.wi;if(inviteMessages[l][k])e.textContent=inviteMessages[l][k]});document.querySelectorAll('[data-wi-placeholder]').forEach(e=>{const k=e.dataset.wiPlaceholder;if(inviteMessages[l][k])e.placeholder=inviteMessages[l][k]});document.querySelectorAll('[data-invite-lang]').forEach(b=>b.classList.toggle('active',b.dataset.inviteLang===l))}
+document.querySelectorAll('[data-invite-lang]').forEach(b=>b.onclick=()=>setInviteLang(b.dataset.inviteLang));setInviteLang((()=>{try{return localStorage.getItem('wedding-commerce-language')}catch(e){return null}})()||'en');
+const gallery=${JSON.stringify(gallery).replace(/</g,"\\u003c")};
+function openLightbox(i){if(!gallery[i])return;document.getElementById("photoLightboxImage").src=gallery[i];document.getElementById("photoLightbox").classList.add("open")}
+function copyAddress(){navigator.clipboard?.writeText(${JSON.stringify(p.address)});alert("Address copied")}
+function shareSite(){if(navigator.share)navigator.share({title:${JSON.stringify(p.names+" Wedding")},text:"Wedding invitation",url:location.href});else navigator.clipboard?.writeText(location.href)}
+function downloadICS(){
+  const ics="BEGIN:VCALENDAR\\r\\nVERSION:2.0\\r\\nBEGIN:VEVENT\\r\\nDTSTART:${calendarStart}\\r\\nDTEND:${calendarEnd}\\r\\nSUMMARY:${String(p.names).replace(/\n/g," ")} Wedding\\r\\nLOCATION:${String(p.address).replace(/\n/g," ")}\\r\\nEND:VEVENT\\r\\nEND:VCALENDAR";
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="wedding.ics";a.click();URL.revokeObjectURL(a.href)
+}
+function sendRSVP(){
+  const name=document.getElementById("rName")?.value||"Guest";const guests=document.getElementById("rGuests")?.value||"";
+  const ext=${JSON.stringify(p.rsvpUrl||"")};
+  if(ext){window.open(ext,"_blank");return}
+  const email=${JSON.stringify(p.rsvpEmail||"")};
+  if(email){location.href="mailto:"+encodeURIComponent(email)+"?subject="+encodeURIComponent("Wedding RSVP — "+name)+"&body="+encodeURIComponent("Name: "+name+"\\nGuests: "+guests)}
+  else alert("Thank you. RSVP details are ready to submit.")
+}
+${p.features.countdown?`function tick(){const t=new Date(${JSON.stringify((p.date||"2027-06-18")+"T"+(p.time||"15:00")+":00")}).getTime()-Date.now();const v=Math.max(0,t);document.getElementById("cdD").textContent=Math.floor(v/86400000);document.getElementById("cdH").textContent=Math.floor(v/3600000)%24;document.getElementById("cdM").textContent=Math.floor(v/60000)%60;document.getElementById("cdS").textContent=Math.floor(v/1000)%60}tick();setInterval(tick,1000);`:""}
+<\/script>
+</body></html>`;
+}
+function refreshWeddingPreview(){
+  const p=weddingProfile();
+  document.getElementById("builderPreview").srcdoc=buildWeddingSite(p);
+}
+function openWeddingBuilder(){
+  document.getElementById("siteBuilder").classList.add("open");
+  document.getElementById("builderSceneLabel").textContent=sceneData[sceneKey]?.name||sceneKey;
+  document.getElementById("wbNames").value=deriveCustomizedNames();
+  const c=sceneData[sceneKey]?.colors?.[3]||"#9a6d57";
+  document.getElementById("wbAccent").value=/^#[0-9a-fA-F]{6}$/.test(c)?c:"#9a6d57";
+  const saved=localStorage.getItem("podWeddingSiteDraft");
+  if(saved){
+    try{
+      const s=JSON.parse(saved);
+      ["names","date","time","venue","address","mapUrl","intro","rsvpEmail","rsvpUrl","note","accent","density","heroAlign","radius"].forEach(k=>{
+        const el=document.getElementById("wb"+k.charAt(0).toUpperCase()+k.slice(1));
+        if(el && s[k]!=null) el.value=s[k];
+      });
+      if(Array.isArray(s.schedule)) document.getElementById("wbSchedule").value=s.schedule.map(x=>`${x.time} | ${x.title} | ${x.desc}`).join("\n");
+    }catch(e){}
+  }
+  refreshWeddingPreview();
+}
+document.getElementById("weddingSiteBtn").onclick=openWeddingBuilder;
+document.getElementById("builderClose").onclick=()=>document.getElementById("siteBuilder").classList.remove("open");
+document.getElementById("builderRefresh").onclick=refreshWeddingPreview;
+document.getElementById("builderSaveDraft").onclick=()=>{
+  const p=weddingProfile();
+  const draft={...p,heroPhoto:"",gallery:[]};
+  localStorage.setItem("podWeddingSiteDraft",JSON.stringify(draft));
+  showToast("婚礼网站草稿已保存在浏览器");
+};
+document.getElementById("builderDownload").onclick=()=>{
+  const p=weddingProfile();const html=buildWeddingSite(p);
+  const blob=new Blob([html],{type:"text/html;charset=utf-8"});const a=document.createElement("a");
+  const safe=(p.names||"wedding").replace(/[^a-zA-Z0-9\u4e00-\u9fff]+/g,"_");
+  a.href=URL.createObjectURL(blob);a.download=safe+"_wedding_invitation.html";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+};
+document.getElementById("builderPublish").onclick=async()=>{
+  const p=weddingProfile();const html=buildWeddingSite(p);
+  try{
+    const r=await fetch("/api/invitations",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({profile:p,html})});
+    if(!r.ok)throw new Error();
+    const data=await r.json();
+    showToast("已生成专属链接："+data.url);
+    navigator.clipboard?.writeText(location.origin+data.url);
+    window.open(data.url,"_blank");
+  }catch(e){
+    showToast("当前为静态模式：请启动项目服务端后使用“保存为专属链接”");
+  }
+};
+document.getElementById("wbHeroPhoto").onchange=async e=>{
+  const f=e.target.files?.[0];if(!f)return;wbHeroData=await readFileAsDataURL(f);
+  document.getElementById("wbHeroStatus").textContent=f.name;refreshWeddingPreview();
+};
+document.getElementById("wbGallery").onchange=async e=>{
+  const files=[...(e.target.files||[])].slice(0,12);
+  wbGalleryData=await Promise.all(files.map(readFileAsDataURL));
+  document.getElementById("wbGalleryStatus").textContent=files.length?`${files.length} 张图片：`+files.map(f=>f.name).join("、"):"未上传相册";
+  refreshWeddingPreview();
+};
+["wbNames","wbDate","wbTime","wbVenue","wbAddress","wbMapUrl","wbIntro","wbSchedule","wbRsvpEmail","wbRsvpUrl","wbNote","wbAccent","wbDensity","wbHeroAlign","wbRadius",
+ "ftCountdown","ftTimeline","ftMap","ftGallery","ftRsvp","ftShare","ftCalendar","ftAddressCopy"].forEach(id=>{
+  const el=document.getElementById(id);if(el)el.addEventListener("change",refreshWeddingPreview);
+});
+
+</script>
+<script src="account-auth.js"></script>
+</body>
+</html>

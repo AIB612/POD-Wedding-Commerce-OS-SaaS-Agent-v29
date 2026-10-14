@@ -1,0 +1,11 @@
+node_modules
+admin-app/node_modules
+admin-app/dist
+.env
+.git
+generated/*
+!generated/.gitkeep
+var/
+server/data/runtime.json
+*.zip
+scripts/.cache

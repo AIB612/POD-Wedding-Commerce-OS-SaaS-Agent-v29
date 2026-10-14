@@ -1,0 +1,403 @@
+{
+  "_comment": "Server-side price list mirrored from index.html (sceneData / materialsByType / priceInfo). self-test verifies it stays in sync.",
+  "currency": "CNY",
+  "tiers": [
+    {
+      "min_qty": 50,
+      "discount": 0.15
+    },
+    {
+      "min_qty": 30,
+      "discount": 0.1
+    },
+    {
+      "min_qty": 10,
+      "discount": 0.05
+    },
+    {
+      "min_qty": 1,
+      "discount": 0
+    }
+  ],
+  "max_quantity_per_line": 10000,
+  "products": {
+    "COTTON-PAPER-INVITATION": {
+      "name": "Cotton Paper Invitation",
+      "price": 12.9,
+      "type": "invite",
+      "scene": "cream"
+    },
+    "VELLUM-OVERLAY-INVITE": {
+      "name": "Vellum Overlay Invite",
+      "price": 15.8,
+      "type": "invite",
+      "scene": "cream"
+    },
+    "ACRYLIC-WELCOME-SIGN": {
+      "name": "Acrylic Welcome Sign",
+      "price": 68.0,
+      "type": "sign",
+      "scene": "cream"
+    },
+    "TABLE-NUMBER-ACRYLIC": {
+      "name": "Table Number Acrylic",
+      "price": 19.9,
+      "type": "sign",
+      "scene": "cream"
+    },
+    "MENU-CARD": {
+      "name": "Menu Card",
+      "price": 9.9,
+      "type": "table",
+      "scene": "cream"
+    },
+    "PLACE-CARD": {
+      "name": "Place Card",
+      "price": 5.2,
+      "type": "table",
+      "scene": "cream"
+    },
+    "PERSONALIZED-GIFT-BOX": {
+      "name": "Personalized Gift Box",
+      "price": 32.0,
+      "type": "gift",
+      "scene": "cream"
+    },
+    "MINI-TOTE-BAG": {
+      "name": "Mini Tote Bag",
+      "price": 21.9,
+      "type": "gift",
+      "scene": "cream"
+    },
+    "LETTERPRESS-MENU": {
+      "name": "Letterpress Menu",
+      "price": 14.8,
+      "type": "table",
+      "scene": "french"
+    },
+    "GOLD-FOIL-PLACE-CARD": {
+      "name": "Gold Foil Place Card",
+      "price": 8.8,
+      "type": "table",
+      "scene": "french"
+    },
+    "SEATING-CHART-BOARD": {
+      "name": "Seating Chart Board",
+      "price": 118.0,
+      "type": "sign",
+      "scene": "french"
+    },
+    "BAR-MENU-SIGN": {
+      "name": "Bar Menu Sign",
+      "price": 52.0,
+      "type": "sign",
+      "scene": "french"
+    },
+    "CHAMPAGNE-LABEL-SET": {
+      "name": "Champagne Label Set",
+      "price": 16.5,
+      "type": "gift",
+      "scene": "french"
+    },
+    "THANK-YOU-CARD": {
+      "name": "Thank You Card",
+      "price": 8.9,
+      "type": "invite",
+      "scene": "french"
+    },
+    "FRENCH-SUITE-INVITATION": {
+      "name": "French Suite Invitation",
+      "price": 26.8,
+      "type": "invite",
+      "scene": "french"
+    },
+    "RSVP-CARD": {
+      "name": "RSVP Card",
+      "price": 6.9,
+      "type": "invite",
+      "scene": "french"
+    },
+    "WOOD-WELCOME-SIGN": {
+      "name": "Wood Welcome Sign",
+      "price": 76.0,
+      "type": "sign",
+      "scene": "botanical"
+    },
+    "FABRIC-DIRECTION-BANNER": {
+      "name": "Fabric Direction Banner",
+      "price": 48.0,
+      "type": "sign",
+      "scene": "botanical"
+    },
+    "WEDDING-HAND-FAN": {
+      "name": "Wedding Hand Fan",
+      "price": 12.5,
+      "type": "gift",
+      "scene": "botanical"
+    },
+    "CEREMONY-PROGRAM": {
+      "name": "Ceremony Program",
+      "price": 7.8,
+      "type": "invite",
+      "scene": "botanical"
+    },
+    "BOTANICAL-MENU-CARD": {
+      "name": "Botanical Menu Card",
+      "price": 10.8,
+      "type": "table",
+      "scene": "botanical"
+    },
+    "LEAF-PLACE-CARD": {
+      "name": "Leaf Place Card",
+      "price": 7.2,
+      "type": "table",
+      "scene": "botanical"
+    },
+    "CANVAS-WELCOME-TOTE": {
+      "name": "Canvas Welcome Tote",
+      "price": 23.9,
+      "type": "gift",
+      "scene": "botanical"
+    },
+    "SEED-PACKET-FAVOR": {
+      "name": "Seed Packet Favor",
+      "price": 9.6,
+      "type": "gift",
+      "scene": "botanical"
+    },
+    "CLEAR-ACRYLIC-WELCOME": {
+      "name": "Clear Acrylic Welcome",
+      "price": 72.0,
+      "type": "sign",
+      "scene": "beach"
+    },
+    "BEACH-DIRECTION-SIGN": {
+      "name": "Beach Direction Sign",
+      "price": 45.0,
+      "type": "sign",
+      "scene": "beach"
+    },
+    "BEACH-WEDDING-FAN": {
+      "name": "Beach Wedding Fan",
+      "price": 13.8,
+      "type": "gift",
+      "scene": "beach"
+    },
+    "WATERPROOF-FAVOR-POUCH": {
+      "name": "Waterproof Favor Pouch",
+      "price": 18.9,
+      "type": "gift",
+      "scene": "beach"
+    },
+    "COCKTAIL-MENU-CARD": {
+      "name": "Cocktail Menu Card",
+      "price": 11.6,
+      "type": "table",
+      "scene": "beach"
+    },
+    "PERSONALIZED-CUP": {
+      "name": "Personalized Cup",
+      "price": 17.5,
+      "type": "gift",
+      "scene": "beach"
+    },
+    "DESTINATION-INVITE": {
+      "name": "Destination Invite",
+      "price": 16.9,
+      "type": "invite",
+      "scene": "beach"
+    },
+    "TRAVEL-THANK-YOU-CARD": {
+      "name": "Travel Thank You Card",
+      "price": 8.6,
+      "type": "invite",
+      "scene": "beach"
+    },
+    "BLACK-ACRYLIC-SIGN": {
+      "name": "Black Acrylic Sign",
+      "price": 78.0,
+      "type": "sign",
+      "scene": "modern"
+    },
+    "PHOTO-WELCOME-BOARD": {
+      "name": "Photo Welcome Board",
+      "price": 88.0,
+      "type": "sign",
+      "scene": "modern"
+    },
+    "MINIMAL-MENU": {
+      "name": "Minimal Menu",
+      "price": 10.8,
+      "type": "table",
+      "scene": "modern"
+    },
+    "MODERN-PLACE-CARD": {
+      "name": "Modern Place Card",
+      "price": 6.4,
+      "type": "table",
+      "scene": "modern"
+    },
+    "CANDLE-LABEL": {
+      "name": "Candle Label",
+      "price": 6.8,
+      "type": "gift",
+      "scene": "modern"
+    },
+    "MONOGRAM-STICKER": {
+      "name": "Monogram Sticker",
+      "price": 4.6,
+      "type": "gift",
+      "scene": "modern"
+    },
+    "MINIMAL-INVITATION": {
+      "name": "Minimal Invitation",
+      "price": 13.9,
+      "type": "invite",
+      "scene": "modern"
+    },
+    "SAVE-THE-DATE-CARD": {
+      "name": "Save The Date Card",
+      "price": 9.8,
+      "type": "invite",
+      "scene": "modern"
+    },
+    "RUSTIC-WOOD-SIGN": {
+      "name": "Rustic Wood Sign",
+      "price": 69.0,
+      "type": "sign",
+      "scene": "rustic"
+    },
+    "BARN-SEATING-BOARD": {
+      "name": "Barn Seating Board",
+      "price": 96.0,
+      "type": "sign",
+      "scene": "rustic"
+    },
+    "KRAFT-INVITATION": {
+      "name": "Kraft Invitation",
+      "price": 11.8,
+      "type": "invite",
+      "scene": "rustic"
+    },
+    "KRAFT-MENU-CARD": {
+      "name": "Kraft Menu Card",
+      "price": 8.8,
+      "type": "table",
+      "scene": "rustic"
+    },
+    "MASON-JAR-MUG": {
+      "name": "Mason Jar Mug",
+      "price": 24.5,
+      "type": "gift",
+      "scene": "rustic"
+    },
+    "COTTON-FAVOR-BAG": {
+      "name": "Cotton Favor Bag",
+      "price": 13.6,
+      "type": "gift",
+      "scene": "rustic"
+    },
+    "FABRIC-WELCOME-BANNER": {
+      "name": "Fabric Welcome Banner",
+      "price": 39.0,
+      "type": "sign",
+      "scene": "rustic"
+    },
+    "TABLE-RUNNER-PRINT": {
+      "name": "Table Runner Print",
+      "price": 29.0,
+      "type": "table",
+      "scene": "rustic"
+    }
+  },
+  "materials": {
+    "invite": [
+      {
+        "id": "cotton",
+        "name": "棉纹艺术纸",
+        "delta": 0.0
+      },
+      {
+        "id": "pearl",
+        "name": "珠光纸",
+        "delta": 2.5
+      },
+      {
+        "id": "kraft",
+        "name": "牛皮纸",
+        "delta": -1.2
+      },
+      {
+        "id": "vellum",
+        "name": "半透明硫酸纸",
+        "delta": 3.2
+      }
+    ],
+    "table": [
+      {
+        "id": "cotton",
+        "name": "棉纹艺术纸",
+        "delta": 0.0
+      },
+      {
+        "id": "pearl",
+        "name": "珠光纸",
+        "delta": 2.0
+      },
+      {
+        "id": "kraft",
+        "name": "牛皮纸",
+        "delta": -1.0
+      },
+      {
+        "id": "vellum",
+        "name": "半透明硫酸纸",
+        "delta": 2.8
+      }
+    ],
+    "sign": [
+      {
+        "id": "clear",
+        "name": "透明亚克力",
+        "delta": 0.0
+      },
+      {
+        "id": "frosted",
+        "name": "磨砂亚克力",
+        "delta": 8.0
+      },
+      {
+        "id": "wood",
+        "name": "天然木板",
+        "delta": 12.0
+      },
+      {
+        "id": "kraft",
+        "name": "轻质硬板",
+        "delta": -6.0
+      }
+    ],
+    "gift": [
+      {
+        "id": "canvas",
+        "name": "棉帆布",
+        "delta": 0.0
+      },
+      {
+        "id": "ceramic",
+        "name": "陶瓷",
+        "delta": 4.5
+      },
+      {
+        "id": "kraft",
+        "name": "牛皮纸包装",
+        "delta": -1.5
+      },
+      {
+        "id": "pearl",
+        "name": "珠光包装纸",
+        "delta": 1.8
+      }
+    ]
+  }
+}

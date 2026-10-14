@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Wedding Commerce OS Admin</title>
+<style>
+:root{
+  --ant-primary:#1677ff;
+  --ant-primary-hover:#4096ff;
+  --ant-success:#52c41a;
+  --ant-warning:#faad14;
+  --ant-error:#ff4d4f;
+  --ant-text:rgba(0,0,0,.88);
+  --ant-text-secondary:rgba(0,0,0,.65);
+  --ant-text-tertiary:rgba(0,0,0,.45);
+  --ant-border:#f0f0f0;
+  --ant-fill:#f5f5f5;
+  --ant-layout:#f5f5f5;
+  --ant-bg:#fff;
+  --ant-radius:8px;
+  --sider:208px;
+  --header:64px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--ant-layout);color:var(--ant-text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
+  font-size:14px;line-height:1.5715;-webkit-font-smoothing:antialiased
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{text-decoration:none;color:inherit}
+.app{min-height:100vh;display:grid;grid-template-columns:var(--sider) minmax(0,1fr)}
+.sider{
+  position:fixed;inset:0 auto 0 0;width:var(--sider);background:#001529;color:#fff;z-index:30;
+  display:flex;flex-direction:column;overflow:auto
+}
+.brand{height:64px;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand-mark{width:30px;height:30px;border-radius:6px;background:var(--ant-primary);display:grid;place-items:center;font-weight:700}
+.brand strong{font-size:15px;white-space:nowrap}.brand small{display:block;color:rgba(255,255,255,.45);font-size:11px;margin-top:1px}
+.menu{padding:8px 8px 18px}
+.menu-title{font-size:11px;color:rgba(255,255,255,.35);padding:14px 12px 6px}
+.menu button{
+  width:100%;height:40px;border:0;border-radius:6px;background:transparent;color:rgba(255,255,255,.65);
+  padding:0 12px;display:flex;align-items:center;gap:10px;text-align:left;font-size:14px;margin:2px 0
+}
+.menu button:hover{color:#fff}.menu button.active{background:var(--ant-primary);color:#fff}
+.menu .ico{width:16px;text-align:center;opacity:.9}
+.menu .badge{margin-left:auto;font-size:11px;color:rgba(255,255,255,.5)}
+.sider-user{margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding:14px 16px;display:flex;align-items:center;gap:9px}
+.avatar{width:28px;height:28px;border-radius:50%;background:#334454;display:grid;place-items:center;font-size:11px}
+.sider-user strong{font-size:12px;display:block}.sider-user span{font-size:11px;color:rgba(255,255,255,.45)}
+.main{grid-column:2;min-width:0}
+.header{
+  position:sticky;top:0;height:var(--header);z-index:20;background:#fff;border-bottom:1px solid var(--ant-border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px
+}
+.header-left,.header-right{display:flex;align-items:center;gap:12px}
+.header-title{font-size:16px;font-weight:600}.header-sub{font-size:12px;color:var(--ant-text-tertiary);margin-left:8px}
+.header-search{width:220px;height:32px;border:1px solid #d9d9d9;border-radius:6px;padding:0 10px;outline:none}
+.header-search:focus{border-color:var(--ant-primary);box-shadow:0 0 0 2px rgba(5,145,255,.1)}
+.ant-btn{height:32px;border:1px solid #d9d9d9;background:#fff;border-radius:6px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px}
+.ant-btn:hover{border-color:var(--ant-primary);color:var(--ant-primary)}
+.ant-btn.primary{background:var(--ant-primary);border-color:var(--ant-primary);color:#fff}.ant-btn.primary:hover{background:var(--ant-primary-hover);color:#fff}
+.ant-btn.shopify{background:#008060;border-color:#008060;color:#fff}.ant-btn.shopify:hover{background:#00966f;border-color:#00966f;color:#fff}
+.icon-btn{width:32px;height:32px;border:0;background:transparent;border-radius:6px}.icon-btn:hover{background:var(--ant-fill)}
+.lang-switch{display:flex;padding:2px;border-radius:6px;background:#f5f5f5}
+.lang-switch button{height:28px;border:0;background:transparent;border-radius:5px;padding:0 8px;font-size:12px;color:var(--ant-text-secondary)}
+.lang-switch button.active{background:#fff;color:var(--ant-text);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.page{display:none}.page.active{display:block}
+.page-header{
+  background:#fff;border-bottom:1px solid var(--ant-border);padding:16px 24px 18px
+}
+.breadcrumb{font-size:12px;color:var(--ant-text-tertiary);margin-bottom:8px}
+.page-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.page-header h1{font-size:20px;line-height:28px;margin:0;font-weight:600}
+.page-header p{margin:4px 0 0;font-size:14px;color:var(--ant-text-secondary)}
+.page-actions{display:flex;gap:8px}
+.content{padding:24px}
+.grid-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.card{background:#fff;border-radius:var(--ant-radius);border:1px solid var(--ant-border)}
+.stat{padding:20px 20px 18px}
+.stat-label{color:var(--ant-text-secondary);font-size:14px}.stat-value{font-size:30px;line-height:38px;font-weight:600;margin-top:6px}.stat-foot{font-size:12px;color:var(--ant-text-tertiary);margin-top:4px}
+.grid-2{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,.75fr);gap:16px;margin-bottom:16px}
+.card-title{height:52px;padding:0 20px;border-bottom:1px solid var(--ant-border);display:flex;align-items:center;justify-content:space-between}
+.card-title strong{font-size:15px}.card-title span{font-size:12px;color:var(--ant-text-tertiary)}
+.card-body{padding:20px}
+.chart{height:260px}.chart svg{width:100%;height:100%}.grid-line{stroke:#f0f0f0;stroke-width:1}.revenue-line{fill:none;stroke:var(--ant-primary);stroke-width:2}.profit-line{fill:none;stroke:var(--ant-success);stroke-width:2}
+.health{display:grid;gap:16px}.health-row{display:grid;gap:7px}.health-head{display:flex;justify-content:space-between;font-size:13px}.health-head span{color:var(--ant-text-secondary)}
+.progress{height:6px;border-radius:99px;background:#f0f0f0;overflow:hidden}.progress i{display:block;height:100%;background:var(--ant-primary);border-radius:99px}
+.query-card{background:#fff;border:1px solid var(--ant-border);border-radius:var(--ant-radius);padding:20px;margin-bottom:16px}
+.query-grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:16px}
+.form-item{display:grid;gap:6px}.form-item label{font-size:14px;color:var(--ant-text-secondary)}
+.ant-input,.ant-select{height:32px;width:100%;border:1px solid #d9d9d9;border-radius:6px;background:#fff;padding:0 10px;outline:none}
+.ant-input:focus,.ant-select:focus{border-color:var(--ant-primary);box-shadow:0 0 0 2px rgba(5,145,255,.1)}
+.query-actions{display:flex;justify-content:flex-end;align-items:end;gap:8px}
+.table-card{background:#fff;border-radius:var(--ant-radius);border:1px solid var(--ant-border);overflow:hidden}
+.table-toolbar{min-height:56px;padding:0 16px 0 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--ant-border)}
+.table-toolbar strong{font-size:15px}.table-tools{display:flex;gap:8px}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;white-space:nowrap}
+th{background:#fafafa;color:var(--ant-text);font-weight:600}
+th,td{height:54px;padding:12px 16px;text-align:left;border-bottom:1px solid var(--ant-border)}
+tbody tr:hover{background:#fafafa}tbody tr:last-child td{border-bottom:0}
+.link{color:var(--ant-primary);cursor:pointer}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:4px;font-size:12px;border:1px solid #d9d9d9;background:#fafafa}
+.tag.blue{color:#0958d9;background:#e6f4ff;border-color:#91caff}.tag.green{color:#389e0d;background:#f6ffed;border-color:#b7eb8f}.tag.gold{color:#d48806;background:#fffbe6;border-color:#ffe58f}.tag.red{color:#cf1322;background:#fff1f0;border-color:#ffa39e}
+.shopify-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;padding:24px;margin-bottom:16px;background:#fff;border:1px solid var(--ant-border);border-radius:var(--ant-radius)}
+.shopify-mark{width:42px;height:42px;border-radius:8px;background:#008060;color:#fff;display:grid;place-items:center;font-size:19px;font-weight:700;margin-bottom:12px}
+.shopify-hero h3{margin:0;font-size:18px}.shopify-hero p{margin:6px 0 0;color:var(--ant-text-secondary);max-width:720px}
+.shopify-meta{display:flex;gap:22px;margin-top:16px}.shopify-meta span{font-size:12px;color:var(--ant-text-tertiary)}.shopify-meta b{display:block;color:var(--ant-text);font-size:13px;margin-bottom:2px}
+.store-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.store-card{padding:18px}.store-head{display:flex;justify-content:space-between;align-items:center}.store-card h3{font-size:15px;margin:14px 0 2px}.store-card p{font-size:13px;color:var(--ant-text-tertiary);margin:0}
+.store-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0}.store-stats div{background:#fafafa;border-radius:6px;padding:10px}.store-stats small{display:block;color:var(--ant-text-tertiary)}.store-stats b{display:block;margin-top:3px}
+.list{display:grid}.list-item{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--ant-border)}.list-item:last-child{border-bottom:0}.list-icon{width:32px;height:32px;border-radius:6px;background:#e6f4ff;color:#1677ff;display:grid;place-items:center}.list-main{min-width:0;flex:1}.list-main strong{font-size:13px}.list-main p{font-size:12px;color:var(--ant-text-tertiary);margin:2px 0 0}.list-side{font-size:12px;color:var(--ant-text-tertiary)}
+.agent-grid{display:grid;grid-template-columns:minmax(0,1.5fr) 360px;gap:16px}
+.agent-chat{min-height:540px;display:grid;grid-template-rows:auto minmax(0,1fr) auto}.quick{padding:12px 16px;border-bottom:1px solid var(--ant-border);display:flex;gap:8px;overflow:auto}.quick button{height:28px;border:1px solid #d9d9d9;background:#fff;border-radius:6px;padding:0 10px;white-space:nowrap;font-size:12px}.messages{padding:20px;overflow:auto;display:flex;flex-direction:column;gap:12px}.msg{max-width:78%;padding:10px 12px;border-radius:8px;font-size:14px;line-height:1.6;white-space:pre-wrap}.msg.agent{background:#f5f5f5}.msg.user{align-self:flex-end;background:#1677ff;color:#fff}.composer{padding:12px 16px;border-top:1px solid var(--ant-border);display:grid;grid-template-columns:1fr auto;gap:8px}.composer textarea{min-height:64px;border:1px solid #d9d9d9;border-radius:6px;padding:10px;resize:vertical;outline:none}.composer textarea:focus{border-color:var(--ant-primary);box-shadow:0 0 0 2px rgba(5,145,255,.1)}
+.steps{display:grid}.step{display:grid;grid-template-columns:24px 1fr;gap:10px;padding-bottom:16px;position:relative}.step:not(:last-child):before{content:"";position:absolute;left:11px;top:22px;bottom:0;border-left:1px solid #d9d9d9}.step i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;background:#f5f5f5;color:var(--ant-text-tertiary);z-index:1}.step.done i{background:#f6ffed;color:#389e0d;border:1px solid #b7eb8f}.step b{font-size:13px}.step span{font-size:12px;color:var(--ant-text-tertiary);display:block;margin-top:2px}
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:90;display:none;place-items:center;padding:20px}.mask.open{display:grid}
+.modal{width:min(520px,94vw);background:#fff;border-radius:8px;box-shadow:0 12px 48px rgba(0,0,0,.18)}.modal-head{height:56px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--ant-border)}.modal-body{padding:24px}.modal-foot{padding:10px 16px;border-top:1px solid var(--ant-border);display:flex;justify-content:flex-end;gap:8px}
+.drawer-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:80;opacity:0;pointer-events:none}.drawer-mask.open{opacity:1;pointer-events:auto}.drawer{position:fixed;right:0;top:0;bottom:0;width:min(520px,92vw);background:#fff;z-index:81;transform:translateX(100%);transition:.2s;display:grid;grid-template-rows:56px minmax(0,1fr) 56px}.drawer.open{transform:translateX(0)}.drawer-head,.drawer-foot{padding:0 20px;display:flex;align-items:center;border-bottom:1px solid var(--ant-border)}.drawer-head{justify-content:space-between}.drawer-foot{justify-content:flex-end;gap:8px;border-top:1px solid var(--ant-border);border-bottom:0}.drawer-body{padding:20px;overflow:auto}
+.desc{display:grid;grid-template-columns:140px 1fr;border:1px solid var(--ant-border);border-radius:6px;overflow:hidden}.desc div{padding:10px 12px;border-bottom:1px solid var(--ant-border)}.desc div:nth-child(odd){background:#fafafa;color:var(--ant-text-secondary)}
+.notice{position:fixed;right:24px;top:80px;z-index:120;background:#fff;border:1px solid var(--ant-border);border-radius:6px;box-shadow:0 6px 24px rgba(0,0,0,.12);padding:12px 14px;display:none}.notice.show{display:block}
+@media(max-width:1180px){.grid-kpi{grid-template-columns:1fr 1fr}.grid-2,.agent-grid{grid-template-columns:1fr}.store-grid{grid-template-columns:1fr 1fr}.query-grid{grid-template-columns:1fr 1fr}.header-search{display:none}}
+@media(max-width:820px){:root{--sider:0px}.sider{display:none}.app{display:block}.main{grid-column:auto}.header{padding:0 12px}.content{padding:12px}.grid-kpi,.store-grid,.query-grid{grid-template-columns:1fr}.page-header{padding:14px 16px}.shopify-hero{grid-template-columns:1fr}.header-sub{display:none}.header-right .ant-btn.shopify{display:none}}
+
+/* v9: sider collapse (desktop) / slide-in sider (mobile), table density, column toggles, data-source hint */
+body.sider-collapsed{--sider:64px}
+body.sider-collapsed .brand>div:last-child,body.sider-collapsed .menu-title,body.sider-collapsed .menu button span:not(.ico),body.sider-collapsed .sider-user>:not(.avatar){display:none}
+body.sider-collapsed .menu button{justify-content:center;padding:0}
+@media(max-width:820px){body.sider-open .sider{display:flex;width:240px;box-shadow:0 0 32px rgba(0,0,0,.3)}body.sider-open .app::after{content:"";position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:25}}
+table.compact th,table.compact td{height:40px;padding:8px 12px}
+.col-hidden{display:none}
+.empty{padding:24px;text-align:center;color:var(--ant-text-tertiary)}
+.data-source{font-size:12px;color:var(--ant-text-tertiary)}
+.drawer-body .form-item{margin-bottom:14px}.drawer-body textarea.ant-input{width:100%;min-height:160px;font-family:ui-monospace,Menlo,monospace;font-size:12px;padding:10px;border:1px solid #d9d9d9;border-radius:6px}
+.drawer-body pre{white-space:pre-wrap;word-break:break-word;background:#fafafa;border:1px solid var(--ant-border);border-radius:6px;padding:10px;font-size:12px;max-height:320px;overflow:auto}
+.check-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--ant-border)}
+.list-item.clickable{cursor:pointer}.list-item.clickable:hover{background:#fafafa}.list-item.selected{background:#e6f4ff}
+
+/* v11: logistics, data exchange, connector center, customer 360 (from v10) */
+
+
+.data-layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:16px}.upload-zone{border:1px dashed #91caff;background:#fafcff;border-radius:8px;padding:24px;text-align:center}.upload-zone input{display:none}.upload-zone .upload-icon{font-size:26px;color:#1677ff}.upload-zone p{color:var(--ant-text-secondary);margin:6px 0 14px}.data-actions{display:flex;gap:8px;flex-wrap:wrap}.preview-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.preview-summary div{border:1px solid var(--ant-border);border-radius:6px;padding:10px}.preview-summary small{display:block;color:var(--ant-text-tertiary)}.preview-summary b{display:block;font-size:18px;margin-top:2px}.error-row{color:#cf1322}.io-help{font-size:12px;color:var(--ant-text-secondary);line-height:1.8}.io-help code{background:#f5f5f5;padding:2px 5px;border-radius:4px}@media(max-width:900px){.data-layout{grid-template-columns:1fr}.preview-summary{grid-template-columns:1fr 1fr}}
+
+.connector-card{cursor:pointer;transition:.15s}.connector-card:hover{border-color:#91caff;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.connector-fields{display:grid;gap:10px;margin-top:16px}.connector-fields .field-state{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--ant-border);border-radius:6px;padding:9px 10px}.track-line{border-left:2px solid #d9d9d9;margin:8px 0 0 9px;padding-left:18px}.track-event{position:relative;padding:0 0 18px}.track-event:before{content:"";position:absolute;left:-24px;top:4px;width:10px;height:10px;border-radius:50%;background:#1677ff;border:2px solid #fff;box-shadow:0 0 0 1px #91caff}.track-event b{display:block;font-size:13px}.track-event span{display:block;font-size:12px;color:var(--ant-text-tertiary);margin-top:3px}.sync-note{font-size:12px;color:var(--ant-text-secondary);background:#fafafa;border:1px solid var(--ant-border);border-radius:6px;padding:10px;margin-top:12px}
+.customer-summary{display:grid;grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:center;margin-bottom:18px}
+.customer-avatar{width:64px;height:64px;border-radius:50%;background:#e6f4ff;color:#1677ff;display:grid;place-items:center;font-size:20px;font-weight:600}
+.customer-name{font-size:19px;font-weight:600}.customer-meta{color:var(--ant-text-secondary);font-size:13px;margin-top:3px}
+.profile-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.profile-kpi{border:1px solid var(--ant-border);border-radius:6px;padding:12px}.profile-kpi small{display:block;color:var(--ant-text-tertiary)}.profile-kpi b{display:block;font-size:19px;margin-top:3px}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.profile-section{border:1px solid var(--ant-border);border-radius:8px;padding:16px}.profile-section h3{font-size:14px;margin:0 0 14px}
+.radar{display:grid;place-items:center;min-height:260px}.radar svg{width:100%;max-width:310px;height:auto}.radar-grid{fill:none;stroke:#d9d9d9;stroke-width:1}.radar-axis{stroke:#f0f0f0}.radar-shape{fill:rgba(22,119,255,.16);stroke:#1677ff;stroke-width:2}.radar-label{font-size:10px;fill:rgba(0,0,0,.65)}
+.pref-list{display:grid;gap:12px}.pref-row{display:grid;grid-template-columns:110px 1fr 38px;align-items:center;gap:8px;font-size:12px}.pref-row span:first-child{color:var(--ant-text-secondary)}
+.pref-bar{height:7px;background:#f0f0f0;border-radius:99px;overflow:hidden}.pref-bar i{display:block;height:100%;background:#1677ff}
+.interest-tags{display:flex;gap:6px;flex-wrap:wrap}.interest-tags span{font-size:12px;border:1px solid #d9d9d9;background:#fafafa;border-radius:4px;padding:3px 7px}
+.event-list{display:grid}.event-row{display:grid;grid-template-columns:22px 1fr auto;gap:10px;padding:10px 0;border-bottom:1px solid var(--ant-border)}.event-row:last-child{border-bottom:0}.event-dot{width:20px;height:20px;border-radius:50%;background:#e6f4ff;color:#1677ff;display:grid;place-items:center;font-size:10px}.event-row b{font-size:13px}.event-row p{font-size:12px;color:var(--ant-text-tertiary);margin:2px 0 0}.event-row time{font-size:11px;color:var(--ant-text-tertiary)}
+.reco-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.reco-card{border:1px solid var(--ant-border);border-radius:8px;padding:12px}.reco-thumb{height:72px;border-radius:6px;background:linear-gradient(135deg,#f5f5f5,#e6f4ff);display:grid;place-items:center;color:#1677ff;font-weight:600;margin-bottom:9px}.reco-card b{font-size:13px}.reco-card p{font-size:11px;color:var(--ant-text-tertiary);margin:4px 0}.reco-score{font-size:12px;color:#389e0d}
+.customer-row{cursor:pointer}
+@media(max-width:820px){.profile-grid,.profile-kpis,.reco-grid{grid-template-columns:1fr}
+.data-layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:16px}.upload-zone{border:1px dashed #91caff;background:#fafcff;border-radius:8px;padding:24px;text-align:center}.upload-zone input{display:none}.upload-zone .upload-icon{font-size:26px;color:#1677ff}.upload-zone p{color:var(--ant-text-secondary);margin:6px 0 14px}.data-actions{display:flex;gap:8px;flex-wrap:wrap}.preview-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.preview-summary div{border:1px solid var(--ant-border);border-radius:6px;padding:10px}.preview-summary small{display:block;color:var(--ant-text-tertiary)}.preview-summary b{display:block;font-size:18px;margin-top:2px}.error-row{color:#cf1322}.io-help{font-size:12px;color:var(--ant-text-secondary);line-height:1.8}.io-help code{background:#f5f5f5;padding:2px 5px;border-radius:4px}@media(max-width:900px){.data-layout{grid-template-columns:1fr}.preview-summary{grid-template-columns:1fr 1fr}}
+.customer-summary{grid-template-columns:54px 1fr}.customer-avatar{width:50px;height:50px}}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sider">
+    <div class="brand"><div class="brand-mark">W</div><div><strong>Wedding Commerce OS</strong><small>Multi-seller SaaS</small></div></div>
+    <nav class="menu">
+      <div class="menu-title">运营</div>
+      <button class="active" data-page="overview"><span class="ico">⌂</span><span>总览</span></button>
+      <button data-page="stores"><span class="ico">▦</span><span>店铺中心</span></button>
+      <button data-page="orders"><span class="ico">□</span><span>订单管理</span><span class="badge" id="badge-orders">8</span></button>
+      <button data-page="studio-sync"><span class="ico">◈</span><span>Studio / 账号</span><span class="badge" id="badge-studio">0</span></button>
+      <button data-page="logistics"><span class="ico">⇢</span><span>物流管理</span><span class="badge">2</span></button>
+      <button data-page="catalog"><span class="ico">◇</span><span>商品 / 采购</span></button>
+      <button data-page="data"><span class="ico">⇅</span><span>数据导入 / 导出</span></button>
+      <button data-page="inbox"><span class="ico">✉</span><span>统一 Inbox</span><span class="badge" id="badge-inbox">5</span></button>
+      <div class="menu-title">增长</div>
+      <button data-page="marketing"><span class="ico">↗</span><span>营销 / 广告</span></button>
+      <button data-page="customers"><span class="ico">◎</span><span>用户画像 / 推荐</span></button>
+      <button data-page="creators"><span class="ico">☆</span><span>达人 / 联盟</span></button>
+      <button data-page="finance"><span class="ico">$</span><span>财务 / 利润</span></button>
+      <div class="menu-title">AI 控制</div>
+      <button data-page="agent"><span class="ico">AI</span><span>Agent 任务中心</span><span class="badge" id="badge-agent">4</span></button>
+      <button data-page="approvals"><span class="ico">✓</span><span>审批中心</span><span class="badge" id="badge-approvals">3</span></button>
+      <button data-page="connectors"><span class="ico">⌘</span><span>API / 协议</span></button>
+    </nav>
+    <div class="sider-user"><div class="avatar">AD</div><div><strong>Admin Operator</strong><span>tenant_demo · owner</span></div></div>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div class="header-left"><button class="icon-btn" id="siderToggle" data-action="toggle-sider" aria-label="菜单">☰</button><div class="header-title" id="headerTitle">总览</div><div class="header-sub">Wedding Commerce OS</div></div>
+      <div class="header-right">
+        <input class="header-search" id="globalSearch" placeholder="搜索订单 / SKU / 客户..."/>
+        <div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div>
+        <button class="icon-btn" id="notifyBtn" data-action="notifications" aria-label="通知">◌</button>
+        <button class="ant-btn shopify" onclick="openShopify()">连接 Shopify</button>
+        <button class="ant-btn primary" onclick="showPage('agent')">Ask Agent</button>
+      </div>
+    </header>
+
+    <section class="page active" id="overview">
+      <div class="page-header">
+        <div class="breadcrumb">Wedding Commerce OS / <span>总览</span></div>
+        <div class="page-head-row"><div><h1>运营总览</h1><p>收入、订单、利润、营销与 Agent 风险一屏查看</p></div><div class="page-actions"><button class="ant-btn" data-action="refresh">刷新</button><button class="ant-btn" data-action="export-overview">导出报表</button></div></div>
+      </div>
+      <div class="content">
+        <div class="grid-kpi">
+          <div class="card stat"><div class="stat-label">Revenue</div><div class="stat-value" data-kpi="revenue">$41,620</div><div class="stat-foot" data-kpi-foot>较上期 +12.8%</div></div>
+          <div class="card stat"><div class="stat-label">Contribution</div><div class="stat-value" data-kpi="contribution">$18,280</div><div class="stat-foot" data-kpi-foot>较上期 +9.4%</div></div>
+          <div class="card stat"><div class="stat-label">Orders</div><div class="stat-value" data-kpi="orders">284</div><div class="stat-foot" data-kpi-foot>较上期 +18.1%</div></div>
+          <div class="card stat"><div class="stat-label">Open Agent Tasks</div><div class="stat-value" data-kpi="tasks">4</div><div class="stat-foot" data-kpi-foot>今天 -2</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-title"><strong>收入与贡献利润趋势</strong><span>Last 30 days</span></div><div class="card-body"><div class="chart" id="overviewChart"></div></div></div>
+          <div class="card"><div class="card-title"><strong>渠道健康度</strong><span>实时同步</span></div><div class="card-body health" id="health"></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-title"><strong>需要关注</strong><span>按影响排序</span></div><div class="card-body list" id="attention"></div></div>
+          <div class="card"><div class="card-title"><strong>Agent 自动化</strong><span>Today</span></div><div class="card-body health">
+            <div class="health-row"><div class="health-head"><span>自动读取 / 分析</span><b>88%</b></div><div class="progress"><i style="width:88%"></i></div></div>
+            <div class="health-row"><div class="health-head"><span>审批后执行</span><b>57%</b></div><div class="progress"><i style="width:57%;background:#faad14"></i></div></div>
+            <div class="health-row"><div class="health-head"><span>人工接管</span><b>14%</b></div><div class="progress"><i style="width:14%;background:#ff4d4f"></i></div></div>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="stores">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>店铺中心</span></div><div class="page-head-row"><div><h1>多店铺中心</h1><p>统一连接、同步和管理 Shopify Seller Stores</p></div><button class="ant-btn" data-action="sync-all-stores">全部同步</button></div></div>
+      <div class="content">
+        <div class="shopify-hero">
+          <div><div class="shopify-mark">S</div><h3>连接新的 Shopify 店铺</h3><p>通过 Shopify OAuth 接入商品、订单、客户和 Fulfillment。每个店铺保持独立授权、Webhook 和租户隔离。</p><div class="shopify-meta"><span><b>01</b>输入 .myshopify.com</span><span><b>02</b>Shopify OAuth</span><span><b>03</b>首次数据同步</span></div></div>
+          <div><button class="ant-btn shopify" onclick="openShopify()">连接 Shopify 店铺</button></div>
+        </div>
+        <div class="store-grid" id="storesGrid"></div>
+      </div>
+    </section>
+
+    <section class="page" id="orders">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>订单管理</span></div><div class="page-head-row"><div><h1>统一订单管理</h1><p>Payment → Proof → Production；发货后进入独立物流中心追踪</p></div><div class="page-actions"><button class="ant-btn" data-action="export-orders">导出 CSV</button></div></div></div>
+      <div class="content">
+        <div class="query-card">
+          <div class="query-grid">
+            <div class="form-item"><label>Search</label><input class="ant-input" id="orderSearch" placeholder="订单号 / 邮箱 / Tracking"/></div>
+            <div class="form-item"><label>Status</label><select class="ant-select" id="statusFilter"><option value="">全部状态</option><option>Paid</option><option>Proofing</option><option>Production</option><option>Shipped</option></select></div>
+            <div class="form-item"><label>Store</label><select class="ant-select" id="storeFilter"><option value="">全部店铺</option></select></div>
+            <div class="query-actions"><button class="ant-btn" onclick="resetOrderFilter()">重置</button><button class="ant-btn primary" onclick="filterOrders()">查询</button></div>
+          </div>
+        </div>
+        <div class="table-card"><div class="table-toolbar"><strong>订单列表</strong><div class="table-tools"><button class="ant-btn" data-action="columns">Columns</button><button class="ant-btn" data-action="density">Density</button></div></div><div class="table-wrap"><table><thead><tr><th>订单</th><th>客户</th><th>店铺</th><th>状态</th><th>收入</th><th>贡献利润</th><th>物流</th><th>更新时间</th></tr></thead><tbody id="ordersBody"></tbody></table></div></div>
+      </div>
+    </section>
+
+    <section class="page" id="studio-sync">
+      <div class="page-header"><div class="breadcrumb">运营 / Studio</div><div class="page-head-row"><div><h1>Studio / 账号同步</h1><p>前端登录用户、设计方案、Request order 与邮件通知实时同步。</p></div><div class="page-actions"><button class="ant-btn" data-action="refresh">刷新</button></div></div></div>
+      <div class="content"><div class="grid-kpi"><div class="card stat"><div class="stat-label">注册用户</div><div class="stat-value" id="studioUsersKpi">0</div></div><div class="card stat"><div class="stat-label">Studio 方案</div><div class="stat-value" id="studioProjectsKpi">0</div></div><div class="card stat"><div class="stat-label">Studio 订单</div><div class="stat-value" id="studioOrdersKpi">0</div></div><div class="card stat"><div class="stat-label">邮件 / 通知</div><div class="stat-value" id="studioNotificationsKpi">0</div></div></div>
+      <div class="table-card" style="margin-bottom:16px"><div class="table-toolbar"><strong>用户账号</strong></div><div class="table-wrap"><table><thead><tr><th>Email</th><th>Name</th><th>Status</th><th>Last login</th><th>操作</th></tr></thead><tbody id="studioUsersBody"></tbody></table></div></div>
+      <div class="table-card" style="margin-bottom:16px"><div class="table-toolbar"><strong>Studio 方案</strong></div><div class="table-wrap"><table><thead><tr><th>Project</th><th>User</th><th>Scenario</th><th>Status</th><th>Updated</th></tr></thead><tbody id="studioProjectsBody"></tbody></table></div></div>
+      <div class="table-card" style="margin-bottom:16px"><div class="table-toolbar"><strong>Studio 订单 / 后续流程</strong><span style="font-size:12px;color:var(--ant-text-tertiary)">Request → Proof → Approved → Production → Shipped → Delivered</span></div><div class="table-wrap"><table><thead><tr><th>Order</th><th>User</th><th>Status</th><th>Proof</th><th>Total</th><th>Email</th><th>操作</th></tr></thead><tbody id="studioOrdersBody"></tbody></table></div></div>
+      <div class="table-card" style="margin-bottom:16px"><div class="table-toolbar"><strong>订单事件</strong><span style="font-size:12px;color:var(--ant-text-tertiary)">前端提交、Proof、状态与邮件均记录</span></div><div class="table-wrap"><table><thead><tr><th>Order</th><th>Event</th><th>Source</th><th>Detail</th><th>Time</th></tr></thead><tbody id="studioEventsBody"></tbody></table></div></div>
+      <div class="table-card" style="margin-bottom:16px"><div class="table-toolbar"><strong>已发布婚礼页面</strong></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>User</th><th>Names</th><th>Scene</th><th>URL</th></tr></thead><tbody id="studioInvitationsBody"></tbody></table></div></div>
+      <div class="table-card"><div class="table-toolbar"><strong>邮件 / 通知</strong></div><div class="table-wrap"><table><thead><tr><th>Type</th><th>To</th><th>Subject</th><th>Status</th><th>Created</th></tr></thead><tbody id="studioNotificationsBody"></tbody></table></div></div></div>
+    </section>
+
+    <section class="page" id="logistics">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>物流管理</span></div><div class="page-head-row"><div><h1>物流管理</h1><p>Carrier API · Tracking · 运费 · 税费 · 区域规则 · 多店铺同步 · Storefront Quote</p></div><div class="page-actions"><button class="ant-btn" onclick="syncTracking()">同步轨迹</button><button class="ant-btn primary" onclick="syncShippingStores()">同步到所有网店</button></div></div></div>
+      <div class="content">
+        <div class="grid-kpi">
+          <div class="card stat"><div class="stat-label">Active Shipments</div><div class="stat-value" id="logActive">2</div><div class="stat-foot">运输中 / 待发货</div></div>
+          <div class="card stat"><div class="stat-label">Carrier APIs</div><div class="stat-value" id="logProviders">0</div><div class="stat-foot">已配置连接器</div></div>
+          <div class="card stat"><div class="stat-label">Shipping Regions</div><div class="stat-value" id="logRegions">6</div><div class="stat-foot">运费 / 税费区域</div></div>
+          <div class="card stat"><div class="stat-label">Connected Stores</div><div class="stat-value" id="logStores">3</div><div class="stat-foot">可同步渠道</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-title"><strong>物流 API / 承运商</strong><span>点击卡片配置 API</span></div><div class="card-body"><div class="store-grid" id="logisticsProviders"></div></div></div>
+          <div class="card"><div class="card-title"><strong>运费与税费试算</strong><span>同一服务用于前端购物车</span></div><div class="card-body">
+            <div class="form-item"><label>Country</label><select class="ant-select" id="quoteCountry"><option value="CH">Switzerland</option><option value="DE">Germany</option><option value="FR">France / EU</option><option value="GB">United Kingdom</option><option value="US">United States</option><option value="CA">Canada</option></select></div>
+            <div class="form-item" style="margin-top:10px"><label>Postal code</label><input class="ant-input" id="quotePostal" value="4051"/></div>
+            <div class="form-item" style="margin-top:10px"><label>Cart subtotal</label><input class="ant-input" id="quoteSubtotal" type="number" value="980"/></div>
+            <div style="display:flex;gap:8px;margin-top:14px"><button class="ant-btn primary" onclick="testShippingQuote()">计算运费 / 税费</button><button class="ant-btn" onclick="showPage('connectors')">配置 Tax API</button></div>
+            <div id="quoteResult" style="margin-top:14px;color:var(--ant-text-secondary);font-size:13px;line-height:1.8">选择区域后测试服务端报价。</div>
+          </div></div>
+        </div>
+        <div class="table-card" style="margin-bottom:16px"><div class="table-toolbar"><strong>Shipment Tracking</strong><span style="font-size:12px;color:var(--ant-text-tertiary)">点击 Tracking 查看完整轨迹</span></div><div class="table-wrap"><table><thead><tr><th>Order</th><th>Carrier</th><th>Tracking</th><th>Status</th><th>Last event</th><th>ETA</th></tr></thead><tbody id="shipmentsBody"></tbody></table></div></div>
+        <div class="table-card" style="margin-bottom:16px"><div class="table-toolbar"><strong>运费 / 税费区域</strong><div class="table-tools"><button class="ant-btn" onclick="exportData('shipping_zones','xlsx')">Export Excel</button></div></div><div class="table-wrap"><table><thead><tr><th>Region</th><th>Countries</th><th>Standard</th><th>Express</th><th>Free threshold</th><th>Tax mode</th><th>Tax rate</th><th>Status</th></tr></thead><tbody id="zonesBody"></tbody></table></div></div>
+        <div class="table-card"><div class="table-toolbar"><strong>网店同步状态</strong><span style="font-size:12px;color:var(--ant-text-tertiary)">运费区域与报价策略同步到 Shopify / Direct Store</span></div><div class="table-wrap"><table><thead><tr><th>Store</th><th>Provider</th><th>Sync type</th><th>Status</th><th>Last sync</th></tr></thead><tbody id="shippingStoreSyncBody"></tbody></table></div></div>
+      </div>
+    </section>
+
+    <section class="page" id="catalog">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>商品 / 采购</span></div><div class="page-head-row"><div><h1>商品主数据 / 采购成本</h1><p>Supplier Feed → Master Catalog → Listing → Seller Channels</p></div><div class="page-actions"><button class="ant-btn" data-action="agent:检查商品同步和采购成本异常">AI 成本检查</button><button class="ant-btn primary" data-action="agent:同步供应商商品到已连接店铺">同步商品</button></div></div></div>
+      <div class="content"><div class="table-card"><div class="table-toolbar"><strong>Master Catalog</strong><button class="ant-btn" data-action="import-feed">导入 Supplier Feed</button></div><div class="table-wrap"><table><thead><tr><th>SKU</th><th>产品</th><th>供应成本</th><th>到岸成本</th><th>售价</th><th>毛利率</th><th>库存</th><th>渠道状态</th></tr></thead><tbody id="catalogBody"></tbody></table></div></div></div>
+    </section>
+
+    <section class="page" id="data">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>Data</span></div><div class="page-head-row"><div><h1>数据导入 / 导出</h1><p>Excel / CSV 模板、预览校验、确认导入和模块化导出</p></div><div class="page-actions"><button class="ant-btn" onclick="downloadTemplate()">下载 Excel 模板</button></div></div></div>
+      <div class="content"><div class="data-layout">
+        <div class="card"><div class="card-title"><strong>导入数据</strong><span>.xlsx / .csv</span></div><div class="card-body">
+          <div class="form-item"><label>数据类型</label><select class="ant-select" id="importEntity"><option value="products">Products</option><option value="orders">Orders</option><option value="customers">Customers</option><option value="shipments">Shipments</option><option value="shipping_zones">Shipping Zones</option><option value="influencers">Creators</option><option value="affiliates">Affiliates</option><option value="campaigns">Campaigns</option></select></div>
+          <div class="upload-zone" style="margin-top:14px"><div class="upload-icon">⇧</div><strong>选择 Excel 或 CSV 文件</strong><p>先预览并检查错误，不会直接写入。</p><input id="importFile" type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"/><button class="ant-btn primary" onclick="document.getElementById('importFile').click()">选择文件</button><div id="importFilename" style="font-size:12px;color:var(--ant-text-tertiary);margin-top:8px">No file selected</div></div>
+          <div class="data-actions" style="margin-top:14px"><button class="ant-btn" onclick="previewImport()">预览导入</button><button class="ant-btn primary" id="commitImportBtn" onclick="commitImportData()" disabled>确认导入</button></div>
+          <div class="io-help" style="margin-top:16px">流程：<code>Upload</code> → <code>Validate</code> → <code>Preview</code> → <code>Approve</code> → <code>Commit</code><br>数组字段支持逗号、分号或竖线分隔；日期建议 YYYY-MM-DD。</div>
+        </div></div>
+        <div class="card"><div class="card-title"><strong>导入预览</strong><span id="previewState">Waiting for file</span></div><div class="card-body" id="importPreview"><div style="color:var(--ant-text-tertiary)">上传文件后在这里查看有效行、错误行、字段错误和数据预览。</div></div></div>
+      </div>
+      <div class="table-card" style="margin-top:16px"><div class="table-toolbar"><strong>导出数据</strong><span style="font-size:12px;color:var(--ant-text-tertiary)">Excel 或 CSV</span></div><div class="table-wrap"><table><thead><tr><th>模块</th><th>内容</th><th>Excel</th><th>CSV</th></tr></thead><tbody>
+        <tr><td>Products</td><td>商品、成本、库存、场景标签</td><td><button class="ant-btn" onclick="exportData('products','xlsx')">Export .xlsx</button></td><td><button class="ant-btn" onclick="exportData('products','csv')">Export .csv</button></td></tr>
+        <tr><td>Orders</td><td>订单、收入、成本、状态</td><td><button class="ant-btn" onclick="exportData('orders','xlsx')">Export .xlsx</button></td><td><button class="ant-btn" onclick="exportData('orders','csv')">Export .csv</button></td></tr>
+        <tr><td>Customers</td><td>Customer 360 基础画像</td><td><button class="ant-btn" onclick="exportData('customers','xlsx')">Export .xlsx</button></td><td><button class="ant-btn" onclick="exportData('customers','csv')">Export .csv</button></td></tr>
+        <tr><td>Shipments</td><td>承运商、Tracking、ETA</td><td><button class="ant-btn" onclick="exportData('shipments','xlsx')">Export .xlsx</button></td><td><button class="ant-btn" onclick="exportData('shipments','csv')">Export .csv</button></td></tr>
+        <tr><td>Shipping Zones</td><td>区域、运费、免邮门槛、税费模式</td><td><button class="ant-btn" onclick="exportData('shipping_zones','xlsx')">Export .xlsx</button></td><td><button class="ant-btn" onclick="exportData('shipping_zones','csv')">Export .csv</button></td></tr>
+        <tr><td>Creators / Affiliates</td><td>达人、联盟、佣金</td><td><button class="ant-btn" onclick="exportData('influencers','xlsx')">Creators .xlsx</button> <button class="ant-btn" onclick="exportData('affiliates','xlsx')">Affiliates .xlsx</button></td><td><button class="ant-btn" onclick="exportData('influencers','csv')">Creators .csv</button></td></tr>
+        <tr><td>Marketing</td><td>Campaign spend / revenue / conversions</td><td><button class="ant-btn" onclick="exportData('campaigns','xlsx')">Export .xlsx</button></td><td><button class="ant-btn" onclick="exportData('campaigns','csv')">Export .csv</button></td></tr>
+        <tr><td>Finance</td><td>统一财务汇总</td><td><button class="ant-btn" onclick="exportData('finance','xlsx')">Export .xlsx</button></td><td><button class="ant-btn" onclick="exportData('finance','csv')">Export .csv</button></td></tr>
+      </tbody></table></div></div></div>
+    </section>
+
+    <section class="page" id="inbox">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>Inbox</span></div><div class="page-head-row"><div><h1>统一 Inbox</h1><p>Email、Instagram、WhatsApp、TikTok Business Messaging、Web Chat</p></div><div class="page-actions"><button class="ant-btn" data-action="routing-rules">路由规则</button><button class="ant-btn primary" data-action="agent:汇总所有未读客户会话并给出处理建议">AI 汇总未读</button></div></div></div>
+      <div class="content"><div class="grid-2"><div class="card"><div class="card-title"><strong>会话</strong><span id="inboxCount">3 open</span></div><div class="card-body list" id="inboxList"></div></div><div class="card"><div class="card-title"><strong>Agent Reply Draft</strong><span>Approval required</span></div><div class="card-body"><p style="color:var(--ant-text-secondary)">选择会话后，Agent 会读取客户画像、订单和历史消息，生成回复草稿。</p><button class="ant-btn primary" data-action="reply-draft">生成草稿</button></div></div></div></div>
+    </section>
+
+    <section class="page" id="marketing">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>Marketing</span></div><div class="page-head-row"><div><h1>营销 / 广告运营</h1><p>Spend、Revenue、ROAS、CAC、Attribution、AI Optimization</p></div><div class="page-actions"><button class="ant-btn" data-action="marketing-ideas">AI 优化建议</button><button class="ant-btn primary" data-action="new-campaign">新建 Campaign</button></div></div></div>
+      <div class="content"><div class="grid-kpi"><div class="card stat"><div class="stat-label">Spend</div><div class="stat-value" data-kpi="mkt-spend">$4,040</div></div><div class="card stat"><div class="stat-label">Attributed Revenue</div><div class="stat-value" data-kpi="mkt-revenue">$13,330</div></div><div class="card stat"><div class="stat-label">Blended ROAS</div><div class="stat-value" data-kpi="mkt-roas">3.30</div></div><div class="card stat"><div class="stat-label">Approvals</div><div class="stat-value" data-kpi="mkt-approvals">2</div></div></div><div class="table-card"><div class="table-toolbar"><strong>Campaigns</strong><div class="table-tools"><button class="ant-btn" data-action="platforms">平台</button><button class="ant-btn" data-action="period">日期</button></div></div><div class="table-wrap"><table><thead><tr><th>平台</th><th>Campaign</th><th>Spend</th><th>Revenue</th><th>ROAS</th><th>CPA</th><th>状态</th></tr></thead><tbody id="marketingBody"></tbody></table></div></div></div>
+    </section>
+
+    <section class="page" id="customers">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>Customer 360</span></div><div class="page-head-row"><div><h1>Customer 360 / 产品推荐</h1><p>多维价值、行为、兴趣、订单历史与个性化推荐</p></div><div class="page-actions"><button class="ant-btn" data-action="segments">创建 Segment</button><button class="ant-btn primary" onclick="quickAgent('识别高价值用户并生成个性化推荐任务')">AI 推荐</button></div></div></div>
+      <div class="content">
+        <div class="grid-kpi">
+          <div class="card stat"><div class="stat-label">Customer Profiles</div><div class="stat-value" data-kpi="cust-profiles">3</div><div class="stat-foot">统一身份画像</div></div>
+          <div class="card stat"><div class="stat-label">VIP / Returning</div><div class="stat-value" data-kpi="cust-active">3</div><div class="stat-foot">可运营用户</div></div>
+          <div class="card stat"><div class="stat-label">Average LTV</div><div class="stat-value" data-kpi="cust-ltv">$586</div><div class="stat-foot">LTV / customer</div></div>
+          <div class="card stat"><div class="stat-label">Recommendation coverage</div><div class="stat-value" data-kpi="cust-reco">100%</div><div class="stat-foot">每个用户均有推荐</div></div>
+        </div>
+        <div class="table-card"><div class="table-toolbar"><strong>Customer Profiles</strong><span style="color:var(--ant-text-tertiary);font-size:12px">点击用户查看完整画像</span></div><div class="table-wrap"><table><thead><tr><th>Customer</th><th>Segment</th><th>LTV</th><th>订单</th><th>活跃度</th><th>购买意向</th><th>偏好场景</th><th>来源</th><th>Next Best Action</th></tr></thead><tbody id="customersBody"></tbody></table></div></div>
+      </div>
+    </section>
+
+    <section class="page" id="creators">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>Creator</span></div><div class="page-head-row"><div><h1>Creator / Affiliate</h1><p>达人发现、合作、佣金与归因</p></div><button class="ant-btn primary" data-action="agent:筛选适合婚礼品类的达人">AI 筛选</button></div></div>
+      <div class="content"><div class="table-card"><div class="table-toolbar"><strong>Creator List</strong><button class="ant-btn" data-action="agent:联系达人合作并准备外联草稿">+ Campaign</button></div><div class="table-wrap"><table><thead><tr><th>平台</th><th>账号</th><th>Followers</th><th>Engagement</th><th>状态</th></tr></thead><tbody id="creatorsBody"></tbody></table></div></div></div>
+    </section>
+
+    <section class="page" id="finance">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>Finance</span></div><div class="page-head-row"><div><h1>财务 / 单位经济</h1><p>Revenue − COGS − Shipping − Payment fee − Affiliate − Ads</p></div><div class="page-actions"><button class="ant-btn" data-action="agent:汇总本期财务利润并准备结算">结算</button><button class="ant-btn" data-action="export-pnl">导出 P&L</button></div></div></div>
+      <div class="content"><div class="grid-kpi"><div class="card stat"><div class="stat-label">Revenue</div><div class="stat-value" data-kpi="fin-revenue">$41,620</div></div><div class="card stat"><div class="stat-label">COGS + Shipping</div><div class="stat-value" data-kpi="fin-cogs">$16,160</div></div><div class="card stat"><div class="stat-label">Ads + Affiliate</div><div class="stat-value" data-kpi="fin-ads">$5,920</div></div><div class="card stat"><div class="stat-label">Contribution</div><div class="stat-value" data-kpi="fin-contribution">$18,280</div></div></div><div class="grid-2"><div class="card"><div class="card-title"><strong>利润桥</strong><span>Contribution Margin</span></div><div class="card-body health" id="profitBridge"></div></div><div class="card"><div class="card-title"><strong>成本异常</strong><span>AI monitored</span></div><div class="card-body list"><div class="list-item"><div class="list-icon">!</div><div class="list-main"><strong>Supplier cost +8.2%</strong><p>ACR-WELCOME-SIGN · this week</p></div><div class="list-side">Review</div></div></div></div></div></div>
+    </section>
+
+    <section class="page" id="agent">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>Agent</span></div><div class="page-head-row"><div><h1>Agent Command Center</h1><p>Plan → Retrieve → Tool Call → Approval → Execute → Observe</p></div><div class="page-actions"><button class="ant-btn" data-action="run-history">运行历史</button><button class="ant-btn" data-action="guardrails">自动化规则</button></div></div></div>
+      <div class="content"><div class="agent-grid"><div class="card agent-chat"><div class="quick"><button onclick="quickAgent('汇总今天需要我处理的事项')">今日重点</button><button onclick="quickAgent('检查订单和物流异常')">订单异常</button><button onclick="quickAgent('分析低ROAS广告并生成优化建议')">广告优化</button><button onclick="quickAgent('检查商品同步和采购成本异常')">商品同步</button></div><div class="messages" id="agentMessages"><div class="msg agent">我是 Commerce Ops Agent。可以跨店铺、订单、物流、广告、财务、客户、商品和达人执行分析；涉及外部写操作会进入审批。</div></div><div class="composer"><textarea id="agentInput" placeholder="例如：检查本周利润下降原因，并创建需要审批的优化任务"></textarea><button class="ant-btn primary" onclick="runAgent()">执行</button></div></div><div class="card"><div class="card-title"><strong>Current Run</strong><span>Trace</span></div><div class="card-body"><div class="steps" id="agentSteps"><div class="step"><i>1</i><div><b>No active run</b><span>等待任务</span></div></div></div></div></div></div></div>
+    </section>
+
+    <section class="page" id="approvals">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>Approvals</span></div><div class="page-head-row"><div><h1>审批中心</h1><p>广告发布、预算、退款、采购、外部消息发送</p></div><button class="ant-btn" data-action="guardrails">审批规则</button></div></div>
+      <div class="content"><div class="table-card"><div class="table-toolbar"><strong>Pending approvals</strong><span></span></div><div class="table-wrap"><table><thead><tr><th>类型</th><th>请求</th><th>风险</th><th>Agent 理由</th><th>影响</th><th>操作</th></tr></thead><tbody id="approvalBody"></tbody></table></div></div></div>
+    </section>
+
+    <section class="page" id="connectors">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>API</span></div><div class="page-head-row"><div><h1>Connectors / Agentic Commerce</h1><p>点击任意 API 卡片配置凭证、Webhook、启用状态并查看最近测试结果</p></div><button class="ant-btn" data-action="test-connectors">测试全部连接</button></div></div>
+      <div class="content"><div class="store-grid" id="connectorsGrid"></div></div>
+    </section>
+  </main>
+</div>
+
+<div class="mask" id="shopifyMask"><div class="modal"><div class="modal-head"><strong>连接 Shopify 店铺</strong><button class="icon-btn" onclick="closeShopify()">×</button></div><div class="modal-body"><div class="form-item"><label>Shopify Store Domain</label><input class="ant-input" id="shopifyDomain" placeholder="your-store.myshopify.com"/></div><p style="font-size:12px;color:var(--ant-text-tertiary);margin-top:12px">下一步会进入 Shopify 官方 OAuth。SHOPIFY_CLIENT_SECRET 只保存在服务端。</p></div><div class="modal-foot"><button class="ant-btn" onclick="closeShopify()">取消</button><button class="ant-btn shopify" onclick="startShopifyOAuth()">继续授权</button></div></div></div>
+<div class="drawer-mask" id="drawerMask" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer"><div class="drawer-head"><strong id="drawerTitle">Detail</strong><button class="icon-btn" onclick="closeDrawer()">×</button></div><div class="drawer-body" id="drawerBody"></div><div class="drawer-foot" id="drawerFoot"><button class="ant-btn" onclick="closeDrawer()">关闭</button></div></aside>
+<div class="notice" id="notice"></div>
+
+<script src="i18n.js"></script>
+<script>
+// ===== Wedding Commerce OS — Admin (Ant Design Pro layout) =====
+// Live data from /api/saas/*; falls back to the built-in demo data when the backend is unreachable.
+const tenant='tenant_demo';
+const demo={
+stores:[
+{id:'s1',name:'Atelier Paris',domain:'atelier-paris.myshopify.com',country:'FR',status:'connected',health:96,orders:122,revenue:18420},
+{id:'s2',name:'Garden Wedding',domain:'garden-wedding.myshopify.com',country:'CH',status:'connected',health:91,orders:98,revenue:14280},
+{id:'s3',name:'Beach Studio',domain:'beach-studio.myshopify.com',country:'US',status:'warning',health:76,orders:64,revenue:8920}
+],
+orders:[
+{id:'POD-2026-1008',customer:'emma@example.com',store:'Atelier Paris',status:'Proofing',revenue:238,profit:114,tracking:'—',updated:'5 min ago'},
+{id:'POD-2026-1009',customer:'leo@example.com',store:'Garden Wedding',status:'Production',revenue:506,profit:246,tracking:'—',updated:'12 min ago'},
+{id:'POD-2026-1010',customer:'mia@example.com',store:'Beach Studio',status:'Shipped',revenue:329,profit:148,tracking:'TRK-DEMO-8821',updated:'18 min ago'},
+{id:'POD-2026-1011',customer:'zoe@example.com',store:'Atelier Paris',status:'Paid',revenue:186,profit:89,tracking:'—',updated:'34 min ago'}
+],
+catalog:[
+{sku:'INV-COTTON-01',name:'Cotton Paper Invitation',supplier:4.8,landed:6.2,price:12.9,margin:'51.9%',inventory:680,status:'synced'},
+{sku:'SIGN-ACRYLIC-01',name:'Acrylic Welcome Sign',supplier:28,landed:34.5,price:68,margin:'49.3%',inventory:122,status:'synced'},
+{sku:'MENU-PEARL-01',name:'Pearl Menu Card',supplier:4.1,landed:5.35,price:11.9,margin:'55.0%',inventory:940,status:'pending'},
+{sku:'GIFT-TOTE-01',name:'Mini Tote Bag',supplier:8.6,landed:10.9,price:21.9,margin:'50.2%',inventory:305,status:'synced'}
+],
+marketing:[
+{platform:'Meta',name:'Garden Invitation EU',spend:1820,revenue:6120,roas:3.36,cpa:22.7,status:'active'},
+{platform:'Google',name:'Wedding Acrylic Search',spend:1240,revenue:4980,roas:4.02,cpa:18.2,status:'active'},
+{platform:'TikTok',name:'Bride Creator Spark',spend:980,revenue:2230,roas:2.28,cpa:31.6,status:'review'}
+],
+customers:[
+{email:'emma@example.com',segment:'VIP',ltv:1280,orders:6,scene:'French Indoor',source:'Instagram',next:'Anniversary / thank-you set'},
+{email:'mia@example.com',segment:'High intent',ltv:620,orders:3,scene:'Beach Ceremony',source:'TikTok',next:'Favor bundle'},
+{email:'zoe@example.com',segment:'New',ltv:186,orders:1,scene:'Cream Garden',source:'Google',next:'Welcome sign cross-sell'}
+],
+creators:[
+{platform:'Instagram',handle:'@weddingmuse',followers:'184K',engagement:'5.2%',status:'shortlist'},
+{platform:'TikTok',handle:'@brideideas',followers:'322K',engagement:'7.1%',status:'contacted'},
+{platform:'Pinterest',handle:'@modernvows',followers:'96K',engagement:'3.8%',status:'active'}
+],
+inbox:[{id:'d1',channel:'Instagram',subject:'Can I change the material?',updated:'2 min ago'},{id:'d2',channel:'Email',subject:'Order #1049 proof',updated:'9 min ago'},{id:'d3',channel:'WhatsApp',subject:'Beach wedding bundle',updated:'18 min ago'}],
+finance:{revenue:41620,cogs:12980,shipping:3180,payment_fees:0,affiliates:1240,ads:4680,contribution_margin:18280},
+approvals:[{type:'Marketing',title:'Pause TikTok Spark Ads',risk:'medium',reason:'ROAS below target',impact:'Save ~$320/wk'},{type:'Messaging',title:'Send 5 customer replies',risk:'medium',reason:'Context verified',impact:'5 conversations'},{type:'Refund',title:'Refund POD-2026-1007',risk:'high',reason:'Cancelled before production',impact:'$186'}],
+connectors:[['Shopify','configured','OAuth · Admin GraphQL 2026-10'],['PayPal','configured','Create · Capture · Refund'],['UCP','ready','Agentic commerce'],['ACP','ready','ChatGPT commerce'],['MCP','ready','Agent → tools'],['A2A','ready','Agent delegation']],
+kpi:{revenue:41620,contribution:18280,orders:284,tasks:4}
+};
+
+// ---------- helpers ----------
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const I18N=()=>window.WeddingI18n||{t:x=>x,lang:()=>'zh'};
+const T=zh=>I18N().t(zh);
+const L=(zh,en,de)=>({zh,en,de})[I18N().lang()]||zh;   // interpolated strings
+const money=v=>'$'+Number(v||0).toLocaleString(undefined,{maximumFractionDigits:2});
+const pct=v=>(Number(v||0)*100).toFixed(1)+'%';
+const r2=v=>Math.round(Number(v||0)*100)/100;
+const tag=s=>{const c=/active|connected|shipped|synced|approved|paid|delivered|VIP|configured|ready/i.test(s)?'green':/review|proof|production|pending|warning|contacted|shortlist|needs|draft|medium/i.test(s)?'gold':/high|failed|cancel|error/i.test(s)?'red':'blue';return `<span class="tag ${c}">${esc(s)}</span>`};
+function ago(iso){if(!iso)return '—';const m=Math.max(0,Math.round((Date.now()-new Date(iso))/60000));if(isNaN(m))return esc(iso);if(m<60)return L(`${m} 分钟前`,`${m} min ago`,`vor ${m} Min.`);const h=Math.round(m/60);if(h<48)return L(`${h} 小时前`,`${h} h ago`,`vor ${h} Std.`);return new Date(iso).toLocaleDateString()}
+function notice(t){const n=document.getElementById('notice');n.textContent=t;n.classList.add('show');clearTimeout(notice.t);notice.t=setTimeout(()=>n.classList.remove('show'),2200)}
+
+// ---------- API (admin key asked once on 401, kept per tab) ----------
+const KEY_STORE='wedding-commerce-admin-key';
+const adminKey=()=>{try{return sessionStorage.getItem(KEY_STORE)||'change-me'}catch{return 'change-me'}};
+// Many requests run in parallel: only the first 401 prompts; the others reuse the key it produced.
+let keyPrompt=null,authDenied=false;
+function askKey(){
+  keyPrompt||=Promise.resolve().then(()=>{const k=prompt('Admin API Key (ADMIN_API_KEY)');if(!k){authDenied=true;return false}try{sessionStorage.setItem(KEY_STORE,k.trim())}catch{}return true}).finally(()=>setTimeout(()=>keyPrompt=null,0));
+  return keyPrompt;
+}
+async function api(url,opt={},retry=true){
+  try{
+    const used=adminKey();
+    const r=await fetch(url,{...opt,headers:{'x-tenant-id':tenant,'x-admin-api-key':used,'Content-Type':'application/json',...(opt.headers||{})}});
+    if(r.status===401&&retry&&!authDenied){if(adminKey()!==used||await askKey())return api(url,opt,false)}
+    if(r.status===401)authDenied=true;
+    const d=await r.json().catch(()=>null);
+    if(!r.ok){if(d)d.__error=true;return d&&d.error?d:null}
+    return d;
+  }catch{return null}
+}
+const post=(url,body)=>api(url,{method:'POST',body:JSON.stringify(body||{})});
+
+// ---------- state & mapping ----------
+let live=false, view={...demo}, raw={}, selectedConversation=null, hiddenCols=new Set(), compact=false;
+const platformLabel={google_ads:'Google',meta:'Meta',tiktok:'TikTok',pinterest:'Pinterest',reddit:'Reddit',linkedin:'LinkedIn',youtube:'YouTube',x:'X'};
+const fmtFollowers=n=>typeof n==='number'?(n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?Math.round(n/1e3)+'K':String(n)):n;
+
+function mapLive(d){
+  const storeName=id=>id==='pod_studio'?'POD Studio':id==='direct_storefront'?'Storefront':(d.stores.find(s=>s.id===id)?.name||id||'—');
+  const custEmail=o=>o.customer_email||d.customers.find(c=>c.id===o.customer_id)?.email||o.customer_id||'—';
+  const tracking=o=>d.shipments.find(s=>s.order_id===o.id)?.tracking_number||o.tracking_number||'—';
+  const profit=o=>r2(Number(o.revenue||0)-Number(o.cogs||0)-Number(o.shipping_cost||0)-Number(o.payment_fee||0)-Number(o.affiliate_commission||0)-Number(o.ad_attributed_cost||0));
+  const paidOrders=d.orders.filter(o=>!['pending','failed','cancelled'].includes(String(o.payment_status||'').toLowerCase()));
+  const camps=(d.marketing?.campaigns)||[];
+  return {
+    stores:d.stores.map(s=>{const os=paidOrders.filter(o=>o.store_id===s.id);return {...s,health:s.health||88,orders:os.length,revenue:r2(os.reduce((a,o)=>a+Number(o.revenue||0),0))}}),
+    orders:[...d.orders].sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||''))).map(o=>({id:o.id,customer:custEmail(o),store:storeName(o.store_id),status:o.status,revenue:Number(o.revenue||0),currency:o.currency||'USD',profit:profit(o),tracking:tracking(o),updatedAt:o.updated_at||o.created_at,raw:o})),
+    catalog:d.catalog.map(p=>({sku:p.sku,name:p.name,supplier:r2(p.supplier_cost),landed:r2(p.landed_cost),price:r2(p.base_price),margin:pct(p.gross_margin),inventory:p.inventory,status:p.channel_status||'synced'})),
+    marketing:camps.map(c=>({platform:platformLabel[c.platform]||c.platform,name:c.name,spend:c.spend,revenue:c.revenue,roas:r2(c.roas).toFixed(2),cpa:r2(c.cpa).toFixed(2),status:c.status})),
+    customers:d.customers.map(c=>({id:c.id,name:c.name||c.email,email:c.email,segment:c.segment,ltv:c.lifetime_value,orders:c.orders,scene:c.favorite_scene,source:c.acquisition,scores:c.scores||{},next:(c.preferred_categories||[])[0]?`${c.preferred_categories[0]} cross-sell`:'Cross-sell recommendation'})),
+    creators:(d.influencers?.items||[]).map(i=>({platform:i.platform,handle:i.handle,followers:fmtFollowers(i.followers),engagement:pct(i.engagement_rate),status:i.status})),
+    inbox:(d.conversations?.conversations||[]).map(c=>({id:c.id,channel:c.channel,subject:c.subject,last:c.last_message,status:c.status,updatedAt:c.updated_at})),
+    finance:d.finance,
+    approvals:d.tasks.filter(t=>t.status==='needs_approval').map(t=>({id:t.id,type:t.type,title:t.title,risk:t.risk,reason:t.payload?.request||'Agent-staged action',impact:'—'})),
+    connectors:[
+      ...(d.connectors.protocols||[]).map(x=>[x.name,x.status,x.role]),
+      ['Shopify',d.connectors.shopify?.configured?'configured':'needs keys','OAuth · Admin GraphQL '+(d.connectors.shopify?.api_version||'')],
+      ['PayPal',d.connectors.paypal?.configured?'configured':'needs keys',(d.connectors.paypal?.environment||'')+' · Create · Capture · Refund'],
+      ...(d.connectors.marketing||[]).map(x=>[x.label,x.configured?'configured':'needs keys',(x.capabilities||[]).join(' · ')]),
+      ...(d.connectors.logistics||[]).map(x=>[x.label,x.configured?'configured':'needs keys','tracking / webhook']),
+      ...(d.connectors.messaging||[]).map(x=>[x.label,x.configured?'configured':'needs keys',x.send_mode])
+    ],
+    kpi:{revenue:d.finance.revenue,contribution:d.finance.contribution_margin,orders:d.overview.orders,tasks:d.overview.open_tasks}
+  };
+}
+
+async function load(){
+  const keys=['overview','stores','orders','users','studio-projects','notifications','invitations','proofs','order-events','shipments','catalog','finance','marketing','customers','conversations','influencers','tasks','connectors'];
+  const res=await Promise.all(keys.map(k=>api('/api/saas/'+k)));
+  const d={};keys.forEach((k,i)=>d[k]=res[i]&&!res[i].__error?res[i]:null);
+  live=!!(d.overview&&d.stores&&d.orders&&d.finance);
+  if(live){
+    for(const k of ['shipments','catalog','customers','tasks'])d[k]=d[k]||[];
+    d.connectors=d.connectors||{};
+    raw=d; view=mapLive(d);
+  } else { raw={}; view={...demo}; }
+  render();
+  if(live){loadLogistics();loadConnectorRegistry();}
+}
+
+// ---------- render ----------
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));
+  document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  const label=document.querySelector(`[data-page="${id}"] span:nth-child(2)`)?.textContent||id;
+  document.getElementById('headerTitle').textContent=label;
+  document.body.classList.remove('sider-open');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+
+function chart(){
+  const a=[18,21,20,25,27,31,30,35,37,41,39,45],b=[8,10,9,12,13,15,14,17,18,20,19,22],w=760,h=240,p=20,max=50;
+  const pts=x=>x.map((v,i)=>`${p+i*(w-p*2)/(x.length-1)},${h-p-v/max*(h-p*2)}`).join(' ');
+  document.getElementById('overviewChart').innerHTML=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${[.2,.4,.6,.8].map(q=>`<line class="grid-line" x1="${p}" x2="${w-p}" y1="${h*q}" y2="${h*q}"/>`).join('')}<polyline class="revenue-line" points="${pts(a)}"/><polyline class="profit-line" points="${pts(b)}"/></svg>`;
+}
+const setKpi=(k,v)=>{const e=document.querySelector(`[data-kpi="${k}"]`);if(e)e.textContent=v};
+const setBadge=(id,n)=>{const e=document.getElementById(id);if(e){e.textContent=n||'';e.style.display=n?'':'none'}};
+const when=x=>x.updatedAt?ago(x.updatedAt):(x.updated||'—');
+const empty=(cols,text)=>`<tr><td colspan="${cols}" class="empty">${esc(text)}</td></tr>`;
+
+function renderStudioSync(){
+  if(!live)return;
+  const users=raw.users||[], projects=raw['studio-projects']||[], notes=raw.notifications||[], invitations=raw.invitations||[], proofs=raw.proofs||[], events=raw['order-events']||[], orders=raw.orders||[];
+  const studioOrders=orders.filter(o=>o.channel==='studio');
+  const byId=Object.fromEntries(users.map(u=>[u.id,u]));
+  const proofByOrder=Object.fromEntries(proofs.map(p=>[p.order_id,p]));
+  const latestMail=oid=>[...notes].reverse().find(n=>n.related_id===oid&&n.channel==='email');
+  const st=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  st('studioUsersKpi',users.length);st('studioProjectsKpi',projects.length);st('studioOrdersKpi',studioOrders.length);st('studioNotificationsKpi',notes.length);setBadge('badge-studio',projects.filter(p=>p.status==='submitted').length);
+  const ub=document.getElementById('studioUsersBody'); if(ub)ub.innerHTML=users.length?users.map(u=>`<tr><td>${esc(u.email)}</td><td>${esc(u.name||'—')}</td><td>${tag(u.status||'active')}</td><td>${esc(ago(u.last_login_at))}</td><td><button class="ant-btn" onclick="setStudioUserStatus('${esc(u.id)}','${u.status==='disabled'?'active':'disabled'}')">${u.status==='disabled'?'启用':'停用'}</button></td></tr>`).join(''):empty(5,'暂无账号');
+  const pb=document.getElementById('studioProjectsBody'); if(pb)pb.innerHTML=projects.length?[...projects].reverse().map(p=>`<tr><td>${esc(p.id)}</td><td>${esc(byId[p.user_id]?.email||p.contact?.email||'—')}</td><td>${esc(p.scenario_id||'custom')}</td><td>${tag(p.status||'draft')}</td><td>${esc(ago(p.updated_at||p.created_at))}</td></tr>`).join(''):empty(5,'暂无方案');
+  const statuses=['Quote requested','Order requested','Sample requested','Proof ready','Changes requested','Approved','Production','Shipped','Delivered','Cancelled'];
+  const ob=document.getElementById('studioOrdersBody'); if(ob)ob.innerHTML=studioOrders.length?[...studioOrders].reverse().map(o=>{const pr=proofByOrder[o.id],mail=latestMail(o.id),uid=byId[o.user_id];return `<tr><td><b>${esc(o.id)}</b><div style="font-size:11px;color:var(--ant-text-tertiary)">${esc(o.buyer_type||'')}</div></td><td>${esc(uid?.email||o.customer_email||'—')}</td><td>${tag(o.status||'—')}</td><td>${pr?tag(pr.status||'Pending'):'—'}</td><td>${esc(o.currency||'')} ${Number(o.revenue||0).toFixed(2)}</td><td>${mail?tag(mail.status||'pending'):'—'}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><select class="ant-select" id="status_${esc(o.id)}" style="min-width:145px">${statuses.map(x=>`<option ${x===o.status?'selected':''}>${esc(x)}</option>`).join('')}</select><button class="ant-btn" onclick="setStudioOrderStatus('${esc(o.id)}')">更新</button>${pr?`<button class="ant-btn primary" onclick="sendStudioProof('${esc(o.id)}','${esc(pr.id)}')">${pr.status==='ChangesRequested'?'重新发 Proof':'发送 Proof'}</button>`:''}<button class="ant-btn" onclick="resendStudioEmail('${esc(o.id)}')">重发邮件</button></div></td></tr>`}).join(''):empty(7,'暂无 Studio 订单');
+  const eb=document.getElementById('studioEventsBody'); if(eb)eb.innerHTML=events.length?[...events].sort((a,b)=>String(b.event_time||'').localeCompare(String(a.event_time||''))).slice(0,150).map(e=>`<tr><td>${esc(e.order_id||'—')}</td><td>${esc(e.event_type||'—')}</td><td>${esc(e.source||'—')}</td><td>${esc(e.payload?.status||e.payload?.note||e.payload?.proof_id||'—')}</td><td>${esc(ago(e.event_time||e.created_at))}</td></tr>`).join(''):empty(5,'暂无事件');
+  const ib=document.getElementById('studioInvitationsBody'); if(ib)ib.innerHTML=invitations.length?[...invitations].reverse().map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(byId[x.user_id]?.email||'—')}</td><td>${esc(x.names||'—')}</td><td>${esc(x.scene||'—')}</td><td><a class="link" href="${esc(x.url||'#')}" target="_blank">Open</a></td></tr>`).join(''):empty(5,'暂无发布页面');
+  const nb=document.getElementById('studioNotificationsBody'); if(nb)nb.innerHTML=notes.length?[...notes].reverse().slice(0,100).map(n=>`<tr><td>${esc(n.type)}</td><td>${esc(n.to||'—')}</td><td>${esc(n.subject||'—')}</td><td>${tag(n.status||'pending')}</td><td>${esc(ago(n.created_at))}</td></tr>`).join(''):empty(5,'暂无通知');
+}
+async function setStudioUserStatus(id,status){
+  if(!confirm(status==='disabled'?'确认停用这个账号？':'确认重新启用这个账号？'))return;
+  const d=await api('/api/saas/users/'+encodeURIComponent(id)+'/status',{method:'POST',body:JSON.stringify({status,approved:true})});
+  if(d&&!d.__error){await load();}else alert(d?.error||'更新失败');
+}
+async function setStudioOrderStatus(id){
+  const el=document.getElementById('status_'+id);if(!el||!confirm(`确认把 ${id} 更新为 ${el.value}？客户会收到状态邮件。`))return;
+  const d=await api('/api/saas/orders/'+encodeURIComponent(id)+'/status',{method:'POST',body:JSON.stringify({status:el.value,approved:true})});
+  if(d&&!d.__error){alert('状态已更新');await load();}else alert(d?.error||'更新失败');
+}
+async function sendStudioProof(orderId,proofId){
+  const url=prompt(`填写 ${orderId} 的效果图 URL（https://... 或 /路径）`);if(!url)return;
+  if(!confirm('保存效果图并立即发送确认邮件给客户？'))return;
+  const d=await api('/api/saas/proofs/'+encodeURIComponent(proofId),{method:'PATCH',body:JSON.stringify({proof_url:url,status:'Sent'})});
+  if(d&&!d.__error){alert('Proof 已保存，系统已尝试发送确认邮件。');await load();}else alert(d?.error||d?.message||'发送失败');
+}
+async function resendStudioEmail(id){
+  if(!confirm(`重发 ${id} 的订单状态邮件？`))return;
+  const d=await api('/api/saas/orders/'+encodeURIComponent(id)+'/resend-email',{method:'POST',body:JSON.stringify({approved:true})});
+  if(d&&!d.__error){alert(d.email_status==='sent'?'邮件已发送':`邮件状态：${d.email_status}`);await load();}else alert(d?.error||'发送失败');
+}
+
+function render(){
+  chart();
+  renderStudioSync();
+  const k=view.kpi,f=view.finance;
+  setKpi('revenue',money(k.revenue));setKpi('contribution',money(k.contribution));setKpi('orders',Number(k.orders).toLocaleString());setKpi('tasks',k.tasks);
+  document.querySelectorAll('[data-kpi-foot]').forEach(e=>{e.textContent=live?T('实时数据'):authDenied?T('演示数据（需要管理员密钥，刷新页面后输入）'):T('演示数据（后端未连接）');e.className='stat-foot data-source'});
+  setKpi('fin-revenue',money(f.revenue));setKpi('fin-cogs',money(Number(f.cogs||0)+Number(f.shipping||0)));setKpi('fin-ads',money(Number(f.ads||0)+Number(f.affiliates||0)));setKpi('fin-contribution',money(f.contribution_margin));
+  const spend=view.marketing.reduce((a,c)=>a+Number(c.spend||0),0),rev=view.marketing.reduce((a,c)=>a+Number(c.revenue||0),0);
+  setKpi('mkt-spend',money(spend));setKpi('mkt-revenue',money(rev));setKpi('mkt-roas',spend?(rev/spend).toFixed(2):'—');
+  setKpi('mkt-approvals',live?(raw.marketing?.ideas||[]).filter(x=>x.requires_approval).length:2);
+
+  const openConvs=view.inbox.filter(c=>!c.status||c.status==='open');
+  setBadge('badge-orders',view.orders.length);setBadge('badge-inbox',openConvs.length);setBadge('badge-agent',k.tasks);setBadge('badge-approvals',view.approvals.length);
+  document.getElementById('inboxCount').textContent=`${openConvs.length} open`;
+
+  document.getElementById('health').innerHTML=view.stores.map(s=>`<div class="health-row"><div class="health-head"><span>${esc(s.name)}</span><b>${esc(s.health)}%</b></div><div class="progress"><i style="width:${Number(s.health)||0}%"></i></div></div>`).join('');
+  const shipIssues=live?(raw.shipments||[]).filter(s=>!/delivered/i.test(s.status||'')).length:1;
+  const margin=f.revenue?f.contribution_margin/f.revenue:0;
+  document.getElementById('attention').innerHTML=[
+    ['!',L(`${view.approvals.length} 个审批待处理`,`${view.approvals.length} approvals waiting`,`${view.approvals.length} Freigaben offen`),'Marketing, refund, messaging','approvals'],
+    ['↗',L(`${shipIssues} 个运输中 / 异常包裹`,`${shipIssues} shipments in transit / exceptions`,`${shipIssues} Sendungen unterwegs / Ausnahmen`),'Logistics','orders'],
+    ['$',L(`贡献利润率 ${pct(margin)}`,`Contribution margin ${pct(margin)}`,`Deckungsbeitrag ${pct(margin)}`),'Supplier cost + paid media','finance'],
+    ['✉',L(`${openConvs.length} 个未处理会话`,`${openConvs.length} open conversations`,`${openConvs.length} offene Konversationen`),'Instagram / Email / WhatsApp','inbox']
+  ].map(x=>`<div class="list-item clickable" onclick="showPage('${x[3]}')"><div class="list-icon">${x[0]}</div><div class="list-main"><strong>${esc(x[1])}</strong><p>${esc(x[2])}</p></div><div class="list-side">${T('查看')}</div></div>`).join('');
+
+  document.getElementById('storesGrid').innerHTML=view.stores.map(s=>`<div class="card store-card"><div class="store-head"><strong>${esc(s.name)}</strong>${tag(s.status)}</div><p>${esc(s.domain||s.provider||'')} · ${esc(s.country||'')}</p><div class="store-stats"><div><small>Orders</small><b>${esc(s.orders??'—')}</b></div><div><small>Revenue</small><b>${money(s.revenue)}</b></div><div><small>Health</small><b>${esc(s.health)}%</b></div></div><div class="progress"><i style="width:${Number(s.health)||0}%"></i></div><div style="margin-top:14px;display:flex;gap:8px"><button class="ant-btn" onclick="syncStore('${esc(s.id)}')">Sync</button><button class="ant-btn" onclick="openStore('${esc(s.id)}')">详情</button></div></div>`).join('');
+
+  fillFilters();renderOrders();
+  document.getElementById('catalogBody').innerHTML=view.catalog.length?view.catalog.map(p=>`<tr><td>${esc(p.sku)}</td><td>${esc(p.name)}</td><td>$${esc(p.supplier)}</td><td>$${esc(p.landed)}</td><td>$${esc(p.price)}</td><td>${esc(p.margin)}</td><td>${esc(p.inventory)}</td><td>${tag(p.status)}</td></tr>`).join(''):empty(8,T('暂无数据'));
+  document.getElementById('marketingBody').innerHTML=view.marketing.length?view.marketing.map(c=>`<tr><td>${esc(c.platform)}</td><td>${esc(c.name)}</td><td>${money(c.spend)}</td><td>${money(c.revenue)}</td><td>${esc(c.roas)}</td><td>$${esc(c.cpa)}</td><td>${tag(c.status)}</td></tr>`).join(''):empty(7,T('暂无数据'));
+  const score=v=>`<div class="pref-bar" title="${Number(v)||0}"><i style="width:${Math.max(0,Math.min(100,Number(v)||0))}%"></i></div>`;
+  document.getElementById('customersBody').innerHTML=view.customers.length?view.customers.map(c=>`<tr class="customer-row" ${c.id?`onclick="openCustomer('${esc(c.id)}')"`:''}><td><span class="link">${esc(c.name||c.email)}</span><br><span style="color:var(--ant-text-tertiary);font-size:12px">${esc(c.email)}</span></td><td>${tag(c.segment)}</td><td>${money(c.ltv)}</td><td>${esc(c.orders)}</td><td>${score(c.scores?.engagement)}</td><td>${score(c.scores?.intent)}</td><td>${esc(c.scene)}</td><td>${esc(c.source)}</td><td>${esc(c.next)}</td></tr>`).join(''):empty(9,T('暂无数据'));
+  const custN=view.customers.length,active=view.customers.filter(c=>/vip|returning/i.test(c.segment)).length;
+  setKpi('cust-profiles',custN);setKpi('cust-active',active);setKpi('cust-ltv',money(custN?view.customers.reduce((a,c)=>a+Number(c.ltv||0),0)/custN:0));setKpi('cust-reco',custN?'100%':'—');
+  document.getElementById('creatorsBody').innerHTML=view.creators.length?view.creators.map(c=>`<tr><td>${esc(c.platform)}</td><td>${esc(c.handle)}</td><td>${esc(c.followers)}</td><td>${esc(c.engagement)}</td><td>${tag(c.status)}</td></tr>`).join(''):empty(5,T('暂无数据'));
+  document.getElementById('inboxList').innerHTML=view.inbox.length?view.inbox.map(c=>`<div class="list-item clickable ${selectedConversation===c.id?'selected':''}" onclick="openConversation('${esc(c.id)}')"><div class="list-icon">✉</div><div class="list-main"><strong>${esc(c.subject)}</strong><p>${esc(c.channel)}${c.last?' · '+esc(c.last):''}</p></div><div class="list-side">${esc(when(c))}</div></div>`).join(''):`<div class="empty">${T('暂无数据')}</div>`;
+  const R=Number(f.revenue)||1;
+  document.getElementById('profitBridge').innerHTML=[['Revenue',f.revenue],['COGS',f.cogs],['Shipping',f.shipping],['Payment fees',f.payment_fees],['Ads + Affiliate',Number(f.ads||0)+Number(f.affiliates||0)],['Contribution',f.contribution_margin]].map(x=>`<div class="health-row"><div class="health-head"><span>${x[0]}</span><b>${money(x[1])}</b></div><div class="progress"><i style="width:${Math.max(0,Math.min(100,Number(x[1]||0)/R*100))}%"></i></div></div>`).join('');
+  document.getElementById('approvalBody').innerHTML=view.approvals.length?view.approvals.map((x,i)=>`<tr><td>${esc(x.type)}</td><td>${esc(x.title)}</td><td>${tag(x.risk)}</td><td>${esc(x.reason)}</td><td>${esc(x.impact)}</td><td><button class="ant-btn" onclick="rejectApproval(${i})">Reject</button> <button class="ant-btn primary" onclick="approve(${i})">Approve</button></td></tr>`).join(''):empty(6,T('暂无待审批任务'));
+  renderConnectors(); renderLogistics();
+}
+
+function fillFilters(){
+  const sf=document.getElementById('storeFilter'),cur=sf.value;
+  const names=[...new Set(view.orders.map(o=>o.store))];
+  sf.innerHTML=`<option value="">${T('全部店铺')}</option>`+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');sf.value=names.includes(cur)?cur:'';
+  const st=document.getElementById('statusFilter'),cs=st.value;
+  const statuses=[...new Set(['Paid','Proofing','Production','Shipped',...view.orders.map(o=>o.status)])].filter(Boolean);
+  st.innerHTML=`<option value="">${T('全部状态')}</option>`+statuses.map(s=>`<option>${esc(s)}</option>`).join('');st.value=statuses.includes(cs)?cs:'';
+}
+function filteredOrders(){
+  const q=(document.getElementById('orderSearch')?.value||'').toLowerCase(),st=document.getElementById('statusFilter')?.value||'',sf=document.getElementById('storeFilter')?.value||'';
+  return view.orders.filter(o=>(!q||[o.id,o.customer,o.store,o.status,o.tracking].join(' ').toLowerCase().includes(q))&&(!st||o.status===st)&&(!sf||o.store===sf));
+}
+function renderOrders(){
+  const rows=filteredOrders();
+  document.getElementById('ordersBody').innerHTML=rows.length?rows.map(o=>`<tr><td><span class="link" onclick="openOrder('${esc(o.id)}')">${esc(o.id)}</span></td><td>${esc(o.customer)}</td><td>${esc(o.store)}</td><td>${tag(o.status)}</td><td>${money(o.revenue)}</td><td>${money(o.profit)}</td><td>${esc(o.tracking)}</td><td>${esc(when(o))}</td></tr>`).join(''):empty(8,T('没有符合条件的订单'));
+  applyTableView();
+}
+function applyTableView(){
+  const table=document.getElementById('ordersBody').closest('table');
+  table.classList.toggle('compact',compact);
+  table.querySelectorAll('tr').forEach(tr=>[...tr.children].forEach((td,i)=>td.classList.toggle('col-hidden',hiddenCols.has(i)&&td.colSpan===1)));
+}
+function filterOrders(){renderOrders()}
+function resetOrderFilter(){document.getElementById('orderSearch').value='';document.getElementById('statusFilter').value='';document.getElementById('storeFilter').value='';renderOrders()}
+
+// ---------- drawers ----------
+function openDrawer(t,b,foot){
+  document.getElementById('drawerTitle').textContent=t;document.getElementById('drawerBody').innerHTML=b;
+  document.getElementById('drawerFoot').innerHTML=(foot||'')+`<button class="ant-btn" onclick="closeDrawer()">${T('关闭')}</button>`;
+  document.getElementById('drawerMask').classList.add('open');document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){document.getElementById('drawerMask').classList.remove('open');document.getElementById('drawer').classList.remove('open')}
+function openOrder(id){const o=view.orders.find(x=>x.id===id);if(!o)return;const st=o.status||'';const reached=s=>['Paid','Proofing','Approved','Production','Shipped','Delivered'].indexOf(st)>=['Paid','Proofing','Approved','Production','Shipped','Delivered'].indexOf(s);
+  openDrawer(id,`<div class="desc"><div>Customer</div><div>${esc(o.customer)}</div><div>Store</div><div>${esc(o.store)}</div><div>Status</div><div>${tag(o.status)}</div><div>Revenue</div><div>${esc(o.currency||'USD')} ${money(o.revenue).slice(1)}</div><div>Contribution</div><div>${money(o.profit)}</div><div>Tracking</div><div>${esc(o.tracking)}</div></div><h3 style="font-size:15px;margin-top:24px">Order Timeline</h3><div class="steps">${[['Paid','Payment verified','PayPal / Shopify financial state synchronized'],['Proofing','Proofing','Design job created'],['Production','Production','Waiting / in progress'],['Shipped','Shipment',o.tracking]].map((s,i)=>`<div class="step ${reached(s[0])?'done':''}"><i>${reached(s[0])?'✓':i+1}</i><div><b>${s[1]}</b><span>${esc(s[2])}</span></div></div>`).join('')}</div>`)}
+function openStore(id){const s=view.stores.find(x=>x.id===id);if(!s)return;openDrawer(s.name,`<div class="desc"><div>Domain</div><div>${esc(s.domain||'—')}</div><div>Country</div><div>${esc(s.country||'—')}</div><div>Status</div><div>${tag(s.status)}</div><div>Health</div><div>${esc(s.health)}%</div></div>`,`<button class="ant-btn" onclick="syncStore('${esc(s.id)}','orders')">Sync orders</button><button class="ant-btn primary" onclick="syncStore('${esc(s.id)}')">Sync products</button>`)}
+function openConversation(id){
+  selectedConversation=id;render();
+  const c=view.inbox.find(x=>x.id===id);if(!c)return;
+  const msgs=live?(raw.conversations?.messages||[]).filter(m=>m.conversation_id===id):[];
+  openDrawer(c.subject,`<div class="desc"><div>Channel</div><div>${esc(c.channel)}</div><div>Status</div><div>${tag(c.status||'open')}</div><div>Updated</div><div>${esc(when(c))}</div></div><div style="margin-top:16px">${msgs.map(m=>`<div class="msg ${m.role==='customer'?'user':'agent'}" style="margin-bottom:8px">${esc(m.text)}</div>`).join('')}</div><div class="form-item" style="margin-top:12px"><label>${T('回复草稿')}</label><textarea class="ant-input" id="draftText" style="min-height:100px;font-family:inherit"></textarea></div>`,`<button class="ant-btn primary" onclick="replyDraft()">${T('生成草稿')}</button>`);
+}
+
+// ---------- actions ----------
+async function syncStore(id,type='products'){
+  if(!live)return notice(T('演示模式：请先启动后端'));
+  if(!confirm(L(`确认同步店铺${type==='orders'?'订单':'商品'}？`,`Approve ${type} sync for this store?`,`${type==='orders'?'Bestellungs':'Produkt'}-Sync für diesen Shop freigeben?`)))return;
+  const r=await post(`/api/shopify/stores/${encodeURIComponent(id)}/sync-${type}`,{approved:true});
+  notice(r&&!r.__error?(r.message||L(`已提交同步：${r.count??0} 条`,`Sync submitted: ${r.count??0} items`,`Sync übermittelt: ${r.count??0}`)):T('同步失败'));
+}
+async function approve(i){
+  const a=view.approvals[i];if(!a)return;
+  if(!live||!a.id){view.approvals.splice(i,1);render();return notice(T('已批准（演示）'))}
+  if(!confirm(L(`确认批准：${a.title}？`,`Approve: ${a.title}?`,`Freigeben: ${a.title}?`)))return;
+  const r=await post(`/api/saas/tasks/${encodeURIComponent(a.id)}/approve`,{approved:true});
+  if(r&&!r.__error){notice(T('已批准，任务进入执行队列'));load()}else notice(T('操作失败'));
+}
+function rejectApproval(i){const a=view.approvals[i];if(!a)return;view.approvals.splice(i,1);render();notice(T('已拒绝，任务不会执行'))}
+
+function downloadCsv(name,rows){
+  if(!rows.length)return notice(T('暂无数据'));
+  const cols=Object.keys(rows[0]);const cell=v=>{const s=String(v??'');return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s};
+  const csv='\ufeff'+[cols.join(','),...rows.map(r=>cols.map(c=>cell(r[c])).join(','))].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+}
+const financeRows=()=>{const f=view.finance;return [['Revenue',f.revenue],['COGS',f.cogs],['Shipping',f.shipping],['Payment fees',f.payment_fees],['Affiliates',f.affiliates],['Ads',f.ads],['Contribution margin',f.contribution_margin]].map(([line,amount])=>({line,amount:r2(amount)}))};
+
+function quickAgent(q){showPage('agent');document.getElementById('agentInput').value=q;runAgent()}
+function summarize(d){
+  if(!d)return T('演示模式：已生成计划，外部写操作会进入审批。');
+  const data=d.data,parts=[];
+  if(data?.task)parts.push(L(`已创建任务「${data.task.title}」，状态：${data.task.status}`,`Task created: "${data.task.title}" (${data.task.status})`,`Aufgabe erstellt: „${data.task.title}“ (${data.task.status})`));
+  const count=x=>Array.isArray(x)?x.length:null;
+  if(Array.isArray(data))parts.push(L(`读取 ${data.length} 条记录`,`Read ${data.length} records`,`${data.length} Datensätze gelesen`));
+  else if(data&&typeof data==='object')for(const [k,v] of Object.entries(data)){const n=count(v);if(n!==null)parts.push(`${k}: ${n}`)}
+  if(data&&'contribution_margin' in data)parts.push(`Contribution ${money(data.contribution_margin)} · ${pct(data.margin_rate)}`);
+  return `${d.intent}\n${(d.plan||[]).join(' → ')}${parts.length?'\n\n'+parts.join('\n'):''}`;
+}
+async function runAgent(){
+  const input=document.getElementById('agentInput'),q=input.value.trim();if(!q)return;
+  const box=document.getElementById('agentMessages');
+  const add=(role,text,json)=>{const e=document.createElement('div');e.className='msg '+role;e.textContent=text;if(json){const det=document.createElement('details');det.innerHTML=`<summary style="cursor:pointer;margin-top:6px">JSON</summary><pre style="white-space:pre-wrap;font-size:11px;max-height:260px;overflow:auto">${esc(JSON.stringify(json,null,2))}</pre>`;e.appendChild(det)}box.appendChild(e);e.scrollIntoView({behavior:'smooth',block:'end'})};
+  add('user',q);input.value='';
+  const steps=document.getElementById('agentSteps');
+  steps.innerHTML=`<div class="step done"><i>✓</i><div><b>Resolve context</b><span>tenant / store / page</span></div></div><div class="step"><i>2</i><div><b>Retrieve & plan</b><span>…</span></div></div><div class="step"><i>3</i><div><b>Tool calls</b><span>…</span></div></div><div class="step"><i>4</i><div><b>Approval gate</b><span>external writes require approval</span></div></div>`;
+  const d=live?await post('/api/agent/ops',{message:q}):null;
+  const plan=(d?.plan||['retrieve','analyze','prepare action']).map(esc).join(' → ');
+  steps.innerHTML=`<div class="step done"><i>✓</i><div><b>Resolve context</b><span>${esc(d?.intent||'demo')}</span></div></div><div class="step done"><i>✓</i><div><b>Retrieve & plan</b><span>${plan}</span></div></div><div class="step done"><i>✓</i><div><b>Tool calls</b><span>${d?'read-only business connectors':'demo'}</span></div></div><div class="step ${d?.data?.task?'':'done'}"><i>${d?.data?.task?'4':'✓'}</i><div><b>Approval gate</b><span>${d?.data?.task?esc(d.data.task.status):'no external write'}</span></div></div>`;
+  add('agent',summarize(d),d&&d.data);
+  if(d?.data?.task)load();
+}
+
+const actions={
+  'toggle-sider'(){if(window.matchMedia('(max-width:820px)').matches)document.body.classList.toggle('sider-open');else{document.body.classList.toggle('sider-collapsed');try{localStorage.setItem('wcos-sider-collapsed',document.body.classList.contains('sider-collapsed')?'1':'')}catch{}}},
+  notifications(){openDrawer(T('通知'),document.getElementById('attention').innerHTML)},
+  async refresh(){await load();notice(live?T('数据已刷新'):T('演示数据（后端未连接）'))},
+  'export-overview'(){downloadCsv('overview.csv',[{metric:'Revenue',value:view.kpi.revenue},{metric:'Contribution',value:view.kpi.contribution},{metric:'Orders',value:view.kpi.orders},{metric:'Open agent tasks',value:view.kpi.tasks},...financeRows().map(x=>({metric:x.line,value:x.amount}))])},
+  'export-orders'(){downloadCsv('orders.csv',filteredOrders().map(({raw,updatedAt,...o})=>({...o,updated:updatedAt||o.updated})))},
+  'export-pnl'(){downloadCsv('profit-and-loss.csv',financeRows())},
+  async 'sync-all-stores'(){
+    if(!live)return notice(T('演示模式：请先启动后端'));
+    const stores=view.stores.filter(s=>s.provider==='shopify'||s.domain);
+    if(!confirm(L(`确认同步全部 ${stores.length} 个店铺的商品？`,`Approve product sync for all ${stores.length} stores?`,`Produkt-Sync für alle ${stores.length} Shops freigeben?`)))return;
+    const rs=await Promise.all(stores.map(s=>post(`/api/shopify/stores/${encodeURIComponent(s.id)}/sync-products`,{approved:true})));
+    notice(L(`已提交 ${rs.filter(r=>r&&!r.__error).length}/${stores.length} 个店铺同步`,`Submitted ${rs.filter(r=>r&&!r.__error).length}/${stores.length} store syncs`,`${rs.filter(r=>r&&!r.__error).length}/${stores.length} Shop-Syncs übermittelt`));
+  },
+  async 'sync-logistics'(){
+    if(!live)return notice(T('演示模式：请先启动后端'));
+    if(!confirm(T('确认现在同步物流状态？')))return;
+    const r=await post('/api/saas/logistics/sync',{approved:true});
+    notice(r&&!r.__error?L(`已同步 ${r.synced} 个包裹`,`Synced ${r.synced} shipments`,`${r.synced} Sendungen synchronisiert`):T('同步失败'));if(r&&!r.__error)load();
+  },
+  columns(){
+    const heads=[...document.getElementById('ordersBody').closest('table').querySelectorAll('thead th')].map(th=>th.textContent);
+    openDrawer('Columns',heads.map((h,i)=>`<label class="check-row"><input type="checkbox" ${hiddenCols.has(i)?'':'checked'} ${i===0?'disabled':''} onchange="toggleCol(${i},this.checked)"/>${esc(h)}</label>`).join(''));
+  },
+  density(){compact=!compact;applyTableView();notice(compact?T('紧凑'):T('默认'))},
+  'import-feed'(){
+    const sample=JSON.stringify([{sku:'NEW-INV-01',name:'Pearl Invitation',supplier_id:'sup_print',supplier_cost:4.2,inbound_shipping:0.5,duty:0.1,packaging:0.3,base_price:13.9,inventory:500,scene_tags:['cream','french']}],null,2);
+    openDrawer(T('导入 Supplier Feed'),`<p style="color:var(--ant-text-secondary);margin-top:0">${T('粘贴供应商授权 Feed（JSON 数组），导入后会重新计算到岸成本。导入属于写操作，需要确认。')}</p><textarea class="ant-input" id="feedJson">${esc(sample)}</textarea>`,`<button class="ant-btn primary" onclick="submitFeed()">${T('导入')}</button>`);
+  },
+  'routing-rules'(){
+    const ch=live?(raw.conversations?.channels||[]):[];
+    openDrawer(T('路由规则'),ch.length?`<table><thead><tr><th>Channel</th><th>Status</th><th>Send mode</th></tr></thead><tbody>${ch.map(c=>`<tr><td>${esc(c.label)}</td><td>${tag(c.configured?'configured':'needs keys')}</td><td>${esc(c.send_mode)}</td></tr>`).join('')}</tbody></table><p style="color:var(--ant-text-secondary)">${T('所有对外发送都需要审批。')}</p>`:`<div class="empty">${T('演示模式：请先启动后端')}</div>`);
+  },
+  'reply-draft'(){if(!selectedConversation)return notice(T('请先选择会话'));openConversation(selectedConversation)},
+  'marketing-ideas'(){
+    const ideas=live?(raw.marketing?.ideas||[]):[];
+    openDrawer(T('AI 优化建议'),ideas.length?`<table><thead><tr><th>Campaign</th><th>ROAS</th><th>Action</th><th>Reason</th></tr></thead><tbody>${ideas.map(x=>`<tr><td>${esc(x.name)}</td><td>${r2(x.roas).toFixed(2)}</td><td>${tag(x.action)}</td><td>${esc(x.reason)}${x.requires_approval?' · '+tag('needs approval'):''}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">${T('演示模式：请先启动后端')}</div>`);
+  },
+  'new-campaign'(){
+    const plats=live?(raw.marketing?.platforms||[]):Object.keys(platformLabel).map(id=>({id,label:platformLabel[id]}));
+    openDrawer(T('新建 Campaign'),`<div class="form-item"><label>Platform</label><select class="ant-select" id="cmpPlatform">${plats.map(p=>`<option value="${esc(p.id)}">${esc(p.label)}${p.configured===false?' (needs keys)':''}</option>`).join('')}</select></div><div class="form-item"><label>Objective</label><select class="ant-select" id="cmpObjective"><option>sales</option><option>traffic</option><option>awareness</option></select></div><div class="form-item"><label>Daily budget (USD)</label><input class="ant-input" id="cmpBudget" type="number" min="1" value="50"/></div><p style="color:var(--ant-text-secondary)">${T('只会创建草稿；发布和预算变更需要审批。')}</p>`,`<button class="ant-btn primary" onclick="submitCampaign()">${T('创建草稿')}</button>`);
+  },
+  platforms(){
+    const plats=live?(raw.marketing?.platforms||[]):[];
+    openDrawer(T('平台'),plats.length?`<table><thead><tr><th>Platform</th><th>Status</th><th>Capabilities</th></tr></thead><tbody>${plats.map(p=>`<tr><td>${esc(p.label)}</td><td>${tag(p.configured?'configured':'needs keys')}</td><td>${esc((p.capabilities||[]).join(' · '))}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">${T('演示模式：请先启动后端')}</div>`);
+  },
+  period(){notice(T('当前广告数据为汇总值，接入平台报表后可按日期筛选'))},
+  async segments(){
+    const seg=live?await api('/api/saas/customer-segments'):null;
+    openDrawer('Segments',seg&&seg.length?`<table><thead><tr><th>Segment</th><th>Customers</th></tr></thead><tbody>${seg.map(s=>`<tr><td>${tag(s.segment)}</td><td>${esc(s.count)}</td></tr>`).join('')}</tbody></table><p style="color:var(--ant-text-secondary)">${T('分群规则：LTV ≥ 700 为 VIP，订单 ≥ 2 为 Returning，其余为 New。')}</p>`:`<div class="empty">${T('演示模式：请先启动后端')}</div>`);
+  },
+  'run-history'(){
+    const tasks=live?(raw.tasks||[]):[];
+    openDrawer(T('运行历史'),tasks.length?`<table><thead><tr><th>Task</th><th>Type</th><th>Status</th><th>Created</th></tr></thead><tbody>${[...tasks].reverse().map(t=>`<tr><td>${esc(t.title)}</td><td>${esc(t.type)}</td><td>${tag(t.status)}</td><td>${esc(ago(t.created_at))}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">${T('演示模式：请先启动后端')}</div>`);
+  },
+  guardrails(){
+    openDrawer(T('审批规则'),`<div class="desc"><div>${T('自动执行')}</div><div>${T('读取、分析、异常识别、任务拆解')}</div><div>${T('需要审批')}</div><div>${T('广告发布、预算、退款、采购、外部消息发送')}</div><div>${T('需要审批')}</div><div>${T('商品导入、店铺同步、物流同步')}</div><div>${T('禁止')}</div><div>${T('模型直接持有 API Key 或绕过审批执行写操作')}</div></div>`);
+  },
+  'test-connectors'(){return testAllConnectors()}
+};
+function toggleCol(i,on){on?hiddenCols.delete(i):hiddenCols.add(i);applyTableView()}
+async function submitFeed(){
+  let items;try{items=JSON.parse(document.getElementById('feedJson').value);if(!Array.isArray(items))throw 0}catch{return notice(T('JSON 格式不正确，需要是数组'))}
+  if(!live)return notice(T('演示模式：请先启动后端'));
+  if(!confirm(L(`确认导入 ${items.length} 个商品？`,`Import ${items.length} products?`,`${items.length} Produkte importieren?`)))return;
+  const r=await post('/api/saas/catalog/import',{approved:true,items});
+  if(r&&!r.__error){closeDrawer();notice(L(`已导入 ${r.imported.length} 个商品`,`Imported ${r.imported.length} products`,`${r.imported.length} Produkte importiert`));load()}else notice(T('操作失败'));
+}
+async function submitCampaign(){
+  if(!live)return notice(T('演示模式：请先启动后端'));
+  const body={platform:document.getElementById('cmpPlatform').value,objective:document.getElementById('cmpObjective').value,budget:Number(document.getElementById('cmpBudget').value)||0};
+  const r=await post('/api/saas/marketing/drafts',body);
+  if(r&&!r.__error)openDrawer(T('草稿已创建'),`<div class="desc"><div>ID</div><div>${esc(r.id)}</div><div>Platform</div><div>${esc(r.platform)}</div><div>Status</div><div>${tag(r.status)}</div><div>Approval</div><div>${tag('needs approval')}</div></div>`);
+  else notice(T('操作失败'));
+}
+async function replyDraft(){
+  const c=view.inbox.find(x=>x.id===selectedConversation);if(!c)return;
+  const text=document.getElementById('draftText')?.value.trim();if(!text)return notice(T('请输入回复内容'));
+  if(!live)return notice(T('演示模式：请先启动后端'));
+  const r=await post(`/api/saas/conversations/${encodeURIComponent(c.id)}/reply-draft`,{text});
+  notice(r&&!r.__error?T('草稿已保存，发送前需要审批'):T('操作失败'));
+}
+
+// ---------- Shopify OAuth ----------
+function openShopify(){document.getElementById('shopifyMask').classList.add('open');setTimeout(()=>document.getElementById('shopifyDomain').focus(),50)}
+function closeShopify(){document.getElementById('shopifyMask').classList.remove('open')}
+async function startShopifyOAuth(){
+  const s=document.getElementById('shopifyDomain').value.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+  if(!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(s))return notice(T('请输入有效的 .myshopify.com 域名'));
+  // A plain redirect cannot carry the admin header: fetch the OAuth URL first, then leave for Shopify.
+  const d=await api(`/api/shopify/oauth/start?shop=${encodeURIComponent(s)}&tenant_id=${tenant}`);
+  if(d&&d.url)location.href=d.url;else notice(T('Shopify OAuth 未配置或店铺域名无效'));
+}
+
+
+// ===== v11: Logistics center · Connector center · Data import/export · Customer 360 =====
+// Ported from v10 and rewritten: authenticated requests via api() (no hard-coded key), every value escaped,
+// write actions confirmed by the user before the approval flag is sent.
+const authHeaders = () => ({ 'x-tenant-id': tenant, 'x-admin-api-key': adminKey() });
+async function adminJson(url, opt = {}) { const d = await api(url, opt); return d && !d.__error ? d : null; }
+const setText = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+const fmtTime = v => String(v || '—').replace('T', ' ').slice(0, 16);
+const drawerWidth = w => { document.getElementById('drawer').style.width = w; };
+const logisticsFallback = { active_shipments: 2, exceptions: 0, connected_providers: 0, configured_regions: 6, connected_stores: 3, rate_engine: 'regional_rules', tax_engine: 'regional_rules',
+  providers: [], shipments: [{ id: 'ship_1', order_id: 'POD-2026-1010', carrier: 'DHL', tracking_number: 'TRK-DEMO-8821', status: 'In transit', eta: '2026-10-09', last_event: 'Basel Distribution Center' }],
+  zones: [], store_sync: [], stores: [] };
+let logisticsData = logisticsFallback, connectorRegistryData = [], importPreviewData = null;
+
+// ---------- Logistics ----------
+async function loadLogistics() { logisticsData = (live && await adminJson('/api/saas/logistics/overview')) || logisticsFallback; renderLogistics(); }
+function renderLogistics() {
+  const d = logisticsData || logisticsFallback;
+  setText('logActive', d.active_shipments ?? 0); setText('logProviders', d.connected_providers ?? 0);
+  setText('logRegions', d.configured_regions ?? (d.zones || []).length); setText('logStores', d.connected_stores ?? 0);
+  document.getElementById('logisticsProviders').innerHTML = (d.providers || []).map(p => `<div class="card store-card connector-card" onclick="openConnector('${esc(p.id)}')"><div class="store-head"><strong>${esc(p.label)}</strong>${tag(p.configured ? 'configured' : 'not configured')}</div><p>${esc((p.capabilities || []).join(' · '))}</p><button class="ant-btn" style="margin-top:12px" onclick="event.stopPropagation();openConnector('${esc(p.id)}')">${T('配置 API')}</button></div>`).join('') || `<div class="empty">${T('演示模式：请先启动后端')}</div>`;
+  document.getElementById('shipmentsBody').innerHTML = (d.shipments || []).map(x => `<tr><td>${esc(x.order_id)}</td><td>${esc(x.carrier)}</td><td><span class="link" onclick="openTracking('${esc(x.tracking_number)}')">${esc(x.tracking_number)}</span></td><td>${tag(x.status)}</td><td>${esc(typeof x.last_event === 'string' ? x.last_event : (x.last_event?.description || '—'))}</td><td>${esc(x.eta || '—')}</td></tr>`).join('') || empty(6, T('暂无数据'));
+  document.getElementById('zonesBody').innerHTML = (d.zones || []).map(z => `<tr><td><span class="link" onclick="openShippingZone('${esc(z.id)}')">${esc(z.name)}</span></td><td>${esc((z.countries || []).slice(0, 8).join(', '))}${(z.countries || []).length > 8 ? '…' : ''}</td><td>${esc(z.standard_base)} + ${esc(z.standard_per_kg)}/kg</td><td>${esc(z.express_base)} + ${esc(z.express_per_kg)}/kg</td><td>${esc(z.free_shipping_threshold || '—')}</td><td>${esc(z.tax_mode)}</td><td>${((Number(z.tax_rate) || 0) * 100).toFixed(1)}%</td><td>${tag(z.active === false ? 'disabled' : 'active')}</td></tr>`).join('') || empty(8, T('暂无数据'));
+  const stores = Object.fromEntries((d.stores || []).map(x => [x.id, x.name || x.domain]));
+  document.getElementById('shippingStoreSyncBody').innerHTML = (d.store_sync || []).map(x => `<tr><td>${esc(stores[x.store_id] || x.store_id)}</td><td>${esc(x.provider)}</td><td>${esc(x.sync_type)}</td><td>${tag(x.status)}</td><td>${esc(fmtTime(x.synced_at))}</td></tr>`).join('') || empty(5, T('暂无数据'));
+}
+async function openTracking(number) {
+  const d = (live && await adminJson(`/api/saas/logistics/tracking/${encodeURIComponent(number)}`)) || { shipment: (logisticsData.shipments || []).find(x => x.tracking_number === number), timeline: [] };
+  drawerWidth('min(640px,94vw)');
+  // Carrier timeline text comes from third-party APIs — always escaped.
+  openDrawer(`Tracking · ${number}`, `<div class="desc"><div>Carrier</div><div>${esc(d.shipment?.carrier || '—')}</div><div>Status</div><div>${tag(d.shipment?.status || d.live?.status || 'Unknown')}</div><div>Order</div><div>${esc(d.shipment?.order_id || '—')}</div><div>ETA</div><div>${esc(d.shipment?.eta || d.live?.eta || '—')}</div></div><h3 style="font-size:15px;margin-top:22px">Tracking Timeline</h3><div class="track-line">${(d.timeline || []).map(e => `<div class="track-event"><b>${esc(e.status)}</b><span>${esc(e.location || '')}${e.description ? ' · ' + esc(e.description) : ''}<br>${esc(fmtTime(e.time))}</span></div>`).join('') || `<div class="empty">${T('暂无数据')}</div>`}</div>`);
+}
+async function testShippingQuote() {
+  const body = { country: document.getElementById('quoteCountry').value, postal_code: document.getElementById('quotePostal').value, subtotal: Number(document.getElementById('quoteSubtotal').value || 0), weight_kg: 1.2, item_count: 4, currency: 'CNY' };
+  const d = live && await adminJson('/api/saas/logistics/quote', { method: 'POST', body: JSON.stringify(body) });
+  if (!d) return notice(T('演示模式：请先启动后端'));
+  document.getElementById('quoteResult').innerHTML = `<b>${esc(d.zone.name)}</b><br>${d.shipping_options.map(o => `${esc(o.label)}: ¥${esc(o.amount)} · ${esc(o.eta_days)}`).join('<br>')}<br>Tax: ¥${esc(d.tax.amount)} · ${((Number(d.tax.rate) || 0) * 100).toFixed(1)}% · ${esc(d.tax.engine)}<br><strong>Total: ¥${esc(d.grand_total)}</strong>${d.live_rate_error ? `<div class="sync-note">Live rate fallback: ${esc(d.live_rate_error)}</div>` : ''}${d.live_tax_error ? `<div class="sync-note">Live tax fallback: ${esc(d.live_tax_error)}</div>` : ''}<div class="sync-note">Rate engine: ${esc(d.rate_engine)} · Tax engine: ${esc(d.tax_engine)} · <span>${T('前台购物车使用同一个服务端报价')}</span></div>`;
+}
+async function syncTracking() {
+  if (!live) return notice(T('演示模式：请先启动后端'));
+  if (!confirm(T('确认现在同步物流状态？'))) return;
+  const d = await adminJson('/api/saas/logistics/sync', { method: 'POST', body: JSON.stringify({ approved: true }) });
+  if (d) { notice(L(`已同步 ${d.synced || 0} 个包裹`, `Synced ${d.synced || 0} shipments`, `${d.synced || 0} Sendungen synchronisiert`)); loadLogistics(); } else notice(T('同步失败'));
+}
+async function syncShippingStores() {
+  if (!live) return notice(T('演示模式：请先启动后端'));
+  if (!confirm(T('确认把当前运费 / 税费区域配置同步到所有已连接网店？'))) return;
+  const d = await adminJson('/api/saas/logistics/sync-stores', { method: 'POST', body: JSON.stringify({ approved: true }) });
+  if (!d) return notice(T('同步失败'));
+  const n = s => (d.stores || []).filter(x => s.includes(x.status)).length;
+  notice(L(`网店同步：${n(['synced', 'registered'])} 已生效 · ${n(['staged'])} 待配置 · ${n(['error'])} 失败`, `Store sync: ${n(['synced', 'registered'])} live · ${n(['staged'])} staged · ${n(['error'])} error`, `Shop-Sync: ${n(['synced', 'registered'])} aktiv · ${n(['staged'])} vorbereitet · ${n(['error'])} Fehler`));
+  loadLogistics();
+}
+function openShippingZone(id) {
+  const z = (logisticsData.zones || []).find(x => x.id === id); if (!z) return;
+  drawerWidth('min(620px,94vw)');
+  const f = (label, idAttr, value, type = 'text', extra = '') => `<div class="form-item"><label>${label}</label><input class="ant-input" id="${idAttr}" type="${type}" ${extra} value="${esc(value)}"></div>`;
+  openDrawer(`Shipping Region · ${z.name}`, `<div class="query-grid" style="grid-template-columns:1fr 1fr">${f('Name', 'zoneName', z.name)}${f('Countries', 'zoneCountries', (z.countries || []).join(', '))}${f('Standard base', 'zoneStdBase', z.standard_base, 'number')}${f('Standard / kg', 'zoneStdKg', z.standard_per_kg, 'number')}${f('Express base', 'zoneExpBase', z.express_base, 'number')}${f('Express / kg', 'zoneExpKg', z.express_per_kg, 'number')}${f('Free shipping threshold', 'zoneFree', z.free_shipping_threshold || 0, 'number')}${f('Tax rate', 'zoneTax', z.tax_rate || 0, 'number', 'step="0.001"')}<div class="form-item"><label>Tax mode</label><select class="ant-select" id="zoneTaxMode">${['manual_demo', 'external_recommended', 'external_required'].map(m => `<option ${z.tax_mode === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div><div class="form-item"><label>Status</label><select class="ant-select" id="zoneActive"><option value="1" ${z.active !== false ? 'selected' : ''}>active</option><option value="0" ${z.active === false ? 'selected' : ''}>disabled</option></select></div></div><div class="sync-note">${T('区域规则用于 Commerce OS 前端报价。Shopify checkout 最终金额仍由 Shopify / 已配置的 carrier/tax service 决定。')}</div>`, `<button class="ant-btn primary" onclick="saveShippingZoneUi('${esc(z.id)}')">${T('保存')}</button>`);
+}
+async function saveShippingZoneUi(id) {
+  if (!live) return notice(T('演示模式：请先启动后端'));
+  const v = i => document.getElementById(i).value;
+  const body = { name: v('zoneName'), countries: v('zoneCountries'), standard_base: Number(v('zoneStdBase')), standard_per_kg: Number(v('zoneStdKg')), express_base: Number(v('zoneExpBase')), express_per_kg: Number(v('zoneExpKg')), free_shipping_threshold: Number(v('zoneFree')), tax_rate: Number(v('zoneTax')), tax_mode: v('zoneTaxMode'), active: v('zoneActive') === '1', approved: true };
+  if (!confirm(L(`确认保存区域「${body.name}」？会影响前台报价。`, `Save region "${body.name}"? This changes storefront quotes.`, `Region „${body.name}“ speichern? Das ändert die Shop-Preise.`))) return;
+  const d = await adminJson(`/api/saas/logistics/zones/${encodeURIComponent(id)}`, { method: 'POST', body: JSON.stringify(body) });
+  if (d) { notice(T('区域配置已保存')); closeDrawer(); loadLogistics(); } else notice(T('保存失败'));
+}
+
+// ---------- Connector center ----------
+async function loadConnectorRegistry() { connectorRegistryData = (live && await adminJson('/api/saas/connectors/registry')) || []; renderConnectors(); }
+function renderConnectors() {
+  const list = connectorRegistryData.length ? connectorRegistryData : demo.connectors.map(([label, status, description]) => ({ id: '', label, group: '', configured: /configured|ready/.test(status), description }));
+  document.getElementById('connectorsGrid').innerHTML = list.map(x => `<div class="card store-card connector-card" ${x.id ? `onclick="openConnector('${esc(x.id)}')"` : ''}><div class="store-head"><strong>${esc(x.label)}</strong>${tag(x.configured ? 'configured' : 'not configured')}</div><p>${esc([x.group, x.description].filter(Boolean).join(' · '))}</p>${x.id ? `<div style="margin-top:10px;font-size:12px;color:var(--ant-text-tertiary)">Last test: ${esc(x.last_test_status || 'not_tested')}${x.last_test_at ? ' · ' + esc(fmtTime(x.last_test_at)) : ''}</div><button class="ant-btn" style="margin-top:14px" onclick="event.stopPropagation();openConnector('${esc(x.id)}')">${T('配置 / 状态')}</button>` : ''}</div>`).join('');
+}
+async function openConnector(id) {
+  if (!live) return notice(T('演示模式：请先启动后端'));
+  const d = connectorRegistryData.find(x => x.id === id) || await adminJson(`/api/saas/connectors/${encodeURIComponent(id)}/config`);
+  if (!d) return notice(T('操作失败'));
+  drawerWidth('min(680px,94vw)');
+  // Secrets are write-only: inputs start empty; configured fields keep their value when left blank.
+  const fields = (d.fields || []).map(f => `<div class="form-item"><label>${esc(f.key)}${f.required ? ' *' : ''}${f.secret ? ' · secret' : ''}</label><input class="ant-input connector-value" data-key="${esc(f.key)}" type="${f.secret ? 'password' : 'text'}" autocomplete="off" placeholder="${esc(f.configured ? T('已配置；留空保持不变') : f.env)}"></div>`).join('');
+  openDrawer(`${d.label} · API`, `<div class="desc"><div>Group</div><div>${esc(d.group)}</div><div>Status</div><div>${tag(d.configured ? 'configured' : 'not configured')}</div><div>Last test</div><div>${esc(d.last_test_status || 'not_tested')} ${esc(d.last_test_at ? fmtTime(d.last_test_at) : '')}</div><div>Docs</div><div>${esc(d.docs || '—')}</div></div><p style="font-size:13px;color:var(--ant-text-secondary);margin-top:16px">${esc(d.description || '')}</p><div class="connector-fields">${fields}<div class="form-item"><label>Webhook URL</label><input class="ant-input" id="connectorWebhook" value="${esc(d.webhook_url || '')}" placeholder="https://your-domain.com/api/webhooks/..."></div><div class="form-item"><label>Notes</label><input class="ant-input" id="connectorNotes" value="${esc(d.notes || '')}"></div></div><div class="sync-note">${T('凭证只发送到服务端并加密保存，页面不会显示已保存的值。')}</div>`,
+    `<button class="ant-btn" onclick="testConnectorUi('${esc(id)}')">${T('测试连接')}</button><button class="ant-btn primary" onclick="saveConnectorUi('${esc(id)}')">${T('保存配置')}</button>`);
+}
+async function saveConnectorUi(id) {
+  const webhook = document.getElementById('connectorWebhook')?.value.trim() || '';
+  if (webhook && !/^https:\/\//i.test(webhook)) return notice(T('Webhook URL 需要以 https:// 开头'));
+  const body = { enabled: true, webhook_url: webhook, notes: document.getElementById('connectorNotes')?.value || '', approved: true };
+  document.querySelectorAll('.connector-value').forEach(x => { if (x.value.trim()) body[x.dataset.key] = x.value.trim(); });
+  if (!confirm(T('确认保存这个 API 连接的配置？'))) return;
+  const d = await adminJson(`/api/saas/connectors/${encodeURIComponent(id)}/config`, { method: 'POST', body: JSON.stringify(body) });
+  document.querySelectorAll('.connector-value').forEach(x => { x.value = ''; }); // never keep secrets in the DOM
+  if (d) { notice(T('API 配置已保存')); connectorRegistryData = connectorRegistryData.map(x => x.id === id ? d : x); renderConnectors(); openConnector(id); loadLogistics(); } else notice(T('保存失败'));
+}
+async function testConnectorUi(id) {
+  const d = await adminJson(`/api/saas/connectors/${encodeURIComponent(id)}/test`, { method: 'POST', body: '{}' });
+  if (d) { notice(L(`测试结果：${d.last_test_status}`, `Test result: ${d.last_test_status}`, `Testergebnis: ${d.last_test_status}`)); await loadConnectorRegistry(); openConnector(id); } else notice(T('操作失败'));
+}
+async function testAllConnectors() {
+  if (!live) return notice(T('演示模式：请先启动后端'));
+  if (!connectorRegistryData.length) await loadConnectorRegistry();
+  await Promise.all(connectorRegistryData.map(x => adminJson(`/api/saas/connectors/${encodeURIComponent(x.id)}/test`, { method: 'POST', body: '{}' })));
+  await loadConnectorRegistry(); loadLogistics();
+  const ok = connectorRegistryData.filter(x => x.configured).length;
+  notice(L(`已检查 ${connectorRegistryData.length} 个连接，${ok} 个已配置`, `Checked ${connectorRegistryData.length} connections, ${ok} configured`, `${connectorRegistryData.length} Verbindungen geprüft, ${ok} konfiguriert`));
+}
+
+// ---------- Data import / export ----------
+function downloadBlob(blob, name) { const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+async function fetchDownload(url, fallback, retry = true) {
+  const used = adminKey();
+  const r = await fetch(url, { headers: authHeaders() });
+  if (r.status === 401 && retry && !authDenied && (adminKey() !== used || await askKey())) return fetchDownload(url, fallback, false);
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
+  const m = (r.headers.get('content-disposition') || '').match(/filename="?([^";]+)"?/i);
+  downloadBlob(await r.blob(), m?.[1] || fallback);
+}
+async function downloadTemplate() { try { await fetchDownload('/api/saas/data/template.xlsx', 'commerce-os-import-template.xlsx'); } catch (e) { notice(e.message); } }
+async function exportData(entity, format) { try { await fetchDownload(`/api/saas/data/export/${encodeURIComponent(entity)}?format=${format}`, `${entity}.${format}`); } catch (e) { notice(e.message); } }
+async function previewImport(retry = true) {
+  const file = document.getElementById('importFile').files?.[0];
+  if (!file) return notice(T('请先选择 .xlsx 或 .csv 文件'));
+  const entity = document.getElementById('importEntity').value, format = file.name.toLowerCase().endsWith('.csv') ? 'csv' : 'xlsx';
+  setText('previewState', 'Validating…');
+  try {
+    const used = adminKey();
+    const r = await fetch(`/api/saas/data/import/preview?entity=${encodeURIComponent(entity)}&format=${format}`, { method: 'POST', headers: { ...authHeaders(), 'x-file-name': encodeURIComponent(file.name), 'Content-Type': 'application/octet-stream' }, body: file });
+    if (r.status === 401 && retry && !authDenied && (adminKey() !== used || await askKey())) return previewImport(false);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+    importPreviewData = d; renderImportPreview(d);
+    document.getElementById('commitImportBtn').disabled = d.error_rows > 0 || d.valid_rows === 0;
+    setText('previewState', d.error_rows ? `${d.error_rows} rows need attention` : `${d.valid_rows} rows ready`);
+  } catch (e) { setText('previewState', 'Failed'); notice(e.message); }
+}
+function renderImportPreview(d) {
+  // Cell values come from the uploaded file — escaped before rendering.
+  const rows = (d.rows || []).slice(0, 8), headers = [...new Set(rows.flatMap(r => Object.keys(r)))];
+  document.getElementById('importPreview').innerHTML = `<div class="preview-summary"><div><small>Total rows</small><b>${esc(d.total_rows)}</b></div><div><small>Valid rows</small><b style="color:#389e0d">${esc(d.valid_rows)}</b></div><div><small>Error rows</small><b style="color:${d.error_rows ? '#cf1322' : 'inherit'}">${esc(d.error_rows)}</b></div><div><small>Sheet</small><b style="font-size:14px">${esc(d.sheet)}</b></div></div>${(d.errors || []).length ? `<div style="margin-bottom:14px"><strong>Validation errors</strong>${d.errors.slice(0, 12).map(e => `<div class="error-row" style="font-size:12px;margin-top:5px">Row ${esc(e.row)} · ${esc(e.field)}: ${esc(e.message)}</div>`).join('')}</div>` : ''}<div class="table-wrap"><table><thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${headers.map(h => `<td>${esc(Array.isArray(r[h]) ? r[h].join(', ') : (r[h] ?? ''))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${d.total_rows > 8 ? `<div style="font-size:12px;color:var(--ant-text-tertiary);margin-top:8px">Previewing first 8 rows of ${esc(d.total_rows)}</div>` : ''}`;
+}
+async function commitImportData() {
+  if (!importPreviewData || importPreviewData.error_rows) return notice(T('请先完成无错误的导入预览'));
+  if (!confirm(L(`确认导入 ${importPreviewData.valid_rows} 行数据？`, `Import ${importPreviewData.valid_rows} rows?`, `${importPreviewData.valid_rows} Zeilen importieren?`))) return;
+  // The server commits exactly the rows it validated, identified by the preview token.
+  const d = await api('/api/saas/data/import/commit', { method: 'POST', body: JSON.stringify({ preview_token: importPreviewData.preview_token, approved: true }) });
+  if (d && !d.__error) { notice(L(`导入完成：新增 ${d.inserted}，更新 ${d.updated}`, `Imported: ${d.inserted} new, ${d.updated} updated`, `Importiert: ${d.inserted} neu, ${d.updated} aktualisiert`)); document.getElementById('commitImportBtn').disabled = true; importPreviewData = null; load(); }
+  else notice(d?.error === 'invalid_or_expired_preview' ? T('预览已过期，请重新预览') : (d?.error || T('操作失败')));
+}
+document.getElementById('importFile').addEventListener('change', e => { const f = e.target.files?.[0]; setText('importFilename', f ? `${f.name} · ${(f.size / 1024).toFixed(1)} KB` : 'No file selected'); importPreviewData = null; document.getElementById('commitImportBtn').disabled = true; });
+
+// ---------- Customer 360 ----------
+function radarSvg(scores = {}) {
+  const labels = [['价值', 'value'], ['活跃', 'engagement'], ['复购', 'repeat'], ['意向', 'intent'], ['偏好', 'affinity'], ['传播', 'advocacy']], cx = 150, cy = 132, r = 92, n = labels.length;
+  const point = (i, val) => { const a = -Math.PI / 2 + i * 2 * Math.PI / n, rr = r * val / 100; return [cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]; };
+  const rings = [20, 40, 60, 80, 100].map(v => `<polygon class="radar-grid" points="${labels.map((_, i) => point(i, v).join(',')).join(' ')}"/>`).join('');
+  const axes = labels.map((_, i) => { const p = point(i, 100); return `<line class="radar-axis" x1="${cx}" y1="${cy}" x2="${p[0]}" y2="${p[1]}"/>`; }).join('');
+  const poly = labels.map(([, k], i) => point(i, Math.max(0, Math.min(100, Number(scores[k]) || 0))).join(',')).join(' ');
+  const texts = labels.map(([l], i) => { const p = point(i, 118); return `<text class="radar-label" text-anchor="middle" x="${p[0]}" y="${p[1]}">${l}</text>`; }).join('');
+  return `<svg viewBox="0 0 300 270">${rings}${axes}<polygon class="radar-shape" points="${poly}"/>${texts}</svg>`;
+}
+async function openCustomer(id) {
+  // Live: full profile from /detail. Demo: what the table already has.
+  const detail = live ? await adminJson(`/api/saas/customers/${encodeURIComponent(id)}/detail`) : null;
+  const c = detail?.customer || (raw.customers || []).find(x => x.id === id) || view.customers.find(x => x.id === id);
+  if (!c) return;
+  drawerWidth('min(880px,96vw)');
+  const name = c.name || c.email, ltv = c.lifetime_value ?? c.ltv ?? 0;
+  const initials = String(name).split(/[\s@.]+/).filter(Boolean).map(x => x[0]).join('').slice(0, 2).toUpperCase();
+  const orders = (detail?.orders || []).map(o => ({ id: o.id, date: String(o.created_at || '').slice(0, 10), status: o.status, total: o.revenue, currency: o.currency, items: (o.items || []).map(i => i.name).join(' / ') || '—' }));
+  const events = (detail?.behavior_events || []).map(e => [e.label, e.channel, fmtTime(e.created_at)]);
+  const recs = (detail?.recommendations || []).slice(0, 3);
+  const pref = [['Product views', c.product_views_30d, 2.5], ['Site visits', c.site_visits_30d, 7], ['Cart adds', c.cart_adds_30d, 18], ['Email clicks', c.email_clicks_30d, 12]].map(([l, v, k]) => [l, Math.min(100, (Number(v) || 0) * k), Number(v) || 0]);
+  const chips = list => (list || []).map(x => `<span>${esc(x)}</span>`).join('');
+  openDrawer(name, `<div class="customer-summary"><div class="customer-avatar">${esc(initials)}</div><div><div class="customer-name">${esc(name)}</div><div class="customer-meta">${esc(c.email)} · ${esc(c.country || '—')} · ${esc(c.device || '—')} · ${tag(c.segment || '—')}</div><div class="interest-tags" style="margin-top:8px">${chips(c.interests || c.traits)}</div></div></div>
+  <div class="profile-kpis"><div class="profile-kpi"><small>LTV</small><b>${money(ltv)}</b></div><div class="profile-kpi"><small>Orders</small><b>${esc(c.orders ?? 0)}</b></div><div class="profile-kpi"><small>Avg order value</small><b>${money(c.avg_order_value || 0)}</b></div><div class="profile-kpi"><small>Last seen</small><b style="font-size:15px">${esc(c.last_seen || '—')}</b></div></div>
+  <div class="profile-grid"><div class="profile-section"><h3>${T('多维用户画像')}</h3><div class="radar">${radarSvg(c.scores)}</div></div><div class="profile-section"><h3>${T('行为强度 · 最近 30 天')}</h3><div class="pref-list">${pref.map(x => `<div class="pref-row"><span>${x[0]}</span><div class="pref-bar"><i style="width:${x[1]}%"></i></div><b>${x[2]}</b></div>`).join('')}</div><h3 style="margin-top:20px">${T('偏好与爱好')}</h3><div class="interest-tags">${chips([...(c.preferred_materials || []), ...(c.preferred_categories || [])])}</div><p style="color:var(--ant-text-secondary);font-size:12px;margin:14px 0 0">${T('来源')}: ${esc(c.acquisition || '—')} · ${T('偏好场景')}: ${esc(c.favorite_scene || '—')}${c.avg_session_minutes ? ` · ${esc(c.avg_session_minutes)} min` : ''}</p></div></div>
+  <div class="profile-grid"><div class="profile-section"><h3>${T('最近行为')}</h3><div class="event-list">${events.map(e => `<div class="event-row"><div class="event-dot">•</div><div><b>${esc(e[0])}</b><p>${esc(e[1])}</p></div><time>${esc(e[2])}</time></div>`).join('') || `<div class="empty">${T('暂无数据')}</div>`}</div></div><div class="profile-section"><h3>${T('推荐产品')}</h3><div class="reco-grid">${recs.map(p => `<div class="reco-card"><div class="reco-thumb">${esc(String(p.sku || p.name || 'POD').slice(0, 4))}</div><b>${esc(p.name)}</b><p>${esc(p.reason || '')}</p><div class="reco-score">Recommendation ${Math.round((Number(p.score) || 0) * 100)}%</div></div>`).join('') || `<div class="empty">${T('暂无数据')}</div>`}</div><button class="ant-btn primary" style="margin-top:12px" data-agent-customer="${esc(id)}">${T('让 Agent 创建跟进任务')}</button></div></div>
+  <div class="profile-section"><h3>${T('历史订单')}</h3><div class="table-wrap"><table><thead><tr><th>Order</th><th>Date</th><th>Status</th><th>Items</th><th>Total</th></tr></thead><tbody>${orders.map(o => `<tr><td>${esc(o.id)}</td><td>${esc(o.date)}</td><td>${tag(o.status)}</td><td>${esc(o.items)}</td><td>${esc(o.currency || '$')} ${esc(o.total)}</td></tr>`).join('') || empty(5, T('暂无数据'))}</tbody></table></div></div>`);
+  // Customer names are data: the agent prompt is built in JS, not inside an inline onclick string.
+  document.querySelector(`[data-agent-customer="${CSS.escape(id)}"]`)?.addEventListener('click', () => { closeDrawer(); quickAgent(L(`为客户 ${name} 生成个性化营销与产品推荐任务`, `Create a personalised marketing and product recommendation task for ${name}`, `Personalisierte Marketing- und Produktempfehlung für ${name} erstellen`)); });
+}
+
+// ---------- wiring ----------
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-action]');
+  if(b){const a=b.dataset.action;if(a.startsWith('agent:'))return quickAgent(a.slice(6));actions[a]?.();return}
+  if(document.body.classList.contains('sider-open')&&!e.target.closest('.sider'))document.body.classList.remove('sider-open');
+});
+document.getElementById('globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){showPage('orders');document.getElementById('orderSearch').value=e.target.value;renderOrders()}});
+document.getElementById('orderSearch').addEventListener('keydown',e=>{if(e.key==='Enter')renderOrders()});
+document.getElementById('agentInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();runAgent()}});
+document.getElementById('shopifyDomain').addEventListener('keydown',e=>{if(e.key==='Enter')startShopifyOAuth()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeShopify();document.body.classList.remove('sider-open')}});
+window.addEventListener('wedding-language-change',()=>render());
+try{if(localStorage.getItem('wcos-sider-collapsed'))document.body.classList.add('sider-collapsed')}catch{}
+const connected=new URLSearchParams(location.search).get('shop_connected');
+if(connected){showPage('stores');setTimeout(()=>notice(L(`已连接 ${connected}`,`Connected ${connected}`,`${connected} verbunden`)),300)}
+render();load();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    env_file: .env
+    ports: ["3000:3000"]
+    depends_on: [postgres, redis]
+    restart: unless-stopped
+    volumes:
+      - appdata:/app/var               # STORE_PERSIST_PATH=./var/runtime-state.json
+      - generated:/app/generated      # published invitation sites
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: pod_commerce
+      POSTGRES_USER: pod
+      POSTGRES_PASSWORD: pod_dev_password
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+volumes:
+  pgdata:
+  appdata:
+  generated:

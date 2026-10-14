@@ -1,0 +1,953 @@
+{
+  "tenants": [
+    {
+      "id": "tenant_demo",
+      "name": "Wedding Commerce Group",
+      "plan": "growth",
+      "currency": "USD"
+    },
+    {
+      "id": "tenant_studio",
+      "name": "Atelier Demo Seller",
+      "plan": "starter",
+      "currency": "EUR"
+    }
+  ],
+  "stores": [
+    {
+      "id": "store_ch_1",
+      "tenant_id": "tenant_demo",
+      "provider": "shopify",
+      "name": "Wedding Atelier CH",
+      "domain": "wedding-atelier-ch.myshopify.com",
+      "status": "connected",
+      "currency": "CHF",
+      "country": "CH"
+    },
+    {
+      "id": "store_us_1",
+      "tenant_id": "tenant_demo",
+      "provider": "shopify",
+      "name": "Wedding Atelier US",
+      "domain": "wedding-atelier-us.myshopify.com",
+      "status": "connected",
+      "currency": "USD",
+      "country": "US"
+    },
+    {
+      "id": "store_custom_1",
+      "tenant_id": "tenant_demo",
+      "provider": "custom",
+      "name": "Direct POD Store",
+      "domain": "direct.example.com",
+      "status": "connected",
+      "currency": "USD",
+      "country": "US"
+    },
+    {
+      "id": "store_studio_1",
+      "tenant_id": "tenant_studio",
+      "provider": "shopify",
+      "name": "Atelier Paris",
+      "domain": "atelier-paris.myshopify.com",
+      "status": "connected",
+      "currency": "EUR",
+      "country": "FR"
+    }
+  ],
+  "products": [
+    {
+      "id": "p_menu",
+      "tenant_id": "tenant_demo",
+      "sku": "MENU-001",
+      "name": "Wedding Menu Card",
+      "source": "supplier_api",
+      "supplier_id": "sup_print",
+      "supplier_cost": 3.2,
+      "inbound_shipping": 0.4,
+      "duty": 0.1,
+      "packaging": 0.25,
+      "base_price": 12.9,
+      "inventory": 680,
+      "scene_tags": [
+        "cream",
+        "french",
+        "modern"
+      ]
+    },
+    {
+      "id": "p_sign",
+      "tenant_id": "tenant_demo",
+      "sku": "SIGN-ACR-01",
+      "name": "Acrylic Welcome Sign",
+      "source": "supplier_api",
+      "supplier_id": "sup_sign",
+      "supplier_cost": 24.0,
+      "inbound_shipping": 4.5,
+      "duty": 1.2,
+      "packaging": 1.1,
+      "base_price": 68.0,
+      "inventory": 120,
+      "scene_tags": [
+        "cream",
+        "beach",
+        "modern"
+      ]
+    },
+    {
+      "id": "p_gift",
+      "tenant_id": "tenant_demo",
+      "sku": "GIFT-BOX-01",
+      "name": "Personalized Gift Box",
+      "source": "csv_feed",
+      "supplier_id": "sup_gift",
+      "supplier_cost": 11.0,
+      "inbound_shipping": 1.8,
+      "duty": 0.5,
+      "packaging": 0.7,
+      "base_price": 32.0,
+      "inventory": 340,
+      "scene_tags": [
+        "cream",
+        "rustic"
+      ]
+    }
+  ],
+  "listings": [
+    {
+      "id": "l1",
+      "tenant_id": "tenant_demo",
+      "product_id": "p_menu",
+      "store_id": "store_ch_1",
+      "external_id": "gid://shopify/Product/1001",
+      "status": "active",
+      "price": 14.9
+    },
+    {
+      "id": "l2",
+      "tenant_id": "tenant_demo",
+      "product_id": "p_menu",
+      "store_id": "store_us_1",
+      "external_id": "gid://shopify/Product/2001",
+      "status": "active",
+      "price": 13.9
+    },
+    {
+      "id": "l3",
+      "tenant_id": "tenant_demo",
+      "product_id": "p_sign",
+      "store_id": "store_ch_1",
+      "external_id": "gid://shopify/Product/1002",
+      "status": "active",
+      "price": 79.0
+    }
+  ],
+  "orders": [
+    {
+      "id": "POD-2026-1008",
+      "tenant_id": "tenant_demo",
+      "store_id": "store_ch_1",
+      "external_order_id": "#1048",
+      "status": "Proofing",
+      "payment_status": "paid",
+      "customer_id": "cust_1",
+      "revenue": 298.0,
+      "cogs": 92.0,
+      "shipping_cost": 16.0,
+      "payment_fee": 10.43,
+      "affiliate_commission": 0,
+      "ad_attributed_cost": 42.0,
+      "currency": "CHF",
+      "created_at": "2026-10-04T10:00:00Z",
+      "items": [
+        {
+          "name": "Acrylic Welcome Sign",
+          "quantity": 1,
+          "material": "磨砂亚克力"
+        }
+      ]
+    },
+    {
+      "id": "POD-2026-1009",
+      "tenant_id": "tenant_demo",
+      "store_id": "store_us_1",
+      "external_order_id": "#2091",
+      "status": "Production",
+      "payment_status": "paid",
+      "customer_id": "cust_2",
+      "revenue": 506.0,
+      "cogs": 198.0,
+      "shipping_cost": 28.0,
+      "payment_fee": 17.71,
+      "affiliate_commission": 25.3,
+      "ad_attributed_cost": 58.0,
+      "currency": "USD",
+      "created_at": "2026-10-03T09:15:00Z"
+    },
+    {
+      "id": "POD-2026-1010",
+      "tenant_id": "tenant_demo",
+      "store_id": "store_custom_1",
+      "external_order_id": "D-310",
+      "status": "Shipped",
+      "payment_status": "paid",
+      "customer_id": "cust_3",
+      "revenue": 189.0,
+      "cogs": 68.0,
+      "shipping_cost": 19.0,
+      "payment_fee": 6.62,
+      "affiliate_commission": 9.45,
+      "ad_attributed_cost": 21.0,
+      "currency": "USD",
+      "created_at": "2026-10-02T14:20:00Z"
+    }
+  ],
+  "shipments": [
+    {
+      "id": "ship_1",
+      "tenant_id": "tenant_demo",
+      "order_id": "POD-2026-1010",
+      "carrier": "DHL",
+      "tracking_number": "TRK-DEMO-8821",
+      "status": "In transit",
+      "eta": "2026-10-09",
+      "last_event": "Basel Distribution Center"
+    },
+    {
+      "id": "ship_2",
+      "tenant_id": "tenant_demo",
+      "order_id": "POD-2026-1009",
+      "carrier": "UPS",
+      "tracking_number": "TRK-DEMO-9912",
+      "status": "Label created",
+      "eta": "2026-10-13",
+      "last_event": "Shipment information received"
+    }
+  ],
+  "customers": [
+    {
+      "id": "cust_1",
+      "tenant_id": "tenant_demo",
+      "email": "anna@example.com",
+      "country": "CH",
+      "lifetime_value": 862,
+      "orders": 3,
+      "favorite_scene": "cream",
+      "acquisition": "instagram",
+      "last_seen": "2026-10-04",
+      "traits": [
+        "premium-paper",
+        "garden-style",
+        "mobile"
+      ],
+      "name": "Anna Keller",
+      "locale": "de-CH",
+      "device": "mobile",
+      "preferred_categories": [
+        "Invitations",
+        "Menus",
+        "Welcome Signs"
+      ],
+      "preferred_materials": [
+        "Pearl paper",
+        "Cotton paper"
+      ],
+      "interests": [
+        "Garden wedding",
+        "Premium stationery",
+        "Minimal floral"
+      ],
+      "engagement_channels": [
+        "Instagram",
+        "Web chat",
+        "Email"
+      ],
+      "avg_session_minutes": 7.8,
+      "product_views_30d": 34,
+      "site_visits_30d": 11,
+      "cart_adds_30d": 5,
+      "email_clicks_30d": 7
+    },
+    {
+      "id": "cust_2",
+      "tenant_id": "tenant_demo",
+      "email": "leo@example.com",
+      "country": "US",
+      "lifetime_value": 506,
+      "orders": 1,
+      "favorite_scene": "french",
+      "acquisition": "google",
+      "last_seen": "2026-10-03",
+      "traits": [
+        "bulk-order",
+        "formal",
+        "desktop"
+      ],
+      "name": "Leo Martin",
+      "locale": "en-US",
+      "device": "desktop",
+      "preferred_categories": [
+        "Menus",
+        "Place Cards",
+        "Seating Charts"
+      ],
+      "preferred_materials": [
+        "Pearl paper",
+        "Letterpress paper"
+      ],
+      "interests": [
+        "French indoor",
+        "Formal dinner",
+        "Gold foil"
+      ],
+      "engagement_channels": [
+        "Google",
+        "Email",
+        "Web"
+      ],
+      "avg_session_minutes": 5.4,
+      "product_views_30d": 18,
+      "site_visits_30d": 6,
+      "cart_adds_30d": 2,
+      "email_clicks_30d": 3
+    },
+    {
+      "id": "cust_3",
+      "tenant_id": "tenant_demo",
+      "email": "mia@example.com",
+      "country": "US",
+      "lifetime_value": 390,
+      "orders": 2,
+      "favorite_scene": "rustic",
+      "acquisition": "affiliate",
+      "last_seen": "2026-10-02",
+      "traits": [
+        "gift-buyer",
+        "rustic",
+        "returning"
+      ],
+      "name": "Mia Clark",
+      "locale": "en-US",
+      "device": "mobile",
+      "preferred_categories": [
+        "Gift Boxes",
+        "Tote Bags",
+        "Rustic Signs"
+      ],
+      "preferred_materials": [
+        "Kraft paper",
+        "Canvas",
+        "Wood"
+      ],
+      "interests": [
+        "Rustic wedding",
+        "Wedding favors",
+        "Monogram gifts"
+      ],
+      "engagement_channels": [
+        "Affiliate",
+        "Instagram",
+        "Web chat"
+      ],
+      "avg_session_minutes": 9.1,
+      "product_views_30d": 29,
+      "site_visits_30d": 9,
+      "cart_adds_30d": 4,
+      "email_clicks_30d": 2
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "camp_google_1",
+      "tenant_id": "tenant_demo",
+      "platform": "google_ads",
+      "name": "Wedding Menu Search",
+      "status": "active",
+      "spend": 680,
+      "revenue": 2380,
+      "clicks": 1480,
+      "conversions": 42,
+      "currency": "USD"
+    },
+    {
+      "id": "camp_meta_1",
+      "tenant_id": "tenant_demo",
+      "platform": "meta",
+      "name": "Cream Garden Retargeting",
+      "status": "active",
+      "spend": 410,
+      "revenue": 1640,
+      "clicks": 1190,
+      "conversions": 31,
+      "currency": "USD"
+    },
+    {
+      "id": "camp_tiktok_1",
+      "tenant_id": "tenant_demo",
+      "platform": "tiktok",
+      "name": "Wedding Decor Video",
+      "status": "active",
+      "spend": 330,
+      "revenue": 890,
+      "clicks": 2130,
+      "conversions": 18,
+      "currency": "USD"
+    },
+    {
+      "id": "camp_pinterest_1",
+      "tenant_id": "tenant_demo",
+      "platform": "pinterest",
+      "name": "Invitation Inspiration",
+      "status": "draft",
+      "spend": 0,
+      "revenue": 0,
+      "clicks": 0,
+      "conversions": 0,
+      "currency": "USD"
+    }
+  ],
+  "influencers": [
+    {
+      "id": "inf_1",
+      "tenant_id": "tenant_demo",
+      "platform": "instagram",
+      "handle": "@modernbride",
+      "followers": 184000,
+      "engagement_rate": 0.041,
+      "country": "US",
+      "categories": [
+        "wedding",
+        "fashion"
+      ],
+      "estimated_cpm": 18,
+      "status": "shortlisted"
+    },
+    {
+      "id": "inf_2",
+      "tenant_id": "tenant_demo",
+      "platform": "tiktok",
+      "handle": "@weddingideasdaily",
+      "followers": 421000,
+      "engagement_rate": 0.063,
+      "country": "GB",
+      "categories": [
+        "wedding",
+        "diy"
+      ],
+      "estimated_cpm": 14,
+      "status": "new"
+    },
+    {
+      "id": "inf_3",
+      "tenant_id": "tenant_demo",
+      "platform": "youtube",
+      "handle": "The Minimal Wedding",
+      "followers": 98000,
+      "engagement_rate": 0.052,
+      "country": "US",
+      "categories": [
+        "wedding",
+        "planning"
+      ],
+      "estimated_cpm": 22,
+      "status": "contacted"
+    },
+    {
+      "id": "inf_4",
+      "tenant_id": "tenant_demo",
+      "platform": "pinterest",
+      "handle": "Garden Ceremony Ideas",
+      "followers": 75000,
+      "engagement_rate": 0.036,
+      "country": "CH",
+      "categories": [
+        "wedding",
+        "garden"
+      ],
+      "estimated_cpm": 12,
+      "status": "new"
+    },
+    {
+      "id": "inf_5",
+      "tenant_id": "tenant_demo",
+      "platform": "linkedin",
+      "handle": "Luxury Event Network",
+      "followers": 54000,
+      "engagement_rate": 0.028,
+      "country": "DE",
+      "categories": [
+        "events",
+        "b2b"
+      ],
+      "estimated_cpm": 30,
+      "status": "new"
+    }
+  ],
+  "affiliates": [
+    {
+      "id": "aff_1",
+      "tenant_id": "tenant_demo",
+      "name": "Bridal Planner Network",
+      "code": "BRIDE10",
+      "commission_rate": 0.1,
+      "revenue": 1240,
+      "commission_due": 124,
+      "status": "active"
+    },
+    {
+      "id": "aff_2",
+      "tenant_id": "tenant_demo",
+      "name": "Garden Venue Partners",
+      "code": "GARDEN8",
+      "commission_rate": 0.08,
+      "revenue": 860,
+      "commission_due": 68.8,
+      "status": "active"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_1",
+      "tenant_id": "tenant_demo",
+      "type": "marketing_review",
+      "title": "Review TikTok campaign ROAS",
+      "status": "needs_approval",
+      "risk": "medium",
+      "created_at": "2026-10-05T08:00:00Z"
+    },
+    {
+      "id": "task_2",
+      "tenant_id": "tenant_demo",
+      "type": "catalog_sync",
+      "title": "Sync supplier catalog to 2 Shopify stores",
+      "status": "queued",
+      "risk": "low",
+      "created_at": "2026-10-05T08:20:00Z"
+    },
+    {
+      "id": "task_3",
+      "tenant_id": "tenant_demo",
+      "type": "influencer_outreach",
+      "title": "Prepare outreach draft for 3 creators",
+      "status": "draft",
+      "risk": "low",
+      "created_at": "2026-10-05T09:10:00Z"
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv_1",
+      "tenant_id": "tenant_demo",
+      "channel": "webchat",
+      "customer_id": "cust_1",
+      "external_thread_id": "web_201",
+      "status": "open",
+      "subject": "Cream Garden 定制与材质",
+      "last_message": "想把邀请卡改成珠光纸，50份多少钱？",
+      "updated_at": "2026-10-05T10:20:00Z",
+      "assigned_to": "agent"
+    },
+    {
+      "id": "conv_2",
+      "tenant_id": "tenant_demo",
+      "channel": "instagram_dm",
+      "customer_id": "cust_3",
+      "external_thread_id": "ig_883",
+      "status": "open",
+      "subject": "伴手礼合作咨询",
+      "last_message": "Can you customize 80 gift boxes with our monogram?",
+      "updated_at": "2026-10-05T09:45:00Z",
+      "assigned_to": "agent"
+    },
+    {
+      "id": "conv_3",
+      "tenant_id": "tenant_demo",
+      "channel": "email",
+      "customer_id": "cust_2",
+      "external_thread_id": "mail_772",
+      "status": "waiting_customer",
+      "subject": "Proof approval",
+      "last_message": "Please confirm the revised menu proof.",
+      "updated_at": "2026-10-05T08:50:00Z",
+      "assigned_to": "human"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg_1",
+      "tenant_id": "tenant_demo",
+      "conversation_id": "conv_1",
+      "role": "customer",
+      "channel": "webchat",
+      "text": "想把邀请卡改成珠光纸，50份多少钱？",
+      "created_at": "2026-10-05T10:20:00Z"
+    },
+    {
+      "id": "msg_2",
+      "tenant_id": "tenant_demo",
+      "conversation_id": "conv_2",
+      "role": "customer",
+      "channel": "instagram_dm",
+      "text": "Can you customize 80 gift boxes with our monogram?",
+      "created_at": "2026-10-05T09:45:00Z"
+    },
+    {
+      "id": "msg_3",
+      "tenant_id": "tenant_demo",
+      "conversation_id": "conv_3",
+      "role": "agent",
+      "channel": "email",
+      "text": "Please confirm the revised menu proof.",
+      "created_at": "2026-10-05T08:50:00Z"
+    }
+  ],
+  "customer_events": [
+    {
+      "id": "evt_1",
+      "tenant_id": "tenant_demo",
+      "customer_id": "cust_1",
+      "type": "product_view",
+      "label": "Viewed Acrylic Welcome Sign",
+      "channel": "web",
+      "created_at": "2026-10-05T09:58:00Z",
+      "metadata": {
+        "product_id": "p_sign",
+        "scene": "cream"
+      }
+    },
+    {
+      "id": "evt_2",
+      "tenant_id": "tenant_demo",
+      "customer_id": "cust_1",
+      "type": "cart_add",
+      "label": "Added Wedding Menu Card × 50",
+      "channel": "web",
+      "created_at": "2026-10-05T09:52:00Z",
+      "metadata": {
+        "product_id": "p_menu",
+        "quantity": 50
+      }
+    },
+    {
+      "id": "evt_3",
+      "tenant_id": "tenant_demo",
+      "customer_id": "cust_1",
+      "type": "conversation",
+      "label": "Asked about pearl paper pricing",
+      "channel": "webchat",
+      "created_at": "2026-10-05T10:20:00Z",
+      "metadata": {
+        "conversation_id": "conv_1"
+      }
+    },
+    {
+      "id": "evt_4",
+      "tenant_id": "tenant_demo",
+      "customer_id": "cust_1",
+      "type": "email_click",
+      "label": "Opened proof reminder email",
+      "channel": "email",
+      "created_at": "2026-10-04T18:22:00Z",
+      "metadata": {}
+    },
+    {
+      "id": "evt_5",
+      "tenant_id": "tenant_demo",
+      "customer_id": "cust_2",
+      "type": "product_view",
+      "label": "Viewed Wedding Menu Card",
+      "channel": "web",
+      "created_at": "2026-10-05T07:42:00Z",
+      "metadata": {
+        "product_id": "p_menu",
+        "scene": "french"
+      }
+    },
+    {
+      "id": "evt_6",
+      "tenant_id": "tenant_demo",
+      "customer_id": "cust_2",
+      "type": "conversation",
+      "label": "Proof approval email interaction",
+      "channel": "email",
+      "created_at": "2026-10-05T08:50:00Z",
+      "metadata": {
+        "conversation_id": "conv_3"
+      }
+    },
+    {
+      "id": "evt_7",
+      "tenant_id": "tenant_demo",
+      "customer_id": "cust_2",
+      "type": "checkout",
+      "label": "Completed a bulk menu checkout",
+      "channel": "shopify",
+      "created_at": "2026-10-03T09:15:00Z",
+      "metadata": {
+        "order_id": "POD-2026-1009"
+      }
+    },
+    {
+      "id": "evt_8",
+      "tenant_id": "tenant_demo",
+      "customer_id": "cust_3",
+      "type": "product_view",
+      "label": "Viewed Personalized Gift Box",
+      "channel": "affiliate",
+      "created_at": "2026-10-05T09:31:00Z",
+      "metadata": {
+        "product_id": "p_gift",
+        "scene": "rustic"
+      }
+    },
+    {
+      "id": "evt_9",
+      "tenant_id": "tenant_demo",
+      "customer_id": "cust_3",
+      "type": "conversation",
+      "label": "Asked about 80 customized gift boxes",
+      "channel": "instagram_dm",
+      "created_at": "2026-10-05T09:45:00Z",
+      "metadata": {
+        "conversation_id": "conv_2"
+      }
+    },
+    {
+      "id": "evt_10",
+      "tenant_id": "tenant_demo",
+      "customer_id": "cust_3",
+      "type": "purchase",
+      "label": "Purchased rustic favor items",
+      "channel": "shopify",
+      "created_at": "2026-10-02T14:20:00Z",
+      "metadata": {
+        "order_id": "POD-2026-1010"
+      }
+    }
+  ],
+  "connector_configs": [],
+  "shipping_zones": [
+    {
+      "id": "zone_ch",
+      "tenant_id": "tenant_demo",
+      "name": "Switzerland",
+      "countries": [
+        "CH",
+        "LI"
+      ],
+      "currency": "CNY",
+      "standard_base": 42,
+      "standard_per_kg": 9,
+      "express_base": 88,
+      "express_per_kg": 18,
+      "free_shipping_threshold": 899,
+      "tax_mode": "manual_demo",
+      "tax_rate": 0.081,
+      "active": true
+    },
+    {
+      "id": "zone_de",
+      "tenant_id": "tenant_demo",
+      "name": "Germany",
+      "countries": [
+        "DE"
+      ],
+      "currency": "CNY",
+      "standard_base": 58,
+      "standard_per_kg": 11,
+      "express_base": 108,
+      "express_per_kg": 22,
+      "free_shipping_threshold": 1099,
+      "tax_mode": "manual_demo",
+      "tax_rate": 0.19,
+      "active": true
+    },
+    {
+      "id": "zone_eu",
+      "tenant_id": "tenant_demo",
+      "name": "EU",
+      "countries": [
+        "FR",
+        "IT",
+        "ES",
+        "AT",
+        "BE",
+        "NL",
+        "LU",
+        "IE",
+        "PT",
+        "DK",
+        "SE",
+        "FI",
+        "PL",
+        "CZ",
+        "SK",
+        "HU",
+        "RO",
+        "BG",
+        "HR",
+        "SI",
+        "EE",
+        "LV",
+        "LT",
+        "GR",
+        "CY",
+        "MT"
+      ],
+      "currency": "CNY",
+      "standard_base": 68,
+      "standard_per_kg": 13,
+      "express_base": 128,
+      "express_per_kg": 25,
+      "free_shipping_threshold": 1299,
+      "tax_mode": "external_recommended",
+      "tax_rate": 0,
+      "active": true
+    },
+    {
+      "id": "zone_uk",
+      "tenant_id": "tenant_demo",
+      "name": "United Kingdom",
+      "countries": [
+        "GB"
+      ],
+      "currency": "CNY",
+      "standard_base": 76,
+      "standard_per_kg": 14,
+      "express_base": 148,
+      "express_per_kg": 28,
+      "free_shipping_threshold": 1399,
+      "tax_mode": "manual_demo",
+      "tax_rate": 0.2,
+      "active": true
+    },
+    {
+      "id": "zone_us",
+      "tenant_id": "tenant_demo",
+      "name": "United States / Canada",
+      "countries": [
+        "US",
+        "CA"
+      ],
+      "currency": "CNY",
+      "standard_base": 92,
+      "standard_per_kg": 16,
+      "express_base": 188,
+      "express_per_kg": 34,
+      "free_shipping_threshold": 1599,
+      "tax_mode": "external_required",
+      "tax_rate": 0,
+      "active": true
+    },
+    {
+      "id": "zone_world",
+      "tenant_id": "tenant_demo",
+      "name": "Rest of world",
+      "countries": [
+        "*"
+      ],
+      "currency": "CNY",
+      "standard_base": 118,
+      "standard_per_kg": 20,
+      "express_base": 228,
+      "express_per_kg": 40,
+      "free_shipping_threshold": 1999,
+      "tax_mode": "external_required",
+      "tax_rate": 0,
+      "active": true
+    }
+  ],
+  "tracking_events": [
+    {
+      "id": "trk_evt_1",
+      "tenant_id": "tenant_demo",
+      "shipment_id": "ship_1",
+      "event_time": "2026-10-02T12:20:00Z",
+      "status": "Label created",
+      "location": "Fulfillment center",
+      "description": "Shipment information received"
+    },
+    {
+      "id": "trk_evt_2",
+      "tenant_id": "tenant_demo",
+      "shipment_id": "ship_1",
+      "event_time": "2026-10-03T08:40:00Z",
+      "status": "Picked up",
+      "location": "Zurich",
+      "description": "Shipment collected by DHL"
+    },
+    {
+      "id": "trk_evt_3",
+      "tenant_id": "tenant_demo",
+      "shipment_id": "ship_1",
+      "event_time": "2026-10-04T17:40:00Z",
+      "status": "In transit",
+      "location": "Basel Distribution Center",
+      "description": "Processed at regional distribution center"
+    },
+    {
+      "id": "trk_evt_4",
+      "tenant_id": "tenant_demo",
+      "shipment_id": "ship_2",
+      "event_time": "2026-10-04T12:10:00Z",
+      "status": "Label created",
+      "location": "Fulfillment center",
+      "description": "UPS shipment information received"
+    }
+  ],
+  "shipping_store_sync": [
+    {
+      "id": "sync_1",
+      "tenant_id": "tenant_demo",
+      "store_id": "store_ch_1",
+      "provider": "shopify",
+      "sync_type": "shipping_rates",
+      "source_hash": "demo-ch",
+      "status": "synced",
+      "response": {
+        "zones": 6,
+        "carrier_service": "staged"
+      },
+      "synced_at": "2026-10-05T09:30:00Z"
+    },
+    {
+      "id": "sync_2",
+      "tenant_id": "tenant_demo",
+      "store_id": "store_us_1",
+      "provider": "shopify",
+      "sync_type": "shipping_rates",
+      "source_hash": "demo-us",
+      "status": "synced",
+      "response": {
+        "zones": 6,
+        "carrier_service": "staged"
+      },
+      "synced_at": "2026-10-05T09:32:00Z"
+    },
+    {
+      "id": "sync_3",
+      "tenant_id": "tenant_demo",
+      "store_id": "store_custom_1",
+      "provider": "custom",
+      "sync_type": "shipping_rates",
+      "source_hash": "demo-direct",
+      "status": "synced",
+      "response": {
+        "zones": 6
+      },
+      "synced_at": "2026-10-05T09:34:00Z"
+    }
+  ],
+  "proofs": [
+    {
+      "id": "proof_demo_1008",
+      "tenant_id": "tenant_demo",
+      "order_id": "POD-2026-1008",
+      "token": "demo-proof-token-1008",
+      "status": "Pending",
+      "proof_url": "",
+      "material": "磨砂亚克力",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  ]
+}
