@@ -551,6 +551,24 @@ button{color:inherit}
 @media(max-width:900px){.focus-grid,.studio-story .focus-grid{grid-template-columns:1fr}.focus-copy{padding:46px 28px}.product-wall{min-height:620px}.studio-visual{min-height:520px}}
 @media(max-width:620px){.product-wall{grid-template-columns:1fr;grid-template-rows:none}.product-shot{min-height:240px}.studio-stack{aspect-ratio:1}.studio-stack img{width:58%}.studio-stack img:nth-child(3){left:22%;width:56%}}
 
+
+.product-modal{position:fixed;inset:0;z-index:200;background:rgba(31,26,23,.55);display:none;place-items:center;padding:16px;backdrop-filter:blur(6px)}
+.product-modal.open{display:grid}
+.product-modal-card{width:min(640px,94vw);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:22px;border:1px solid var(--line);box-shadow:0 28px 80px rgba(35,28,24,.25);display:grid;grid-template-columns:1fr 1fr}
+.product-modal-img{background:#f5efe8;display:grid;place-items:center;padding:24px;min-height:320px}
+.product-modal-img img{max-width:100%;max-height:360px;object-fit:contain}
+.product-modal-info{padding:22px}
+.product-modal-info h3{margin:0 0 6px;font-size:20px}
+.product-modal-info .price{font:18px Georgia,serif;margin:8px 0 14px}
+.color-swatches{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}
+.color-swatches button{width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #ddd;cursor:pointer}
+.color-swatches button.active{box-shadow:0 0 0 2px #28231f}
+.product-modal-actions{display:flex;gap:10px;margin-top:16px}
+.product-modal-actions button{flex:1;padding:12px;border-radius:12px;border:0;cursor:pointer;font-size:13px}
+.product-modal-actions .primary{background:#28231f;color:#fff}
+.product-modal-actions .secondary{background:#f3ece4;color:#28231f}
+.product-modal-close{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:0;background:#fff;cursor:pointer;font-size:18px}
+@media(max-width:640px){.product-modal-card{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -992,7 +1010,7 @@ function renderCatalog(){
           <strong>€${p.price.toFixed(2)}</strong>
         </button>`).join("")}
     </section>`).join("");
-  cat.querySelectorAll(".product").forEach(b=>b.onclick=()=>openStudio(b.dataset.product));
+  cat.querySelectorAll(".product").forEach(b=>b.onclick=()=>openProductModal(b.dataset.product));
 }
 function current(){return sceneData[sceneKey].groups[currentGroup][1][currentProduct]}
 
@@ -1518,6 +1536,24 @@ a{color:inherit}.hero{min-height:100vh;padding:28px;display:grid;place-items:cen
 .floating{position:fixed;right:18px;bottom:18px;z-index:20;display:flex;gap:7px}.floating button,.floating a{width:42px;height:42px;border-radius:50%;border:1px solid rgba(60,45,35,.12);background:rgba(255,255,255,.88);display:grid;place-items:center;text-decoration:none;cursor:pointer;box-shadow:0 8px 20px rgba(40,30,24,.12);font-size:12px}
 .lightbox{position:fixed;inset:0;z-index:30;background:rgba(20,17,15,.84);display:none;place-items:center;padding:24px}.lightbox.open{display:grid}.lightbox img{max-width:94vw;max-height:90vh;border-radius:16px}
 @media(max-width:760px){.section{padding:70px 20px}.countdown{grid-template-columns:repeat(2,1fr)}.venue-card{grid-template-columns:1fr}.map-art{min-height:250px}.gallery{grid-template-columns:1fr 1fr}.gallery-item:first-child{grid-column:1/-1;grid-row:auto;min-height:380px}.rsvp{margin:70px 14px;padding:34px 22px;border-radius:24px}.rsvp-form{grid-template-columns:1fr}.hero{padding:18px}.hero:before{width:70vw;height:90vw}}
+
+.product-modal{position:fixed;inset:0;z-index:200;background:rgba(31,26,23,.55);display:none;place-items:center;padding:16px;backdrop-filter:blur(6px)}
+.product-modal.open{display:grid}
+.product-modal-card{width:min(640px,94vw);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:22px;border:1px solid var(--line);box-shadow:0 28px 80px rgba(35,28,24,.25);display:grid;grid-template-columns:1fr 1fr}
+.product-modal-img{background:#f5efe8;display:grid;place-items:center;padding:24px;min-height:320px}
+.product-modal-img img{max-width:100%;max-height:360px;object-fit:contain}
+.product-modal-info{padding:22px}
+.product-modal-info h3{margin:0 0 6px;font-size:20px}
+.product-modal-info .price{font:18px Georgia,serif;margin:8px 0 14px}
+.color-swatches{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}
+.color-swatches button{width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #ddd;cursor:pointer}
+.color-swatches button.active{box-shadow:0 0 0 2px #28231f}
+.product-modal-actions{display:flex;gap:10px;margin-top:16px}
+.product-modal-actions button{flex:1;padding:12px;border-radius:12px;border:0;cursor:pointer;font-size:13px}
+.product-modal-actions .primary{background:#28231f;color:#fff}
+.product-modal-actions .secondary{background:#f3ece4;color:#28231f}
+.product-modal-close{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:0;background:#fff;cursor:pointer;font-size:18px}
+@media(max-width:640px){.product-modal-card{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -1573,6 +1609,23 @@ function sendRSVP(){
 }
 ${p.features.countdown?`function tick(){const t=new Date(${JSON.stringify((p.date||"2027-06-18")+"T"+(p.time||"15:00")+":00")}).getTime()-Date.now();const v=Math.max(0,t);document.getElementById("cdD").textContent=Math.floor(v/86400000);document.getElementById("cdH").textContent=Math.floor(v/3600000)%24;document.getElementById("cdM").textContent=Math.floor(v/60000)%60;document.getElementById("cdS").textContent=Math.floor(v/1000)%60}tick();setInterval(tick,1000);`:""}
 <\/script>
+
+<div class="product-modal" id="productModal">
+  <div class="product-modal-card" style="position:relative">
+    <button class="product-modal-close" id="productModalClose">×</button>
+    <div class="product-modal-img"><img id="productModalImg" src="" alt=""></div>
+    <div class="product-modal-info">
+      <small id="productModalCat" style="color:var(--muted);font-size:11px;letter-spacing:.08em">PRODUCT</small>
+      <h3 id="productModalName"></h3>
+      <div class="price" id="productModalPrice"></div>
+      <div id="productModalColors" class="color-swatches"></div>
+      <div class="product-modal-actions">
+        <button class="primary" id="productModalDesign">开始设计</button>
+        <button class="secondary" id="productModalClose2">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body></html>`;
 }
 function refreshWeddingPreview(){
@@ -1642,6 +1695,69 @@ document.getElementById("wbGallery").onchange=async e=>{
 });
 
 </script>
-<script src="account-auth.js"></script>
+<script src="account-auth.js">
+// Product detail modal (no page navigation)
+let currentModalProduct = null;
+function openProductModal(productId) {
+  const p = studioProductsById[productId];
+  if (!p) return;
+  currentModalProduct = p;
+  document.getElementById("productModalName").textContent = p.name || productId;
+  document.getElementById("productModalPrice").textContent = "€" + (p.price || p.base_cost_eur || 0).toFixed(2);
+  document.getElementById("productModalCat").textContent = (p.category || "PRODUCT").toUpperCase();
+  const img = document.getElementById("productModalImg");
+  img.src = p.thumb || p.mockup_photo?.src || "";
+  img.alt = p.name || productId;
+  // Color swatches
+  const colorsEl = document.getElementById("productModalColors");
+  const colors = p.colors || [];
+  if (colors.length) {
+    colorsEl.innerHTML = colors.map((c,i) => 
+      `<button style="background:${c}" data-color="${c}" class="${i===0?"active":""}" title="${c}"></button>`
+    ).join("");
+    colorsEl.querySelectorAll("button").forEach(btn => {
+      btn.onclick = () => {
+        colorsEl.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        // Try color-specific image, fall back to main
+        const colorKey = btn.dataset.color.replace("#","");
+        const colorImg = `assets/mockups/${productId}_${colorKey}.jpg`;
+        const test = new Image();
+        test.onload = () => { img.src = colorImg; };
+        test.onerror = () => { img.src = p.thumb || p.mockup_photo?.src || ""; };
+        test.src = colorImg;
+      };
+    });
+  } else {
+    colorsEl.innerHTML = "";
+  }
+  document.getElementById("productModal").classList.add("open");
+}
+document.getElementById("productModalClose").onclick = () => document.getElementById("productModal").classList.remove("open");
+document.getElementById("productModalClose2").onclick = () => document.getElementById("productModal").classList.remove("open");
+document.getElementById("productModalDesign").onclick = () => {
+  if (currentModalProduct) openStudio(currentModalProduct.id);
+};
+document.getElementById("productModal").onclick = e => {
+  if (e.target.id === "productModal") document.getElementById("productModal").classList.remove("open");
+};
+</script>
+
+<div class="product-modal" id="productModal">
+  <div class="product-modal-card" style="position:relative">
+    <button class="product-modal-close" id="productModalClose">×</button>
+    <div class="product-modal-img"><img id="productModalImg" src="" alt=""></div>
+    <div class="product-modal-info">
+      <small id="productModalCat" style="color:var(--muted);font-size:11px;letter-spacing:.08em">PRODUCT</small>
+      <h3 id="productModalName"></h3>
+      <div class="price" id="productModalPrice"></div>
+      <div id="productModalColors" class="color-swatches"></div>
+      <div class="product-modal-actions">
+        <button class="primary" id="productModalDesign">开始设计</button>
+        <button class="secondary" id="productModalClose2">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
