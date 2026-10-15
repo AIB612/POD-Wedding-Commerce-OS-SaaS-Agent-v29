@@ -1720,11 +1720,12 @@ function openProductModal(productId) {
         colorsEl.querySelectorAll("button").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         // Try color-specific image, fall back to main
-        const colorKey = btn.dataset.color.replace("#","");
-        const colorImg = `assets/mockups/${productId}_${colorKey}.jpg`;
+        const colorKey = (btn.dataset.color || "").replace("#","").toLowerCase();
+        const colorImg = `/assets/mockups/${productId}_${colorKey}.jpg`;
+        const mainImg = p.thumb || p.mockup_photo?.src || "";
         const test = new Image();
         test.onload = () => { img.src = colorImg; };
-        test.onerror = () => { img.src = p.thumb || p.mockup_photo?.src || ""; };
+        test.onerror = () => { img.src = mainImg; };
         test.src = colorImg;
       };
     });

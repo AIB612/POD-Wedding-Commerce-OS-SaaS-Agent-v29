@@ -254,17 +254,26 @@
     if (onload && !c._cbs.includes(onload)) c._cbs.push(onload);
     return null;
   }
-  function photoFor(p, onload, needLayers = true) {
+  function photoFor(p, onload, needLayers = true, color) {
     const m = p.mockup_photo; if (!m?.src) return null;
-    const base = img(m.src, onload); if (!base) return null;
-    if (!needLayers) return { base, mask: null, shade: null, area: m.area };   // thumbnails: base image only
+    // Prefer pre-generated color-specific image when a non-default color is selected
+    let baseSrc = m.src;
+    if (color && p.colors && color.toLowerCase() !== p.colors[0].toLowerCase()) {
+      const colorKey = color.replace("#","").toLowerCase();
+      const colorSrc = `assets/mockups/${p.id}_${colorKey}.jpg`;
+      const colorImg = img(colorSrc, onload);
+      if (colorImg) baseSrc = colorSrc;
+    }
+    const base = img(baseSrc, onload); if (!base) return null;
+    if (!needLayers) return { base, mask: null, shade: null, area: m.area, usedColorImg: baseSrc !== m.src };
     const mask = m.mask ? img(m.mask, onload) : true, shade = m.shade ? img(m.shade, onload) : true;
-    return mask && shade ? { base, mask: m.mask ? mask : null, shade: m.shade ? shade : null, area: m.area } : null;
+    return mask && shade ? { base, mask: m.mask ? mask : null, shade: m.shade ? shade : null, area: m.area, usedColorImg: baseSrc !== m.src } : null;
   }
   function layer(px) { const c = document.createElement("canvas"); c.width = c.height = px; const x = c.getContext("2d"); x.setTransform(px / 100, 0, 0, px / 100, 0, 0); return [c, x]; }
   function renderPhoto(x, px, p, pl, ph, showArea, clean) {
     x.drawImage(ph.base, 0, 0, 100, 100);
-    if (pl.color && ph.mask && p.colors && pl.color.toLowerCase() !== p.colors[0].toLowerCase()) { // recolour the product, keep its shading
+    // Skip canvas recolour if we're already using a pre-generated color image
+    if (!ph.usedColorImg && pl.color && ph.mask && p.colors && pl.color.toLowerCase() !== p.colors[0].toLowerCase()) { // recolour the product, keep its shading
       const [c, cx] = layer(px); cx.fillStyle = pl.color; cx.fillRect(0, 0, 100, 100); cx.globalCompositeOperation = "destination-in"; cx.drawImage(ph.mask, 0, 0, 100, 100);
       x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = "multiply"; x.drawImage(c, 0, 0); x.restore();
     }
@@ -288,7 +297,7 @@
     cv.width = cv.height = px;
     const x = cv.getContext("2d"); x.setTransform(px / 100, 0, 0, px / 100, 0, 0);
     const recolour = !!(pl.color && p.colors && pl.color.toLowerCase() !== p.colors[0].toLowerCase());
-    const photo = photoFor(p, onPhotoLoad, !!design || recolour);
+    const photo = photoFor(p, onPhotoLoad, !!design || recolour, pl.color);
     if (p.mockup_photo?.src && !photo) { x.fillStyle = "#efe8df"; x.fillRect(0, 0, 100, 100); return; } // still loading: plain backdrop, no flash of the vector render
     if (photo) { renderPhoto(x, px, p, pl, photo, showArea, clean); return; }
     // v24: one uniform product backdrop across the whole catalog; no artificial ground shadow.
