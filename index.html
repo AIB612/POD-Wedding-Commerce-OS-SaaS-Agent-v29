@@ -753,7 +753,7 @@ button{color:inherit}
         <div class="control-section" data-step="2">
           <h4>风格与语言</h4>
           <div class="control-grid">
-            <div class="control-field"><label for="wbLayout">网站风格</label><select id="wbLayout"><option value="classic" data-i18n-opt="经典">经典</option><option value="modern" data-i18n-opt="现代">现代</option><option value="botanical" data-i18n-opt="植物">植物</option><option value="floral" data-i18n-opt="花卉">花卉</option><option value="minimal" data-i18n-opt="极简">极简</option><option value="destination" data-i18n-opt="目的地">目的地</option><option value="editorial" data-i18n-opt="杂志大字">杂志大字</option><option value="gallery" data-i18n-opt="画廊大图">画廊大图</option></select></div>
+            <div class="control-field"><label for="wbLayout">网站风格</label><select id="wbLayout"><option value="classic" data-i18n-opt="经典">经典</option><option value="modern" data-i18n-opt="现代">现代</option><option value="botanical" data-i18n-opt="植物">植物</option><option value="floral" data-i18n-opt="花卉">花卉</option><option value="watercolor" data-i18n-opt="水彩花卉">水彩花卉</option><option value="olive" data-i18n-opt="橄榄枝">橄榄枝</option><option value="minimal" data-i18n-opt="极简">极简</option><option value="destination" data-i18n-opt="目的地">目的地</option><option value="editorial" data-i18n-opt="杂志大字">杂志大字</option><option value="gallery" data-i18n-opt="画廊大图">画廊大图</option></select></div>
             <div class="control-field"><label for="wbLang">宾客默认语言</label><select id="wbLang"><option value="en">English</option><option value="zh">中文</option><option value="de">Deutsch</option></select></div>
             <div class="control-field"><label for="wbAccent">主题强调色</label><input id="wbAccent" type="color" value="#9a6d57"/></div>
           </div>
@@ -1547,7 +1547,7 @@ function weddingProfile(){
 }
 // ---- Wedding website generator (self-contained HTML). Layouts: classic / editorial / gallery ----
 // Style themes: one page structure, switchable palette / type / hero / envelope / ornament. Legacy values classic/editorial/gallery stay valid.
-const WEDDING_LAYOUTS=["classic","modern","botanical","floral","minimal","destination","editorial","gallery"];
+const WEDDING_LAYOUTS=["classic","modern","botanical","floral","watercolor","olive","minimal","destination","editorial","gallery"];
 const WB_SERIF_STACK='"WB Serif","Cormorant Garamond",Garamond,Baskerville,"Baskerville Old Face",Georgia,"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC",serif';
 const WEDDING_SERIF=Object.fromEntries(WEDDING_LAYOUTS.map(k=>[k,WB_SERIF_STACK]));
 const WB_ORN={
@@ -1556,19 +1556,62 @@ flower:c=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="no
 sun:c=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none" stroke="${c}" stroke-width=".8" stroke-linecap="round"><path d="M44 26a16 16 0 0 1 32 0"/>${[-60,-30,0,30,60].map(a=>`<path d="M60 4v6" transform="rotate(${a} 60 26)"/>`).join("")}<path d="M10 30c8-4 12 4 20 0s12 4 20 0 12 4 20 0 12 4 20 0 12 4 20 0"/><path d="M10 36c8-4 12 4 20 0s12 4 20 0 12 4 20 0 12 4 20 0 12 4 20 0"/></svg>`,
 line:c=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none" stroke="${c}" stroke-width=".8"><path d="M30 20h26M64 20h26"/><path d="M60 16l4 4-4 4-4-4z"/></svg>`
 };
+// Illustrated section dividers (eucalyptus sprig, rose, watercolor bloom, olive branch).
+for(const [k,ill] of [["sprig","botanical"],["bloom","floral"],["wash","watercolor"],["olive","olive"]])WB_ORN[k]=c=>wbVE(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" fill="none">${WB_ILL[ill].sprig(c)}</svg>`);
+// ---- Hand-authored inline SVG illustrations (line art / painted washes) for botanical, floral, watercolor, olive ----
+// Generated from a few leaf/flower primitives placed along cubic stems; aria-hidden decoration, no external assets.
+const wbF=n=>Math.round(n*10)/10;
+function wbBez(p,t){const u=1-t,x=u*u*u*p[0]+3*u*u*t*p[2]+3*u*t*t*p[4]+t*t*t*p[6],y=u*u*u*p[1]+3*u*u*t*p[3]+3*u*t*t*p[5]+t*t*t*p[7];
+ const dx=3*u*u*(p[2]-p[0])+6*u*t*(p[4]-p[2])+3*t*t*(p[6]-p[4]),dy=3*u*u*(p[3]-p[1])+6*u*t*(p[5]-p[3])+3*t*t*(p[7]-p[5]);return [x,y,Math.atan2(dy,dx)*180/Math.PI]}
+const WB_LEAF={almond:["M0 0C5-6 14-6 20 0C14 6 5 6 0 0Z",17],slim:["M0 0C8-3.6 22-3.6 30 0C22 3.6 8 3.6 0 0Z",27],round:["M0 0C1-7 13-9 16-2C18 5 7 8 0 0Z",12]};
+function wbStem(p,n,shape,o={}){const {size=1,angle=40,from=.1,to=.97,rib=false,fill="none",op=1,filter=""}=o;
+ let s=`<path d="M${p[0]} ${p[1]}C${p.slice(2).join(" ")}" fill="none"/>`;
+ for(let i=0;i<n;i++){const t=from+(to-from)*i/Math.max(1,n-1),[x,y,a]=wbBez(p,t),side=i%2?1:-1,k=size*(1-.4*t);
+  s+=`<g transform="translate(${wbF(x)} ${wbF(y)}) rotate(${wbF(a+side*angle)}) scale(${wbF(k*10)/10})"${filter}><path d="${WB_LEAF[shape][0]}" fill="${fill}" fill-opacity="${op}"/>${rib?`<path d="M1.5 0H${WB_LEAF[shape][1]}" fill="none"/>`:""}</g>`}
+ return s}
+const wbRose=(cx,cy,r)=>`<g transform="translate(${cx} ${cy}) scale(${wbF(r/20*100)/100})" fill="none"><path d="M-2-1c2-4 8-3 8 2s-6 8-10 4-2-12 6-13 14 6 11 13-12 11-18 6"/><path d="M-13-7c-1-8 8-14 15-12M13-9c6 5 7 13 1 19M-15 5c1 9 10 13 18 11"/>${[0,72,144,216,288].map(a=>`<path d="M0-16C9-25 21-15 15.2-4.9" transform="rotate(${a})"/>`).join("")}${[36,108,180,252,324].map(a=>`<path d="M0-11C6-17 14-11 10.5-3.4" transform="rotate(${a})"/>`).join("")}</g>`;
+const wbPeony=(cx,cy,r)=>`<g transform="translate(${cx} ${cy}) scale(${wbF(r/20*100)/100})" fill="none">${[0,40,80,120,160,200,240,280,320].map((a,i)=>`<path d="M-7-${i%2?14:16}c2-${i%2?7:9} 12-${i%2?7:9} 14 0" transform="rotate(${a})"/>`).join("")}${[20,110,200,290].map(a=>`<path d="M-5-7c1-5 9-5 10 0" transform="rotate(${a})"/>`).join("")}<circle r="2.6"/><path d="M-20-2c-3 7 0 15 6 19M20 2c2 8-2 15-8 18"/></g>`;
+const wbBud=(x,y,a)=>`<g transform="translate(${x} ${y}) rotate(${a})" fill="none"><path d="M0 0C-4-5-3-12 0-15C3-12 4-5 0 0Z"/><path d="M0 0C-3-2-6-2-7 0M0 0C3-2 6-2 7 0"/></g>`;
+const wbOlives=(pts,c)=>pts.map(([x,y,a])=>`<ellipse cx="${x}" cy="${y}" rx="4.6" ry="6.6" transform="rotate(${a} ${x} ${y})" fill="${c}" fill-opacity=".9"/><path d="M${x} ${y-6.6}l${a>0?2:-2}-4" fill="none"/>`).join("");
+// Watercolor washes: blurred radial-gradient blobs + a few unblurred hairlines for definition.
+function wbWashDefs(u){return `<defs><filter id="wb${u}b" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3.2"/></filter><filter id="wb${u}s" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.1"/></filter>
+${[["p","#f4b9bd","#e58c98"],["c","#f8d5b8","#eda77e"],["l","#d6c6ef","#a98fd3"],["g","#c4d6b7","#8fae86"]].map(([k,a,b])=>`<radialGradient id="wb${u}${k}" cx=".42" cy=".38" r=".65"><stop offset="0" stop-color="${a}" stop-opacity=".95"/><stop offset=".7" stop-color="${b}" stop-opacity=".55"/><stop offset="1" stop-color="${b}" stop-opacity="0"/></radialGradient>`).join("")}</defs>`}
+const wbWashBloom=(u,x,y,r,k)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="url(#wb${u}${k})" filter="url(#wb${u}b)"/>${[0,72,144,216,288].map(a=>`<ellipse cx="${x}" cy="${y-r*.55}" rx="${wbF(r*.38)}" ry="${wbF(r*.62)}" transform="rotate(${a+18} ${x} ${y})" fill="url(#wb${u}${k})" fill-opacity=".55" filter="url(#wb${u}s)"/>`).join("")}<circle cx="${x}" cy="${y}" r="${wbF(r*.18)}" fill="#fff" fill-opacity=".45"/>`;
+const WB_ILL={
+ botanical:{corner:(c,u)=>`<g stroke="${c}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">${wbStem([2,10,60,18,120,40,228,72],14,"round",{size:1.35,angle:58,from:.14})}${wbStem([10,2,22,60,40,128,76,226],22,"almond",{size:.85,angle:62,rib:true,from:.16})}${wbStem([4,4,46,46,92,78,150,150],9,"almond",{size:1.1,angle:44,rib:true,from:.3})}${wbBud(150,150,135)}</g>`,
+  sprig:c=>`<g stroke="${c}" stroke-width=".9" stroke-linecap="round">${wbStem([78,20,58,15,36,25,6,19],5,"round",{size:.75,angle:60,from:.2})}${wbStem([82,20,102,15,124,25,154,19],5,"round",{size:.75,angle:60,from:.2})}<circle cx="80" cy="20" r="2.2" fill="none"/></g>`},
+ floral:{corner:(c,u)=>`<g stroke="${c}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">${wbStem([60,52,110,70,160,96,226,150],6,"almond",{size:1.3,angle:46,rib:true,from:.25})}${wbStem([46,60,46,110,60,160,84,224],6,"almond",{size:1.2,angle:46,rib:true,from:.3})}${wbRose(54,50,32)}${wbRose(124,30,18)}${wbPeony(30,120,22)}${wbBud(178,58,62)}${wbBud(96,150,150)}</g>`,
+  sprig:c=>`<g stroke="${c}" stroke-width=".9" stroke-linecap="round">${wbStem([70,20,52,14,32,26,8,20],4,"almond",{size:.65,angle:44,from:.3,rib:true})}${wbStem([90,20,108,14,128,26,152,20],4,"almond",{size:.65,angle:44,from:.3,rib:true})}${wbRose(80,20,9)}</g>`},
+ watercolor:{corner:(c,u)=>`${wbWashDefs(u)}<g>${wbStem([40,40,100,70,150,100,226,150],7,"almond",{size:1.5,angle:46,fill:`url(#wb${u}g)`,op:.75,filter:` filter="url(#wb${u}s)"`,from:.2}).replace(/<path d="M40/,'<path stroke="none" d="M40')}${wbStem([40,40,40,100,56,160,80,226],6,"almond",{size:1.4,angle:46,fill:`url(#wb${u}g)`,op:.75,filter:` filter="url(#wb${u}s)"`,from:.25}).replace(/<path d="M40/,'<path stroke="none" d="M40')}${wbWashBloom(u,52,50,34,"p")}${wbWashBloom(u,120,28,20,"c")}${wbWashBloom(u,30,118,22,"l")}${wbWashBloom(u,96,96,14,"p")}</g><g stroke="${c}" stroke-width=".8" stroke-linecap="round" fill="none" opacity=".7"><path d="M54 50c4-6 12-2 9 5s-14 6-15-3 12-13 20-6"/><path d="M120 28c3-4 8-1 6 3s-9 4-9-2 8-8 12-3"/><path d="M80 80C110 100 150 110 216 146M60 90C64 130 70 170 82 222"/></g>`,
+  sprig:c=>`${wbWashDefs("d")}${wbStem([70,20,52,14,32,26,8,20],4,"almond",{size:.7,angle:44,fill:"url(#wbdg)",op:.8,filter:' filter="url(#wbds)"',from:.3}).replace(/<path d="M70/,'<path stroke="none" d="M70')}${wbStem([90,20,108,14,128,26,152,20],4,"almond",{size:.7,angle:44,fill:"url(#wbdg)",op:.8,filter:' filter="url(#wbds)"',from:.3}).replace(/<path d="M90/,'<path stroke="none" d="M90')}${wbWashBloom("d",80,20,11,"p")}<path d="M50 20H110" stroke="${c}" stroke-width=".6" opacity=".6"/>`},
+ olive:{corner:(c,u)=>`<g stroke="${c}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">${wbStem([2,14,70,28,140,58,230,118],13,"slim",{size:1.25,angle:30,rib:true})}${wbStem([8,4,30,70,50,124,70,206],9,"slim",{size:1.05,angle:30,rib:true})}${wbOlives([[96,52,-20],[150,88,24],[44,108,10],[188,102,-12]],"#7d8a4e")}</g>`,
+  sprig:c=>`<g stroke="${c}" stroke-width=".9" stroke-linecap="round">${wbStem([6,22,50,14,110,26,154,18],8,"slim",{size:.7,angle:30,rib:true})}${wbOlives([[74,28,15],[88,15,-15]],"#b8643a")}</g>`}
+};
+// Stroked elements get pathLength=1 + class "ln" (stroke-draw animation); filled washes/fruits get "fl" (fade in).
+const wbVE=s=>s.replace(/<(path|circle|ellipse)\b([^>]*?)(\/?)>/g,(m,t,at,sl)=>/fill="(url|#)/.test(at)?`<${t} class="fl"${at}${sl}>`:`<${t} class="ln" pathLength="1"${at}${sl}>`);
+// Layered corner: a light, thin, offset "echo" behind (depth) + the crisp foreground drawing; varied line weight.
+function wbIllCorner(kind,u){const I=WB_ILL[kind];if(!I)return "";const fr=I.corner("currentColor",u),bk=I.corner("currentColor",u+"k").replace(/stroke-width="1"/g,'stroke-width=".55"');
+ return wbVE(`<svg viewBox="0 0 240 240" fill="none" focusable="false"><g class="bk" opacity="${kind==="watercolor"?.32:.4}" transform="translate(30 6) rotate(9) scale(.8)">${bk}</g><g class="fr">${fr.replace(/stroke-width="1"/g,'stroke-width="1.25"')}</g></svg>`)}
+const wbIllUse=(kind,pos,u)=>`<span class="ill ill-${pos}" aria-hidden="true">${wbIllCorner(kind,u)}</span>`;
+// Petals / leaves that drift down when the envelope opens (theme colors; hidden for reduced motion).
+function wbDrift(kind,c1,c2){if(!WB_ILL[kind])return "";const P=kind==="olive"||kind==="botanical"?"M0 6C3 0 11 0 14 6C11 12 3 12 0 6Z":"M7 0C12 3 13 10 7 14C1 10 2 3 7 0Z";
+ return `<div class="drift" aria-hidden="true">${[[12,-30,620,2.9,.15],[26,40,-480,3.3,.35],[41,-20,540,3.0,.05],[57,30,-600,3.6,.45],[70,-40,460,3.1,.25],[83,25,-520,3.4,.55],[93,-15,580,3.2,.4]].map(([x,dx,r,t,dl],i)=>`<span style="--x:${x}%;--dx:${dx}px;--r:${r}deg;--t:${t}s;--dl:${dl}s"><svg viewBox="0 0 14 14"><path d="${P}" fill="${i%2?c1:c2}" fill-opacity="${kind==="watercolor"?.6:.8}"/></svg></span>`).join("")}</div>`}
 const WB_LINER={
 lattice:s=>`repeating-linear-gradient(45deg,color-mix(in srgb,${s} 30%,transparent) 0 1px,transparent 1px 11px),repeating-linear-gradient(-45deg,color-mix(in srgb,${s} 30%,transparent) 0 1px,transparent 1px 11px),color-mix(in srgb,${s} 12%,#f6f1ea)`,
 stripes:s=>`repeating-linear-gradient(90deg,${s} 0 1px,transparent 1px 8px),#efece6`,
 dots:s=>`radial-gradient(color-mix(in srgb,${s} 70%,transparent) 1.3px,transparent 1.8px) 0 0/11px 11px,radial-gradient(color-mix(in srgb,${s} 35%,transparent) 1px,transparent 1.5px) 5.5px 5.5px/11px 11px,color-mix(in srgb,${s} 10%,#faf3f1)`,
 leaves:s=>`repeating-linear-gradient(60deg,transparent 0 9px,color-mix(in srgb,${s} 45%,transparent) 9px 10px),repeating-linear-gradient(-60deg,transparent 0 9px,color-mix(in srgb,${s} 25%,transparent) 9px 10px),color-mix(in srgb,${s} 14%,#f2f1e9)`,
 waves:s=>`repeating-radial-gradient(circle at 0 100%,transparent 0 6px,color-mix(in srgb,${s} 55%,transparent) 6px 7px) 0 0/16px 16px,color-mix(in srgb,${s} 10%,#f6efe6)`,
-plain:s=>`color-mix(in srgb,${s} 8%,#efede8)`
+plain:s=>`color-mix(in srgb,${s} 8%,#efede8)`,
+wash:s=>`radial-gradient(circle at 20% 30%,rgba(244,185,189,.45),transparent 38%),radial-gradient(circle at 75% 65%,rgba(214,198,239,.45),transparent 40%),radial-gradient(circle at 60% 15%,rgba(196,214,183,.4),transparent 35%),#fbf4f2`
 };
 const WEDDING_THEMES={
 classic:{paper:"#f5f3ee",ink:"#1d1b18",block:"color-mix(in srgb,var(--c2) 75%,#fff)",seal:"ACCENT",shape:"999px 999px 0 0",nmW:300,nmS:"italic",nmT:"none",nmLs:"0",orn:"line",oc:"#1d1b18",liner:"lattice"},
 modern:{paper:"#f3f2ef",ink:"#111111",block:"#d8d5ce",seal:"#1b1b1b",shape:"0",nmW:300,nmS:"normal",nmT:"uppercase",nmLs:".02em",orn:"",liner:"stripes"},
-botanical:{paper:"#f1f0e7",ink:"#232a1e",block:"#c8cfb6",seal:"#56623f",shape:"50%",nmW:300,nmS:"italic",nmT:"none",nmLs:"0",orn:"leaf",oc:"#3e4a2e",liner:"leaves"},
-floral:{paper:"#f7f0ed",ink:"#3a2526",block:"#ead0c9",seal:"#9c4b55",shape:"999px 999px 0 0",nmW:300,nmS:"italic",nmT:"none",nmLs:"0",orn:"flower",oc:"#7a3c44",liner:"dots"},
+botanical:{paper:"#f1f0e7",ink:"#232a1e",block:"#c8cfb6",seal:"#56623f",shape:"50%",nmW:300,nmS:"italic",nmT:"none",nmLs:"0",orn:"sprig",oc:"#3e4a2e",liner:"leaves",ill:"botanical"},
+floral:{paper:"#f7f0ed",ink:"#3a2526",block:"#ead0c9",seal:"#9c4b55",shape:"999px 999px 0 0",nmW:300,nmS:"italic",nmT:"none",nmLs:"0",orn:"bloom",oc:"#7a3c44",liner:"dots",ill:"floral"},
+watercolor:{paper:"#fbf7f4",ink:"#3b3340",block:"#f3e6ea",seal:"#c3828f",shape:"999px 999px 0 0",nmW:300,nmS:"italic",nmT:"none",nmLs:"0",orn:"wash",oc:"#76697c",liner:"wash",ill:"watercolor"},
+olive:{paper:"#f4efe3",ink:"#2d3324",block:"#dcdcc6",seal:"#b8643a",shape:"50%",nmW:300,nmS:"normal",nmT:"uppercase",nmLs:".05em",orn:"olive",oc:"#56603d",liner:"leaves",ill:"olive"},
 minimal:{paper:"#fafaf7",ink:"#141414",block:"#ebe9e3",seal:"#2a2a2a",shape:"0",nmW:300,nmS:"normal",nmT:"none",nmLs:"-.01em",orn:"",liner:"plain"},
 destination:{paper:"#f3eee4",ink:"#1e2a33",block:"#bcd0d5",seal:"#b8643a",shape:"50%",nmW:300,nmS:"normal",nmT:"uppercase",nmLs:".04em",orn:"sun",oc:"#1e2a33",liner:"waves"},
 editorial:{paper:"#f5f3ee",ink:"#111111",block:"#e2dcd1",seal:"#111111",shape:"0",nmW:300,nmS:"normal",nmT:"uppercase",nmLs:"-.01em",orn:"",liner:"stripes"},
@@ -1686,21 +1729,44 @@ a{color:inherit}
 .icard{width:min(420px,86vw);aspect-ratio:5/7;background:var(--grain),var(--paper);color:var(--ink);position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:16% 14%;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden}.icard:before{content:"";position:absolute;inset:5.5%;border:var(--hair) solid var(--ink);pointer-events:none}.icard:after{content:"";position:absolute;left:50%;top:7.5%;width:90px;height:34px;transform:translateX(-50%);background:var(--orn) center/contain no-repeat}
 .icard small{font-size:9px;color:var(--muted)}.icard h3{font-family:var(--serif);font-size:clamp(36px,8vw,52px);line-height:1;font-weight:300;font-style:${T.nmS};text-transform:${T.nmT};margin:20px 0}.icard .req{font:italic 17px var(--serif);color:var(--muted);margin:0 0 20px}.icard .when{font-size:10px;line-height:2}.icard .where{font:400 20px var(--serif);margin-top:18px}.icard .addr{font-size:14px;font-style:italic;color:var(--muted);margin-top:2px}.icard .mono{display:none}.icard .photo{display:none}.icard .url{margin-top:20px;font-family:var(--sans);font-size:8px;letter-spacing:.12em;color:var(--muted);word-break:break-all;max-width:100%}
 .l-gallery .icard{justify-content:flex-end;padding-top:0}.l-gallery .icard .photo{display:block;position:absolute;left:5.5%;right:5.5%;top:5.5%;height:42%;background:${heroImg?`url("${heroImg}") center/cover`:"var(--block)"}}.l-gallery .icard:after{display:none}
+/* Illustrations (botanical / floral / watercolor / olive): decorative corners, never above text or controls */
+.ill{position:absolute;pointer-events:none;line-height:0;color:${T.oc||T.ink}}.ill svg{width:100%;height:100%;display:block;overflow:visible}.ill-br{transform:scale(-1,-1)}
+.env-stage .ill{z-index:6;width:44%;aspect-ratio:1}.env-stage .ill-tl{left:-15%;top:-30%}.env-stage .ill-br{right:-15%;bottom:-30%}.env.open .env-stage .ill{opacity:0;transition:opacity .5s var(--ease)}
+.hero .ill{z-index:1;width:clamp(150px,24vw,340px);aspect-ratio:1;color:${heroImg?"rgba(255,255,255,.9)":(T.oc||T.ink)};opacity:${heroImg?(T.ill==="watercolor"?.75:.9):1}}.hero .ill-tl{left:0;top:0}.hero .ill-br{right:0;bottom:0}
+.icard>*:not(.ill):not(.photo){position:relative;z-index:1}.icard .ill{z-index:0;width:34%;aspect-ratio:1}.icard .ill-tl{left:0;top:0}.icard .ill-br{right:0;bottom:0}
+.ill-on .section-title small:after{width:150px;height:38px}
+/* Motion: slow fade/rise reveals, illustrations grow in and sway gently. Only active when JS adds .mo (never hides content without JS). */
+.mo .rv{opacity:0;transform:translateY(22px);transition:opacity 1.2s var(--ease) var(--d,0s),transform 1.2s var(--ease) var(--d,0s)}.mo .rv.in{opacity:1;transform:none}
+.mo .section-title.rv small:after{transform:scaleX(.55);opacity:0;transition:transform 1.4s var(--ease) .35s,opacity 1.4s var(--ease) .35s}.mo .section-title.rv.in small:after{transform:none;opacity:1}
+.ill svg{transform-origin:0 0}.mo .ill .ln{stroke-dasharray:1 1;stroke-dashoffset:1}.mo .ill .fl{opacity:0}
+.mo .ill.in .ln{animation:wbDraw 2.8s var(--ease) forwards;animation-delay:calc(var(--d,0s) + var(--k,0s))}.ill .bk{--k:0s}.ill .fr{--k:.5s}.mo .ill.in .fl{animation:wbFade 1.8s var(--ease) forwards;animation-delay:calc(var(--d,0s) + 1.3s)}
+@keyframes wbDraw{to{stroke-dashoffset:0}}@keyframes wbFade{to{opacity:1}}
+.drift{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:7}.drift span{position:absolute;top:-4%;left:var(--x);width:15px;height:15px;opacity:0}.drift svg{width:100%;height:100%}
+.env.open .drift span{animation:wbDrift var(--t) cubic-bezier(.25,.46,.45,.94) var(--dl) forwards}@keyframes wbDrift{0%{opacity:0;transform:translate(0,0) rotate(0)}12%{opacity:.95}100%{opacity:0;transform:translate(var(--dx),78vh) rotate(var(--r))}}
+.env.open .env-seal{transform:scale(1.2) rotate(-12deg)!important;opacity:0;filter:blur(1.5px);transition:transform .8s var(--ease),opacity .7s var(--ease) .1s,filter .7s var(--ease)}
+@media(max-width:760px){.drift span:nth-child(n+6){display:none}}
+@media(prefers-reduced-motion:reduce){.drift{display:none}.mo .ill .ln{stroke-dasharray:none!important;animation:none!important}.mo .ill .fl{opacity:1!important;animation:none!important}}
+.mo .hero .ill.in svg,.mo .env .ill.in svg{animation:wbSway 11s var(--ease) 3.4s infinite alternate}@keyframes wbSway{from{transform:rotate(0)}to{transform:rotate(1.6deg)}}
+@media(max-width:760px){.mo .hero .ill.in svg,.mo .env .ill.in svg{animation:none}}
+@media(prefers-reduced-motion:reduce){.mo .ill svg{animation:none!important}.mo .rv,.mo .section-title.rv small:after{opacity:1!important;transform:none!important;transition:none!important;animation:none!important}}
+@media print{.mo .rv,.mo .ill svg,.mo .ill .fl{opacity:1!important;transform:none!important;animation:none!important}.mo .ill .ln{stroke-dasharray:none!important;animation:none!important}.drift{display:none}}
+@media(max-width:760px){.hero .ill{width:min(36vw,150px)}.env-stage .ill{width:40%}.env-stage .ill-tl{left:-8%;top:-34%}.env-stage .ill-br{right:-8%;bottom:-34%}.ill-on .section-title small:after{width:128px;height:32px}}
 @media(max-width:760px){.section{padding:92px 22px}.section-title h2{font-size:40px}.countdown{grid-template-columns:repeat(4,1fr);border-left:0;border-right:0}.count{padding:16px 2px}.count b{font-size:30px}.count span{font-size:8.5px;letter-spacing:.12em}.event{grid-template-columns:1fr;gap:4px;padding:22px 0}.venue-card{grid-template-columns:1fr}.map-art{min-height:220px}.gallery,.l-gallery .gallery{grid-template-columns:1fr 1fr}.gallery-item:first-child{grid-column:1/-1;grid-row:auto;min-height:380px}.l-gallery .gallery-item{min-height:280px}.rsvp{margin:80px 16px;padding:44px 22px}.rsvp-form{grid-template-columns:1fr;gap:26px}.hero{padding:18px}.hero h1{font-size:clamp(40px,12vw,76px);overflow-wrap:anywhere;hyphens:auto}.l-editorial .hero h1,.l-modern .hero h1{font-size:clamp(40px,11vw,64px);line-height:.95}.hero-card{width:100%;max-width:100%}.hero .intro{max-width:100%}.floating{transition:opacity .3s}.floating.top{opacity:0;pointer-events:none}.l-editorial .hero:before,.l-modern .hero:before,.l-editorial .hero:after,.l-modern .hero:after{right:0;left:0;width:auto;top:8vh;height:56vh}.footer{padding:80px 20px 100px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.env,.env *{transition:none!important;animation:none!important}}
 @media print{@page{size:127mm 178mm;margin:0}body.printing>*:not(#cardView),body:has(.cardview.open)>*:not(#cardView){display:none!important}body.printing .cardview,body:has(.cardview.open) .cardview{position:static;display:block;background:none;padding:0;backdrop-filter:none}body.printing .card-actions,body:has(.cardview.open) .card-actions{display:none}body.printing .icard,body:has(.cardview.open) .icard{width:127mm;height:178mm;box-shadow:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
+<script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches&&"IntersectionObserver" in window)document.documentElement.classList.add("mo")<\/script>
 </head>
-<body class="l-${layout}">
-${showEnvelope?`<div class="env" id="env" role="dialog" aria-label="${e(p.names)}"><div class="env-stage"><div class="env-back"></div><div class="env-letter"><small>${W("invited")}</small><b>${e(p.names)}</b><span data-wdate>${e(readable)}</span></div><div class="env-front"></div><div class="env-flap"></div><button class="env-seal" id="envSeal" aria-label="${e(WEDDING_INVITE_I18N[lang].open_env)}"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="sg" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></radialGradient></defs><path d="M94.7 50.0 92.6 59.7 92.0 70.2 83.8 76.9 78.6 85.9 69.5 90.5 59.6 92.1 50.0 95.7 40.4 91.9 30.3 90.8 23.1 83.8 16.1 77.0 9.2 69.6 3.6 60.6 6.5 50.0 7.0 40.2 8.2 29.9 12.2 19.9 21.2 13.9 30.4 9.4 39.2 2.8 50.0 6.9 60.6 3.4 69.3 9.9 77.2 15.9 84.0 22.9 90.2 30.7 96.3 39.4Z" fill="${sealC}"/><path d="M94.7 50.0 92.6 59.7 92.0 70.2 83.8 76.9 78.6 85.9 69.5 90.5 59.6 92.1 50.0 95.7 40.4 91.9 30.3 90.8 23.1 83.8 16.1 77.0 9.2 69.6 3.6 60.6 6.5 50.0 7.0 40.2 8.2 29.9 12.2 19.9 21.2 13.9 30.4 9.4 39.2 2.8 50.0 6.9 60.6 3.4 69.3 9.9 77.2 15.9 84.0 22.9 90.2 30.7 96.3 39.4Z" fill="url(#sg)"/><circle cx="50" cy="50" r="31" fill="none" stroke="rgba(0,0,0,.22)" stroke-width="1.2"/><circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,.28)" stroke-width=".8"/></svg><i>${e(initials)}</i></button></div><p class="env-hint">${W("open_env")}</p><button class="env-skip" id="envSkip">${W("skip")}</button></div>`:""}
+<body class="l-${layout}${T.ill?" ill-on":""}">
+${showEnvelope?`<div class="env" id="env" role="dialog" aria-label="${e(p.names)}">${T.ill?wbDrift(T.ill,T.ill==="watercolor"?"#eaa9b2":T.oc,T.ill==="watercolor"?"#b9cfae":sealC):""}<div class="env-stage">${T.ill?wbIllUse(T.ill,"tl","e1")+wbIllUse(T.ill,"br","e2"):""}<div class="env-back"></div><div class="env-letter"><small>${W("invited")}</small><b>${e(p.names)}</b><span data-wdate>${e(readable)}</span></div><div class="env-front"></div><div class="env-flap"></div><button class="env-seal" id="envSeal" aria-label="${e(WEDDING_INVITE_I18N[lang].open_env)}"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="sg" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></radialGradient></defs><path d="M94.7 50.0 92.6 59.7 92.0 70.2 83.8 76.9 78.6 85.9 69.5 90.5 59.6 92.1 50.0 95.7 40.4 91.9 30.3 90.8 23.1 83.8 16.1 77.0 9.2 69.6 3.6 60.6 6.5 50.0 7.0 40.2 8.2 29.9 12.2 19.9 21.2 13.9 30.4 9.4 39.2 2.8 50.0 6.9 60.6 3.4 69.3 9.9 77.2 15.9 84.0 22.9 90.2 30.7 96.3 39.4Z" fill="${sealC}"/><path d="M94.7 50.0 92.6 59.7 92.0 70.2 83.8 76.9 78.6 85.9 69.5 90.5 59.6 92.1 50.0 95.7 40.4 91.9 30.3 90.8 23.1 83.8 16.1 77.0 9.2 69.6 3.6 60.6 6.5 50.0 7.0 40.2 8.2 29.9 12.2 19.9 21.2 13.9 30.4 9.4 39.2 2.8 50.0 6.9 60.6 3.4 69.3 9.9 77.2 15.9 84.0 22.9 90.2 30.7 96.3 39.4Z" fill="url(#sg)"/><circle cx="50" cy="50" r="31" fill="none" stroke="rgba(0,0,0,.22)" stroke-width="1.2"/><circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,.28)" stroke-width=".8"/></svg><i>${e(initials)}</i></button></div><p class="env-hint">${W("open_env")}</p><button class="env-skip" id="envSkip">${W("skip")}</button></div>`:""}
 <div class="invite-lang" role="group" aria-label="Language"><button data-invite-lang="zh" lang="zh">中</button><button data-invite-lang="en" lang="en">EN</button><button data-invite-lang="de" lang="de">DE</button></div>
-<section class="hero">
+<section class="hero">${T.ill?wbIllUse(T.ill,"tl","h1")+wbIllUse(T.ill,"br","h2"):""}
   <div class="hero-card">
     <div class="eyebrow">${W("eyebrow")}</div>
     <h1>${e(p.names)}</h1>
     <div class="date"><span data-wdate>${e(readable)}</span>${p.time?` · ${e(p.time)}`:""}</div>
     ${p.intro?`<div class="intro">${e(p.intro)}</div>`:""}
-    <div class="hero-links">${F.rsvp!==false?`<a href="#rsvp">${W("rsvp_link")}</a>`:""}${F.card!==false?`<button onclick="openCard()">${W("card")}</button>`:""}</div>
+    <div class="hero-links">${F.rsvp!==false?`<a href="#rsvp" onclick="event.preventDefault();document.getElementById('rsvp').scrollIntoView({behavior:'smooth'})">${W("rsvp_link")}</a>`:""}${F.card!==false?`<button onclick="openCard()">${W("card")}</button>`:""}</div>
   </div>
   <div class="scroll-note">${W("scroll")}</div>
 </section>
@@ -1723,7 +1789,7 @@ ${F.rsvp?`<section class="rsvp" id="rsvp"><h2>${W("rsvp_title")}</h2><p>${W("rsv
   ${F.card!==false?`<button onclick="openCard()" title="${e(WEDDING_INVITE_I18N[lang].card_short)}" aria-label="${e(WEDDING_INVITE_I18N[lang].card_short)}" data-wi-label="card_short">✉</button>`:""}
   ${F.share?`<button onclick="shareSite()" title="${e(WEDDING_INVITE_I18N[lang].share_short)}" aria-label="${e(WEDDING_INVITE_I18N[lang].share_short)}" data-wi-label="share_short">↗</button>`:""}
 </div>
-${F.card!==false?`<div class="cardview" id="cardView" onclick="if(event.target===this)closeCard()"><div><div class="icard" id="icard"><div class="photo"></div><div class="mono">${e(initials)}</div><small>${W("families")}</small><h3>${e(p.names)}</h3><p class="req">${W("request")}</p><div class="when"><span data-wdate>${e(readable)}</span><br/>${e(p.time)}</div><div class="where">${e(p.venue)}</div><div class="addr">${e(p.address)}</div><div class="url" id="cardUrl"></div><div class="qr" id="cardQr" role="img" aria-label="${e(WEDDING_INVITE_I18N[lang].scan)}"></div></div><div class="card-actions"><button onclick="printCard()">${W("print")}</button><button onclick="closeCard()">${W("close")}</button></div></div></div>`:""}
+${F.card!==false?`<div class="cardview" id="cardView" onclick="if(event.target===this)closeCard()"><div><div class="icard" id="icard">${T.ill?wbIllUse(T.ill,"tl","c1")+wbIllUse(T.ill,"br","c2"):""}<div class="photo"></div><div class="mono">${e(initials)}</div><small>${W("families")}</small><h3>${e(p.names)}</h3><p class="req">${W("request")}</p><div class="when"><span data-wdate>${e(readable)}</span><br/>${e(p.time)}</div><div class="where">${e(p.venue)}</div><div class="addr">${e(p.address)}</div><div class="url" id="cardUrl"></div><div class="qr" id="cardQr" role="img" aria-label="${e(WEDDING_INVITE_I18N[lang].scan)}"></div></div><div class="card-actions"><button onclick="printCard()">${W("print")}</button><button onclick="closeCard()">${W("close")}</button></div></div></div>`:""}
 <div class="lightbox" id="photoLightbox" onclick="this.classList.remove('open')"><img id="photoLightboxImage" alt="Wedding photo"/></div>
 <script>
 const M=${js(WEDDING_INVITE_I18N)},DATE_ISO=${js(dateIso)},INVITE_ID="__POD_INVITE_ID__",API_BASE="__POD_API_BASE__",LIVE=/^[a-f0-9]{12}$/.test(INVITE_ID),PREVIEW=${opts.preview?"true":"false"};
@@ -1740,6 +1806,20 @@ if(env){const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;docu
  const open=()=>{if(env.classList.contains("open"))return;env.classList.add("open");setTimeout(done,reduce?0:1250)};
  if(Q.has("open")||Q.has("card")||location.hash==="#open"){env.remove();document.body.style.overflow=""} // ?card=1 (print link) goes straight to the card
  else{document.getElementById("envSeal").onclick=open;document.getElementById("envSkip").onclick=done;addEventListener("keydown",ev=>{if(ev.key==="Escape"&&document.contains(env))done()});document.getElementById("envSeal").focus({preventScroll:true})}}
+// Reveal on scroll (IntersectionObserver), illustrations grow in, slow parallax on desktop. Reduced motion: everything static.
+{const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+ if(!RM&&"IntersectionObserver" in window){document.documentElement.classList.add("mo");
+  const els=[...document.querySelectorAll(".section-title,.countdown,.timeline .event,.venue-card,.gallery-item,.rsvp,.footer,.icard .ill,.hero .ill,.env .ill")];
+  els.forEach(el=>{if(!el.classList.contains("ill"))el.classList.add("rv")});
+  document.querySelectorAll(".timeline .event,.gallery-item").forEach((el,i)=>el.style.setProperty("--d",(i%4)*.12+"s"));
+  document.querySelectorAll(".ill-br").forEach(el=>el.style.setProperty("--d",".55s"));
+  const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add("in");io.unobserve(x.target)}}),{rootMargin:"0px 0px -8% 0px",threshold:.08});
+  els.forEach(el=>io.observe(el));
+  // Cards are hidden (display:none) until opened, so reveal their corners on open.
+  const oc=window.openCard;if(oc)window.openCard=function(){oc.apply(this,arguments);document.querySelectorAll(".icard .ill").forEach(e=>e.classList.add("in"))};
+  if(matchMedia("(min-width:761px) and (pointer:fine)").matches){const hs=[...document.querySelectorAll(".hero .ill")];let tk=0;
+   addEventListener("scroll",()=>{if(tk)return;tk=requestAnimationFrame(()=>{tk=0;const y=Math.min(scrollY,innerHeight);hs.forEach((h,i)=>h.style.translate="0 "+(y*(i?-.06:.1)).toFixed(1)+"px")})},{passive:true})}
+ }}
 const gallery=${js(gallery)};
 function openLightbox(i){if(!gallery[i])return;document.getElementById("photoLightboxImage").src=gallery[i];document.getElementById("photoLightbox").classList.add("open")}
 function copyAddress(){navigator.clipboard?.writeText(${js(p.address||"")}).catch(()=>{});alert(tt("copied"))}
@@ -1833,7 +1913,7 @@ async function wbCompressImage(file,maxEdge){
 }
 const wbKB=n=>n>1048576?(n/1048576).toFixed(1)+" MB":Math.round(n/1024)+" KB";
 // Theme sample photos (repo assets) for the builder preview only; published only if the user clicks "用示例照片发布".
-const WB_SAMPLE_PHOTOS={classic:"gifts.jpg",floral:"gifts.jpg",editorial:"gifts.jpg",botanical:"seasonal.jpg",minimal:"seasonal.jpg",gallery:"seasonal.jpg",destination:"cream.webp",modern:"cream.webp"};
+const WB_SAMPLE_PHOTOS={classic:"gifts.jpg",floral:"gifts.jpg",watercolor:"gifts.jpg",olive:"seasonal.jpg",editorial:"gifts.jpg",botanical:"seasonal.jpg",minimal:"seasonal.jpg",gallery:"seasonal.jpg",destination:"cream.webp",modern:"cream.webp"};
 const wbSampleUrl=layout=>location.origin+"/assets/scenes/"+(WB_SAMPLE_PHOTOS[layout]||"gifts.jpg");
 let wbPreviewEnvelopeShown=false;
 function refreshWeddingPreview(ev){
