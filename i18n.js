@@ -344,7 +344,7 @@ const M={
 // Wedding website builder (v30)
 "RSVP 方式":{en:"RSVP method",de:"RSVP-Methode"},"内置回复表单（推荐）":{en:"Built-in RSVP form (recommended)",de:"Integriertes Antwortformular (empfohlen)"},"邮件回复":{en:"Reply by e-mail",de:"Antwort per E-Mail"},"外部链接":{en:"External link",de:"Externer Link"},
 "外部 RSVP 链接（选择“外部链接”时使用）":{en:"External RSVP link (used with “External link”)",de:"Externer RSVP-Link (bei „Externer Link“)"},"收到回复时邮件通知 RSVP 邮箱":{en:"E-mail the RSVP address on each reply",de:"Bei jeder Antwort an die RSVP-E-Mail benachrichtigen"},
-"礼金链接（可选，如 PayPal.me）":{en:"Gift link (optional, e.g. PayPal.me)",de:"Geschenk-Link (optional, z. B. PayPal.me)"},"网站版式":{en:"Layout",de:"Layout"},"经典":{en:"Classic",de:"Klassisch"},"杂志大字":{en:"Editorial",de:"Editorial"},"画廊大图":{en:"Gallery",de:"Galerie"},
+"礼金链接（可选，如 PayPal.me）":{en:"Gift link (optional, e.g. PayPal.me)",de:"Geschenk-Link (optional, z. B. PayPal.me)"},"网站版式":{en:"Layout",de:"Layout"},"经典":{en:"Classic",de:"Klassisch"},"杂志大字":{en:"Editorial",de:"Editorial"},"画廊大图":{en:"Gallery",de:"Galerie"},"网站风格":{en:"Style",de:"Stil"},"现代":{en:"Modern",de:"Modern"},"植物":{en:"Botanical",de:"Botanisch"},"花卉":{en:"Floral",de:"Floral"},"极简":{en:"Minimal",de:"Minimal"},"目的地":{en:"Destination",de:"Destination"},"纸感直角":{en:"Paper (square)",de:"Papier (eckig)"},
 "宾客默认语言":{en:"Default guest language",de:"Standardsprache für Gäste"},"信封开场动画":{en:"Envelope intro",de:"Umschlag-Intro"},"可打印邀请卡":{en:"Printable invitation card",de:"Druckbare Einladungskarte"}
 };
 const reverse=new Map();

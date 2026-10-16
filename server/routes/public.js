@@ -31,6 +31,8 @@ export function publicRouter({ root, generatedDir }) {
   router.get("/studio.html", (_, res) => res.sendFile(path.join(root, "studio.html"), noStore));
   for (const f of ["studio.js", "studio-data.js", "studio-pricing.js", "studio-mockups.js", "account-auth.js"]) router.get("/" + f, (_, res) => res.sendFile(path.join(root, f), { maxAge: "5m" }));
   router.use("/assets", express.static(path.join(root, "assets"), { maxAge: "7d", fallthrough: false }));
+  // Self-hosted OFL webfonts for generated wedding sites (sandboxed /generated pages have an opaque origin, so CORS is required).
+  router.use("/fonts", (_, res, next) => { res.setHeader("Access-Control-Allow-Origin", "*"); next(); }, express.static(path.join(root, "fonts"), { maxAge: "30d", fallthrough: false }));
   const adminAppDist = path.join(root, "admin-app", "dist");
   if (fs.existsSync(adminAppDist)) {
     router.use("/admin-app", express.static(adminAppDist, { maxAge: "7d", index: "index.html" }));
