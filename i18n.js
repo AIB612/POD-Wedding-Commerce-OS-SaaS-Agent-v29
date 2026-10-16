@@ -340,7 +340,12 @@ const M={
 "使用 PayPal 安全支付":{en:"Pay securely with PayPal",de:"Sicher mit PayPal bezahlen"},
 "支付金额会由服务端根据 SKU、材质和数量重新计算，浏览器价格仅用于展示。":{en:"The amount is recalculated on the server from SKU, material and quantity; prices in the browser are for display only.",de:"Der Betrag wird serverseitig aus SKU, Material und Menge berechnet; Preise im Browser dienen nur der Anzeige."},
 "最终效果图和材质会在支付后 2 小时内确认，并发送到您的邮箱。确认后进入生产与配送流程，预计 14 天内送达。":{en:"The final proof and material are confirmed within 2 hours of payment and e-mailed to you. After your approval we produce and ship — delivery in about 14 days.",de:"Endgültiger Entwurf und Material werden innerhalb von 2 Stunden nach Zahlung bestätigt und per E-Mail gesendet. Nach Freigabe produzieren und versenden wir – Lieferung in ca. 14 Tagen."},
-"购物车暂无商品":{en:"Your cart is empty",de:"Ihr Warenkorb ist leer"}
+"购物车暂无商品":{en:"Your cart is empty",de:"Ihr Warenkorb ist leer"},
+// Wedding website builder (v30)
+"RSVP 方式":{en:"RSVP method",de:"RSVP-Methode"},"内置回复表单（推荐）":{en:"Built-in RSVP form (recommended)",de:"Integriertes Antwortformular (empfohlen)"},"邮件回复":{en:"Reply by e-mail",de:"Antwort per E-Mail"},"外部链接":{en:"External link",de:"Externer Link"},
+"外部 RSVP 链接（选择“外部链接”时使用）":{en:"External RSVP link (used with “External link”)",de:"Externer RSVP-Link (bei „Externer Link“)"},"收到回复时邮件通知 RSVP 邮箱":{en:"E-mail the RSVP address on each reply",de:"Bei jeder Antwort an die RSVP-E-Mail benachrichtigen"},
+"礼金链接（可选，如 PayPal.me）":{en:"Gift link (optional, e.g. PayPal.me)",de:"Geschenk-Link (optional, z. B. PayPal.me)"},"网站版式":{en:"Layout",de:"Layout"},"经典":{en:"Classic",de:"Klassisch"},"杂志大字":{en:"Editorial",de:"Editorial"},"画廊大图":{en:"Gallery",de:"Galerie"},
+"宾客默认语言":{en:"Default guest language",de:"Standardsprache für Gäste"},"信封开场动画":{en:"Envelope intro",de:"Umschlag-Intro"},"可打印邀请卡":{en:"Printable invitation card",de:"Druckbare Einladungskarte"}
 };
 const reverse=new Map();
 function build(){

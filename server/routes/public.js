@@ -14,6 +14,8 @@ import { protocolRegistry, ucpProfile, a2aAgentCard, acpFeed } from "../protocol
 import { createStorefrontCheckout, handlePayPalReturn, publicOrderStatus, quoteStorefront } from "../services/checkout-service.js";
 import { publicProof, approvePublicProof, requestPublicProofChanges } from "../services/proof-service.js";
 import { createPayPalOrder, capturePayPalOrder } from "../connectors/paypal.js";
+import { submitRsvp } from "../services/rsvp-service.js";
+import cors from "cors";
 
 const VERSION = JSON.parse(fs.readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version;
 
@@ -102,8 +104,16 @@ export function publicRouter({ root, generatedDir }) {
     if (typeof html !== "string" || html.length < 100) return res.status(400).json({ error: "invalid_html" });
     try {
       const id = crypto.randomBytes(6).toString("hex"), file = `${id}.html`;
-      await fsp.writeFile(path.join(generatedDir, file), html, "utf8");
-      const meta = { id, tenant_id: req.tenantId, user_id: req.user?.id || null, created_at: new Date().toISOString(), scene: String(profile?.sceneKey || "").slice(0, 40), names: String(profile?.names || "").slice(0, 200), date: String(profile?.date || "").slice(0, 40), status: "published", url: `/generated/${file}` };
+      // Optional share card (PNG rendered by the builder) for og:image / WhatsApp link previews.
+      const og = /^data:image\/(png|jpeg);base64,([A-Za-z0-9+/=]+)$/.exec(typeof req.body?.og_image === "string" ? req.body.og_image : "");
+      let ogUrl = "";
+      if (og && og[2].length < 2_000_000) { const ogFile = `${id}-card.${og[1] === "png" ? "png" : "jpg"}`; await fsp.writeFile(path.join(generatedDir, ogFile), Buffer.from(og[2], "base64")); ogUrl = `${baseUrl()}/generated/${ogFile}`; }
+      // Fill the builder's placeholders so the published page knows its id, API and share image.
+      const page = html.replaceAll("__POD_INVITE_ID__", id).replaceAll("__POD_API_BASE__", baseUrl()).replaceAll("__POD_PAGE_URL__", `${baseUrl()}/generated/${file}`).replaceAll("__POD_OG_IMAGE__", ogUrl);
+      await fsp.writeFile(path.join(generatedDir, file), page, "utf8");
+      const notify = String(profile?.rsvpEmail || "").trim().slice(0, 254);
+      const meta = { id, tenant_id: req.tenantId, user_id: req.user?.id || null, created_at: new Date().toISOString(), scene: String(profile?.sceneKey || "").slice(0, 40), names: String(profile?.names || "").slice(0, 200), date: String(profile?.date || "").slice(0, 40), status: "published", url: `/generated/${file}`,
+        layout: String(profile?.layout || "classic").slice(0, 20), rsvp_mode: String(profile?.rsvpMode || "").slice(0, 20), rsvp_enabled: profile?.features?.rsvp !== false, notify_email: profile?.rsvpNotify === false ? "" : notify, og_image: ogUrl };
       await fsp.writeFile(path.join(generatedDir, `${id}.json`), JSON.stringify(meta, null, 2));
       await addRecord("invitations", meta);
       res.json({ ok: true, id, url: `/generated/${file}` });
@@ -112,6 +122,17 @@ export function publicRouter({ root, generatedDir }) {
       res.status(500).json({ error: "publish_failed" });
     }
   }));
+  // Built-in RSVP, posted by guests from the sandboxed (opaque-origin, "Origin: null") invitation page.
+  // The page sends text/plain JSON (a CORS "simple" request, no preflight); responses allow any origin and carry no credentials.
+  const rsvpLimit = rateLimit({ bucket: "invitation-rsvp", windowMs: 10 * 60_000, max: Number(process.env.RSVP_PER_10_MIN || 10) });
+  const rsvpCors = cors({ origin: "*", methods: ["POST", "OPTIONS"], allowedHeaders: ["Content-Type"], maxAge: 600 });
+  router.options("/api/invitations/:id/rsvp", rsvpCors);
+  router.post("/api/invitations/:id/rsvp", rsvpCors, rsvpLimit, express.text({ type: "text/plain", limit: "8kb" }), ah(async (req, res) => {
+    let body = req.body;
+    if (typeof body === "string") { try { body = JSON.parse(body || "{}"); } catch { return res.status(400).json({ error: "invalid_json" }); } }
+    res.status(201).json(await submitRsvp(req.params.id, body));
+  }));
+
   // User-generated pages run in a sandboxed (opaque) origin so they cannot read this site's storage or call admin APIs.
   router.use("/generated", (req, res, next) => {
     if (req.path.endsWith(".json") || /(^|\/)\./.test(req.path)) return res.sendStatus(404); // metadata and private (dot) folders are internal

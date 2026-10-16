@@ -2,6 +2,7 @@ import express from "express";
 import { ah, rateLimit } from "../http/middleware.js";
 import { dashboard, login, logoutToken, publicUser, register, requestEmailCode, verifyEmailCode } from "../services/account-service.js";
 import { requireUser } from "../auth.js";
+import { listRsvps, rsvpCsv } from "../services/rsvp-service.js";
 
 const cookieOpts=()=>({httpOnly:true,sameSite:"lax",secure:process.env.NODE_ENV==="production",path:"/",maxAge:30*864e5});
 const setSession=(res,token)=>res.cookie("pod_session",token,cookieOpts());
@@ -14,5 +15,8 @@ export function accountRouter(){
  r.post("/api/auth/email-code/verify",lim,ah(async(req,res)=>{const x=await verifyEmailCode({tenantId:req.tenantId,...req.body});setSession(res,x.token);res.json({ok:true,user:publicUser(x.user)});}));
  r.post("/api/auth/logout",ah(async(req,res)=>{await logoutToken(req.sessionToken);res.clearCookie("pod_session",cookieOpts());res.json({ok:true});}));
  r.get("/api/account/dashboard",requireUser,ah(async(req,res)=>res.json(await dashboard(req.tenantId,req.user.id))));
+ // Built-in RSVP responses for the couple's own published wedding sites
+ r.get("/api/account/invitations/:id/rsvps",requireUser,ah(async(req,res)=>res.json(await listRsvps(req.tenantId,req.user.id,req.params.id))));
+ r.get("/api/account/invitations/:id/rsvps.csv",requireUser,ah(async(req,res)=>{const x=await listRsvps(req.tenantId,req.user.id,req.params.id);res.setHeader("Content-Type","text/csv; charset=utf-8");res.setHeader("Content-Disposition",`attachment; filename="rsvp-${x.invitation.id}.csv"`);res.setHeader("Cache-Control","no-store");res.send(rsvpCsv(x));}));
  return r;
 }

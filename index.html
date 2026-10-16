@@ -740,8 +740,11 @@ button{color:inherit}
         <div class="control-section">
           <h4>RSVP 与联系</h4>
           <div class="control-grid">
+            <div class="control-field full"><label>RSVP 方式</label><select id="wbRsvpMode"><option value="builtin" data-i18n-opt="内置回复表单（推荐）">内置回复表单（推荐）</option><option value="email" data-i18n-opt="邮件回复">邮件回复</option><option value="link" data-i18n-opt="外部链接">外部链接</option></select></div>
             <div class="control-field full"><label>RSVP 邮箱</label><input id="wbRsvpEmail" type="email" value="wedding@example.com"/></div>
-            <div class="control-field full"><label>外部 RSVP 链接（可选，有值时优先使用）</label><input id="wbRsvpUrl" placeholder="https://..."/></div>
+            <div class="control-field full"><label>外部 RSVP 链接（选择“外部链接”时使用）</label><input id="wbRsvpUrl" placeholder="https://..."/></div>
+            <label class="feature-toggle full" style="grid-column:1/-1"><input id="wbRsvpNotify" type="checkbox" checked/>收到回复时邮件通知 RSVP 邮箱</label>
+            <div class="control-field full"><label>礼金链接（可选，如 PayPal.me）</label><input id="wbGiftUrl" placeholder="https://paypal.me/..."/></div>
             <div class="control-field full"><label>备注</label><textarea id="wbNote">Dress code: Garden formal. Please let us know about dietary requirements in your RSVP.</textarea></div>
           </div>
         </div>
@@ -749,6 +752,8 @@ button{color:inherit}
         <div class="control-section">
           <h4>手动调整视觉</h4>
           <div class="control-grid">
+            <div class="control-field"><label>网站版式</label><select id="wbLayout"><option value="classic" data-i18n-opt="经典">经典</option><option value="editorial" data-i18n-opt="杂志大字">杂志大字</option><option value="gallery" data-i18n-opt="画廊大图">画廊大图</option></select></div>
+            <div class="control-field"><label>宾客默认语言</label><select id="wbLang"><option value="en">English</option><option value="zh">中文</option><option value="de">Deutsch</option></select></div>
             <div class="control-field"><label>主题强调色</label><input id="wbAccent" type="color" value="#9a6d57"/></div>
             <div class="control-field"><label>版式密度</label><select id="wbDensity"><option value="airy">浪漫留白</option><option value="normal">标准</option><option value="compact">紧凑</option></select></div>
             <div class="control-field"><label>Hero 对齐</label><select id="wbHeroAlign"><option value="center">居中</option><option value="left">左对齐</option><option value="right">右对齐</option></select></div>
@@ -759,6 +764,8 @@ button{color:inherit}
         <div class="control-section">
           <h4>网站工具</h4>
           <div class="feature-grid">
+            <label class="feature-toggle"><input id="ftEnvelope" type="checkbox" checked/>信封开场动画</label>
+            <label class="feature-toggle"><input id="ftCard" type="checkbox" checked/>可打印邀请卡</label>
             <label class="feature-toggle"><input id="ftCountdown" type="checkbox" checked/>婚礼倒计时</label>
             <label class="feature-toggle"><input id="ftTimeline" type="checkbox" checked/>活动流程</label>
             <label class="feature-toggle"><input id="ftMap" type="checkbox" checked/>地图/导航</label>
@@ -1473,6 +1480,11 @@ function weddingProfile(){
     density:document.getElementById("wbDensity").value,
     heroAlign:document.getElementById("wbHeroAlign").value,
     radius:document.getElementById("wbRadius").value,
+    layout:document.getElementById("wbLayout").value,
+    lang:document.getElementById("wbLang").value,
+    rsvpMode:document.getElementById("wbRsvpMode").value,
+    rsvpNotify:document.getElementById("wbRsvpNotify").checked,
+    giftUrl:document.getElementById("wbGiftUrl").value.trim(),
     heroPhoto:wbHeroData,
     gallery:wbGalleryData,
     features:{
@@ -1483,157 +1495,245 @@ function weddingProfile(){
       rsvp:document.getElementById("ftRsvp").checked,
       share:document.getElementById("ftShare").checked,
       calendar:document.getElementById("ftCalendar").checked,
-      addressCopy:document.getElementById("ftAddressCopy").checked
+      addressCopy:document.getElementById("ftAddressCopy").checked,
+      envelope:document.getElementById("ftEnvelope").checked,
+      card:document.getElementById("ftCard").checked
     }
   };
 }
-function buildWeddingSite(p){
+// ---- Wedding website generator (self-contained HTML). Layouts: classic / editorial / gallery ----
+const WEDDING_LAYOUTS=["classic","editorial","gallery"];
+const WEDDING_INVITE_I18N={
+en:{eyebrow:"Wedding Invitation",scroll:"Scroll to discover",count_title:"Until we say “I do”",count_desc:"We cannot wait to celebrate this day with you.",days:"Days",hours:"Hours",minutes:"Minutes",seconds:"Seconds",schedule:"Wedding schedule",schedule_desc:"A simple guide to the celebration.",join:"Join us here",open_map:"Open map",copy_addr:"Copy address",add_cal:"Add to calendar",share:"Share",moments:"Moments we love",gallery_desc:"Click any photo to view it larger.",gallery_ph:"Upload wedding photos in the editor to replace this placeholder.",rsvp_title:"Will you join us?",rsvp_desc:"Please let us know by replying below.",name:"Your name",guests:"Number of guests",yes:"Joyfully accept",no:"Regretfully decline",dietary:"Dietary note (optional)",send:"Send RSVP",sending:"Sending…",thanks_yes:"Thank you! We can’t wait to celebrate with you.",thanks_no:"Thank you for letting us know — you will be missed.",preview_note:"Preview only — publish the site to collect RSVPs.",err:"Could not send. Please try again.",err_name:"Please enter your name.",err_att:"Please choose yes or no.",open_env:"Tap the seal to open",skip:"Skip",invited:"You are invited",card:"Invitation card",print:"Print",close:"Close",gift:"Wedding gift",copied:"Address copied",families:"Together with their families",request:"request the pleasure of your company",rsvp_link:"RSVP"},
+zh:{eyebrow:"婚礼邀请",scroll:"向下滑动",count_title:"距离我们说“我愿意”",count_desc:"期待与你一起庆祝这一天。",days:"天",hours:"小时",minutes:"分钟",seconds:"秒",schedule:"婚礼流程",schedule_desc:"当天活动安排。",join:"婚礼地点",open_map:"打开地图",copy_addr:"复制地址",add_cal:"加入日历",share:"分享",moments:"我们的故事",gallery_desc:"点击照片可放大查看。",gallery_ph:"在编辑器中上传婚纱照以替换此占位图。",rsvp_title:"你会来参加吗？",rsvp_desc:"请在下方回复是否出席。",name:"您的姓名",guests:"出席人数",yes:"欣然出席",no:"遗憾缺席",dietary:"饮食需求（可选）",send:"提交回复",sending:"提交中…",thanks_yes:"谢谢！期待与你相见。",thanks_no:"谢谢告知，我们会想念你。",preview_note:"当前为预览，发布网站后即可收集回复。",err:"提交失败，请稍后再试。",err_name:"请填写姓名。",err_att:"请选择是否出席。",open_env:"轻触火漆印打开",skip:"跳过",invited:"诚挚邀请",card:"邀请卡",print:"打印",close:"关闭",gift:"礼金",copied:"地址已复制",families:"携双方家人",request:"诚邀您出席我们的婚礼",rsvp_link:"回复"},
+de:{eyebrow:"Hochzeitseinladung",scroll:"Nach unten scrollen",count_title:"Bis wir „Ja“ sagen",count_desc:"Wir freuen uns darauf, diesen Tag mit euch zu feiern.",days:"Tage",hours:"Stunden",minutes:"Minuten",seconds:"Sekunden",schedule:"Tagesablauf",schedule_desc:"Ein kurzer Überblick über unseren Hochzeitstag.",join:"Hier feiern wir",open_map:"Karte öffnen",copy_addr:"Adresse kopieren",add_cal:"In Kalender",share:"Teilen",moments:"Unsere Geschichte",gallery_desc:"Klickt auf ein Foto, um es größer anzusehen.",gallery_ph:"Ladet im Editor Hochzeitsfotos hoch, um diesen Platzhalter zu ersetzen.",rsvp_title:"Seid ihr dabei?",rsvp_desc:"Bitte gebt uns unten Bescheid.",name:"Euer Name",guests:"Anzahl Gäste",yes:"Wir kommen gern",no:"Leider nicht",dietary:"Ernährungshinweis (optional)",send:"Antwort senden",sending:"Wird gesendet…",thanks_yes:"Danke! Wir freuen uns auf euch.",thanks_no:"Danke für die Rückmeldung – ihr werdet uns fehlen.",preview_note:"Nur Vorschau – veröffentlicht die Seite, um Antworten zu sammeln.",err:"Senden fehlgeschlagen. Bitte erneut versuchen.",err_name:"Bitte Namen eingeben.",err_att:"Bitte Ja oder Nein wählen.",open_env:"Siegel antippen zum Öffnen",skip:"Überspringen",invited:"Ihr seid eingeladen",card:"Einladungskarte",print:"Drucken",close:"Schließen",gift:"Hochzeitsgeschenk",copied:"Adresse kopiert",families:"Gemeinsam mit unseren Familien",request:"laden wir euch herzlich zu unserer Hochzeit ein",rsvp_link:"Antworten"}
+};
+const WEDDING_SERIF={classic:'Georgia,"Times New Roman",serif',editorial:'"Didot","Bodoni 72","Bodoni MT","Playfair Display",Georgia,serif',gallery:'"Cormorant Garamond",Garamond,Baskerville,"Baskerville Old Face",Georgia,serif'};
+function weddingInitials(names){const parts=String(names||"").split(/\s*(?:&|\+|和|and|und)\s*/i).filter(Boolean);return (parts.slice(0,2).map(x=>[...x.trim()][0]||"").join("&")||"♥").toUpperCase()}
+function buildWeddingSite(p,opts={}){
   const e=escapeSiteText;
-  const dateObj=new Date((p.date||"2027-06-18")+"T"+(p.time||"15:00")+":00");
-  const readable=isNaN(dateObj)?e(p.date):dateObj.toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const layout=WEDDING_LAYOUTS.includes(p.layout)?p.layout:"classic";
+  const lang=["zh","en","de"].includes(p.lang)?p.lang:"en";
+  const F=p.features||{};
+  const dateIso=(p.date||"2027-06-18")+"T"+(p.time||"15:00")+":00";
+  const dateObj=new Date(dateIso);
+  const readable=isNaN(dateObj)?e(p.date):dateObj.toLocaleDateString(lang==="zh"?"zh-CN":lang==="de"?"de-CH":"en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
   const mapUrl=p.mapUrl || ("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(p.address||p.venue));
-  const heroStyle=p.heroPhoto?`background-image:linear-gradient(180deg,rgba(25,20,17,.14),rgba(25,20,17,.54)),url("${p.heroPhoto}")`:"";
+  const gallery=p.gallery||[];
+  const heroImg=p.heroPhoto||(layout==="gallery"?gallery[0]||"":"");
+  const heroStyle=heroImg?`background-image:linear-gradient(180deg,rgba(25,20,17,.10),rgba(25,20,17,.55)),url("${heroImg}")`:"";
   const gap=p.density==="compact"?"54px":p.density==="normal"?"78px":"108px";
   const radius=p.radius==="minimal"?"12px":p.radius==="pill"?"32px":"22px";
   const align=p.heroAlign||"center";
-  
-const inviteMessages={
-en:{count_title:'Until we say “I do”',count_desc:'We cannot wait to celebrate this day with you.',schedule:'Wedding schedule',schedule_desc:'A simple guide to the celebration.',join:'Join us here',moments:'Moments we love',gallery_desc:'Click any photo to view it larger.',rsvp_title:'Will you join us?',rsvp_desc:'Please RSVP and let us know if there is anything we should know before the celebration.',name:'Your name',guests:'Number of guests'},
-zh:{count_title:'距离我们说“我愿意”',count_desc:'期待与你一起庆祝这一天。',schedule:'婚礼流程',schedule_desc:'当天活动安排。',join:'婚礼地点',moments:'我们的故事',gallery_desc:'点击照片可放大查看。',rsvp_title:'你会来参加吗？',rsvp_desc:'请回复是否出席，也欢迎告诉我们饮食或其他需求。',name:'您的姓名',guests:'出席人数'},
-de:{count_title:'Bis wir „Ja“ sagen',count_desc:'Wir freuen uns darauf, diesen Tag mit euch zu feiern.',schedule:'Tagesablauf',schedule_desc:'Ein kurzer Überblick über unseren Hochzeitstag.',join:'Hier feiern wir',moments:'Unsere Geschichte',gallery_desc:'Klicken Sie auf ein Foto, um es größer anzusehen.',rsvp_title:'Seid ihr dabei?',rsvp_desc:'Bitte gebt uns Bescheid, ob ihr kommt, und teilt uns besondere Wünsche mit.',name:'Ihr Name',guests:'Anzahl Gäste'}
-};
-
-const gallery=p.gallery||[];
+  const accent=/^#[0-9a-fA-F]{6}$/.test(p.accent||"")?p.accent:"#9a6d57";
   const schedule=p.schedule||[];
-  const sceneColors=p.sceneColors||["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"];
-  const galleryHtml=gallery.length?gallery.map((src,i)=>`<button class="gallery-item" onclick="openLightbox(${i})"><img src="${src}" alt="Wedding photo ${i+1}"/></button>`).join(""):`<div class="gallery-placeholder">Upload wedding photos in the editor to replace this placeholder.</div>`;
+  const sceneColors=(p.sceneColors||["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"]).map(c=>/^#[0-9a-fA-F]{3,8}$/.test(c)?c:"#d8cec2");
+  const rsvpMode=["builtin","email","link"].includes(p.rsvpMode)?p.rsvpMode:(p.rsvpUrl?"link":"builtin");
+  const giftUrl=/^https:\/\/[^\s"'<>]+$/i.test(p.giftUrl||"")?p.giftUrl:"";
+  const W=k=>`<span data-wi="${k}">${e(WEDDING_INVITE_I18N[lang][k])}</span>`;
+  const galleryHtml=gallery.length?gallery.map((src,i)=>`<button class="gallery-item" onclick="openLightbox(${i})"><img src="${src}" alt="Wedding photo ${i+1}" loading="lazy"/></button>`).join(""):`<div class="gallery-placeholder">${W("gallery_ph")}</div>`;
   const timelineHtml=schedule.map(x=>`<div class="event"><time>${e(x.time)}</time><div><b>${e(x.title)}</b><p>${e(x.desc)}</p></div></div>`).join("");
   const calendarStart=(p.date||"2027-06-18").replaceAll("-","") + "T" + (p.time||"1500").replace(":","") + "00";
   const calendarEnd=(p.date||"2027-06-18").replaceAll("-","") + "T235900";
-
+  const desc=[readable,p.venue,p.address].filter(Boolean).join(" · ");
+  const showEnvelope=F.envelope!==false&&!opts.skipEnvelope;
+  const initials=weddingInitials(p.names);
+  const js=v=>JSON.stringify(v).replace(/</g,"\\u003c");
+  const rsvpForm=rsvpMode==="link"
+    ?`<div class="rsvp-actions"><button type="button" class="rsvp-btn" onclick="sendRSVP()">${W("rsvp_link")} ↗</button>${giftUrl?`<a class="rsvp-btn ghost" href="${e(giftUrl)}" target="_blank" rel="noopener">${W("gift")}</a>`:""}</div>`
+    :`<form class="rsvp-form" id="rsvpForm" onsubmit="return sendRSVP(event)" novalidate>
+<input id="rName" name="name" maxlength="80" autocomplete="name" placeholder="${e(WEDDING_INVITE_I18N[lang].name)}" data-wi-placeholder="name" required/>
+<div class="seg" role="radiogroup"><label><input type="radio" name="attending" value="yes" checked/><span>${W("yes")}</span></label><label><input type="radio" name="attending" value="no"/><span>${W("no")}</span></label></div>
+<label class="party" id="rPartyWrap"><span>${W("guests")}</span><select id="rGuests" name="party_size">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}</option>`).join("")}</select></label>
+<input id="rDiet" name="dietary" maxlength="300" placeholder="${e(WEDDING_INVITE_I18N[lang].dietary)}" data-wi-placeholder="dietary"/>
+<input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"/>
+<div class="rsvp-actions"><button class="rsvp-btn" id="rSend" type="submit">${W("send")}</button>${giftUrl?`<a class="rsvp-btn ghost" href="${e(giftUrl)}" target="_blank" rel="noopener">${W("gift")}</a>`:""}</div>
+<p class="rsvp-msg" id="rMsg" role="status" aria-live="polite"></p></form>`;
   return `<!doctype html>
-<html lang="zh-CN">
+<html lang="${lang==="zh"?"zh-CN":lang}">
 <head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>${e(p.names)} — Wedding Invitation</title>
+<meta name="description" content="${e(desc)}"/>
+<meta property="og:type" content="website"/><meta property="og:title" content="${e(p.names)} — Wedding Invitation"/><meta property="og:description" content="${e(desc)}"/>
+<meta property="og:url" content="__POD_PAGE_URL__"/><meta property="og:image" content="__POD_OG_IMAGE__"/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/>
+<meta name="twitter:card" content="summary_large_image"/><meta name="theme-color" content="${accent}"/>
 <style>
-:root{--accent:${e(p.accent)};--c1:${sceneColors[0]};--c2:${sceneColors[1]};--c3:${sceneColors[2]};--radius:${radius};--gap:${gap}}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:#292521;background:#f8f4ef;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+:root{--accent:${accent};--c1:${sceneColors[0]};--c2:${sceneColors[1]};--c3:${sceneColors[2]};--radius:${radius};--gap:${gap};--serif:${WEDDING_SERIF[layout]};--ink:#292521;--paper:#f8f4ef}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--paper);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 a{color:inherit}.hero{min-height:100vh;padding:28px;display:grid;place-items:center;background:${heroStyle||`radial-gradient(circle at 50% 16%,rgba(255,255,255,.88),transparent 28%),linear-gradient(155deg,var(--c1),var(--c2) 48%,var(--c3))`};background-size:cover;background-position:center;position:relative;overflow:hidden}
 .hero:before{content:"";position:absolute;width:38vw;height:58vw;max-height:600px;max-width:400px;border:18px solid rgba(255,255,255,.36);border-bottom:0;border-radius:50% 50% 0 0;left:50%;bottom:-80px;transform:translateX(-50%)}
-.hero-card{position:relative;z-index:2;text-align:${align};width:min(860px,94vw);color:${p.heroPhoto?"#fff":"#57483e"}}
-.eyebrow{font-size:10px;letter-spacing:.28em;text-transform:uppercase;margin-bottom:18px}.hero h1{font:italic clamp(52px,9vw,124px) Georgia,serif;font-weight:400;line-height:.92;margin:0}.hero .date{font-size:12px;letter-spacing:.22em;margin-top:24px}.hero .intro{max-width:620px;margin:24px ${align==="left"?"auto 0":align==="right"?"0 0 0 auto":"auto"};line-height:1.8;font-size:14px}
-.scroll-note{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.16em;opacity:.75}
-.section{padding:var(--gap) 7vw;max-width:1280px;margin:auto}.section-title small{font-size:9px;letter-spacing:.2em;color:#8a7669}.section-title h2{font:44px Georgia,serif;font-weight:500;margin:8px 0 12px}.section-title p{color:#7e746d;line-height:1.75;max-width:700px;font-size:13px}
-.countdown{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:26px}.count{border:1px solid rgba(50,40,34,.12);border-radius:var(--radius);background:#fff;padding:20px;text-align:center}.count b{font:36px Georgia,serif}.count span{display:block;font-size:9px;color:#8a7d75;margin-top:5px}
-.timeline{display:grid;gap:0;margin-top:26px}.event{display:grid;grid-template-columns:90px 1fr;gap:20px;padding:18px 0;border-bottom:1px solid rgba(50,40,34,.12)}.event time{font:18px Georgia,serif;color:var(--accent)}.event b{font-size:13px}.event p{margin:6px 0 0;color:#7e746d;font-size:11px;line-height:1.6}
-.venue-card{margin-top:26px;border-radius:var(--radius);overflow:hidden;display:grid;grid-template-columns:1.05fr .95fr;min-height:350px;border:1px solid rgba(50,40,34,.11);background:#fff}.map-art{background:linear-gradient(135deg,var(--c2),var(--c1));position:relative;overflow:hidden}.map-art:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(32deg,transparent 0 35px,rgba(255,255,255,.28) 36px 38px),repeating-linear-gradient(112deg,transparent 0 48px,rgba(77,66,59,.08) 49px 51px)}.map-pin{position:absolute;left:52%;top:48%;width:30px;height:30px;background:var(--accent);border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 10px 22px rgba(40,30,24,.2)}.venue-info{padding:34px;display:flex;flex-direction:column;justify-content:center}.venue-info h3{font:30px Georgia,serif;margin:0 0 8px}.venue-info p{font-size:12px;line-height:1.65;color:#776d67}.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.tool{border:1px solid rgba(50,40,34,.13);background:#fff;border-radius:999px;padding:10px 13px;text-decoration:none;font-size:10px;cursor:pointer}
-.gallery{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:26px}.gallery-item{border:0;padding:0;background:none;cursor:zoom-in;border-radius:var(--radius);overflow:hidden;min-height:250px}.gallery-item:first-child{grid-row:span 2;min-height:510px}.gallery-item img{width:100%;height:100%;object-fit:cover;display:block}.gallery-placeholder{grid-column:1/-1;min-height:300px;border:1px dashed rgba(50,40,34,.18);border-radius:var(--radius);display:grid;place-items:center;color:#8a7f77;font-size:11px;background:#fff}
-.rsvp{background:#2d2926;color:#fff;border-radius:32px;margin:var(--gap) auto;max-width:1180px;padding:54px}.rsvp h2{font:44px Georgia,serif;margin:0 0 10px}.rsvp p{color:rgba(255,255,255,.68);font-size:12px;line-height:1.7}.rsvp-form{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:20px}.rsvp input{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;border-radius:12px;padding:12px;outline:none}.rsvp button{border:0;border-radius:12px;padding:12px 18px;background:#fff;color:#292521;cursor:pointer}.note{font-size:10px;margin-top:12px!important}
-.footer{text-align:center;padding:50px 20px 70px;color:#837770}.footer b{font:italic 28px Georgia,serif;color:#5d4f46}
-.invite-lang{position:fixed;right:18px;top:18px;z-index:25;display:flex;gap:2px;padding:3px;border-radius:9px;background:rgba(255,255,255,.9);backdrop-filter:blur(12px)}
+.hero-card{position:relative;z-index:2;text-align:${align};width:min(860px,94vw);color:${heroImg?"#fff":"#57483e"}}
+.eyebrow{font-size:10px;letter-spacing:.28em;text-transform:uppercase;margin-bottom:18px}.hero h1{font:italic clamp(52px,9vw,124px) var(--serif);font-weight:400;line-height:.92;margin:0}.hero .date{font-size:12px;letter-spacing:.22em;margin-top:24px;text-transform:uppercase}.hero .intro{max-width:620px;margin:24px ${align==="left"?"auto 0":align==="right"?"0 0 0 auto":"auto"};line-height:1.8;font-size:14px}
+.hero-links{margin-top:26px;display:flex;gap:8px;flex-wrap:wrap;justify-content:${align==="left"?"flex-start":align==="right"?"flex-end":"center"}}.hero-links a,.hero-links button{font:inherit;font-size:10px;letter-spacing:.14em;text-transform:uppercase;border:1px solid currentColor;border-radius:999px;padding:9px 14px;background:transparent;color:inherit;cursor:pointer;text-decoration:none}
+.scroll-note{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.16em;opacity:.75;text-transform:uppercase}
+.section{padding:var(--gap) 7vw;max-width:1280px;margin:auto}.section-title small{font-size:9px;letter-spacing:.2em;color:#8a7669}.section-title h2{font:44px var(--serif);font-weight:500;margin:8px 0 12px}.section-title p{color:#7e746d;line-height:1.75;max-width:700px;font-size:13px}
+.countdown{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:26px}.count{border:1px solid rgba(50,40,34,.12);border-radius:var(--radius);background:#fff;padding:20px;text-align:center}.count b{font:36px var(--serif)}.count span{display:block;font-size:9px;color:#8a7d75;margin-top:5px;text-transform:uppercase;letter-spacing:.1em}
+.timeline{display:grid;gap:0;margin-top:26px}.event{display:grid;grid-template-columns:90px 1fr;gap:20px;padding:18px 0;border-bottom:1px solid rgba(50,40,34,.12)}.event time{font:18px var(--serif);color:var(--accent)}.event b{font-size:13px}.event p{margin:6px 0 0;color:#7e746d;font-size:11px;line-height:1.6}
+.venue-card{margin-top:26px;border-radius:var(--radius);overflow:hidden;display:grid;grid-template-columns:1.05fr .95fr;min-height:350px;border:1px solid rgba(50,40,34,.11);background:#fff}.map-art{background:linear-gradient(135deg,var(--c2),var(--c1));position:relative;overflow:hidden}.map-art:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(32deg,transparent 0 35px,rgba(255,255,255,.28) 36px 38px),repeating-linear-gradient(112deg,transparent 0 48px,rgba(77,66,59,.08) 49px 51px)}.map-pin{position:absolute;left:52%;top:48%;width:30px;height:30px;background:var(--accent);border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 10px 22px rgba(40,30,24,.2)}.venue-info{padding:34px;display:flex;flex-direction:column;justify-content:center}.venue-info h3{font:30px var(--serif);margin:0 0 8px}.venue-info p{font-size:12px;line-height:1.65;color:#776d67}.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.tool{border:1px solid rgba(50,40,34,.13);background:#fff;border-radius:999px;padding:10px 13px;text-decoration:none;font-size:10px;cursor:pointer;color:inherit}
+.gallery{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:26px}.gallery-item{border:0;padding:0;background:none;cursor:zoom-in;border-radius:var(--radius);overflow:hidden;min-height:250px}.gallery-item:first-child{grid-row:span 2;min-height:510px}.gallery-item img{width:100%;height:100%;object-fit:cover;display:block}.gallery-placeholder{grid-column:1/-1;min-height:300px;border:1px dashed rgba(50,40,34,.18);border-radius:var(--radius);display:grid;place-items:center;color:#8a7f77;font-size:11px;background:#fff;padding:20px;text-align:center}
+.rsvp{background:#2d2926;color:#fff;border-radius:32px;margin:var(--gap) auto;max-width:1180px;padding:54px}.rsvp h2{font:44px var(--serif);margin:0 0 10px}.rsvp p{color:rgba(255,255,255,.68);font-size:12px;line-height:1.7}
+.rsvp-form{display:grid;grid-template-columns:1.2fr 1.4fr .7fr;gap:8px;margin-top:20px}.rsvp-form #rDiet{grid-column:1/3}.rsvp input,.rsvp select{font:inherit;font-size:13px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;border-radius:12px;padding:12px;outline:none;width:100%}.rsvp select option{color:#292521}.rsvp input:focus,.rsvp select:focus{border-color:var(--accent)}
+.seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18)}.seg label{flex:1;position:relative}.seg input{position:absolute;opacity:0;inset:0;width:100%;cursor:pointer}.seg span{display:block;text-align:center;padding:8px 6px;border-radius:10px;font-size:12px}.seg input:checked+span{background:#fff;color:#292521}.seg input:focus-visible+span{outline:2px solid var(--accent)}
+.party{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.7)}.party select{flex:1}.party.off{opacity:.35;pointer-events:none}
+.rsvp-actions{display:flex;gap:8px;flex-wrap:wrap}.rsvp-form .rsvp-actions{grid-column:3}.rsvp-btn{border:0;border-radius:12px;padding:12px 18px;background:#fff;color:#292521;cursor:pointer;font:inherit;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;flex:1}.rsvp-btn.ghost{background:transparent;color:inherit;border:1px solid rgba(255,255,255,.35)}.rsvp-btn[disabled]{opacity:.6}
+.rsvp-msg{grid-column:1/-1;min-height:1em;margin:4px 0 0!important}.rsvp-msg.ok{color:#fff!important;font:22px var(--serif)}.hp{position:absolute!important;left:-9999px;width:1px;height:1px;opacity:0}.note{font-size:10px;margin-top:12px!important}
+.footer{text-align:center;padding:50px 20px 70px;color:#837770}.footer b{font:italic 28px var(--serif);color:#5d4f46}
+.invite-lang{position:fixed;right:18px;top:18px;z-index:25;display:flex;gap:2px;padding:3px;border-radius:9px;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);box-shadow:0 4px 14px rgba(40,30,24,.08)}
 .invite-lang button{border:0;background:transparent;padding:7px 9px;border-radius:7px;font-size:10px;cursor:pointer;color:#766d66}.invite-lang button.active{background:#292521;color:#fff}
-.floating{position:fixed;right:18px;bottom:18px;z-index:20;display:flex;gap:7px}.floating button,.floating a{width:42px;height:42px;border-radius:50%;border:1px solid rgba(60,45,35,.12);background:rgba(255,255,255,.88);display:grid;place-items:center;text-decoration:none;cursor:pointer;box-shadow:0 8px 20px rgba(40,30,24,.12);font-size:12px}
+.floating{position:fixed;right:18px;bottom:18px;z-index:20;display:flex;gap:7px}.floating button,.floating a{width:42px;height:42px;border-radius:50%;border:1px solid rgba(60,45,35,.12);background:rgba(255,255,255,.88);display:grid;place-items:center;text-decoration:none;cursor:pointer;box-shadow:0 8px 20px rgba(40,30,24,.12);font-size:12px;color:var(--ink)}
 .lightbox{position:fixed;inset:0;z-index:30;background:rgba(20,17,15,.84);display:none;place-items:center;padding:24px}.lightbox.open{display:grid}.lightbox img{max-width:94vw;max-height:90vh;border-radius:16px}
-@media(max-width:760px){.section{padding:70px 20px}.countdown{grid-template-columns:repeat(2,1fr)}.venue-card{grid-template-columns:1fr}.map-art{min-height:250px}.gallery{grid-template-columns:1fr 1fr}.gallery-item:first-child{grid-column:1/-1;grid-row:auto;min-height:380px}.rsvp{margin:70px 14px;padding:34px 22px;border-radius:24px}.rsvp-form{grid-template-columns:1fr}.hero{padding:18px}.hero:before{width:70vw;height:90vw}}
-
-.product-modal{position:fixed;inset:0;z-index:200;background:rgba(31,26,23,.55);display:none;place-items:center;padding:16px;backdrop-filter:blur(6px)}
-.product-modal.open{display:grid}
-.product-modal-card{width:min(640px,94vw);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:22px;border:1px solid var(--line);box-shadow:0 28px 80px rgba(35,28,24,.25);display:grid;grid-template-columns:1fr 1fr}
-.product-modal-img{background:#f5efe8;display:grid;place-items:center;padding:24px;min-height:320px}
-.product-modal-img img{max-width:100%;max-height:360px;object-fit:contain}
-.product-modal-info{padding:22px}
-.product-modal-info h3{margin:0 0 6px;font-size:20px}
-.product-modal-info .price{font:18px Georgia,serif;margin:8px 0 14px}
-.color-swatches{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}
-.color-swatches button{width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #ddd;cursor:pointer}
-.color-swatches button.active{box-shadow:0 0 0 2px #28231f}
-.product-modal-actions{display:flex;gap:10px;margin-top:16px}
-.product-modal-actions button{flex:1;padding:12px;border-radius:12px;border:0;cursor:pointer;font-size:13px}
-.product-modal-actions .primary{background:#28231f;color:#fff}
-.product-modal-actions .secondary{background:#f3ece4;color:#28231f}
-.product-modal-close{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:0;background:#fff;cursor:pointer;font-size:18px}
-@media(max-width:640px){.product-modal-card{grid-template-columns:1fr}}
+/* Editorial: big serif, paper white, thin rules */
+.l-editorial{--paper:#fbf8f3}.l-editorial .hero{background:${heroImg?heroStyle:"var(--paper)"};background-size:cover;background-position:center;place-items:end start;padding:9vh 7vw}.l-editorial .hero:before{display:none}
+.l-editorial .hero-card{text-align:left;width:100%;max-width:1200px;color:${heroImg?"#fff":"var(--ink)"}}.l-editorial .hero h1{font:400 clamp(72px,13vw,210px) var(--serif);font-style:normal;letter-spacing:-.035em;line-height:.84}.l-editorial .hero .date{font-size:13px;letter-spacing:.32em;border-top:1px solid currentColor;display:inline-block;padding-top:16px;margin-top:34px}.l-editorial .hero .intro{margin:20px 0 0;font:italic 20px/1.55 var(--serif);max-width:640px}.l-editorial .eyebrow{color:var(--accent)}.l-editorial .hero-links{justify-content:flex-start}
+.l-editorial .section{max-width:1100px;border-top:1px solid rgba(41,37,33,.85);padding-top:calc(var(--gap)*.6);margin-top:calc(var(--gap)*.4)}.l-editorial .section-title h2{font-size:clamp(46px,7vw,92px);letter-spacing:-.03em;line-height:.95;font-weight:400}.l-editorial .section-title small{color:var(--accent);font-size:11px}.l-editorial .count{border:0;border-left:1px solid rgba(41,37,33,.3);border-radius:0;background:none;text-align:left}.l-editorial .count b{font-size:64px}.l-editorial .event time{font-size:28px}
+.l-editorial .rsvp{border-radius:0;background:var(--ink);max-width:1100px}.l-editorial .rsvp h2{font-size:clamp(46px,7vw,92px);font-weight:400;letter-spacing:-.03em}.l-editorial .venue-card,.l-editorial .gallery-item{border-radius:0}.l-editorial .footer b{font-style:normal;font-size:44px;letter-spacing:-.02em}
+/* Gallery: airy, large images, photo-led hero */
+.l-gallery{--paper:#ffffff}.l-gallery .hero{place-items:end center;padding:0 0 12vh}.l-gallery .hero:before{display:none}.l-gallery .hero-card{color:${heroImg?"#fff":"#4d4038"};text-align:center}.l-gallery .hero h1{font-size:clamp(48px,7vw,96px);font-weight:300}.l-gallery .eyebrow{letter-spacing:.5em}
+.l-gallery .section{padding:calc(var(--gap)*1.25) 5vw;max-width:1400px}.l-gallery .section-title{text-align:center}.l-gallery .section-title p{margin:0 auto}.l-gallery .section-title h2{font-weight:300;font-size:52px}
+.l-gallery .gallery{grid-template-columns:1fr 1fr;gap:18px}.l-gallery .gallery-item{min-height:520px}.l-gallery .gallery-item:first-child{grid-column:1/-1;grid-row:auto;min-height:72vh}.l-gallery .count{border:0;background:#faf7f3}.l-gallery .timeline{max-width:760px;margin:26px auto 0}.l-gallery .event{border-bottom-color:rgba(50,40,34,.07)}
+.l-gallery .rsvp{background:#faf7f3;color:var(--ink);text-align:center;padding:72px 54px}.l-gallery .rsvp p{color:#7e746d}.l-gallery .rsvp input,.l-gallery .rsvp select{background:#fff;color:var(--ink);border-color:rgba(50,40,34,.14)}.l-gallery .seg{background:#fff;border-color:rgba(50,40,34,.14)}.l-gallery .seg input:checked+span{background:var(--ink);color:#fff}.l-gallery .party{color:#7e746d}.l-gallery .rsvp-btn{background:var(--ink);color:#fff}.l-gallery .rsvp-btn.ghost{background:none;color:var(--ink);border-color:rgba(50,40,34,.3)}.l-gallery .rsvp-msg.ok{color:var(--ink)!important}.l-gallery .rsvp-actions{justify-content:center}
+/* Envelope intro (2D, CSS only animation) */
+.env{position:fixed;inset:0;z-index:60;display:grid;place-items:center;align-content:center;gap:26px;background:radial-gradient(circle at 50% 40%,#fffaf4,var(--c2) 70%,var(--c3));transition:opacity .7s ease .1s}.env.gone{opacity:0;pointer-events:none}
+.env-stage{position:relative;width:min(440px,84vw);aspect-ratio:1.45;filter:drop-shadow(0 30px 40px rgba(50,35,25,.28)) drop-shadow(0 6px 10px rgba(50,35,25,.16));margin-top:18vh}
+.env-back,.env-front,.env-flap{position:absolute;inset:0;border-radius:6px}.env-back{background:color-mix(in srgb,var(--accent) 22%,#efe4d8);z-index:1}
+.env-letter{position:absolute;left:6%;right:6%;top:5%;height:90%;z-index:2;background:#fffdf9;border-radius:4px;display:grid;place-content:center;text-align:center;gap:6px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:transform 1s cubic-bezier(.2,.8,.2,1) .55s}.env-letter small{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent)}.env-letter b{font:italic clamp(26px,6vw,40px) var(--serif);font-weight:400;color:var(--ink)}.env-letter span{font-size:10px;letter-spacing:.18em;color:#8a7d75;text-transform:uppercase}
+.env-front{z-index:3;background:linear-gradient(160deg,#f8efe5,color-mix(in srgb,var(--accent) 14%,#efe2d4));clip-path:polygon(0 0,50% 54%,100% 0,100% 100%,0 100%)}
+.env-flap{z-index:4;height:60%;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 10%,#f4e9dd),color-mix(in srgb,var(--accent) 26%,#eadbcc));clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;transition:transform .6s ease,z-index 0s linear .3s}
+.env-seal{position:absolute;z-index:5;left:50%;top:60%;width:74px;height:74px;margin:-37px 0 0 -37px;border-radius:50%;border:0;cursor:pointer;color:rgba(255,255,255,.92);font:italic 18px var(--serif);background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--accent) 70%,#fff),var(--accent) 55%,color-mix(in srgb,var(--accent) 70%,#000));box-shadow:0 6px 14px rgba(40,20,10,.35),inset 0 -3px 6px rgba(0,0,0,.25),inset 0 3px 5px rgba(255,255,255,.3);transition:transform .35s ease,opacity .35s ease}.env-seal:before{content:"";position:absolute;inset:7px;border-radius:50%;border:1.5px dashed rgba(255,255,255,.45)}.env-seal:hover{transform:scale(1.06)}.env-seal:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.env-hint{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#6d5f55;margin:0;animation:pulse 2.4s ease-in-out infinite}.env-skip{position:absolute;right:18px;bottom:18px;border:1px solid rgba(60,45,35,.2);background:rgba(255,255,255,.7);border-radius:999px;padding:8px 14px;font-size:11px;cursor:pointer;color:#5d4f46}
+.env.open .env-seal{transform:scale(.4);opacity:0}.env.open .env-flap{transform:scaleY(-1);z-index:1}.env.open .env-letter{transform:translateY(-62%)}.env.open .env-hint{opacity:0}
+@keyframes pulse{50%{opacity:.45}}
+/* Printable invitation card */
+.cardview{position:fixed;inset:0;z-index:50;background:rgba(32,27,24,.72);backdrop-filter:blur(6px);display:none;place-items:center;padding:20px;overflow:auto}.cardview.open{display:grid}.card-actions{display:flex;gap:8px;justify-content:center;margin-top:14px}.card-actions button{border:0;border-radius:999px;padding:10px 18px;background:#fff;cursor:pointer;font:inherit;font-size:12px}.card-actions button:first-child{background:var(--accent);color:#fff}
+.icard{width:min(420px,86vw);aspect-ratio:5/7;background:#fffdf9;color:var(--ink);position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:11% 10%;box-shadow:0 30px 70px rgba(0,0,0,.35);overflow:hidden}.icard:before{content:"";position:absolute;inset:4.5%;border:1px solid var(--accent);pointer-events:none}
+.icard small{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent)}.icard h3{font:italic clamp(34px,8vw,50px)/1 var(--serif);font-weight:400;margin:18px 0}.icard .req{font:italic 14px var(--serif);color:#6e625a;margin:0 0 16px}.icard .when{font-size:11px;letter-spacing:.16em;text-transform:uppercase;line-height:1.9}.icard .where{font:16px var(--serif);margin-top:14px}.icard .addr{font-size:10px;color:#7e746d;margin-top:4px}.icard .mono{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--accent);color:var(--accent);font:italic 15px var(--serif);margin-bottom:16px}.icard .url{position:absolute;bottom:7%;left:0;right:0;font-size:8px;letter-spacing:.12em;color:#9a8f86;word-break:break-all;padding:0 12%}
+.l-classic .icard{background:radial-gradient(circle at 50% 0,color-mix(in srgb,var(--c2) 55%,#fff),#fffdf9 60%)}
+.l-editorial .icard{align-items:flex-start;text-align:left;justify-content:flex-end}.l-editorial .icard:before{inset:0;border:0;border-top:10px solid var(--accent)}.l-editorial .icard h3{font-style:normal;font-size:clamp(44px,11vw,72px);letter-spacing:-.04em;line-height:.88}.l-editorial .icard .mono{display:none}.l-editorial .icard .url{text-align:left;padding:0 10%}
+.l-gallery .icard{justify-content:flex-end;padding-top:0}.l-gallery .icard .photo{position:absolute;left:0;right:0;top:0;height:46%;background:${heroImg?`url("${heroImg}") center/cover`:"linear-gradient(155deg,var(--c1),var(--c2) 48%,var(--c3))"}}.l-gallery .icard:before{display:none}.l-gallery .icard .mono{display:none}.l-gallery .icard h3{font-weight:300;font-style:normal;margin-top:8px}
+@media(max-width:760px){.section{padding:70px 20px}.countdown{grid-template-columns:repeat(2,1fr)}.venue-card{grid-template-columns:1fr}.map-art{min-height:250px}.gallery,.l-gallery .gallery{grid-template-columns:1fr 1fr}.gallery-item:first-child{grid-column:1/-1;grid-row:auto;min-height:380px}.l-gallery .gallery-item{min-height:280px}.rsvp{margin:70px 14px;padding:34px 22px;border-radius:24px}.rsvp-form{grid-template-columns:1fr}.rsvp-form #rDiet,.rsvp-form .rsvp-actions{grid-column:auto}.hero{padding:18px}.hero:before{width:70vw;height:90vw}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.env,.env *{transition:none!important;animation:none!important}}
+@media print{@page{size:127mm 178mm;margin:0}body.printing>*:not(#cardView){display:none!important}body.printing .cardview{position:static;display:block;background:none;padding:0;backdrop-filter:none}body.printing .card-actions{display:none}body.printing .icard{width:127mm;height:178mm;box-shadow:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 </head>
-<body>
-<div class="invite-lang"><button data-invite-lang="zh">中文</button><button data-invite-lang="en">EN</button><button data-invite-lang="de">DE</button></div>
+<body class="l-${layout}">
+${showEnvelope?`<div class="env" id="env" role="dialog" aria-label="${e(p.names)}"><div class="env-stage"><div class="env-back"></div><div class="env-letter"><small>${W("invited")}</small><b>${e(p.names)}</b><span data-wdate>${e(readable)}</span></div><div class="env-front"></div><div class="env-flap"></div><button class="env-seal" id="envSeal" aria-label="${e(WEDDING_INVITE_I18N[lang].open_env)}">${e(initials)}</button></div><p class="env-hint">${W("open_env")}</p><button class="env-skip" id="envSkip">${W("skip")}</button></div>`:""}
+<div class="invite-lang" role="group" aria-label="Language"><button data-invite-lang="zh" lang="zh">中</button><button data-invite-lang="en" lang="en">EN</button><button data-invite-lang="de" lang="de">DE</button></div>
 <section class="hero">
   <div class="hero-card">
-    <div class="eyebrow">${e(p.sceneName)} · Wedding Invitation</div>
+    <div class="eyebrow">${W("eyebrow")}</div>
     <h1>${e(p.names)}</h1>
-    <div class="date">${e(readable)} · ${e(p.time)}</div>
+    <div class="date"><span data-wdate>${e(readable)}</span> · ${e(p.time)}</div>
     <div class="intro">${e(p.intro)}</div>
+    <div class="hero-links">${F.rsvp!==false?`<a href="#rsvp">${W("rsvp_link")}</a>`:""}${F.card!==false?`<button onclick="openCard()">${W("card")}</button>`:""}</div>
   </div>
-  <div class="scroll-note">SCROLL TO DISCOVER</div>
+  <div class="scroll-note">${W("scroll")}</div>
 </section>
 
-${p.features.countdown?`<section class="section"><div class="section-title"><small>COUNTDOWN</small><h2><span data-wi="count_title">Until we say “I do”</span></h2><p><span data-wi="count_desc">We cannot wait to celebrate this day with you.</span></p></div><div class="countdown"><div class="count"><b id="cdD">--</b><span>DAYS</span></div><div class="count"><b id="cdH">--</b><span>HOURS</span></div><div class="count"><b id="cdM">--</b><span>MINUTES</span></div><div class="count"><b id="cdS">--</b><span>SECONDS</span></div></div></section>`:""}
+${F.countdown?`<section class="section"><div class="section-title"><small>COUNTDOWN</small><h2>${W("count_title")}</h2><p>${W("count_desc")}</p></div><div class="countdown"><div class="count"><b id="cdD">--</b>${`<span data-wi="days">${WEDDING_INVITE_I18N[lang].days}</span>`}</div><div class="count"><b id="cdH">--</b><span data-wi="hours">${WEDDING_INVITE_I18N[lang].hours}</span></div><div class="count"><b id="cdM">--</b><span data-wi="minutes">${WEDDING_INVITE_I18N[lang].minutes}</span></div><div class="count"><b id="cdS">--</b><span data-wi="seconds">${WEDDING_INVITE_I18N[lang].seconds}</span></div></div></section>`:""}
 
-${p.features.timeline?`<section class="section"><div class="section-title"><small>THE DAY</small><h2><span data-wi="schedule">Wedding schedule</span></h2><p><span data-wi="schedule_desc">A simple guide to the celebration.</span></p></div><div class="timeline">${timelineHtml}</div></section>`:""}
+${F.timeline?`<section class="section"><div class="section-title"><small>THE DAY</small><h2>${W("schedule")}</h2><p>${W("schedule_desc")}</p></div><div class="timeline">${timelineHtml}</div></section>`:""}
 
-${p.features.map?`<section class="section"><div class="section-title"><small>VENUE</small><h2><span data-wi="join">Join us here</span></h2><p>${e(p.venue)} · ${e(p.address)}</p></div><div class="venue-card"><div class="map-art"><div class="map-pin"></div></div><div class="venue-info"><h3>${e(p.venue)}</h3><p>${e(p.address)}</p><div class="tools"><a class="tool" href="${e(mapUrl)}" target="_blank" rel="noopener">Open Map</a>${p.features.addressCopy?`<button class="tool" onclick="copyAddress()">Copy Address</button>`:""}${p.features.calendar?`<button class="tool" onclick="downloadICS()">Add to Calendar</button>`:""}${p.features.share?`<button class="tool" onclick="shareSite()">Share</button>`:""}</div></div></div></section>`:""}
+${F.map?`<section class="section"><div class="section-title"><small>VENUE</small><h2>${W("join")}</h2><p>${e(p.venue)} · ${e(p.address)}</p></div><div class="venue-card"><div class="map-art"><div class="map-pin"></div></div><div class="venue-info"><h3>${e(p.venue)}</h3><p>${e(p.address)}</p><div class="tools"><a class="tool" href="${e(mapUrl)}" target="_blank" rel="noopener">${W("open_map")}</a>${F.addressCopy?`<button class="tool" onclick="copyAddress()">${W("copy_addr")}</button>`:""}${F.calendar?`<button class="tool" onclick="downloadICS()">${W("add_cal")}</button>`:""}${F.share?`<button class="tool" onclick="shareSite()">${W("share")}</button>`:""}</div></div></div></section>`:""}
 
-${p.features.gallery?`<section class="section"><div class="section-title"><small>OUR STORY</small><h2><span data-wi="moments">Moments we love</span></h2><p><span data-wi="gallery_desc">Click any photo to view it larger.</span></p></div><div class="gallery">${galleryHtml}</div></section>`:""}
+${F.gallery?`<section class="section"><div class="section-title"><small>OUR STORY</small><h2>${W("moments")}</h2><p>${W("gallery_desc")}</p></div><div class="gallery">${galleryHtml}</div></section>`:""}
 
-${p.features.rsvp?`<section class="rsvp" id="rsvp"><h2><span data-wi="rsvp_title">Will you join us?</span></h2><p><span data-wi="rsvp_desc">Please RSVP and let us know if there is anything we should know before the celebration.</span></p><div class="rsvp-form"><input id="rName" placeholder="Your name" data-wi-placeholder="name"/><input id="rGuests" placeholder="Number of guests" data-wi-placeholder="guests"/><button onclick="sendRSVP()">RSVP</button></div><p class="note">${e(p.note)}</p></section>`:""}
+${F.rsvp?`<section class="rsvp" id="rsvp"><h2>${W("rsvp_title")}</h2><p>${W("rsvp_desc")}</p>${rsvpForm}<p class="note">${e(p.note)}</p></section>`:""}
 
-<footer class="footer"><b>${e(p.names)}</b><div>${e(readable)}</div></footer>
+<footer class="footer"><b>${e(p.names)}</b><div data-wdate>${e(readable)}</div></footer>
 
 <div class="floating">
-  ${p.features.map?`<a href="${e(mapUrl)}" target="_blank" title="Map">⌖</a>`:""}
-  ${p.features.rsvp?`<a href="#rsvp" title="RSVP">R</a>`:""}
-  ${p.features.share?`<button onclick="shareSite()" title="Share">↗</button>`:""}
+  ${F.map?`<a href="${e(mapUrl)}" target="_blank" rel="noopener" title="Map">⌖</a>`:""}
+  ${F.rsvp?`<a href="#rsvp" title="RSVP">R</a>`:""}
+  ${F.card!==false?`<button onclick="openCard()" title="Invitation card">✉</button>`:""}
+  ${F.share?`<button onclick="shareSite()" title="Share">↗</button>`:""}
 </div>
-
-<div class="lightbox" id="photoLightbox" onclick="this.classList.remove('open')"><img id="photoLightboxImage"/></div>
+${F.card!==false?`<div class="cardview" id="cardView" onclick="if(event.target===this)closeCard()"><div><div class="icard" id="icard"><div class="photo"></div><div class="mono">${e(initials)}</div><small>${W("families")}</small><h3>${e(p.names)}</h3><p class="req">${W("request")}</p><div class="when"><span data-wdate>${e(readable)}</span><br/>${e(p.time)}</div><div class="where">${e(p.venue)}</div><div class="addr">${e(p.address)}</div><div class="url" id="cardUrl"></div></div><div class="card-actions"><button onclick="printCard()">${W("print")}</button><button onclick="closeCard()">${W("close")}</button></div></div></div>`:""}
+<div class="lightbox" id="photoLightbox" onclick="this.classList.remove('open')"><img id="photoLightboxImage" alt=""/></div>
 <script>
-const inviteMessages=${JSON.stringify(inviteMessages).replace(/</g,"\\u003c")};
-function setInviteLang(l){if(!inviteMessages[l])l='en';try{localStorage.setItem('wedding-commerce-language',l)}catch(e){}document.documentElement.lang=l==='zh'?'zh-CN':l;document.querySelectorAll('[data-wi]').forEach(e=>{const k=e.dataset.wi;if(inviteMessages[l][k])e.textContent=inviteMessages[l][k]});document.querySelectorAll('[data-wi-placeholder]').forEach(e=>{const k=e.dataset.wiPlaceholder;if(inviteMessages[l][k])e.placeholder=inviteMessages[l][k]});document.querySelectorAll('[data-invite-lang]').forEach(b=>b.classList.toggle('active',b.dataset.inviteLang===l))}
-document.querySelectorAll('[data-invite-lang]').forEach(b=>b.onclick=()=>setInviteLang(b.dataset.inviteLang));setInviteLang((()=>{try{return localStorage.getItem('wedding-commerce-language')}catch(e){return null}})()||'en');
-const gallery=${JSON.stringify(gallery).replace(/</g,"\\u003c")};
+const M=${js(WEDDING_INVITE_I18N)},DATE_ISO=${js(dateIso)},INVITE_ID="__POD_INVITE_ID__",API_BASE="__POD_API_BASE__",LIVE=/^[a-f0-9]{12}$/.test(INVITE_ID),PREVIEW=${opts.preview?"true":"false"};
+const RSVP_MODE=${js(rsvpMode)},RSVP_EMAIL=${js(p.rsvpEmail||"")},RSVP_URL=${js(p.rsvpUrl||"")};
+let L=${js(lang)};
+function tt(k){return (M[L]&&M[L][k])||M.en[k]||k}
+function setInviteLang(l){if(!M[l])l="en";L=l;document.documentElement.lang=l==="zh"?"zh-CN":l;document.querySelectorAll("[data-wi]").forEach(e=>{const k=e.dataset.wi;if(M[l][k])e.textContent=M[l][k]});document.querySelectorAll("[data-wi-placeholder]").forEach(e=>{const k=e.dataset.wiPlaceholder;if(M[l][k])e.placeholder=M[l][k]});const d=new Date(DATE_ISO);if(!isNaN(d)){const s=d.toLocaleDateString(l==="zh"?"zh-CN":l==="de"?"de-CH":"en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});document.querySelectorAll("[data-wdate]").forEach(e=>e.textContent=s)}document.querySelectorAll("[data-invite-lang]").forEach(b=>b.classList.toggle("active",b.dataset.inviteLang===l))}
+const Q=new URLSearchParams(location.search);
+document.querySelectorAll("[data-invite-lang]").forEach(b=>b.onclick=()=>setInviteLang(b.dataset.inviteLang));setInviteLang(M[Q.get("lang")]?Q.get("lang"):L);
+const env=document.getElementById("env");
+if(env){const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;document.body.style.overflow="hidden";
+ const done=()=>{env.classList.add("gone");document.body.style.overflow="";setTimeout(()=>env.remove(),reduce?0:800)};
+ const open=()=>{if(env.classList.contains("open"))return;env.classList.add("open");setTimeout(done,reduce?0:2100)};
+ if(Q.has("open")||location.hash==="#open"){env.remove();document.body.style.overflow=""}
+ else{document.getElementById("envSeal").onclick=open;document.getElementById("envSkip").onclick=done;addEventListener("keydown",ev=>{if(ev.key==="Escape"&&document.contains(env))done()});document.getElementById("envSeal").focus({preventScroll:true})}}
+const gallery=${js(gallery)};
 function openLightbox(i){if(!gallery[i])return;document.getElementById("photoLightboxImage").src=gallery[i];document.getElementById("photoLightbox").classList.add("open")}
-function copyAddress(){navigator.clipboard?.writeText(${JSON.stringify(p.address)});alert("Address copied")}
-function shareSite(){if(navigator.share)navigator.share({title:${JSON.stringify(p.names+" Wedding")},text:"Wedding invitation",url:location.href});else navigator.clipboard?.writeText(location.href)}
+function copyAddress(){navigator.clipboard?.writeText(${js(p.address||"")}).catch(()=>{});alert(tt("copied"))}
+function shareSite(){if(navigator.share)navigator.share({title:${js((p.names||"")+" Wedding")},url:location.href}).catch(()=>{});else navigator.clipboard?.writeText(location.href).catch(()=>{})}
 function downloadICS(){
-  const ics="BEGIN:VCALENDAR\\r\\nVERSION:2.0\\r\\nBEGIN:VEVENT\\r\\nDTSTART:${calendarStart}\\r\\nDTEND:${calendarEnd}\\r\\nSUMMARY:${String(p.names).replace(/\n/g," ")} Wedding\\r\\nLOCATION:${String(p.address).replace(/\n/g," ")}\\r\\nEND:VEVENT\\r\\nEND:VCALENDAR";
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="wedding.ics";a.click();URL.revokeObjectURL(a.href)
+  const ics="BEGIN:VCALENDAR\\r\\nVERSION:2.0\\r\\nBEGIN:VEVENT\\r\\nDTSTART:${calendarStart}\\r\\nDTEND:${calendarEnd}\\r\\nSUMMARY:"+${js(String(p.names||"").replace(/\n/g," ")+" Wedding")}+"\\r\\nLOCATION:"+${js(String(p.address||"").replace(/\n/g," "))}+"\\r\\nEND:VEVENT\\r\\nEND:VCALENDAR";
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="wedding.ics";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
 }
-function sendRSVP(){
-  const name=document.getElementById("rName")?.value||"Guest";const guests=document.getElementById("rGuests")?.value||"";
-  const ext=${JSON.stringify(p.rsvpUrl||"")};
-  if(ext){window.open(ext,"_blank");return}
-  const email=${JSON.stringify(p.rsvpEmail||"")};
-  if(email){location.href="mailto:"+encodeURIComponent(email)+"?subject="+encodeURIComponent("Wedding RSVP — "+name)+"&body="+encodeURIComponent("Name: "+name+"\\nGuests: "+guests)}
-  else alert("Thank you. RSVP details are ready to submit.")
+function openCard(){const c=document.getElementById("cardView");if(!c)return;const u=document.getElementById("cardUrl");if(u)u.textContent=LIVE?location.href.split(/[?#]/)[0]:"";c.classList.add("open")}
+function closeCard(){document.getElementById("cardView")?.classList.remove("open")}
+function printCard(){document.body.classList.add("printing");setTimeout(()=>{window.print();document.body.classList.remove("printing")},50)}
+if(Q.has("card"))openCard();
+const form=document.getElementById("rsvpForm");
+if(form){const sync=()=>document.getElementById("rPartyWrap").classList.toggle("off",form.elements.attending.value==="no");form.querySelectorAll("[name=attending]").forEach(r=>r.onchange=sync);sync()}
+function rsvpMsg(t,ok){const m=document.getElementById("rMsg");if(m){m.textContent=t;m.className="rsvp-msg"+(ok?" ok":"")}}
+async function sendRSVP(ev){
+  ev&&ev.preventDefault();
+  if(RSVP_MODE==="link"){if(RSVP_URL)window.open(RSVP_URL,"_blank","noopener");return false}
+  const F_=form.elements,name=(F_.namedItem("name").value||"").trim(),attending=form.elements.attending.value,party=attending==="yes"?Number(F_.namedItem("party_size").value||1):0,dietary=(F_.namedItem("dietary").value||"").trim();
+  if(!name){rsvpMsg(tt("err_name"));F_.namedItem("name").focus();return false}
+  if(attending!=="yes"&&attending!=="no"){rsvpMsg(tt("err_att"));return false}
+  if(RSVP_MODE==="email"||(!LIVE&&RSVP_EMAIL&&!PREVIEW)){
+    if(RSVP_EMAIL)location.href="mailto:"+encodeURIComponent(RSVP_EMAIL)+"?subject="+encodeURIComponent("Wedding RSVP — "+name)+"&body="+encodeURIComponent("Name: "+name+"\\nAttending: "+attending+"\\nGuests: "+party+"\\nDietary: "+dietary);
+    return false}
+  if(!LIVE){form.querySelectorAll("input,select,button").forEach(x=>x.disabled=true);rsvpMsg(tt(attending==="yes"?"thanks_yes":"thanks_no")+" ("+tt("preview_note")+")",true);return false}
+  const btn=document.getElementById("rSend");btn.disabled=true;btn.textContent=tt("sending");
+  try{
+    const r=await fetch((/^https?:/.test(API_BASE)?API_BASE:"")+"/api/invitations/"+INVITE_ID+"/rsvp",{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({name,attending,party_size:party,dietary,website:F_.namedItem("website").value})});
+    if(!r.ok)throw new Error(r.status);
+    form.querySelectorAll("input,select,.seg,#rPartyWrap,.rsvp-actions").forEach(x=>x.style.display="none");rsvpMsg(tt(attending==="yes"?"thanks_yes":"thanks_no"),true);
+  }catch(e){btn.disabled=false;btn.textContent=tt("send");rsvpMsg(tt("err"))}
+  return false
 }
-${p.features.countdown?`function tick(){const t=new Date(${JSON.stringify((p.date||"2027-06-18")+"T"+(p.time||"15:00")+":00")}).getTime()-Date.now();const v=Math.max(0,t);document.getElementById("cdD").textContent=Math.floor(v/86400000);document.getElementById("cdH").textContent=Math.floor(v/3600000)%24;document.getElementById("cdM").textContent=Math.floor(v/60000)%60;document.getElementById("cdS").textContent=Math.floor(v/1000)%60}tick();setInterval(tick,1000);`:""}
+${F.countdown?`function tick(){const t=new Date(DATE_ISO).getTime()-Date.now();const v=Math.max(0,t);document.getElementById("cdD").textContent=Math.floor(v/86400000);document.getElementById("cdH").textContent=Math.floor(v/3600000)%24;document.getElementById("cdM").textContent=Math.floor(v/60000)%60;document.getElementById("cdS").textContent=Math.floor(v/1000)%60}tick();setInterval(tick,1000);`:""}
 <\/script>
-
-<div class="product-modal" id="productModal">
-  <div class="product-modal-card" style="position:relative">
-    <button class="product-modal-close" id="productModalClose">×</button>
-    <div class="product-modal-img"><img id="productModalImg" src="" alt=""></div>
-    <div class="product-modal-info">
-      <small id="productModalCat" style="color:var(--muted);font-size:11px;letter-spacing:.08em">PRODUCT</small>
-      <h3 id="productModalName"></h3>
-      <div class="price" id="productModalPrice"></div>
-      <div id="productModalColors" class="color-swatches"></div>
-      <div class="product-modal-actions">
-        <button class="primary" id="productModalDesign">开始设计</button>
-        <button class="secondary" id="productModalClose2">关闭</button>
-      </div>
-    </div>
-  </div>
-</div>
 </body></html>`;
 }
-function refreshWeddingPreview(){
-  const p=weddingProfile();
-  document.getElementById("builderPreview").srcdoc=buildWeddingSite(p);
+// Share image (og:image, 1200×630) drawn on a canvas with the site's colours and layout font.
+async function renderWeddingShareCard(p){
+  const W=1200,H=630,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  const layout=WEDDING_LAYOUTS.includes(p.layout)?p.layout:"classic",serif=WEDDING_SERIF[layout],accent=/^#[0-9a-fA-F]{6}$/.test(p.accent||"")?p.accent:"#9a6d57";
+  const col=p.sceneColors||["#d8cec2","#eadfd4","#c8b9ac"];
+  const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,col[0]);g.addColorStop(.5,col[1]);g.addColorStop(1,col[2]||col[0]);x.fillStyle=g;x.fillRect(0,0,W,H);
+  const img=p.heroPhoto||(layout==="gallery"?(p.gallery||[])[0]:"");
+  if(img){try{const im=new Image();im.src=img;await im.decode();const s=Math.max(W/im.width,H/im.height);x.drawImage(im,(W-im.width*s)/2,(H-im.height*s)/2,im.width*s,im.height*s);x.fillStyle="rgba(25,20,17,.35)";x.fillRect(0,0,W,H)}catch(e){}}
+  x.fillStyle="rgba(255,253,249,.94)";const cw=layout==="editorial"?760:620,ch=500,cx=layout==="editorial"?70:(W-cw)/2,cy=(H-ch)/2;x.fillRect(cx,cy,cw,ch);
+  x.strokeStyle=accent;x.lineWidth=2;if(layout==="editorial"){x.fillStyle=accent;x.fillRect(cx,cy,cw,12)}else x.strokeRect(cx+18,cy+18,cw-36,ch-36);
+  const lang=["zh","en","de"].includes(p.lang)?p.lang:"en",T=WEDDING_INVITE_I18N[lang];
+  const d=new Date((p.date||"2027-06-18")+"T"+(p.time||"15:00")+":00");const ds=isNaN(d)?p.date:d.toLocaleDateString(lang==="zh"?"zh-CN":lang==="de"?"de-CH":"en-US",{year:"numeric",month:"long",day:"numeric"});
+  const left=layout==="editorial";x.textAlign=left?"left":"center";const tx=left?cx+56:W/2;
+  x.fillStyle=accent;x.font="600 20px Inter,system-ui,sans-serif";x.fillText(T.eyebrow.toUpperCase().split("").join(String.fromCharCode(8202)),tx,cy+(left?110:96));
+  x.fillStyle="#292521";let size=left?104:86;x.font=(left?"":"italic ")+size+"px "+serif;while(x.measureText(p.names||"").width>cw-100&&size>40){size-=4;x.font=(left?"":"italic ")+size+"px "+serif}
+  x.fillText(p.names||"",tx,cy+250);
+  x.fillStyle="#5d4f46";x.font="28px "+serif;x.fillText([ds,p.time].filter(Boolean).join(" · "),tx,cy+340);
+  x.fillStyle="#7e746d";x.font="22px Inter,system-ui,sans-serif";x.fillText([p.venue,p.address].filter(Boolean).join(" · ").slice(0,60),tx,cy+392);
+  return c.toDataURL("image/jpeg",.86);
 }
+let wbPreviewEnvelopeShown=false;
+function refreshWeddingPreview(ev){
+  const p=weddingProfile();
+  // Show the envelope intro on the first preview (or when its toggle changes); later edits jump straight to the site.
+  const showEnv=!wbPreviewEnvelopeShown||ev?.target?.id==="ftEnvelope";wbPreviewEnvelopeShown=true;
+  document.getElementById("builderPreview").srcdoc=buildWeddingSite(p,{preview:true,skipEnvelope:!showEnv});
+}
+function localizeBuilderOptions(){document.querySelectorAll("#siteBuilder option[data-i18n-opt]").forEach(o=>{o.textContent=window.WeddingI18n?.t?.(o.dataset.i18nOpt)||o.dataset.i18nOpt})}
+window.addEventListener("wedding-language-change",localizeBuilderOptions);
+const wbStripPlaceholders=html=>html.replace(/__POD_[A-Z_]+__/g,"");
 function openWeddingBuilder(){
   document.getElementById("siteBuilder").classList.add("open");
+  localizeBuilderOptions();wbPreviewEnvelopeShown=false;
   document.getElementById("builderSceneLabel").textContent=sceneData[sceneKey]?.name||sceneKey;
   document.getElementById("wbNames").value=deriveCustomizedNames();
   const c=sceneData[sceneKey]?.colors?.[3]||"#9a6d57";
@@ -1642,7 +1742,7 @@ function openWeddingBuilder(){
   if(saved){
     try{
       const s=JSON.parse(saved);
-      ["names","date","time","venue","address","mapUrl","intro","rsvpEmail","rsvpUrl","note","accent","density","heroAlign","radius"].forEach(k=>{
+      ["names","date","time","venue","address","mapUrl","intro","rsvpEmail","rsvpUrl","note","accent","density","heroAlign","radius","layout","lang","rsvpMode","giftUrl"].forEach(k=>{
         const el=document.getElementById("wb"+k.charAt(0).toUpperCase()+k.slice(1));
         if(el && s[k]!=null) el.value=s[k];
       });
@@ -1661,15 +1761,16 @@ document.getElementById("builderSaveDraft").onclick=()=>{
   showToast("婚礼网站草稿已保存在浏览器");
 };
 document.getElementById("builderDownload").onclick=()=>{
-  const p=weddingProfile();const html=buildWeddingSite(p);
+  const p=weddingProfile();const html=wbStripPlaceholders(buildWeddingSite(p));
   const blob=new Blob([html],{type:"text/html;charset=utf-8"});const a=document.createElement("a");
   const safe=(p.names||"wedding").replace(/[^a-zA-Z0-9\u4e00-\u9fff]+/g,"_");
   a.href=URL.createObjectURL(blob);a.download=safe+"_wedding_invitation.html";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
 };
 document.getElementById("builderPublish").onclick=async()=>{
   const p=weddingProfile();const html=buildWeddingSite(p);
+  let og_image="";try{og_image=await renderWeddingShareCard(p)}catch(e){}
   try{
-    const r=await fetch("/api/invitations",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({profile:p,html})});
+    const r=await fetch("/api/invitations",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({profile:p,html,og_image})});
     if(!r.ok)throw new Error();
     const data=await r.json();
     showToast("已生成专属链接："+data.url);
@@ -1689,8 +1790,8 @@ document.getElementById("wbGallery").onchange=async e=>{
   document.getElementById("wbGalleryStatus").textContent=files.length?`${files.length} 张图片：`+files.map(f=>f.name).join("、"):"未上传相册";
   refreshWeddingPreview();
 };
-["wbNames","wbDate","wbTime","wbVenue","wbAddress","wbMapUrl","wbIntro","wbSchedule","wbRsvpEmail","wbRsvpUrl","wbNote","wbAccent","wbDensity","wbHeroAlign","wbRadius",
- "ftCountdown","ftTimeline","ftMap","ftGallery","ftRsvp","ftShare","ftCalendar","ftAddressCopy"].forEach(id=>{
+["wbNames","wbDate","wbTime","wbVenue","wbAddress","wbMapUrl","wbIntro","wbSchedule","wbRsvpEmail","wbRsvpUrl","wbNote","wbAccent","wbDensity","wbHeroAlign","wbRadius","wbLayout","wbLang","wbRsvpMode","wbRsvpNotify","wbGiftUrl",
+ "ftEnvelope","ftCard","ftCountdown","ftTimeline","ftMap","ftGallery","ftRsvp","ftShare","ftCalendar","ftAddressCopy"].forEach(id=>{
   const el=document.getElementById(id);if(el)el.addEventListener("change",refreshWeddingPreview);
 });
 
