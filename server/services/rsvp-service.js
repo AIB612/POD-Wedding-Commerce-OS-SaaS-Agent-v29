@@ -67,7 +67,8 @@ export async function submitRsvp(invitationId, body) {
 
 /** Responses for one invitation, only for the couple that published it. */
 export async function listRsvps(tenantId, userId, invitationId) {
-  const inv = await publishedInvitation(invitationId);
+  // Owners still see answers after taking the site offline.
+  const inv = ID_RE.test(String(invitationId || "")) ? await findRecord("invitations", invitationId) : null;
   if (!inv || inv.tenant_id !== tenantId || !userId || inv.user_id !== userId) throw new HttpError(404, "invitation_not_found");
   const s = await getState();
   // One row per guest, newest answer wins (also collapses duplicates stored before updates existed).
@@ -77,7 +78,7 @@ export async function listRsvps(tenantId, userId, invitationId) {
     .filter(r => { const k = guestKey(r); return seen.has(k) ? false : seen.add(k); })
     .map(({ tenant_id, ...r }) => ({ ...r, updated_at: r.updated_at || r.created_at }));
   const yes = rows.filter(r => r.attending);
-  return { invitation: { id: inv.id, names: inv.names, date: inv.date, url: inv.url }, rsvps: rows,
+  return { invitation: { id: inv.id, names: inv.names, date: inv.date, url: inv.url, status: inv.status }, rsvps: rows,
     counts: { responses: rows.length, attending: yes.length, declined: rows.length - yes.length, guests: yes.reduce((n, r) => n + (r.party_size || 0), 0) } };
 }
 

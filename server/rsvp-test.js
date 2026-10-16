@@ -28,8 +28,8 @@ try {
   const inv = await (await req("/api/invitations", { method: "POST", cookie, body: { html, og_image: png, profile: { names: "Anna & Luca", date: "2027-06-12", layout: "editorial", rsvpEmail: "anna@example.com", features: { rsvp: true } } } })).json();
   assert.ok(inv.ok && /^[a-f0-9]{12}$/.test(inv.id));
   const page = await (await req(inv.url)).text();
-  assert.ok(page.includes(`INVITE_ID="${inv.id}"`) && page.includes('API_BASE="https://shop.example.com"') && page.includes(`/generated/${inv.id}-card.png`));
-  assert.equal((await req(`/generated/${inv.id}-card.png`)).status, 200);
+  assert.ok(page.includes(`INVITE_ID="${inv.id}"`) && page.includes('API_BASE="https://shop.example.com"') && new RegExp(`/generated/${inv.id}-[a-z0-9]+-card\\.png`).test(page));
+  assert.equal((await req(page.match(/\/generated\/[a-f0-9]{12}-[a-z0-9]+-card\.png/)[0])).status, 200);
   result.publish_placeholders = "pass";
 
   // 1b. Publish splits embedded photos into files; missing share image drops og:image tags.
@@ -37,9 +37,9 @@ try {
   const html2 = `<!doctype html><html><head><meta property="og:image" content="__POD_OG_IMAGE__"/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/><meta name="twitter:card" content="summary_large_image"/></head><body><style>.h{background:url("${photo}")}</style><img src="${photo}"/>${"x".repeat(200)}</body></html>`;
   const inv3 = await (await req("/api/invitations", { method: "POST", cookie, body: { html: html2, profile: { names: "Split" } } })).json();
   const page3 = await (await req(inv3.url)).text();
-  assert.ok(!page3.includes("base64") && page3.includes(`https://shop.example.com/generated/${inv3.id}-1.jpg`) && !page3.includes(`${inv3.id}-2.`), "deduped external file");
+  assert.ok(!page3.includes("base64") && new RegExp(`https://shop\\.example\\.com/generated/${inv3.id}-[a-z0-9]+-1\\.jpg`).test(page3) && !/-2\.jpg/.test(page3), "deduped external file");
   assert.ok(!page3.includes("og:image") && page3.includes('content="summary"'), "og:image dropped when no share card");
-  const img = Buffer.from(await (await req(`/generated/${inv3.id}-1.jpg`)).arrayBuffer());
+  const img = Buffer.from(await (await req(page3.match(/\/generated\/[a-f0-9]{12}-[a-z0-9]+-1\.jpg/)[0])).arrayBuffer());
   assert.equal(img.length, 3000);
   result.publish_split_images = "pass";
 
@@ -55,6 +55,19 @@ try {
   const i18n = new Function("return " + indexSrc.match(/const WEDDING_INVITE_I18N=(\{[\s\S]*?\n\});/)[1])();
   for (const l of ["en", "zh", "de"]) for (const k of ["err_contact", "err_rate", "err_offline", "err_long", "ey_count", "ey_day", "ey_venue", "ey_story", "title"]) assert.ok(i18n[l][k], `${l}.${k}`);
   result.generator_helpers = "pass";
+
+  // 1d. Publishing requires login (401), RSVP privacy: pages carry noindex header + robots.txt disallows /generated.
+  let r0 = await req("/api/invitations", { method: "POST", body: { html, profile: { names: "Anon" } } });
+  assert.equal(r0.status, 401); assert.equal((await r0.json()).error, "login_required");
+  r0 = await req(inv.url);
+  assert.match(r0.headers.get("x-robots-tag") || "", /noindex/); assert.match(r0.headers.get("content-security-policy"), /allow-downloads/);
+  assert.match(await (await req("/robots.txt")).text(), /Disallow: \/generated\//);
+  // Generator: noindex meta, .ics with UID/DTSTAMP + localized title, map + Google Calendar fallbacks, privacy line, card QR encoder.
+  for (const needle of ['<meta name="robots" content="noindex,nofollow"/>', '"UID:"+', '"DTSTAMP:"+stamp', '"SUMMARY:"+esc(NAMES+" — "+tt("title"))', "calendar.google.com/calendar/render?action=TEMPLATE", "uri.amap.com/search", "maps.apple.com/?q=", 'W("privacy")', "MicroMessenger", "podQrSvg(link"])
+    assert.ok(indexSrc.includes(needle), needle);
+  for (const l of ["en", "zh", "de"]) for (const k of ["privacy", "gcal", "amap", "apple_map", "wechat_hint", "scan"]) assert.ok(i18n[l][k], `${l}.${k}`);
+  assert.equal(i18n.zh.privacy, "你的回复只有新人可见。");
+  result.login_noindex_ics = "pass";
 
   // 1. Valid RSVP from the sandboxed page (Origin: null, text/plain simple request) → 201 + CORS header despite CORS_ORIGINS
   let r = await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", origin: "null", type: "text/plain", body: JSON.stringify({ name: "  Marco   Rossi ", attending: "yes", party_size: 2, dietary: "Vegetarian" }) });
@@ -132,6 +145,37 @@ try {
   const csv2 = Buffer.from(await (await req(`/api/account/invitations/${inv.id}/rsvps.csv`, { cookie })).arrayBuffer()).toString("utf8");
   assert.ok(csv2.includes("Jürgen Größe 王小明,yes,1,keine Nüsse；不吃辣"));
   result.csv_bom_utf8 = "pass";
+
+  // 4c. Stable URL: owner updates in place (same id + URL), RSVPs kept; others/anonymous cannot.
+  const before = (await (await req(`/api/account/invitations/${inv.id}/rsvps`, { cookie })).json()).counts.responses;
+  const html4 = html.replace("<body>", "<body><h1>Updated v2</h1>");
+  assert.equal((await req(`/api/invitations/${inv.id}`, { method: "PUT", body: { html: html4, profile: { names: "Anna & Luca" } } })).status, 401);
+  assert.equal((await req(`/api/invitations/${inv.id}`, { method: "PUT", cookie: other, body: { html: html4, profile: { names: "X" } } })).status, 404);
+  let up = await (await req(`/api/invitations/${inv.id}`, { method: "PUT", cookie, body: { html: html4, profile: { names: "Anna & Luca", lang: "de" } } })).json();
+  assert.deepEqual([up.id, up.url, up.updated], [inv.id, inv.url, true]);
+  up = await (await req(`/api/invitations?id=${inv.id}`, { method: "PUT", cookie, body: { html: html4 + " ", profile: { names: "Anna & Luca", lang: "de", heroPhoto: photo } } })).json();
+  assert.equal(up.id, inv.id, "query-id variant (exempt from global 1 MB parser)");
+  assert.ok((await (await req(inv.url)).text()).includes("Updated v2"));
+  assert.equal((await (await req(`/api/account/invitations/${inv.id}/rsvps`, { cookie })).json()).counts.responses, before, "RSVPs kept after update");
+  const ed = await (await req(`/api/invitations/${inv.id}/edit`, { cookie })).json();
+  assert.equal(ed.profile.names, "Anna & Luca"); assert.match(ed.profile.heroPhoto, /^https:\/\/shop\.example\.com\/generated\/.+\.jpg$/, "edit profile has photo URL, not base64");
+  assert.equal((await req(ed.profile.heroPhoto.replace("https://shop.example.com", ""))).status, 200);
+  assert.equal((await req(`/api/invitations/${inv.id}/edit`, { cookie: other })).status, 404);
+  result.update_same_url = "pass";
+
+  // 4d. Unpublish: owner only; guests get a localized offline page (410) and RSVP is closed; owner still sees answers; republish restores.
+  assert.equal((await req(`/api/invitations/${inv.id}/unpublish`, { method: "POST", cookie: other })).status, 404);
+  assert.equal((await req(`/api/invitations/${inv.id}/unpublish`, { method: "POST" })).status, 401);
+  assert.equal((await (await req(`/api/invitations/${inv.id}/unpublish`, { method: "POST", cookie })).json()).status, "unpublished");
+  r = await req(inv.url);
+  assert.equal(r.status, 410); const off = await r.text();
+  assert.ok(off.includes("Diese Einladung ist nicht mehr online") && off.includes("此邀请已下线") && off.includes('lang="de"') && off.includes("noindex"));
+  assert.equal((await req(inv.url.replace(".html", ""))).status, 410, "extensionless URL also offline");
+  assert.equal((await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", body: { name: "After", attending: "yes" } })).status, 404);
+  assert.equal((await req(`/api/account/invitations/${inv.id}/rsvps`, { cookie })).status, 200, "owner still sees answers");
+  await req(`/api/invitations/${inv.id}/republish`, { method: "POST", cookie });
+  assert.equal((await req(inv.url)).status, 200);
+  result.unpublish_offline = "pass";
 
   // 5. Rate limit per invitation + IP (RSVP_PER_10_MIN=19): exhaust this invitation, a second invitation from the same IP still works.
   let n = 0; do { r = await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", body: { name: "Late " + n, attending: "no" } }); n++; } while (r.status !== 429 && n < 30);

@@ -468,9 +468,22 @@ button{color:inherit}
 .builder-preview-wrap{position:relative}.preview-device{position:absolute;top:6px;left:50%;transform:translateX(-50%);display:flex;z-index:2;background:rgba(255,255,255,.85);border-radius:999px;padding:2px}.preview-device button{border:0;background:none;border-radius:999px;padding:3px 10px;font-size:9px;cursor:pointer;color:#5d544c}.preview-device button.on{background:#292622;color:#fff}
 .builder-preview-wrap.phone .builder-preview{width:390px;max-width:100%;border-radius:28px;border:8px solid #292622}
 .builder-note{font-size:8.5px;line-height:1.5;color:var(--muted);padding:8px 0 0}
+.site-builder-actions .wb-link{background:none;border-color:transparent;text-decoration:underline;color:var(--muted)}
+.wb-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:0 0 14px;position:sticky;top:-14px;z-index:3;background:#fffdf9;padding:6px 0}.wb-steps button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 4px;font-size:11px;cursor:pointer;color:var(--muted)}.wb-steps button.on{background:#25211e;color:#fff;border-color:#25211e}.wb-steps button.done{color:#25211e}
+.site-controls[data-cur="1"] [data-step]:not([data-step="1"]),.site-controls[data-cur="2"] [data-step]:not([data-step="2"]),.site-controls[data-cur="3"] [data-step]:not([data-step="3"]){display:none}
+.wb-next{position:sticky;bottom:-14px;display:flex;gap:8px;justify-content:space-between;background:linear-gradient(transparent,#fffdf9 30%);padding:16px 0 14px;margin-top:6px}.wb-next .btn{flex:1}.wb-next .btn.dark{flex:2}
+.site-controls[data-cur="1"] #wbBack{visibility:hidden}
+.wb-check{list-style:none;padding:0;margin:0 0 12px;font-size:12px;line-height:2}.wb-check li:before{content:"✓ ";color:#3d7a4a}.wb-check li.miss:before{content:"• ";color:#b3412e}.wb-check li.miss{color:#b3412e;cursor:pointer}
+.wb-pubstate{font-size:11px;line-height:1.6;color:var(--muted);background:#f6f2ec;border-radius:10px;padding:10px 12px}.wb-pubstate a{color:inherit}
+.wb-dl{border:0;background:none;color:var(--muted);text-decoration:underline;font-size:10px;margin-top:12px;cursor:pointer;padding:0}
+.control-field input.wb-invalid{border-color:#b3412e;box-shadow:0 0 0 2px rgba(179,65,46,.15)}
+.wb-success{position:absolute;inset:0;z-index:20;background:rgba(30,26,23,.42);display:grid;place-items:center;padding:16px}.wb-success[hidden]{display:none}.wb-success-card{background:#fffdf9;border-radius:18px;padding:24px;width:min(460px,100%);max-height:100%;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.25);display:grid;gap:14px}.wb-success-card h3{margin:0;font:400 26px Georgia,serif}.wb-sub{margin:0;font-size:12px;color:var(--muted)}
+.wb-url{display:flex;gap:6px}.wb-url input{flex:1;min-width:0;font-size:12px;padding:10px;border:1px solid var(--line);border-radius:10px}.wb-share{display:flex;gap:6px;flex-wrap:wrap}.wb-share .btn{flex:1;text-align:center;text-decoration:none}
+.wb-qr{display:flex;gap:14px;align-items:center;font-size:11px;line-height:1.6;color:var(--muted)}.wb-qr #wbQr{width:132px;height:132px;flex:none}.wb-qr svg{width:100%;height:100%}
+@media(max-width:1000px){.site-builder-shell{grid-template-columns:minmax(0,1fr)}.site-builder-head{gap:8px;min-width:0}.site-builder-head>div{min-width:0}.site-builder-actions{flex-wrap:nowrap;overflow-x:auto;max-width:100%;min-width:0}.site-builder-actions .btn{padding:7px 10px;font-size:11px;white-space:nowrap}.site-controls{padding-bottom:84px}.wb-next{position:fixed;left:14px;right:14px;bottom:14px;z-index:6;background:#fffdf9;border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.15)}.wb-steps{top:-14px}}
 @media(max-width:1000px){
   .site-builder{padding:7px}.site-builder-shell{border-radius:18px}
-  .site-builder-body{grid-template-columns:1fr;grid-template-rows:minmax(410px,52vh) minmax(480px,1fr)}
+  .site-builder-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(410px,52vh) minmax(480px,1fr)}.site-controls,.builder-preview-wrap{min-width:0}
   .site-controls{border-right:0;border-bottom:1px solid var(--line)}
   .builder-preview-wrap{grid-row:1}.site-controls{grid-row:2}
   .wedding-site-btn{max-width:152px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -699,27 +712,35 @@ button{color:inherit}
       <div class="site-builder-actions">
         <button class="btn" id="builderSaveDraft">保存草稿</button>
         <button class="btn" id="builderRefresh">更新预览</button>
-        <button class="btn" id="builderPublish">保存为专属链接</button>
-        <button class="btn dark" id="builderDownload">下载独立 HTML</button>
+        <button class="btn wb-link" id="builderDownload" title="离线备份，不含 RSVP 收集">下载 HTML</button>
+        <button class="btn dark" id="builderPublish">发布网站</button>
         <button class="pop-close" id="builderClose">×</button>
       </div>
     </div>
+    <div class="wb-success" id="wbSuccess" hidden role="dialog" aria-modal="true" aria-labelledby="wbSuccessTitle"><div class="wb-success-card">
+      <h3 id="wbSuccessTitle">网站已发布</h3><p class="wb-sub" id="wbSuccessSub">把链接发给宾客吧。之后修改再发布，链接保持不变。</p>
+      <div class="wb-url"><input id="wbSuccessUrl" readonly aria-label="网站链接"/><button type="button" class="btn dark" id="wbCopy">复制链接</button></div>
+      <div class="wb-share"><a class="btn" id="wbWa" target="_blank" rel="noopener">WhatsApp</a><a class="btn" id="wbOpen" target="_blank" rel="noopener">打开网站</a><a class="btn" href="account.html">查看回复</a></div>
+      <div class="wb-qr"><div id="wbQr"></div><span>微信：截图或长按识别二维码，也可以直接打印邀请卡（卡片上同样有二维码）。</span></div>
+      <button type="button" class="btn" id="wbSuccessClose">完成</button>
+    </div></div>
     <div class="site-builder-body">
-      <div class="site-controls">
-        <div class="control-section">
+      <div class="site-controls" id="wbControls" data-cur="1">
+        <nav class="wb-steps" aria-label="步骤"><button type="button" data-go="1" class="on" aria-current="step">① 信息</button><button type="button" data-go="2">② 照片和风格</button><button type="button" data-go="3">③ 发布</button></nav>
+        <div class="control-section" data-step="1">
           <h4>新人和婚礼信息</h4>
           <div class="control-grid">
-            <div class="control-field full"><label for="wbNames">新人姓名</label><input id="wbNames" value="Amelia & Noah"/></div>
-            <div class="control-field"><label for="wbDate">婚礼日期</label><input id="wbDate" type="date" value="2027-06-18"/></div>
+            <div class="control-field full"><label for="wbNames">新人姓名 *</label><input id="wbNames" required placeholder="例如 Amelia & Noah"/></div>
+            <div class="control-field"><label for="wbDate">婚礼日期 *</label><input id="wbDate" type="date" required/></div>
             <div class="control-field"><label for="wbTime">开始时间</label><input id="wbTime" type="time" value="15:00"/></div>
-            <div class="control-field full"><label for="wbVenue">场地名称</label><input id="wbVenue" value="The Garden House"/></div>
-            <div class="control-field full"><label for="wbAddress">详细地址</label><input id="wbAddress" value="123 Celebration Avenue"/></div>
+            <div class="control-field full"><label for="wbVenue">场地名称 *</label><input id="wbVenue" required placeholder="例如 The Garden House"/></div>
+            <div class="control-field full"><label for="wbAddress">详细地址</label><input id="wbAddress" placeholder="例如 Münsterhof 8, 8001 Zürich"/></div>
             <div class="control-field full"><label for="wbMapUrl">地图 / 导航链接（可手动替换）</label><input id="wbMapUrl" placeholder="Google Maps / Apple Maps / 高德 / 百度地图分享链接"/></div>
             <div class="control-field full"><label for="wbIntro">欢迎语</label><textarea id="wbIntro">With joyful hearts, we invite you to celebrate our wedding with us.</textarea></div>
           </div>
         </div>
 
-        <div class="control-section">
+        <div class="control-section" data-step="2">
           <h4>婚纱照与图片</h4>
           <label class="photo-upload"><b>替换主婚纱照</b><span>JPG / PNG / WEBP</span><input id="wbHeroPhoto" type="file" accept="image/*"/></label>
           <div class="photo-status" id="wbHeroStatus">未上传，将使用极简场景占位视觉</div>
@@ -729,7 +750,7 @@ button{color:inherit}
           <div class="photo-status" id="wbGalleryStatus">未上传相册</div>
         </div>
 
-        <div class="control-section">
+        <div class="control-section" data-step="2">
           <h4>风格与语言</h4>
           <div class="control-grid">
             <div class="control-field"><label for="wbLayout">网站风格</label><select id="wbLayout"><option value="classic" data-i18n-opt="经典">经典</option><option value="modern" data-i18n-opt="现代">现代</option><option value="botanical" data-i18n-opt="植物">植物</option><option value="floral" data-i18n-opt="花卉">花卉</option><option value="minimal" data-i18n-opt="极简">极简</option><option value="destination" data-i18n-opt="目的地">目的地</option><option value="editorial" data-i18n-opt="杂志大字">杂志大字</option><option value="gallery" data-i18n-opt="画廊大图">画廊大图</option></select></div>
@@ -738,7 +759,7 @@ button{color:inherit}
           </div>
         </div>
 
-        <details class="wb-advanced" id="wbAdvanced">
+        <details class="wb-advanced" id="wbAdvanced" data-step="2">
         <summary>高级</summary>
         <div class="control-section">
           <h4>活动流程</h4>
@@ -757,10 +778,10 @@ button{color:inherit}
           <h4>RSVP 与联系</h4>
           <div class="control-grid">
             <div class="control-field full"><label for="wbRsvpMode">RSVP 方式</label><select id="wbRsvpMode"><option value="builtin" data-i18n-opt="内置回复表单（推荐）">内置回复表单（推荐）</option><option value="email" data-i18n-opt="邮件回复">邮件回复</option><option value="link" data-i18n-opt="外部链接">外部链接</option></select></div>
-            <div class="control-field full"><label for="wbRsvpEmail">RSVP 邮箱</label><input id="wbRsvpEmail" type="email" value="wedding@example.com"/></div>
+            <div class="control-field full"><label for="wbRsvpEmail">RSVP 邮箱</label><input id="wbRsvpEmail" type="email" placeholder="可选：收到回复时通知此邮箱"/></div>
             <div class="control-field full"><label for="wbRsvpUrl">外部 RSVP 链接（选择“外部链接”时使用）</label><input id="wbRsvpUrl" placeholder="https://..."/></div>
-            <label class="feature-toggle full" style="grid-column:1/-1"><input id="wbRsvpNotify" type="checkbox" checked/>收到回复时邮件通知 RSVP 邮箱</label>
-            <div class="control-field full"><label for="wbGiftUrl">礼金链接（可选，如 PayPal.me）</label><input id="wbGiftUrl" placeholder="https://paypal.me/..."/></div>
+            <label class="feature-toggle full" style="grid-column:1/-1"><input id="wbRsvpNotify" type="checkbox" checked/>收到回复时邮件通知 RSVP 邮箱（未填写邮箱则不通知）</label>
+            <div class="control-field full"><label for="wbGiftUrl">心意 / 礼金链接（可选，如 PayPal.me）</label><input id="wbGiftUrl" placeholder="https://paypal.me/..."/></div>
             <div class="control-field full"><label for="wbNote">备注</label><textarea id="wbNote">Dress code: Garden formal. Please let us know about dietary requirements in your RSVP.</textarea></div>
           </div>
         </div>
@@ -791,6 +812,13 @@ button{color:inherit}
           <div class="builder-note">生成的网站是独立 HTML。地图默认使用你填写的地图链接；如果未填写，会根据地址生成通用 Google Maps 搜索导航链接。</div>
         </div>
         </details>
+        <div class="control-section" data-step="3">
+          <h4>发布</h4>
+          <ul class="wb-check" id="wbCheck"></ul>
+          <div class="wb-pubstate" id="wbPubState">发布后会得到一个专属链接，宾客可在线回复 RSVP。发布需要登录，回复只有你能在「我的账户」看到。</div>
+          <button type="button" class="wb-dl" id="wbStepDownload">或下载离线 HTML（不收集 RSVP）</button>
+        </div>
+        <div class="wb-next"><button type="button" class="btn" id="wbBack">上一步</button><button type="button" class="btn dark" id="wbNext">下一步</button></div>
       </div>
 
       <div class="builder-preview-wrap">
@@ -885,6 +913,7 @@ button{color:inherit}
 
 <script src="studio-data.js"></script>
 <script src="i18n.js"></script>
+<script src="wedding-qr.js"></script>
 <script>
 const HOME_SCENARIO_ORDER = ["gifts","seasonal","creator","community","corporate","art"];
 const HOME_RECOMMENDED = new Set(["gifts","seasonal"]);
@@ -1462,7 +1491,7 @@ function deriveCustomizedNames(){
       return first.replace(/^设计文件：/,"").trim();
     }
   }
-  return document.getElementById("coupleNames").textContent || "Amelia & Noah";
+  const t=document.getElementById("coupleNames").textContent.trim();return t==="Amelia & Noah"?"":t; // the storefront sample name is not a real couple
 }
 function readFileAsDataURL(file){
   return new Promise((resolve,reject)=>{
@@ -1546,9 +1575,9 @@ editorial:{paper:"#f5f3ee",ink:"#111111",block:"#e2dcd1",seal:"#111111",shape:"0
 gallery:{paper:"#f7f6f2",ink:"#1b1a18",block:"#e6e2da",seal:"ACCENT",shape:"0",nmW:300,nmS:"italic",nmT:"none",nmLs:"0",orn:"line",oc:"#1b1a18",liner:"plain"}
 };
 const WEDDING_INVITE_I18N={
-en:{eyebrow:"Wedding Invitation",scroll:"Scroll to discover",count_title:"Until we say “I do”",count_desc:"We cannot wait to celebrate this day with you.",days:"Days",hours:"Hours",minutes:"Minutes",seconds:"Seconds",schedule:"Wedding schedule",schedule_desc:"A simple guide to the celebration.",join:"Join us here",open_map:"Open map",copy_addr:"Copy address",add_cal:"Add to calendar",share:"Share",moments:"Moments we love",gallery_desc:"Click any photo to view it larger.",gallery_ph:"Upload wedding photos in the editor to replace this placeholder.",rsvp_title:"Will you join us?",rsvp_desc:"Please let us know by replying below.",name:"Your name",guests:"Number of guests",yes:"Joyfully accept",no:"Regretfully decline",dietary:"Dietary note (optional)",send:"Send RSVP",sending:"Sending…",thanks_yes:"Thank you! We can’t wait to celebrate with you.",thanks_no:"Thank you for letting us know — you will be missed.",preview_note:"Preview only — publish the site to collect RSVPs.",err:"Could not send. Please try again.",err_name:"Please enter your name.",err_att:"Please choose yes or no.",open_env:"Tap the seal to open",skip:"Skip",invited:"You are invited",card:"Invitation card",print:"Print",close:"Close",gift:"Wedding gift",copied:"Address copied",families:"Together with their families",request:"request the pleasure of your company",rsvp_link:"RSVP",contact:"E-mail or phone (optional, lets you update later)",updated:"Your RSVP has been updated.",err_contact:"Please check your e-mail or phone number.",err_rate:"Too many attempts. Please try again in a few minutes.",err_offline:"You seem to be offline. Please check your connection and try again.",err_long:"Some text is too long. Please shorten it.",ey_count:"Countdown",ey_day:"The Day",ey_venue:"Venue",ey_story:"Our Story",title:"Wedding Invitation",map:"Map",card_short:"Invitation card",share_short:"Share"},
-zh:{eyebrow:"婚礼邀请",scroll:"向下滑动",count_title:"距离我们说“我愿意”",count_desc:"期待与你一起庆祝这一天。",days:"天",hours:"小时",minutes:"分钟",seconds:"秒",schedule:"婚礼流程",schedule_desc:"当天活动安排。",join:"婚礼地点",open_map:"打开地图",copy_addr:"复制地址",add_cal:"加入日历",share:"分享",moments:"我们的故事",gallery_desc:"点击照片可放大查看。",gallery_ph:"在编辑器中上传婚纱照以替换此占位图。",rsvp_title:"你会来参加吗？",rsvp_desc:"请在下方回复是否出席。",name:"您的姓名",guests:"出席人数",yes:"欣然出席",no:"遗憾缺席",dietary:"饮食需求（可选）",send:"提交回复",sending:"提交中…",thanks_yes:"谢谢！期待与你相见。",thanks_no:"谢谢告知，我们会想念你。",preview_note:"当前为预览，发布网站后即可收集回复。",err:"提交失败，请稍后再试。",err_name:"请填写姓名。",err_att:"请选择是否出席。",open_env:"轻触火漆印打开",skip:"跳过",invited:"诚挚邀请",card:"邀请卡",print:"打印",close:"关闭",gift:"礼金",copied:"地址已复制",families:"携双方家人",request:"诚邀您出席我们的婚礼",rsvp_link:"回复",contact:"邮箱或手机（可选，便于之后修改）",updated:"已更新你的回复。",err_contact:"请检查邮箱或手机号码格式。",err_rate:"提交次数过多，请几分钟后再试。",err_offline:"网络似乎已断开，请检查网络后重试。",err_long:"部分内容过长，请缩短后再提交。",ey_count:"倒计时",ey_day:"当天流程",ey_venue:"地点",ey_story:"我们的故事",title:"婚礼邀请",map:"地图",card_short:"邀请卡",share_short:"分享"},
-de:{eyebrow:"Hochzeitseinladung",scroll:"Nach unten scrollen",count_title:"Bis wir „Ja“ sagen",count_desc:"Wir freuen uns darauf, diesen Tag mit euch zu feiern.",days:"Tage",hours:"Stunden",minutes:"Minuten",seconds:"Sekunden",schedule:"Tagesablauf",schedule_desc:"Ein kurzer Überblick über unseren Hochzeitstag.",join:"Hier feiern wir",open_map:"Karte öffnen",copy_addr:"Adresse kopieren",add_cal:"In Kalender",share:"Teilen",moments:"Unsere Geschichte",gallery_desc:"Klickt auf ein Foto, um es größer anzusehen.",gallery_ph:"Ladet im Editor Hochzeitsfotos hoch, um diesen Platzhalter zu ersetzen.",rsvp_title:"Seid ihr dabei?",rsvp_desc:"Bitte gebt uns unten Bescheid.",name:"Euer Name",guests:"Anzahl Gäste",yes:"Wir kommen gern",no:"Leider nicht",dietary:"Ernährungshinweis (optional)",send:"Antwort senden",sending:"Wird gesendet…",thanks_yes:"Danke! Wir freuen uns auf euch.",thanks_no:"Danke für die Rückmeldung – ihr werdet uns fehlen.",preview_note:"Nur Vorschau – veröffentlicht die Seite, um Antworten zu sammeln.",err:"Senden fehlgeschlagen. Bitte erneut versuchen.",err_name:"Bitte Namen eingeben.",err_att:"Bitte Ja oder Nein wählen.",open_env:"Siegel antippen zum Öffnen",skip:"Überspringen",invited:"Ihr seid eingeladen",card:"Einladungskarte",print:"Drucken",close:"Schließen",gift:"Hochzeitsgeschenk",copied:"Adresse kopiert",families:"Gemeinsam mit unseren Familien",request:"laden wir euch herzlich zu unserer Hochzeit ein",rsvp_link:"Antworten",contact:"E-Mail oder Telefon (optional, für spätere Änderungen)",updated:"Eure Antwort wurde aktualisiert.",err_contact:"Bitte E-Mail oder Telefonnummer prüfen.",err_rate:"Zu viele Versuche. Bitte in ein paar Minuten erneut versuchen.",err_offline:"Keine Internetverbindung. Bitte Verbindung prüfen und erneut senden.",err_long:"Ein Text ist zu lang. Bitte kürzen.",ey_count:"Countdown",ey_day:"Der Tag",ey_venue:"Ort",ey_story:"Unsere Geschichte",title:"Hochzeitseinladung",map:"Karte",card_short:"Einladungskarte",share_short:"Teilen"}
+en:{eyebrow:"Wedding Invitation",scroll:"Scroll to discover",count_title:"Until we say “I do”",count_desc:"We cannot wait to celebrate this day with you.",days:"Days",hours:"Hours",minutes:"Minutes",seconds:"Seconds",schedule:"Wedding schedule",schedule_desc:"A simple guide to the celebration.",join:"Join us here",open_map:"Open map",copy_addr:"Copy address",add_cal:"Add to calendar",share:"Share",moments:"Moments we love",gallery_desc:"Click any photo to view it larger.",gallery_ph:"Upload wedding photos in the editor to replace this placeholder.",rsvp_title:"Will you join us?",rsvp_desc:"Please let us know by replying below.",name:"Your name",guests:"Number of guests",yes:"Joyfully accept",no:"Regretfully decline",dietary:"Dietary note (optional)",send:"Send RSVP",sending:"Sending…",thanks_yes:"Thank you! We can’t wait to celebrate with you.",thanks_no:"Thank you for letting us know — you will be missed.",preview_note:"Preview only — publish the site to collect RSVPs.",err:"Could not send. Please try again.",err_name:"Please enter your name.",err_att:"Please choose yes or no.",open_env:"Tap the seal to open",skip:"Skip",invited:"You are invited",card:"Invitation card",print:"Print",close:"Close",gift:"Gift",copied:"Address copied",families:"Together with their families",request:"request the pleasure of your company",rsvp_link:"RSVP",contact:"E-mail or phone (optional, lets you update later)",updated:"Your RSVP has been updated.",err_contact:"Please check your e-mail or phone number.",err_rate:"Too many attempts. Please try again in a few minutes.",err_offline:"You seem to be offline. Please check your connection and try again.",err_long:"Some text is too long. Please shorten it.",ey_count:"Countdown",ey_day:"The Day",ey_venue:"Venue",ey_story:"Our Story",title:"Wedding Invitation",map:"Map",card_short:"Invitation card",share_short:"Share",gcal:"Google Calendar",apple_map:"Apple Maps",amap:"Amap",google_map:"Google Maps",wechat_hint:"WeChat cannot save calendar files. Tap ··· (top right) and choose “Open in browser”, or use the Google Calendar link.",privacy:"Only the couple can see your reply.",scan:"Scan to open the invitation"},
+zh:{eyebrow:"婚礼邀请",scroll:"向下滑动",count_title:"距离我们说“我愿意”",count_desc:"期待与你一起庆祝这一天。",days:"天",hours:"小时",minutes:"分钟",seconds:"秒",schedule:"婚礼流程",schedule_desc:"当天活动安排。",join:"婚礼地点",open_map:"打开地图",copy_addr:"复制地址",add_cal:"加入日历",share:"分享",moments:"我们的故事",gallery_desc:"点击照片可放大查看。",gallery_ph:"在编辑器中上传婚纱照以替换此占位图。",rsvp_title:"你会来参加吗？",rsvp_desc:"请在下方回复是否出席。",name:"您的姓名",guests:"出席人数",yes:"欣然出席",no:"遗憾缺席",dietary:"饮食需求（可选）",send:"提交回复",sending:"提交中…",thanks_yes:"谢谢！期待与你相见。",thanks_no:"谢谢告知，我们会想念你。",preview_note:"当前为预览，发布网站后即可收集回复。",err:"提交失败，请稍后再试。",err_name:"请填写姓名。",err_att:"请选择是否出席。",open_env:"轻触火漆印打开",skip:"跳过",invited:"诚挚邀请",card:"邀请卡",print:"打印",close:"关闭",gift:"送上心意",copied:"地址已复制",families:"携双方家人",request:"诚邀您出席我们的婚礼",rsvp_link:"回复",contact:"邮箱或手机（可选，便于之后修改）",updated:"已更新你的回复。",err_contact:"请检查邮箱或手机号码格式。",err_rate:"提交次数过多，请几分钟后再试。",err_offline:"网络似乎已断开，请检查网络后重试。",err_long:"部分内容过长，请缩短后再提交。",ey_count:"倒计时",ey_day:"当天流程",ey_venue:"地点",ey_story:"我们的故事",title:"婚礼邀请",map:"地图",card_short:"邀请卡",share_short:"分享",gcal:"Google 日历",apple_map:"Apple 地图",amap:"高德地图",google_map:"Google 地图",wechat_hint:"微信内无法保存日历文件。请点击右上角“···”选择“在浏览器打开”后再加入日历。",privacy:"你的回复只有新人可见。",scan:"扫码打开电子请柬"},
+de:{eyebrow:"Hochzeitseinladung",scroll:"Nach unten scrollen",count_title:"Bis wir „Ja“ sagen",count_desc:"Wir freuen uns darauf, diesen Tag mit euch zu feiern.",days:"Tage",hours:"Stunden",minutes:"Minuten",seconds:"Sekunden",schedule:"Tagesablauf",schedule_desc:"Ein kurzer Überblick über unseren Hochzeitstag.",join:"Hier feiern wir",open_map:"Karte öffnen",copy_addr:"Adresse kopieren",add_cal:"In Kalender",share:"Teilen",moments:"Unsere Geschichte",gallery_desc:"Klickt auf ein Foto, um es größer anzusehen.",gallery_ph:"Ladet im Editor Hochzeitsfotos hoch, um diesen Platzhalter zu ersetzen.",rsvp_title:"Seid ihr dabei?",rsvp_desc:"Bitte gebt uns unten Bescheid.",name:"Euer Name",guests:"Anzahl Gäste",yes:"Wir kommen gern",no:"Leider nicht",dietary:"Ernährungshinweis (optional)",send:"Antwort senden",sending:"Wird gesendet…",thanks_yes:"Danke! Wir freuen uns auf euch.",thanks_no:"Danke für die Rückmeldung – ihr werdet uns fehlen.",preview_note:"Nur Vorschau – veröffentlicht die Seite, um Antworten zu sammeln.",err:"Senden fehlgeschlagen. Bitte erneut versuchen.",err_name:"Bitte Namen eingeben.",err_att:"Bitte Ja oder Nein wählen.",open_env:"Siegel antippen zum Öffnen",skip:"Überspringen",invited:"Ihr seid eingeladen",card:"Einladungskarte",print:"Drucken",close:"Schließen",gift:"Geschenk",copied:"Adresse kopiert",families:"Gemeinsam mit unseren Familien",request:"laden wir euch herzlich zu unserer Hochzeit ein",rsvp_link:"Antworten",contact:"E-Mail oder Telefon (optional, für spätere Änderungen)",updated:"Eure Antwort wurde aktualisiert.",err_contact:"Bitte E-Mail oder Telefonnummer prüfen.",err_rate:"Zu viele Versuche. Bitte in ein paar Minuten erneut versuchen.",err_offline:"Keine Internetverbindung. Bitte Verbindung prüfen und erneut senden.",err_long:"Ein Text ist zu lang. Bitte kürzen.",ey_count:"Countdown",ey_day:"Der Tag",ey_venue:"Ort",ey_story:"Unsere Geschichte",title:"Hochzeitseinladung",map:"Karte",card_short:"Einladungskarte",share_short:"Teilen",gcal:"Google Kalender",apple_map:"Apple Karten",amap:"Amap",google_map:"Google Maps",wechat_hint:"In WeChat können keine Kalenderdateien gespeichert werden. Tippt oben rechts auf ··· und wählt „Im Browser öffnen“ oder nutzt den Google-Kalender-Link.",privacy:"Eure Antwort sehen nur wir als Brautpaar.",scan:"Scannen, um die Einladung zu öffnen"}
 };
 function weddingInitials(names){const parts=String(names||"").split(/\s*[&+和]\s*|\s+(?:and|und)\s+/i).filter(Boolean);return (parts.slice(0,2).map(x=>[...x.trim()][0]||"").join("&")||"♥").toUpperCase()}
 function buildWeddingSite(p,opts={}){
@@ -1559,7 +1588,12 @@ function buildWeddingSite(p,opts={}){
   const dateIso=(p.date||"2027-06-18")+"T"+(p.time||"15:00")+":00";
   const dateObj=new Date(dateIso);
   const readable=isNaN(dateObj)?e(p.date):dateObj.toLocaleDateString(lang==="zh"?"zh-CN":lang==="de"?"de-CH":"en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
-  const mapUrl=p.mapUrl || ("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(p.address||p.venue));
+  const mapQ=encodeURIComponent([p.venue,p.address].filter(Boolean).join(", ")||p.address||p.venue||"");
+  const mapLinks={google:"https://www.google.com/maps/search/?api=1&query="+mapQ,apple:"https://maps.apple.com/?q="+mapQ,amap:"https://uri.amap.com/search?keyword="+mapQ+"&src=wedding-site&callnative=1"};
+  // Chinese guests: Amap first (Google Maps is unreachable in mainland China); a custom link always wins.
+  const mapUrl=p.mapUrl || (lang==="zh"?mapLinks.amap:mapLinks.google);
+  const mapAlt=[["google","google_map"],["apple","apple_map"],["amap","amap"]].filter(([k])=>p.mapUrl||mapLinks[k]!==mapUrl);
+  const gcalUrl="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent((p.names||"")+" — "+WEDDING_INVITE_I18N[lang].title)+"&dates="+(p.date||"2027-06-18").replaceAll("-","")+"T"+(p.time||"15:00").replace(":","")+"00/"+(p.date||"2027-06-18").replaceAll("-","")+"T235900&location="+mapQ;
   const gallery=p.gallery||[];
   const heroImg=p.heroPhoto||(layout==="gallery"?gallery[0]||"":"");
   const heroStyle=heroImg?`linear-gradient(180deg,rgba(18,16,14,.10) 0%,rgba(18,16,14,.28) 40%,rgba(18,16,14,.70) 100%),url("${heroImg}")`:"";
@@ -1591,7 +1625,7 @@ function buildWeddingSite(p,opts={}){
 <input id="rDiet" name="dietary" maxlength="300" placeholder="${e(WEDDING_INVITE_I18N[lang].dietary)}" data-wi-placeholder="dietary"/>
 <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"/>
 <div class="rsvp-actions"><button class="rsvp-btn" id="rSend" type="submit">${W("send")}</button>${giftUrl?`<a class="rsvp-btn ghost" href="${e(giftUrl)}" target="_blank" rel="noopener">${W("gift")}</a>`:""}</div>
-<p class="rsvp-msg" id="rMsg" role="status" aria-live="polite"></p></form>`;
+<p class="rsvp-msg" id="rMsg" role="status" aria-live="polite"></p><p class="privacy">${W("privacy")}</p></form>`;
   return `<!doctype html>
 <html lang="${lang==="zh"?"zh-CN":lang}">
 <head>
@@ -1600,7 +1634,7 @@ function buildWeddingSite(p,opts={}){
 <meta name="description" content="${e(desc)}"/>
 <meta property="og:type" content="website"/><meta property="og:title" content="${e(p.names)} — ${e(WEDDING_INVITE_I18N[lang].title)}"/><meta property="og:description" content="${e(desc)}"/>
 <meta property="og:url" content="__POD_PAGE_URL__"/><meta property="og:image" content="__POD_OG_IMAGE__"/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/>
-<meta name="twitter:card" content="summary_large_image"/><meta name="theme-color" content="${accent}"/>
+<meta name="robots" content="noindex,nofollow"/><meta name="twitter:card" content="summary_large_image"/><meta name="theme-color" content="${accent}"/>
 <style>
 @font-face{font-family:"WB Serif";src:url(/fonts/cormorant-garamond-latin-var.woff2) format("woff2");font-weight:300 700;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD}
 @font-face{font-family:"WB Serif";src:url(/fonts/cormorant-garamond-italic-latin-var.woff2) format("woff2");font-weight:300 700;font-style:italic;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD}
@@ -1619,7 +1653,7 @@ a{color:inherit}
 .section{padding:var(--gap) 7vw;max-width:1180px;margin:auto}.section-title{text-align:center}.section-title small{color:var(--muted)}.section-title small:after{content:"";display:block;width:64px;height:28px;margin:12px auto 0;background:var(--orn) center/contain no-repeat}.section-title h2{font-family:var(--serif);font-size:clamp(38px,5vw,58px);font-weight:300;margin:10px 0 10px}.section-title p{color:var(--muted);line-height:1.6;max-width:620px;margin:0 auto;font-style:italic;font-size:18px}
 .countdown{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:34px auto 0;max-width:760px;border-top:var(--hair) solid var(--line);border-bottom:var(--hair) solid var(--line)}.count{border:0;border-left:var(--hair) solid var(--line);background:none;padding:24px 8px;text-align:center}.count:first-child{border-left:0}.count b{font:300 46px var(--serif);display:block}.count span{display:block;color:var(--muted);margin-top:6px}
 .timeline{display:grid;gap:0;margin:30px auto 0;max-width:760px;border-top:var(--hair) solid var(--line)}.event{display:grid;grid-template-columns:110px 1fr;gap:20px;padding:20px 0;border-bottom:var(--hair) solid var(--line)}.event time{color:var(--ink);padding-top:6px}.event b{font:400 22px var(--serif)}.event p{margin:4px 0 0;color:var(--muted);font-size:16px;font-style:italic;line-height:1.5}
-.venue-card{margin-top:30px;border-radius:var(--radius);overflow:hidden;display:grid;grid-template-columns:1.05fr .95fr;min-height:350px;border:var(--hair) solid var(--line);background:transparent;box-shadow:none}.map-art{background:var(--block);position:relative;overflow:hidden}.map-art:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(32deg,transparent 0 35px,color-mix(in srgb,var(--ink) 14%,transparent) 35px 36px),repeating-linear-gradient(112deg,transparent 0 48px,color-mix(in srgb,var(--ink) 9%,transparent) 48px 49px)}.map-pin{position:absolute;left:52%;top:48%;width:22px;height:22px;border:var(--hair) solid var(--ink);background:var(--paper);border-radius:50% 50% 50% 0;transform:rotate(-45deg)}.venue-info{padding:36px;display:flex;flex-direction:column;justify-content:center}.venue-info h3{font:300 34px var(--serif);margin:0 0 6px}.venue-info p{font-size:17px;font-style:italic;line-height:1.5;color:var(--muted);margin:0}.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}.tool{border:var(--hair) solid var(--ink);background:transparent;border-radius:var(--radius);padding:10px 14px;text-decoration:none;cursor:pointer;color:inherit}
+.venue-card{margin-top:30px;border-radius:var(--radius);overflow:hidden;display:grid;grid-template-columns:1.05fr .95fr;min-height:350px;border:var(--hair) solid var(--line);background:transparent;box-shadow:none}.map-art{background:var(--block);position:relative;overflow:hidden}.map-art:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(32deg,transparent 0 35px,color-mix(in srgb,var(--ink) 14%,transparent) 35px 36px),repeating-linear-gradient(112deg,transparent 0 48px,color-mix(in srgb,var(--ink) 9%,transparent) 48px 49px)}.map-pin{position:absolute;left:52%;top:48%;width:22px;height:22px;border:var(--hair) solid var(--ink);background:var(--paper);border-radius:50% 50% 50% 0;transform:rotate(-45deg)}.venue-info{padding:36px;display:flex;flex-direction:column;justify-content:center}.venue-info h3{font:300 34px var(--serif);margin:0 0 6px}.venue-info p{font-size:17px;font-style:italic;line-height:1.5;color:var(--muted);margin:0}.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}.tool.alt{border-color:var(--line)}.wx-hint{margin-top:14px;font-family:var(--sans);font-size:12px;line-height:1.5;color:var(--ink);border:var(--hair) solid var(--line);padding:10px 12px;border-radius:var(--radius)}.rsvp .privacy{font-size:13px!important;font-style:normal!important;margin-top:14px!important}.icard .qr{width:22mm;height:22mm;margin:10px auto 0}.icard .qr svg{width:100%;height:100%;display:block}.icard .qr:empty{display:none}.tool{border:var(--hair) solid var(--ink);background:transparent;border-radius:var(--radius);padding:10px 14px;text-decoration:none;cursor:pointer;color:inherit}
 .gallery{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:30px}.gallery-item{border:0;padding:0;background:none;cursor:zoom-in;border-radius:var(--radius);overflow:hidden;min-height:250px}.gallery-item:first-child{grid-row:span 2;min-height:510px}.gallery-item img{width:100%;height:100%;object-fit:cover;display:block}.gallery-placeholder{grid-column:1/-1;min-height:300px;border:var(--hair) solid var(--line);border-radius:var(--radius);display:grid;place-items:center;color:var(--muted);font-style:italic;font-size:17px;background:var(--block);padding:20px;text-align:center}
 .rsvp{background:transparent;color:var(--ink);border:var(--hair) solid var(--line);border-radius:var(--radius);margin:var(--gap) auto;max-width:860px;padding:60px 54px;text-align:center;box-shadow:none}.rsvp h2{font:300 clamp(38px,5vw,58px) var(--serif);margin:0 0 8px}.rsvp p{color:var(--muted);font-size:18px;font-style:italic;line-height:1.5}
 .rsvp-form{display:grid;grid-template-columns:1fr 1fr;gap:22px 28px;margin-top:30px;text-align:left}.rsvp-form #rName,.rsvp-form #rContact,.rsvp-form #rDiet,.rsvp-form .seg{grid-column:1/-1}.rsvp input,.rsvp select{font:inherit;font-size:18px;border:0;border-bottom:var(--hair) solid var(--ink);background:transparent;color:var(--ink);border-radius:0;padding:10px 2px;outline:none;width:100%}.rsvp input::placeholder{color:var(--muted);font-style:italic}.rsvp input:focus,.rsvp select:focus{border-bottom-color:var(--accent);border-bottom-width:1.5px}
@@ -1675,7 +1709,7 @@ ${F.countdown?`<section class="section"><div class="section-title"><small>${W("e
 
 ${F.timeline&&schedule.length?`<section class="section"><div class="section-title"><small>${W("ey_day")}</small><h2>${W("schedule")}</h2><p>${W("schedule_desc")}</p></div><div class="timeline">${timelineHtml}</div></section>`:""}
 
-${F.map?`<section class="section"><div class="section-title"><small>${W("ey_venue")}</small><h2>${W("join")}</h2>${p.venue||p.address?`<p>${[p.venue,p.address].filter(Boolean).map(e).join(" · ")}</p>`:""}</div><div class="venue-card"><div class="map-art"><div class="map-pin"></div></div><div class="venue-info">${p.venue?`<h3>${e(p.venue)}</h3>`:""}${p.address?`<p>${e(p.address)}</p>`:""}<div class="tools"><a class="tool" href="${e(mapUrl)}" target="_blank" rel="noopener">${W("open_map")}</a>${F.addressCopy?`<button class="tool" onclick="copyAddress()">${W("copy_addr")}</button>`:""}${F.calendar?`<button class="tool" onclick="downloadICS()">${W("add_cal")}</button>`:""}${F.share?`<button class="tool" onclick="shareSite()">${W("share")}</button>`:""}</div></div></div></section>`:""}
+${F.map?`<section class="section"><div class="section-title"><small>${W("ey_venue")}</small><h2>${W("join")}</h2>${p.venue||p.address?`<p>${[p.venue,p.address].filter(Boolean).map(e).join(" · ")}</p>`:""}</div><div class="venue-card"><div class="map-art"><div class="map-pin"></div></div><div class="venue-info">${p.venue?`<h3>${e(p.venue)}</h3>`:""}${p.address?`<p>${e(p.address)}</p>`:""}<div class="tools"><a class="tool" href="${e(mapUrl)}" target="_blank" rel="noopener">${W("open_map")}</a>${mapAlt.map(([k,t])=>`<a class="tool alt" href="${e(mapLinks[k])}" target="_blank" rel="noopener">${W(t)}</a>`).join("")}${F.addressCopy?`<button class="tool" onclick="copyAddress()">${W("copy_addr")}</button>`:""}${F.calendar?`<button class="tool" onclick="downloadICS()">${W("add_cal")}</button><a class="tool alt" id="gcalLink" href="${e(gcalUrl)}" target="_blank" rel="noopener">${W("gcal")}</a>`:""}${F.share?`<button class="tool" onclick="shareSite()">${W("share")}</button>`:""}</div><p class="wx-hint" id="wxHint" hidden></p></div></div></section>`:""}
 
 ${F.gallery&&(gallery.length||opts.preview)?`<section class="section"><div class="section-title"><small>${W("ey_story")}</small><h2>${W("moments")}</h2><p>${W("gallery_desc")}</p></div><div class="gallery">${galleryHtml}</div></section>`:""}
 
@@ -1689,11 +1723,11 @@ ${F.rsvp?`<section class="rsvp" id="rsvp"><h2>${W("rsvp_title")}</h2><p>${W("rsv
   ${F.card!==false?`<button onclick="openCard()" title="${e(WEDDING_INVITE_I18N[lang].card_short)}" aria-label="${e(WEDDING_INVITE_I18N[lang].card_short)}" data-wi-label="card_short">✉</button>`:""}
   ${F.share?`<button onclick="shareSite()" title="${e(WEDDING_INVITE_I18N[lang].share_short)}" aria-label="${e(WEDDING_INVITE_I18N[lang].share_short)}" data-wi-label="share_short">↗</button>`:""}
 </div>
-${F.card!==false?`<div class="cardview" id="cardView" onclick="if(event.target===this)closeCard()"><div><div class="icard" id="icard"><div class="photo"></div><div class="mono">${e(initials)}</div><small>${W("families")}</small><h3>${e(p.names)}</h3><p class="req">${W("request")}</p><div class="when"><span data-wdate>${e(readable)}</span><br/>${e(p.time)}</div><div class="where">${e(p.venue)}</div><div class="addr">${e(p.address)}</div><div class="url" id="cardUrl"></div></div><div class="card-actions"><button onclick="printCard()">${W("print")}</button><button onclick="closeCard()">${W("close")}</button></div></div></div>`:""}
+${F.card!==false?`<div class="cardview" id="cardView" onclick="if(event.target===this)closeCard()"><div><div class="icard" id="icard"><div class="photo"></div><div class="mono">${e(initials)}</div><small>${W("families")}</small><h3>${e(p.names)}</h3><p class="req">${W("request")}</p><div class="when"><span data-wdate>${e(readable)}</span><br/>${e(p.time)}</div><div class="where">${e(p.venue)}</div><div class="addr">${e(p.address)}</div><div class="url" id="cardUrl"></div><div class="qr" id="cardQr" role="img" aria-label="${e(WEDDING_INVITE_I18N[lang].scan)}"></div></div><div class="card-actions"><button onclick="printCard()">${W("print")}</button><button onclick="closeCard()">${W("close")}</button></div></div></div>`:""}
 <div class="lightbox" id="photoLightbox" onclick="this.classList.remove('open')"><img id="photoLightboxImage" alt="Wedding photo"/></div>
 <script>
 const M=${js(WEDDING_INVITE_I18N)},DATE_ISO=${js(dateIso)},INVITE_ID="__POD_INVITE_ID__",API_BASE="__POD_API_BASE__",LIVE=/^[a-f0-9]{12}$/.test(INVITE_ID),PREVIEW=${opts.preview?"true":"false"};
-const RSVP_MODE=${js(rsvpMode)},RSVP_EMAIL=${js(p.rsvpEmail||"")},RSVP_URL=${js(p.rsvpUrl||"")};
+${F.card!==false&&typeof podQr==="function"?podQr.toString()+"\n"+podQrSvg.toString()+"\n":""}const RSVP_MODE=${js(rsvpMode)},RSVP_EMAIL=${js(p.rsvpEmail||"")},RSVP_URL=${js(p.rsvpUrl||"")};
 let L=${js(lang)};const NAMES=${js(p.names||"")};
 function tt(k){return (M[L]&&M[L][k])||M.en[k]||k}
 function setInviteLang(l){if(!M[l])l="en";L=l;document.documentElement.lang=l==="zh"?"zh-CN":l;document.title=NAMES+" — "+M[l].title;document.querySelectorAll("[data-wi]").forEach(e=>{const k=e.dataset.wi;if(M[l][k])e.textContent=M[l][k]});document.querySelectorAll("[data-wi-placeholder]").forEach(e=>{const k=e.dataset.wiPlaceholder;if(M[l][k])e.placeholder=M[l][k]});const d=new Date(DATE_ISO);if(!isNaN(d)){const s=d.toLocaleDateString(l==="zh"?"zh-CN":l==="de"?"de-CH":"en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});document.querySelectorAll("[data-wdate]").forEach(e=>e.textContent=s)}document.querySelectorAll("[data-wi-label]").forEach(e=>{const k=e.dataset.wiLabel;if(M[l][k]){e.title=M[l][k];e.setAttribute("aria-label",M[l][k])}});document.querySelectorAll("[data-invite-lang]").forEach(b=>b.classList.toggle("active",b.dataset.inviteLang===l))}
@@ -1704,17 +1738,22 @@ const env=document.getElementById("env");
 if(env){const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;document.body.style.overflow="hidden";
  const done=()=>{env.classList.add("gone");document.body.style.overflow="";setTimeout(()=>env.remove(),reduce?0:600)};
  const open=()=>{if(env.classList.contains("open"))return;env.classList.add("open");setTimeout(done,reduce?0:1250)};
- if(Q.has("open")||location.hash==="#open"){env.remove();document.body.style.overflow=""}
+ if(Q.has("open")||Q.has("card")||location.hash==="#open"){env.remove();document.body.style.overflow=""} // ?card=1 (print link) goes straight to the card
  else{document.getElementById("envSeal").onclick=open;document.getElementById("envSkip").onclick=done;addEventListener("keydown",ev=>{if(ev.key==="Escape"&&document.contains(env))done()});document.getElementById("envSeal").focus({preventScroll:true})}}
 const gallery=${js(gallery)};
 function openLightbox(i){if(!gallery[i])return;document.getElementById("photoLightboxImage").src=gallery[i];document.getElementById("photoLightbox").classList.add("open")}
 function copyAddress(){navigator.clipboard?.writeText(${js(p.address||"")}).catch(()=>{});alert(tt("copied"))}
 function shareSite(){if(navigator.share)navigator.share({title:${js((p.names||"")+" Wedding")},url:location.href}).catch(()=>{});else navigator.clipboard?.writeText(location.href).catch(()=>{})}
 function downloadICS(){
-  const ics="BEGIN:VCALENDAR\\r\\nVERSION:2.0\\r\\nBEGIN:VEVENT\\r\\nDTSTART:${calendarStart}\\r\\nDTEND:${calendarEnd}\\r\\nSUMMARY:"+${js(String(p.names||"").replace(/\n/g," ")+" Wedding")}+"\\r\\nLOCATION:"+${js(String(p.address||"").replace(/\n/g," "))}+"\\r\\nEND:VEVENT\\r\\nEND:VCALENDAR";
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));a.download="wedding.ics";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
+  // WeChat's in-app browser cannot save .ics files: explain how to open in the system browser instead.
+  if(/MicroMessenger/i.test(navigator.userAgent)){const h=document.getElementById("wxHint");if(h){h.hidden=false;h.textContent=tt("wechat_hint")}else alert(tt("wechat_hint"));return}
+  const esc=s=>String(s||"").replace(/\\\\/g,"\\\\\\\\").replace(/[,;]/g,m=>"\\\\"+m).replace(/\\r?\\n/g," ");
+  const stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\\.\\d+/,"");
+  const url=LIVE?location.href.split(/[?#]/)[0]:"";
+  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//POD Studio//Wedding Site//EN","CALSCALE:GREGORIAN","BEGIN:VEVENT","UID:"+(LIVE?INVITE_ID:"wedding-"+DATE_ISO.replace(/\\D/g,""))+"@wedding-site","DTSTAMP:"+stamp,"DTSTART:${calendarStart}","DTEND:${calendarEnd}","SUMMARY:"+esc(NAMES+" — "+tt("title")),"LOCATION:"+esc(${js([p.venue,p.address].filter(Boolean).join(", "))}),url?"URL:"+url:"",url?"DESCRIPTION:"+esc(url):"","END:VEVENT","END:VCALENDAR"].filter(Boolean).join("\\r\\n")+"\\r\\n";
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar;charset=utf-8"}));a.download="wedding.ics";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500)
 }
-function openCard(){const c=document.getElementById("cardView");if(!c)return;const u=document.getElementById("cardUrl");if(u)u.textContent=LIVE?location.href.split(/[?#]/)[0]:"";c.classList.add("open")}
+function openCard(){const c=document.getElementById("cardView");if(!c)return;const u=document.getElementById("cardUrl"),link=LIVE?location.href.split(/[?#]/)[0]:"";if(u)u.textContent=link;const q=document.getElementById("cardQr");if(q&&link&&!q.innerHTML&&typeof podQrSvg==="function"){try{q.innerHTML=podQrSvg(link,getComputedStyle(document.body).color)}catch(e){}}c.classList.add("open")}
 function closeCard(){document.getElementById("cardView")?.classList.remove("open")}
 function printCard(){document.body.classList.add("printing");setTimeout(()=>{window.print();document.body.classList.remove("printing")},50)}
 if(Q.has("card"))openCard();
@@ -1798,7 +1837,7 @@ const WB_SAMPLE_PHOTOS={classic:"gifts.jpg",floral:"gifts.jpg",editorial:"gifts.
 const wbSampleUrl=layout=>location.origin+"/assets/scenes/"+(WB_SAMPLE_PHOTOS[layout]||"gifts.jpg");
 let wbPreviewEnvelopeShown=false;
 function refreshWeddingPreview(ev){
-  const p=weddingProfile();
+  const p=wbWithExamples(weddingProfile());
   // Show the envelope intro on the first preview (or when its toggle changes); later edits jump straight to the site.
   const showEnv=!wbPreviewEnvelopeShown||ev?.target?.id==="ftEnvelope";wbPreviewEnvelopeShown=true;
   if(!p.heroPhoto&&document.getElementById("wbSamplePhoto")?.checked)p.heroPhoto=wbSampleUrl(p.layout);
@@ -1815,58 +1854,113 @@ const WB_SAMPLES={
  de:{intro:"Voller Freude laden wir euch ein, unsere Hochzeit mit uns zu feiern.",note:"Dresscode: Garden formal. Bitte teilt uns Ernährungswünsche in eurer Antwort mit.",schedule:"14:30 | Ankunft der Gäste | Begrüßungsdrink & Fotos\n15:30 | Trauung | Eheversprechen und Ringtausch\n16:30 | Apéro | Drinks, Musik und Gartenfotos\n18:00 | Abendessen | Essen und Reden\n20:00 | Eröffnungstanz | Die Tanzfläche ist eröffnet\n22:30 | Ausklang | Danke, dass ihr mit uns feiert"}};
 function wbApplySampleLang(){const l=document.getElementById("wbLang").value,t=WB_SAMPLES[l];if(!t)return;
  for(const [k,id] of [["intro","wbIntro"],["note","wbNote"],["schedule","wbSchedule"]]){const el=document.getElementById(id),v=el.value.trim();if(!v||Object.values(WB_SAMPLES).some(x=>x[k].trim()===v))el.value=t[k]}}
-function openWeddingBuilder(){
+function openWeddingBuilder(opts={}){
   document.getElementById("siteBuilder").classList.add("open");
   localizeBuilderOptions();wbPreviewEnvelopeShown=false;
   document.getElementById("builderSceneLabel").textContent=sceneData[sceneKey]?.name||sceneKey;
   document.getElementById("wbNames").value=deriveCustomizedNames();
   const c=sceneData[sceneKey]?.colors?.[3]||"#9a6d57";
   document.getElementById("wbAccent").value=/^#[0-9a-fA-F]{6}$/.test(c)?c:"#9a6d57";
-  const saved=localStorage.getItem("podWeddingSiteDraft");
-  if(saved){
-    try{
-      const s=JSON.parse(saved);
-      ["names","date","time","venue","address","mapUrl","intro","rsvpEmail","rsvpUrl","note","accent","density","heroAlign","radius","layout","lang","rsvpMode","giftUrl"].forEach(k=>{
-        const el=document.getElementById("wb"+k.charAt(0).toUpperCase()+k.slice(1));
-        if(el && s[k]!=null) el.value=s[k];
-      });
-      if(Array.isArray(s.schedule)) document.getElementById("wbSchedule").value=s.schedule.map(x=>`${x.time} | ${x.title} | ${x.desc}`).join("\n");
-    }catch(e){}
-  }
+  const saved=opts.skipDraft?null:localStorage.getItem("podWeddingSiteDraft");
+  if(saved){try{const d=JSON.parse(saved);wbApplyProfile(d);if(/^[a-f0-9]{12}$/.test(d.inviteId||"")){wbInviteId=d.inviteId;wbInviteUrl=d.inviteUrl||"/generated/"+d.inviteId+".html"}}catch(e){}}
+  wbGo(1);wbRenderCheck();
   refreshWeddingPreview();
 }
-document.getElementById("weddingSiteBtn").onclick=openWeddingBuilder;
+document.getElementById("weddingSiteBtn").onclick=()=>openWeddingBuilder();
 document.getElementById("builderClose").onclick=()=>document.getElementById("siteBuilder").classList.remove("open");
 document.getElementById("builderRefresh").onclick=refreshWeddingPreview;
-document.getElementById("builderSaveDraft").onclick=()=>{
-  const p=weddingProfile();
-  const draft={...p,heroPhoto:"",gallery:[]};
-  localStorage.setItem("podWeddingSiteDraft",JSON.stringify(draft));
-  showToast("婚礼网站草稿已保存在浏览器");
-};
+document.getElementById("builderSaveDraft").onclick=()=>{wbSaveDraft();showToast("婚礼网站草稿已保存在浏览器")};
 document.getElementById("builderDownload").onclick=()=>{
   const p=weddingProfile();const html=wbStripPlaceholders(buildWeddingSite(p));
   const blob=new Blob([html],{type:"text/html;charset=utf-8"});const a=document.createElement("a");
   const safe=(p.names||"wedding").replace(/[^a-zA-Z0-9\u4e00-\u9fff]+/g,"_");
   a.href=URL.createObjectURL(blob);a.download=safe+"_wedding_invitation.html";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
 };
-document.getElementById("builderPublish").onclick=async()=>{
-  // Open the tab synchronously (inside the click) so mobile Safari does not block it; navigate it once the link exists.
-  const tab=window.open("about:blank","_blank");
-  const p=weddingProfile();const html=buildWeddingSite(p);
-  let og_image="";try{og_image=await renderWeddingShareCard(p)}catch(e){}
+// ---- Publish: login required, stable URL (update in place), success card with share + QR ----
+let wbInviteId="",wbInviteUrl="";
+const wbT=x=>window.WeddingI18n?.t?.(x)||x; // builder UI language (zh/en/de)
+const WB_EXAMPLES={names:"Amelia & Noah",venue:"The Garden House",address:"Münsterhof 8, 8001 Zürich",date:"2027-06-18"};
+// Preview only: empty key fields show grey example values so the design never looks broken; publishing uses real values.
+function wbWithExamples(p){const q={...p};for(const k of Object.keys(WB_EXAMPLES))if(!q[k])q[k]=WB_EXAMPLES[k];return q}
+const WB_REQUIRED=[["wbNames","新人姓名"],["wbDate","婚礼日期"],["wbVenue","场地名称"]];
+function wbMissing(){return WB_REQUIRED.filter(([id])=>!document.getElementById(id).value.trim())}
+function wbRenderCheck(){
+  const miss=new Set(wbMissing().map(x=>x[0]));const li=WB_REQUIRED.map(([id,t])=>`<li class="${miss.has(id)?"miss":""}" data-fix="${id}">${wbT(t)}${miss.has(id)?wbT("（必填）"):""}</li>`);
+  li.push(`<li class="${wbHeroData?"":"miss opt"}" data-fix="wbHeroPhoto">${wbHeroData?wbT("主婚纱照"):wbT("主婚纱照（可选，建议上传）")}</li>`);
+  document.getElementById("wbCheck").innerHTML=li.join("");
+  document.getElementById("wbPubState").innerHTML=wbInviteId?`${wbT("已发布：")}<a href="${escapeSiteText(wbInviteUrl)}" target="_blank" rel="noopener">${escapeSiteText(location.origin+wbInviteUrl)}</a><br/>${wbT("再次发布会更新同一个链接，已收到的回复会保留。")}`:wbT("发布后会得到一个专属链接，宾客可在线回复 RSVP。发布需要登录，回复只有你能在「我的账户」看到。");
+  document.getElementById("builderPublish").textContent=wbInviteId?wbT("更新网站"):wbT("发布网站");
+  wbStepBtn();
+}
+function wbGo(n){
+  n=Math.max(1,Math.min(3,n));const c=document.getElementById("wbControls");c.dataset.cur=n;c.scrollTop=0;
+  document.querySelectorAll(".wb-steps [data-go]").forEach(b=>{const k=+b.dataset.go;b.classList.toggle("on",k===n);b.classList.toggle("done",k<n);k===n?b.setAttribute("aria-current","step"):b.removeAttribute("aria-current")});
+  if(n===3)wbRenderCheck();wbStepBtn();
+}
+function wbStepBtn(){const n=+document.getElementById("wbControls").dataset.cur;document.getElementById("wbNext").textContent=n<3?wbT("下一步"):wbInviteId?wbT("更新网站"):wbT("发布网站")}
+document.querySelectorAll(".wb-steps [data-go]").forEach(b=>b.onclick=()=>wbGo(+b.dataset.go));
+document.getElementById("wbBack").onclick=()=>wbGo(+document.getElementById("wbControls").dataset.cur-1);
+document.getElementById("wbNext").onclick=()=>{const n=+document.getElementById("wbControls").dataset.cur;if(n<3)wbGo(n+1);else wbPublish()};
+document.getElementById("wbCheck").onclick=e=>{const id=e.target.closest("[data-fix]")?.dataset.fix;if(!id)return;wbGo(id==="wbHeroPhoto"?2:1);setTimeout(()=>document.getElementById(id).focus(),50)};
+document.getElementById("wbStepDownload").onclick=()=>document.getElementById("builderDownload").click();
+WB_REQUIRED.forEach(([id])=>document.getElementById(id).addEventListener("input",e=>e.target.classList.remove("wb-invalid")));
+function wbSaveDraft(){const p=weddingProfile();localStorage.setItem("podWeddingSiteDraft",JSON.stringify({...p,heroPhoto:/^https?:/.test(p.heroPhoto)?p.heroPhoto:"",gallery:(p.gallery||[]).filter(x=>/^https?:/.test(x)),inviteId:wbInviteId,inviteUrl:wbInviteUrl}))}
+async function wbSend(p,html,og_image){
+  const url=wbInviteId?"/api/invitations?id="+encodeURIComponent(wbInviteId):"/api/invitations";
+  return fetch(url,{method:wbInviteId?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({profile:p,html,og_image})});
+}
+async function wbPublish(){
+  const miss=wbMissing();
+  if(miss.length){wbGo(1);miss.forEach(([id])=>document.getElementById(id).classList.add("wb-invalid"));document.getElementById(miss[0][0]).focus();showToast(wbT("请先填写：")+miss.map(x=>wbT(x[1])).join(", "));return}
+  if(location.protocol==="file:"||!window.PODAuth){showToast(wbT("发布需要启动项目服务端；也可以先下载 HTML"));return}
+  // Sign in / register first (the auth sheet resolves after login), then continue publishing automatically.
+  try{await PODAuth.require()}catch(e){showToast(wbT("登录后才能发布网站，回复会保存在你的账户里"));return}
+  const btns=[document.getElementById("builderPublish"),document.getElementById("wbNext")];btns.forEach(b=>{b.disabled=true});const label=btns[0].textContent;btns[0].textContent=wbT("发布中…");
   try{
-    const r=await fetch("/api/invitations",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({profile:p,html,og_image})});
+    const p=weddingProfile();const html=buildWeddingSite(p);
+    let og_image="";try{og_image=await renderWeddingShareCard(p)}catch(e){}
+    let r=await wbSend(p,html,og_image);
+    if(r.status===401){await PODAuth.require();r=await wbSend(p,html,og_image)}
+    if(r.status===404&&wbInviteId){wbInviteId="";wbInviteUrl="";r=await wbSend(p,html,og_image)} // site no longer ours/deleted → publish a new one
     if(!r.ok){const er=new Error("http");er.status=r.status;throw er}
     const data=await r.json();
-    showToast("已生成专属链接："+data.url);
-    navigator.clipboard?.writeText(location.origin+data.url).catch(()=>{});
-    if(tab&&!tab.closed)tab.location.href=data.url;else window.open(data.url,"_blank");
+    wbInviteId=data.id;wbInviteUrl=data.url;wbSaveDraft();wbShowSuccess(data);wbRenderCheck();
   }catch(e){
-    tab?.close();
-    showToast(e.status===429?"发布太频繁，请稍后再试（每小时有次数限制）":e.status===413?"照片总大小超出上限，请减少相册图片后再发布":e.status?"发布失败（"+e.status+"），请稍后重试":"无法连接服务端：请启动项目服务端后使用“保存为专属链接”");
-  }
-};
+    showToast(e.status===429?wbT("发布太频繁，请稍后再试（每小时有次数限制）"):e.status===413?wbT("照片总大小超出上限，请减少相册图片后再发布"):e.status?"发布失败（"+e.status+"），请稍后重试":e.message==="auth_cancelled"?wbT("登录后才能发布网站"):wbT("无法连接服务端，请稍后重试；也可以先下载 HTML"));
+  }finally{btns.forEach(b=>{b.disabled=false});btns[0].textContent=wbInviteId?wbT("更新网站"):wbT("发布网站");wbStepBtn()}
+}
+function wbShowSuccess(data){
+  const full=location.origin+data.url,names=document.getElementById("wbNames").value.trim();
+  document.getElementById("wbSuccessTitle").textContent=data.updated?wbT("网站已更新"):wbT("网站已发布");
+  document.getElementById("wbSuccessSub").textContent=data.updated?wbT("链接保持不变，宾客刷新即可看到新内容，已收到的回复都在。"):wbT("把链接发给宾客吧。之后修改再发布，链接保持不变。");
+  document.getElementById("wbSuccessUrl").value=full;
+  document.getElementById("wbWa").href="https://wa.me/?text="+encodeURIComponent(names+" ♥ "+full);
+  document.getElementById("wbOpen").href=data.url;
+  try{document.getElementById("wbQr").innerHTML=podQrSvg(full)}catch(e){document.getElementById("wbQr").textContent=""}
+  document.getElementById("wbSuccess").hidden=false;document.getElementById("wbCopy").focus();
+}
+document.getElementById("wbCopy").onclick=async()=>{const i=document.getElementById("wbSuccessUrl");try{await navigator.clipboard.writeText(i.value);document.getElementById("wbCopy").textContent=wbT("已复制 ✓")}catch{i.select();document.execCommand?.("copy")}setTimeout(()=>document.getElementById("wbCopy").textContent=wbT("复制链接"),1800)};
+document.getElementById("wbSuccessClose").onclick=()=>{document.getElementById("wbSuccess").hidden=true};
+document.getElementById("wbSuccess").addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("wbSuccess").hidden=true});
+document.getElementById("builderPublish").onclick=wbPublish;
+// Fill the builder from a saved draft or a published site's stored profile (photos as URLs).
+function wbApplyProfile(s){
+  ["names","date","time","venue","address","mapUrl","intro","rsvpEmail","rsvpUrl","note","accent","density","heroAlign","radius","layout","lang","rsvpMode","giftUrl"].forEach(k=>{
+    const el=document.getElementById("wb"+k.charAt(0).toUpperCase()+k.slice(1));if(el&&s[k]!=null)el.value=s[k]});
+  if(Array.isArray(s.schedule))document.getElementById("wbSchedule").value=s.schedule.map(x=>`${x.time} | ${x.title} | ${x.desc}`).join("\n");
+  if(typeof s.rsvpNotify==="boolean")document.getElementById("wbRsvpNotify").checked=s.rsvpNotify;
+  const ft={countdown:"ftCountdown",timeline:"ftTimeline",map:"ftMap",gallery:"ftGallery",rsvp:"ftRsvp",share:"ftShare",calendar:"ftCalendar",addressCopy:"ftAddressCopy",envelope:"ftEnvelope",card:"ftCard"};
+  if(s.features)for(const [k,id] of Object.entries(ft))if(typeof s.features[k]==="boolean")document.getElementById(id).checked=s.features[k];
+  if(typeof s.heroPhoto==="string"&&/^https?:/.test(s.heroPhoto)){wbHeroData=s.heroPhoto;document.getElementById("wbHeroStatus").textContent="已发布的照片"}
+  if(Array.isArray(s.gallery)&&s.gallery.every(x=>/^https?:/.test(x))&&s.gallery.length){wbGalleryData=s.gallery;document.getElementById("wbGalleryStatus").textContent=s.gallery.length+" 张已发布的照片"}
+}
+// Account page "编辑" opens /?edit=<id>: load that site (owner only) and keep updating the same URL.
+async function wbOpenForEdit(id){
+  try{await PODAuth.require();const r=await fetch("/api/invitations/"+encodeURIComponent(id)+"/edit");if(!r.ok)throw new Error(r.status);const d=await r.json();
+    openWeddingBuilder({skipDraft:true});if(d.profile)wbApplyProfile(d.profile);wbInviteId=d.id;wbInviteUrl=d.url;wbRenderCheck();refreshWeddingPreview();showToast("正在编辑已发布的网站，再次发布会更新同一链接");
+  }catch(e){showToast("无法打开这个网站进行编辑")}
+}
+{const ed=new URLSearchParams(location.search).get("edit");if(/^[a-f0-9]{12}$/.test(ed||""))addEventListener("load",()=>wbOpenForEdit(ed))}
 document.getElementById("wbHeroPhoto").onchange=async e=>{
   const f=e.target.files?.[0];if(!f)return;wbHeroData=await wbCompressImage(f,1600);
   document.getElementById("wbHeroStatus").textContent=`${f.name} · ${wbKB(f.size)} → ${wbKB(wbHeroData.length*.75)}`;refreshWeddingPreview();
