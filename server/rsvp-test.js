@@ -52,6 +52,23 @@ try {
   assert.equal(initials("王小明和李华"), "王&李");
   assert.equal(initials("Anna + Luca"), "A&L");
   assert.equal(initials(""), "♥");
+  // Old theme values (drafts / published profiles) map onto the 6-theme system.
+  const norm = new Function(["WEDDING_LAYOUTS", "WB_THEME_MAP", "wbNormTheme"].map(n => indexSrc.match(new RegExp(`^(?:const ${n}=|function ${n}\\().*$`, "m"))[0]).join("\n") + "; return wbNormTheme;")();
+  const M = (layout, extra = {}) => norm({ layout, ...extra });
+  assert.deepEqual(M("classic"), { layout: "letterpress", palette: "", plain: false });
+  assert.deepEqual(M("modern"), { layout: "modern", palette: "", plain: false });
+  assert.deepEqual(M("editorial"), { layout: "modern", palette: "", plain: false });
+  assert.deepEqual(M("minimal"), { layout: "modern", palette: "", plain: true });
+  assert.deepEqual(M("botanical"), { layout: "garden", palette: "green", plain: false });
+  assert.deepEqual(M("olive"), { layout: "garden", palette: "olive", plain: false });
+  assert.deepEqual(M("floral"), { layout: "bloom", palette: "", plain: false });
+  assert.deepEqual(M("watercolor"), { layout: "bloom", palette: "", plain: false });
+  assert.deepEqual(M("destination"), { layout: "postcard", palette: "", plain: false });
+  assert.deepEqual(M("gallery"), { layout: "gallery", palette: "", plain: false });
+  assert.deepEqual(M("garden", { palette: "olive" }), { layout: "garden", palette: "olive", plain: false });
+  assert.deepEqual(M("modern", { plain: true }), { layout: "modern", palette: "", plain: true });
+  assert.deepEqual(M("nonsense"), { layout: "letterpress", palette: "", plain: false });
+  assert.deepEqual(M(undefined), { layout: "letterpress", palette: "", plain: false });
   const i18n = new Function("return " + indexSrc.match(/const WEDDING_INVITE_I18N=(\{[\s\S]*?\n\});/)[1])();
   for (const l of ["en", "zh", "de"]) for (const k of ["err_contact", "err_rate", "err_offline", "err_long", "ey_count", "ey_day", "ey_venue", "ey_story", "title"]) assert.ok(i18n[l][k], `${l}.${k}`);
   result.generator_helpers = "pass";
