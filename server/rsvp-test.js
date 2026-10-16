@@ -32,6 +32,30 @@ try {
   assert.equal((await req(`/generated/${inv.id}-card.png`)).status, 200);
   result.publish_placeholders = "pass";
 
+  // 1b. Publish splits embedded photos into files; missing share image drops og:image tags.
+  const photo = "data:image/jpeg;base64," + Buffer.alloc(3000, 7).toString("base64");
+  const html2 = `<!doctype html><html><head><meta property="og:image" content="__POD_OG_IMAGE__"/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/><meta name="twitter:card" content="summary_large_image"/></head><body><style>.h{background:url("${photo}")}</style><img src="${photo}"/>${"x".repeat(200)}</body></html>`;
+  const inv3 = await (await req("/api/invitations", { method: "POST", cookie, body: { html: html2, profile: { names: "Split" } } })).json();
+  const page3 = await (await req(inv3.url)).text();
+  assert.ok(!page3.includes("base64") && page3.includes(`https://shop.example.com/generated/${inv3.id}-1.jpg`) && !page3.includes(`${inv3.id}-2.`), "deduped external file");
+  assert.ok(!page3.includes("og:image") && page3.includes('content="summary"'), "og:image dropped when no share card");
+  const img = Buffer.from(await (await req(`/generated/${inv3.id}-1.jpg`)).arrayBuffer());
+  assert.equal(img.length, 3000);
+  result.publish_split_images = "pass";
+
+  // 1c. Generator helpers from index.html: initials, guest error strings in all languages.
+  const indexSrc = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const initials = new Function(indexSrc.match(/function weddingInitials\(names\)\{.*\}/)[0] + "; return weddingInitials;")();
+  assert.equal(initials("Maximiliane-Alexandra & Jean-Christophe"), "M&J");
+  assert.equal(initials("Sandra and Fernando"), "S&F");
+  assert.equal(initials("Gundula und Sigmund"), "G&S");
+  assert.equal(initials("王小明和李华"), "王&李");
+  assert.equal(initials("Anna + Luca"), "A&L");
+  assert.equal(initials(""), "♥");
+  const i18n = new Function("return " + indexSrc.match(/const WEDDING_INVITE_I18N=(\{[\s\S]*?\n\});/)[1])();
+  for (const l of ["en", "zh", "de"]) for (const k of ["err_contact", "err_rate", "err_offline", "err_long", "ey_count", "ey_day", "ey_venue", "ey_story", "title"]) assert.ok(i18n[l][k], `${l}.${k}`);
+  result.generator_helpers = "pass";
+
   // 1. Valid RSVP from the sandboxed page (Origin: null, text/plain simple request) → 201 + CORS header despite CORS_ORIGINS
   let r = await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", origin: "null", type: "text/plain", body: JSON.stringify({ name: "  Marco   Rossi ", attending: "yes", party_size: 2, dietary: "Vegetarian" }) });
   assert.equal(r.status, 201);
@@ -95,15 +119,27 @@ try {
   assert.ok(!("tenant_id" in list.rsvps[0]));
   r = await req(`/api/account/invitations/${inv.id}/rsvps.csv`, { cookie });
   assert.match(r.headers.get("content-type"), /text\/csv/);
-  const csv = await r.text();
+  const raw = Buffer.from(await r.arrayBuffer());
+  assert.deepEqual([...raw.subarray(0, 3)], [0xef, 0xbb, 0xbf], "UTF-8 BOM for Excel (raw bytes)");
+  const csv = raw.toString("utf8");
   assert.ok(csv.includes("name,attending,party_size,dietary,contact,created_at,updated_at") && csv.includes("giulia BIANCHI,no,0,Sorry,giulia@example.com") && csv.includes("Marco Rossi,yes,2,Vegetarian"));
   const dash = await (await req("/api/account/dashboard", { cookie })).json();
-  assert.equal(dash.invitations[0].id, inv.id);
+  assert.ok(dash.invitations.some(x => x.id === inv.id));
   result.account_rsvp_list = "pass";
 
-  // 5. Rate limit per IP (RSVP_PER_10_MIN=19; the 19 requests above already counted, so the bucket is exhausted)
-  r = await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", body: { name: "Late", attending: "yes" } });
-  assert.equal(r.status, 429); assert.ok(r.headers.get("retry-after"));
+  // 4b. CSV keeps umlauts / Chinese intact
+  await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", body: { name: "Jürgen Größe 王小明", attending: "yes", dietary: "keine Nüsse；不吃辣" } });
+  const csv2 = Buffer.from(await (await req(`/api/account/invitations/${inv.id}/rsvps.csv`, { cookie })).arrayBuffer()).toString("utf8");
+  assert.ok(csv2.includes("Jürgen Größe 王小明,yes,1,keine Nüsse；不吃辣"));
+  result.csv_bom_utf8 = "pass";
+
+  // 5. Rate limit per invitation + IP (RSVP_PER_10_MIN=19): exhaust this invitation, a second invitation from the same IP still works.
+  let n = 0; do { r = await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", body: { name: "Late " + n, attending: "no" } }); n++; } while (r.status !== 429 && n < 30);
+  assert.equal(r.status, 429); assert.ok(r.headers.get("retry-after")); assert.equal((await r.json()).error, "rate_limited");
+  const inv2 = await (await req("/api/invitations", { method: "POST", cookie, body: { html, profile: { names: "B & C" } } })).json();
+  r = await req(`/api/invitations/${inv2.id}/rsvp`, { method: "POST", origin: "null", type: "text/plain", body: JSON.stringify({ name: "Same Wifi Guest", attending: "yes" }) });
+  assert.equal(r.status, 201, "other invitation on same IP not blocked");
+  assert.equal(r.headers.get("access-control-allow-origin"), "*", "429/201 keep CORS so the guest page can read the code");
   result.rsvp_rate_limit = "pass";
   await flushStore();
 } finally {

@@ -60,7 +60,7 @@ const M={
 '添加相册图片':{en:'Add gallery photos',de:'Galeriefotos hinzufügen'},'活动流程':{en:'Event schedule',de:'Tagesablauf'},'RSVP 与联系':{en:'RSVP & contact',de:'RSVP & Kontakt'},
 'RSVP 邮箱':{en:'RSVP email',de:'RSVP-E-Mail'},'备注':{en:'Notes',de:'Hinweise'},'手动调整视觉':{en:'Manual visual settings',de:'Visuelle Einstellungen'},
 '主题强调色':{en:'Accent color',de:'Akzentfarbe'},'版式密度':{en:'Layout density',de:'Layout-Dichte'},'居中':{en:'Center',de:'Zentriert'},'左对齐':{en:'Left',de:'Links'},'右对齐':{en:'Right',de:'Rechts'},
-'网站工具':{en:'Website tools',de:'Website-Tools'},'婚礼倒计时':{en:'Wedding countdown',de:'Hochzeits-Countdown'},'地图/导航':{en:'Map / navigation',de:'Karte / Navigation'},
+'网站工具':{en:'Website tools',de:'Website-Tools'},'高级':{en:'Advanced',de:'Erweitert'},'风格与语言':{en:'Style & language',de:'Stil & Sprache'},'婚礼倒计时':{en:'Wedding countdown',de:'Hochzeits-Countdown'},'地图/导航':{en:'Map / navigation',de:'Karte / Navigation'},
 '婚纱照相册':{en:'Photo gallery',de:'Fotogalerie'},'分享':{en:'Share',de:'Teilen'},'加入日历':{en:'Add to calendar',de:'Zum Kalender hinzufügen'},'复制地址':{en:'Copy address',de:'Adresse kopieren'},
 '定制助手':{en:'Customization',de:'Personalisierung'},'生成需求':{en:'Design brief',de:'Design-Brief'},'订单查询':{en:'Order lookup',de:'Bestellung prüfen'},'物流查询':{en:'Tracking lookup',de:'Sendung verfolgen'},
 '支付已确认':{en:'Payment confirmed',de:'Zahlung bestätigt'},'支付已取消':{en:'Payment cancelled',de:'Zahlung abgebrochen'},'订单处理中':{en:'Order processing',de:'Bestellung wird verarbeitet'},

@@ -111,7 +111,12 @@ export function publicRouter({ root, generatedDir }) {
       let ogUrl = "";
       if (og && og[2].length < 2_000_000) { const ogFile = `${id}-card.${og[1] === "png" ? "png" : "jpg"}`; await fsp.writeFile(path.join(generatedDir, ogFile), Buffer.from(og[2], "base64")); ogUrl = `${baseUrl()}/generated/${ogFile}`; }
       // Fill the builder's placeholders so the published page knows its id, API and share image.
-      const page = html.replaceAll("__POD_INVITE_ID__", id).replaceAll("__POD_API_BASE__", baseUrl()).replaceAll("__POD_PAGE_URL__", `${baseUrl()}/generated/${file}`).replaceAll("__POD_OG_IMAGE__", ogUrl);
+      const split = splitInlineImages(html, id);
+      let page = String(split);
+      // No share image → drop the og:image tags instead of publishing an empty content="".
+      if (!ogUrl) page = page.replace(/<meta property="og:image" content="__POD_OG_IMAGE__"\/>(<meta property="og:image:(?:width|height)" content="\d+"\/>)*/g, "").replace('content="summary_large_image"', 'content="summary"');
+      page = page.replaceAll("__POD_INVITE_ID__", id).replaceAll("__POD_API_BASE__", baseUrl()).replaceAll("__POD_PAGE_URL__", `${baseUrl()}/generated/${file}`).replaceAll("__POD_OG_IMAGE__", ogUrl);
+      await Promise.all(split.files.map(x => fsp.writeFile(path.join(generatedDir, x.name), x.buf)));
       await fsp.writeFile(path.join(generatedDir, file), page, "utf8");
       const notify = String(profile?.rsvpEmail || "").trim().slice(0, 254);
       const meta = { id, tenant_id: req.tenantId, user_id: req.user?.id || null, created_at: new Date().toISOString(), scene: String(profile?.sceneKey || "").slice(0, 40), names: String(profile?.names || "").slice(0, 200), date: String(profile?.date || "").slice(0, 40), status: "published", url: `/generated/${file}`,
@@ -126,7 +131,8 @@ export function publicRouter({ root, generatedDir }) {
   }));
   // Built-in RSVP, posted by guests from the sandboxed (opaque-origin, "Origin: null") invitation page.
   // The page sends text/plain JSON (a CORS "simple" request, no preflight); responses allow any origin and carry no credentials.
-  const rsvpLimit = rateLimit({ bucket: "invitation-rsvp", windowMs: 10 * 60_000, max: Number(process.env.RSVP_PER_10_MIN || 10) });
+  // Counted per invitation + IP, so many guests on one venue/home Wi-Fi are not blocked by each other's invitations.
+  const rsvpLimit = invitationIpLimit({ windowMs: 10 * 60_000, max: Number(process.env.RSVP_PER_10_MIN || 30) });
   const rsvpCors = cors({ origin: "*", methods: ["POST", "OPTIONS"], allowedHeaders: ["Content-Type"], maxAge: 600 });
   router.options("/api/invitations/:id/rsvp", rsvpCors);
   router.post("/api/invitations/:id/rsvp", rsvpCors, rsvpLimit, express.text({ type: "text/plain", limit: "8kb" }), ah(async (req, res) => {
@@ -145,4 +151,37 @@ export function publicRouter({ root, generatedDir }) {
   router.get("/api/health", (req, res) => res.json({ ok: true, version: VERSION, tenant: req.tenantId, protocols: protocolRegistry().map(x => x.id) }));
 
   return router;
+}
+
+/** Per (invitation id, IP) fixed-window limiter for guest RSVPs. Same 429 shape as the shared rateLimit middleware. */
+export function invitationIpLimit({ windowMs, max }) {
+  const hits = new Map();
+  setInterval(() => { const now = Date.now(); for (const [k, v] of hits) if (v.reset <= now) hits.delete(k); }, windowMs).unref();
+  return (req, res, next) => {
+    if (process.env.RATE_LIMIT_DISABLED === "true") return next();
+    const key = `${String(req.params.id || "").slice(0, 40)}|${req.ip}`, now = Date.now();
+    let e = hits.get(key);
+    if (!e || e.reset <= now) { e = { count: 0, reset: now + windowMs }; hits.set(key, e); }
+    e.count += 1;
+    res.setHeader("RateLimit-Limit", String(max)); res.setHeader("RateLimit-Remaining", String(Math.max(0, max - e.count)));
+    if (e.count > max) { res.setHeader("Retry-After", String(Math.ceil((e.reset - now) / 1000))); return res.status(429).json({ error: "rate_limited", message: "Too many requests, please retry later." }); }
+    next();
+  };
+}
+
+/**
+ * Moves embedded base64 photos (hero, gallery, card) out of the published HTML into /generated/<id>-<n>.<ext>,
+ * so the page itself stays small. Identical data URLs share one file. Returns a String with .files to write.
+ */
+export function splitInlineImages(html, id) {
+  const map = new Map(), files = [];
+  const out = html.replace(/data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]{2000,})/g, (m, type, b64) => {
+    if (!map.has(m)) {
+      const name = `${id}-${files.length + 1}.${type === "jpeg" ? "jpg" : type}`;
+      files.push({ name, buf: Buffer.from(b64, "base64") });
+      map.set(m, `${baseUrl()}/generated/${name}`);
+    }
+    return map.get(m);
+  });
+  const res = new String(out); res.files = files; return res;
 }
