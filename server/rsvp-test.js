@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wcos-rsvp-"));
-Object.assign(process.env, { NODE_ENV: "test", ADMIN_API_KEY: "k", RATE_LIMIT_DISABLED: "false", RSVP_PER_10_MIN: "14", STORE_PERSIST_PATH: path.join(tmp, "state.json"),
+Object.assign(process.env, { NODE_ENV: "test", ADMIN_API_KEY: "k", RATE_LIMIT_DISABLED: "false", RSVP_PER_10_MIN: "19", STORE_PERSIST_PATH: path.join(tmp, "state.json"),
   APP_ENCRYPTION_KEY: "x".repeat(40), PUBLIC_BASE_URL: "https://shop.example.com", CORS_ORIGINS: "https://shop.example.com" });
 for (const k of ["SENDGRID_API_KEY", "POSTMARK_SERVER_TOKEN"]) delete process.env[k];
 
@@ -36,7 +36,7 @@ try {
   let r = await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", origin: "null", type: "text/plain", body: JSON.stringify({ name: "  Marco   Rossi ", attending: "yes", party_size: 2, dietary: "Vegetarian" }) });
   assert.equal(r.status, 201);
   assert.equal(r.headers.get("access-control-allow-origin"), "*");
-  assert.deepEqual(await r.json(), { ok: true, id: (await listForTenant("invitation_rsvps", "tenant_demo"))[0].id, attending: true, party_size: 2 });
+  assert.deepEqual(await r.json(), { ok: true, id: (await listForTenant("invitation_rsvps", "tenant_demo"))[0].id, attending: true, party_size: 2, updated: false });
   r = await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", body: { name: "Lea", attending: "no", party_size: 4 } });
   assert.equal(r.status, 201); assert.equal((await r.json()).party_size, 0, "declined guests count as 0");
   const stored = await listForTenant("invitation_rsvps", "tenant_demo");
@@ -55,6 +55,7 @@ try {
   await bad({ name: "A", attending: "yes", party_size: 1.5 }, "invalid_party_size");
   await bad({ name: "A", attending: "yes", dietary: "d".repeat(301) }, "dietary_too_long");
   await bad({ name: "Bot", attending: "yes", website: "http://spam" }, "invalid_body");
+  await bad({ name: "A", attending: "yes", contact: "not-a-contact" }, "invalid_contact");
   await bad("{not json", "invalid_json", "text/plain");
   assert.equal((await listForTenant("invitation_rsvps", "tenant_demo")).length, 2);
   r = await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", type: "text/plain", body: JSON.stringify({ name: "A", attending: "yes", dietary: "d".repeat(9000) }) });
@@ -67,22 +68,40 @@ try {
   assert.equal((await req("/api/invitations/..%2Fx/rsvp", { method: "POST", body: { name: "A", attending: "yes" } })).status, 404);
   result.rsvp_not_found = "pass";
 
+  // 3b. Guests can update: same normalized name + same (optional) contact overwrites; a different contact is a different guest.
+  const first = await (await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", body: { name: "Giulia Bianchi", attending: "yes", party_size: 2, contact: "Giulia@Example.com" } })).json();
+  assert.equal(first.updated, false, "create");
+  r = await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", origin: "null", type: "text/plain", body: JSON.stringify({ name: "  giulia   BIANCHI", attending: "no", contact: "giulia@example.com", dietary: "Sorry" }) });
+  assert.equal(r.status, 201);
+  const upd = await r.json();
+  assert.equal(upd.updated, true, "update overwrites"); assert.equal(upd.id, first.id); assert.equal(upd.party_size, 0);
+  let giulia = (await listForTenant("invitation_rsvps", "tenant_demo")).filter(x => /giulia/i.test(x.name));
+  assert.equal(giulia.length, 1, "no duplicate row"); assert.equal(giulia[0].attending, false); assert.ok(giulia[0].updated_at >= giulia[0].created_at);
+  const other2 = await (await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", body: { name: "Giulia Bianchi", attending: "yes", contact: "+41 79 000 00 00" } })).json();
+  assert.equal(other2.updated, false, "same name, different contact = different guest");
+  r = await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", body: { name: "Giulia Bianchi", attending: "yes", party_size: 3, contact: "+41790000000" } });
+  assert.equal((await r.json()).updated, true, "phone matched by digits");
+  giulia = (await listForTenant("invitation_rsvps", "tenant_demo")).filter(x => /giulia/i.test(x.name));
+  assert.equal(giulia.length, 2);
+  result.rsvp_update = "pass";
+
   // 4. Couple sees list, counts and CSV; other users and anonymous visitors do not
   assert.equal((await req(`/api/account/invitations/${inv.id}/rsvps`)).status, 401);
   const other = await account(`other-${Date.now()}@example.com`);
   assert.equal((await req(`/api/account/invitations/${inv.id}/rsvps`, { cookie: other })).status, 404);
   const list = await (await req(`/api/account/invitations/${inv.id}/rsvps`, { cookie })).json();
-  assert.deepEqual(list.counts, { responses: 2, attending: 1, declined: 1, guests: 2 });
+  assert.deepEqual(list.counts, { responses: 4, attending: 2, declined: 2, guests: 5 });
+  assert.equal(new Set(list.rsvps.map(x => x.id)).size, list.rsvps.length); assert.ok(list.rsvps.every(x => x.updated_at));
   assert.ok(!("tenant_id" in list.rsvps[0]));
   r = await req(`/api/account/invitations/${inv.id}/rsvps.csv`, { cookie });
   assert.match(r.headers.get("content-type"), /text\/csv/);
   const csv = await r.text();
-  assert.ok(csv.includes("name,attending,party_size,dietary,created_at") && csv.includes("Marco Rossi,yes,2,Vegetarian"));
+  assert.ok(csv.includes("name,attending,party_size,dietary,contact,created_at,updated_at") && csv.includes("giulia BIANCHI,no,0,Sorry,giulia@example.com") && csv.includes("Marco Rossi,yes,2,Vegetarian"));
   const dash = await (await req("/api/account/dashboard", { cookie })).json();
   assert.equal(dash.invitations[0].id, inv.id);
   result.account_rsvp_list = "pass";
 
-  // 5. Rate limit per IP (RSVP_PER_10_MIN=14; the 14 requests above already counted, so the bucket is exhausted)
+  // 5. Rate limit per IP (RSVP_PER_10_MIN=19; the 19 requests above already counted, so the bucket is exhausted)
   r = await req(`/api/invitations/${inv.id}/rsvp`, { method: "POST", body: { name: "Late", attending: "yes" } });
   assert.equal(r.status, 429); assert.ok(r.headers.get("retry-after"));
   result.rsvp_rate_limit = "pass";

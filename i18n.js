@@ -56,7 +56,7 @@ const M={
 '保存草稿':{en:'Save draft',de:'Entwurf speichern'},'更新预览':{en:'Update preview',de:'Vorschau aktualisieren'},'保存为专属链接':{en:'Save personal link',de:'Persönlichen Link speichern'},
 '下载独立 HTML':{en:'Download HTML',de:'HTML herunterladen'},'新人和婚礼信息':{en:'Couple & wedding details',de:'Paar- & Hochzeitsdaten'},'新人姓名':{en:'Couple names',de:'Namen des Paares'},
 '婚礼日期':{en:'Wedding date',de:'Hochzeitsdatum'},'开始时间':{en:'Start time',de:'Startzeit'},'场地名称':{en:'Venue',de:'Location'},'详细地址':{en:'Address',de:'Adresse'},
-'欢迎语':{en:'Welcome text',de:'Begrüßungstext'},'婚纱照与图片':{en:'Wedding photos',de:'Hochzeitsfotos'},'替换主婚纱照':{en:'Replace hero photo',de:'Hauptfoto ersetzen'},
+'欢迎语':{en:'Welcome text',de:'Begrüßungstext'},'婚纱照与图片':{en:'Wedding photos',de:'Hochzeitsfotos'},'替换主婚纱照':{en:'Replace hero photo',de:'Hauptfoto ersetzen'},'预览示例照片':{en:'Preview sample photo',de:'Beispielfoto in Vorschau'},'用示例照片发布':{en:'Publish with sample photo',de:'Mit Beispielfoto veröffentlichen'},'桌面':{en:'Desktop',de:'Desktop'},'手机 390px':{en:'Phone 390px',de:'Handy 390px'},
 '添加相册图片':{en:'Add gallery photos',de:'Galeriefotos hinzufügen'},'活动流程':{en:'Event schedule',de:'Tagesablauf'},'RSVP 与联系':{en:'RSVP & contact',de:'RSVP & Kontakt'},
 'RSVP 邮箱':{en:'RSVP email',de:'RSVP-E-Mail'},'备注':{en:'Notes',de:'Hinweise'},'手动调整视觉':{en:'Manual visual settings',de:'Visuelle Einstellungen'},
 '主题强调色':{en:'Accent color',de:'Akzentfarbe'},'版式密度':{en:'Layout density',de:'Layout-Dichte'},'居中':{en:'Center',de:'Zentriert'},'左对齐':{en:'Left',de:'Links'},'右对齐':{en:'Right',de:'Rechts'},

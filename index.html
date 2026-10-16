@@ -463,6 +463,9 @@ button{color:inherit}
 .builder-preview{
   width:100%;height:100%;border:0;border-radius:18px;background:#fff;box-shadow:0 20px 55px rgba(50,38,31,.16)
 }
+.sample-row{display:flex;gap:6px;align-items:center;margin-top:7px}.sample-use{border:0;background:none;color:var(--muted);font-size:8.5px;text-decoration:underline;cursor:pointer;padding:0}
+.builder-preview-wrap{position:relative}.preview-device{position:absolute;top:6px;left:50%;transform:translateX(-50%);display:flex;z-index:2;background:rgba(255,255,255,.85);border-radius:999px;padding:2px}.preview-device button{border:0;background:none;border-radius:999px;padding:3px 10px;font-size:9px;cursor:pointer;color:#5d544c}.preview-device button.on{background:#292622;color:#fff}
+.builder-preview-wrap.phone .builder-preview{width:390px;max-width:100%;border-radius:28px;border:8px solid #292622}
 .builder-note{font-size:8.5px;line-height:1.5;color:var(--muted);padding:8px 0 0}
 @media(max-width:1000px){
   .site-builder{padding:7px}.site-builder-shell{border-radius:18px}
@@ -719,6 +722,7 @@ button{color:inherit}
           <h4>婚纱照与图片</h4>
           <label class="photo-upload"><b>替换主婚纱照</b><span>JPG / PNG / WEBP</span><input id="wbHeroPhoto" type="file" accept="image/*"/></label>
           <div class="photo-status" id="wbHeroStatus">未上传，将使用极简场景占位视觉</div>
+          <div class="sample-row"><label class="feature-toggle"><input id="wbSamplePhoto" type="checkbox" checked/>预览示例照片</label><button type="button" class="sample-use" id="wbUseSample">用示例照片发布</button></div>
           <div style="height:7px"></div>
           <label class="photo-upload"><b>添加相册图片</b><span>支持多张上传，点击相册图片可放大</span><input id="wbGallery" type="file" multiple accept="image/*"/></label>
           <div class="photo-status" id="wbGalleryStatus">未上传相册</div>
@@ -780,6 +784,7 @@ button{color:inherit}
       </div>
 
       <div class="builder-preview-wrap">
+        <div class="preview-device" role="group"><button type="button" class="on" data-device="desktop">桌面</button><button type="button" data-device="phone">手机 390px</button></div>
         <iframe class="builder-preview" id="builderPreview" title="Wedding invitation preview"></iframe>
       </div>
     </div>
@@ -1531,9 +1536,9 @@ editorial:{paper:"#f5f3ee",ink:"#111111",block:"#e2dcd1",seal:"#111111",shape:"0
 gallery:{paper:"#f7f6f2",ink:"#1b1a18",block:"#e6e2da",seal:"ACCENT",shape:"0",nmW:300,nmS:"italic",nmT:"none",nmLs:"0",orn:"line",oc:"#1b1a18",liner:"plain"}
 };
 const WEDDING_INVITE_I18N={
-en:{eyebrow:"Wedding Invitation",scroll:"Scroll to discover",count_title:"Until we say “I do”",count_desc:"We cannot wait to celebrate this day with you.",days:"Days",hours:"Hours",minutes:"Minutes",seconds:"Seconds",schedule:"Wedding schedule",schedule_desc:"A simple guide to the celebration.",join:"Join us here",open_map:"Open map",copy_addr:"Copy address",add_cal:"Add to calendar",share:"Share",moments:"Moments we love",gallery_desc:"Click any photo to view it larger.",gallery_ph:"Upload wedding photos in the editor to replace this placeholder.",rsvp_title:"Will you join us?",rsvp_desc:"Please let us know by replying below.",name:"Your name",guests:"Number of guests",yes:"Joyfully accept",no:"Regretfully decline",dietary:"Dietary note (optional)",send:"Send RSVP",sending:"Sending…",thanks_yes:"Thank you! We can’t wait to celebrate with you.",thanks_no:"Thank you for letting us know — you will be missed.",preview_note:"Preview only — publish the site to collect RSVPs.",err:"Could not send. Please try again.",err_name:"Please enter your name.",err_att:"Please choose yes or no.",open_env:"Tap the seal to open",skip:"Skip",invited:"You are invited",card:"Invitation card",print:"Print",close:"Close",gift:"Wedding gift",copied:"Address copied",families:"Together with their families",request:"request the pleasure of your company",rsvp_link:"RSVP"},
-zh:{eyebrow:"婚礼邀请",scroll:"向下滑动",count_title:"距离我们说“我愿意”",count_desc:"期待与你一起庆祝这一天。",days:"天",hours:"小时",minutes:"分钟",seconds:"秒",schedule:"婚礼流程",schedule_desc:"当天活动安排。",join:"婚礼地点",open_map:"打开地图",copy_addr:"复制地址",add_cal:"加入日历",share:"分享",moments:"我们的故事",gallery_desc:"点击照片可放大查看。",gallery_ph:"在编辑器中上传婚纱照以替换此占位图。",rsvp_title:"你会来参加吗？",rsvp_desc:"请在下方回复是否出席。",name:"您的姓名",guests:"出席人数",yes:"欣然出席",no:"遗憾缺席",dietary:"饮食需求（可选）",send:"提交回复",sending:"提交中…",thanks_yes:"谢谢！期待与你相见。",thanks_no:"谢谢告知，我们会想念你。",preview_note:"当前为预览，发布网站后即可收集回复。",err:"提交失败，请稍后再试。",err_name:"请填写姓名。",err_att:"请选择是否出席。",open_env:"轻触火漆印打开",skip:"跳过",invited:"诚挚邀请",card:"邀请卡",print:"打印",close:"关闭",gift:"礼金",copied:"地址已复制",families:"携双方家人",request:"诚邀您出席我们的婚礼",rsvp_link:"回复"},
-de:{eyebrow:"Hochzeitseinladung",scroll:"Nach unten scrollen",count_title:"Bis wir „Ja“ sagen",count_desc:"Wir freuen uns darauf, diesen Tag mit euch zu feiern.",days:"Tage",hours:"Stunden",minutes:"Minuten",seconds:"Sekunden",schedule:"Tagesablauf",schedule_desc:"Ein kurzer Überblick über unseren Hochzeitstag.",join:"Hier feiern wir",open_map:"Karte öffnen",copy_addr:"Adresse kopieren",add_cal:"In Kalender",share:"Teilen",moments:"Unsere Geschichte",gallery_desc:"Klickt auf ein Foto, um es größer anzusehen.",gallery_ph:"Ladet im Editor Hochzeitsfotos hoch, um diesen Platzhalter zu ersetzen.",rsvp_title:"Seid ihr dabei?",rsvp_desc:"Bitte gebt uns unten Bescheid.",name:"Euer Name",guests:"Anzahl Gäste",yes:"Wir kommen gern",no:"Leider nicht",dietary:"Ernährungshinweis (optional)",send:"Antwort senden",sending:"Wird gesendet…",thanks_yes:"Danke! Wir freuen uns auf euch.",thanks_no:"Danke für die Rückmeldung – ihr werdet uns fehlen.",preview_note:"Nur Vorschau – veröffentlicht die Seite, um Antworten zu sammeln.",err:"Senden fehlgeschlagen. Bitte erneut versuchen.",err_name:"Bitte Namen eingeben.",err_att:"Bitte Ja oder Nein wählen.",open_env:"Siegel antippen zum Öffnen",skip:"Überspringen",invited:"Ihr seid eingeladen",card:"Einladungskarte",print:"Drucken",close:"Schließen",gift:"Hochzeitsgeschenk",copied:"Adresse kopiert",families:"Gemeinsam mit unseren Familien",request:"laden wir euch herzlich zu unserer Hochzeit ein",rsvp_link:"Antworten"}
+en:{eyebrow:"Wedding Invitation",scroll:"Scroll to discover",count_title:"Until we say “I do”",count_desc:"We cannot wait to celebrate this day with you.",days:"Days",hours:"Hours",minutes:"Minutes",seconds:"Seconds",schedule:"Wedding schedule",schedule_desc:"A simple guide to the celebration.",join:"Join us here",open_map:"Open map",copy_addr:"Copy address",add_cal:"Add to calendar",share:"Share",moments:"Moments we love",gallery_desc:"Click any photo to view it larger.",gallery_ph:"Upload wedding photos in the editor to replace this placeholder.",rsvp_title:"Will you join us?",rsvp_desc:"Please let us know by replying below.",name:"Your name",guests:"Number of guests",yes:"Joyfully accept",no:"Regretfully decline",dietary:"Dietary note (optional)",send:"Send RSVP",sending:"Sending…",thanks_yes:"Thank you! We can’t wait to celebrate with you.",thanks_no:"Thank you for letting us know — you will be missed.",preview_note:"Preview only — publish the site to collect RSVPs.",err:"Could not send. Please try again.",err_name:"Please enter your name.",err_att:"Please choose yes or no.",open_env:"Tap the seal to open",skip:"Skip",invited:"You are invited",card:"Invitation card",print:"Print",close:"Close",gift:"Wedding gift",copied:"Address copied",families:"Together with their families",request:"request the pleasure of your company",rsvp_link:"RSVP",contact:"E-mail or phone (optional, lets you update later)",updated:"Your RSVP has been updated."},
+zh:{eyebrow:"婚礼邀请",scroll:"向下滑动",count_title:"距离我们说“我愿意”",count_desc:"期待与你一起庆祝这一天。",days:"天",hours:"小时",minutes:"分钟",seconds:"秒",schedule:"婚礼流程",schedule_desc:"当天活动安排。",join:"婚礼地点",open_map:"打开地图",copy_addr:"复制地址",add_cal:"加入日历",share:"分享",moments:"我们的故事",gallery_desc:"点击照片可放大查看。",gallery_ph:"在编辑器中上传婚纱照以替换此占位图。",rsvp_title:"你会来参加吗？",rsvp_desc:"请在下方回复是否出席。",name:"您的姓名",guests:"出席人数",yes:"欣然出席",no:"遗憾缺席",dietary:"饮食需求（可选）",send:"提交回复",sending:"提交中…",thanks_yes:"谢谢！期待与你相见。",thanks_no:"谢谢告知，我们会想念你。",preview_note:"当前为预览，发布网站后即可收集回复。",err:"提交失败，请稍后再试。",err_name:"请填写姓名。",err_att:"请选择是否出席。",open_env:"轻触火漆印打开",skip:"跳过",invited:"诚挚邀请",card:"邀请卡",print:"打印",close:"关闭",gift:"礼金",copied:"地址已复制",families:"携双方家人",request:"诚邀您出席我们的婚礼",rsvp_link:"回复",contact:"邮箱或手机（可选，便于之后修改）",updated:"已更新你的回复。"},
+de:{eyebrow:"Hochzeitseinladung",scroll:"Nach unten scrollen",count_title:"Bis wir „Ja“ sagen",count_desc:"Wir freuen uns darauf, diesen Tag mit euch zu feiern.",days:"Tage",hours:"Stunden",minutes:"Minuten",seconds:"Sekunden",schedule:"Tagesablauf",schedule_desc:"Ein kurzer Überblick über unseren Hochzeitstag.",join:"Hier feiern wir",open_map:"Karte öffnen",copy_addr:"Adresse kopieren",add_cal:"In Kalender",share:"Teilen",moments:"Unsere Geschichte",gallery_desc:"Klickt auf ein Foto, um es größer anzusehen.",gallery_ph:"Ladet im Editor Hochzeitsfotos hoch, um diesen Platzhalter zu ersetzen.",rsvp_title:"Seid ihr dabei?",rsvp_desc:"Bitte gebt uns unten Bescheid.",name:"Euer Name",guests:"Anzahl Gäste",yes:"Wir kommen gern",no:"Leider nicht",dietary:"Ernährungshinweis (optional)",send:"Antwort senden",sending:"Wird gesendet…",thanks_yes:"Danke! Wir freuen uns auf euch.",thanks_no:"Danke für die Rückmeldung – ihr werdet uns fehlen.",preview_note:"Nur Vorschau – veröffentlicht die Seite, um Antworten zu sammeln.",err:"Senden fehlgeschlagen. Bitte erneut versuchen.",err_name:"Bitte Namen eingeben.",err_att:"Bitte Ja oder Nein wählen.",open_env:"Siegel antippen zum Öffnen",skip:"Überspringen",invited:"Ihr seid eingeladen",card:"Einladungskarte",print:"Drucken",close:"Schließen",gift:"Hochzeitsgeschenk",copied:"Adresse kopiert",families:"Gemeinsam mit unseren Familien",request:"laden wir euch herzlich zu unserer Hochzeit ein",rsvp_link:"Antworten",contact:"E-Mail oder Telefon (optional, für spätere Änderungen)",updated:"Eure Antwort wurde aktualisiert."}
 };
 function weddingInitials(names){const parts=String(names||"").split(/\s*(?:&|\+|和|and|und)\s*/i).filter(Boolean);return (parts.slice(0,2).map(x=>[...x.trim()][0]||"").join("&")||"♥").toUpperCase()}
 function buildWeddingSite(p,opts={}){
@@ -1570,6 +1575,7 @@ function buildWeddingSite(p,opts={}){
     ?`<div class="rsvp-actions"><button type="button" class="rsvp-btn" onclick="sendRSVP()">${W("rsvp_link")} ↗</button>${giftUrl?`<a class="rsvp-btn ghost" href="${e(giftUrl)}" target="_blank" rel="noopener">${W("gift")}</a>`:""}</div>`
     :`<form class="rsvp-form" id="rsvpForm" onsubmit="return sendRSVP(event)" novalidate>
 <input id="rName" name="name" maxlength="80" autocomplete="name" placeholder="${e(WEDDING_INVITE_I18N[lang].name)}" data-wi-placeholder="name" required/>
+<input id="rContact" name="contact" maxlength="120" autocomplete="email" placeholder="${e(WEDDING_INVITE_I18N[lang].contact)}" data-wi-placeholder="contact"/>
 <div class="seg" role="radiogroup"><label><input type="radio" name="attending" value="yes" checked/><span>${W("yes")}</span></label><label><input type="radio" name="attending" value="no"/><span>${W("no")}</span></label></div>
 <label class="party" id="rPartyWrap"><span>${W("guests")}</span><select id="rGuests" name="party_size">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}</option>`).join("")}</select></label>
 <input id="rDiet" name="dietary" maxlength="300" placeholder="${e(WEDDING_INVITE_I18N[lang].dietary)}" data-wi-placeholder="dietary"/>
@@ -1606,7 +1612,7 @@ a{color:inherit}
 .venue-card{margin-top:30px;border-radius:var(--radius);overflow:hidden;display:grid;grid-template-columns:1.05fr .95fr;min-height:350px;border:var(--hair) solid var(--line);background:transparent;box-shadow:none}.map-art{background:var(--block);position:relative;overflow:hidden}.map-art:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(32deg,transparent 0 35px,color-mix(in srgb,var(--ink) 14%,transparent) 35px 36px),repeating-linear-gradient(112deg,transparent 0 48px,color-mix(in srgb,var(--ink) 9%,transparent) 48px 49px)}.map-pin{position:absolute;left:52%;top:48%;width:22px;height:22px;border:var(--hair) solid var(--ink);background:var(--paper);border-radius:50% 50% 50% 0;transform:rotate(-45deg)}.venue-info{padding:36px;display:flex;flex-direction:column;justify-content:center}.venue-info h3{font:300 34px var(--serif);margin:0 0 6px}.venue-info p{font-size:17px;font-style:italic;line-height:1.5;color:var(--muted);margin:0}.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}.tool{border:var(--hair) solid var(--ink);background:transparent;border-radius:var(--radius);padding:10px 14px;text-decoration:none;cursor:pointer;color:inherit}
 .gallery{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-top:30px}.gallery-item{border:0;padding:0;background:none;cursor:zoom-in;border-radius:var(--radius);overflow:hidden;min-height:250px}.gallery-item:first-child{grid-row:span 2;min-height:510px}.gallery-item img{width:100%;height:100%;object-fit:cover;display:block}.gallery-placeholder{grid-column:1/-1;min-height:300px;border:var(--hair) solid var(--line);border-radius:var(--radius);display:grid;place-items:center;color:var(--muted);font-style:italic;font-size:17px;background:var(--block);padding:20px;text-align:center}
 .rsvp{background:transparent;color:var(--ink);border:var(--hair) solid var(--line);border-radius:var(--radius);margin:var(--gap) auto;max-width:860px;padding:60px 54px;text-align:center;box-shadow:none}.rsvp h2{font:300 clamp(38px,5vw,58px) var(--serif);margin:0 0 8px}.rsvp p{color:var(--muted);font-size:18px;font-style:italic;line-height:1.5}
-.rsvp-form{display:grid;grid-template-columns:1fr 1fr;gap:22px 28px;margin-top:30px;text-align:left}.rsvp-form #rName,.rsvp-form #rDiet,.rsvp-form .seg{grid-column:1/-1}.rsvp input,.rsvp select{font:inherit;font-size:18px;border:0;border-bottom:var(--hair) solid var(--ink);background:transparent;color:var(--ink);border-radius:0;padding:10px 2px;outline:none;width:100%}.rsvp input::placeholder{color:var(--muted);font-style:italic}.rsvp input:focus,.rsvp select:focus{border-bottom-color:var(--accent);border-bottom-width:1.5px}
+.rsvp-form{display:grid;grid-template-columns:1fr 1fr;gap:22px 28px;margin-top:30px;text-align:left}.rsvp-form #rName,.rsvp-form #rContact,.rsvp-form #rDiet,.rsvp-form .seg{grid-column:1/-1}.rsvp input,.rsvp select{font:inherit;font-size:18px;border:0;border-bottom:var(--hair) solid var(--ink);background:transparent;color:var(--ink);border-radius:0;padding:10px 2px;outline:none;width:100%}.rsvp input::placeholder{color:var(--muted);font-style:italic}.rsvp input:focus,.rsvp select:focus{border-bottom-color:var(--accent);border-bottom-width:1.5px}
 .seg{display:flex;gap:0;border:var(--hair) solid var(--ink);border-radius:var(--radius)}.seg label{flex:1;position:relative}.seg label+label{border-left:var(--hair) solid var(--ink)}.seg input{position:absolute;opacity:0;inset:0;width:100%;cursor:pointer}.seg span{display:block;text-align:center;padding:13px 6px}.seg input:checked+span{background:var(--ink);color:var(--paper)}.seg input:focus-visible+span{outline:1px solid var(--accent);outline-offset:2px}
 .party{display:flex;align-items:center;gap:10px;color:var(--muted)}.party select{flex:1}.party.off{opacity:.35;pointer-events:none}
 .rsvp-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.rsvp-form .rsvp-actions{grid-column:1/-1}.rsvp-btn{border:var(--hair) solid var(--ink);border-radius:var(--radius);padding:15px 30px;background:transparent;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-width:200px;transition:background .45s var(--ease),color .45s var(--ease)}.rsvp-btn:hover{background:var(--ink);color:var(--paper)}.rsvp-btn.ghost{border-color:var(--line)}.rsvp-btn[disabled]{opacity:.5}
@@ -1707,7 +1713,7 @@ function rsvpMsg(t,ok){const m=document.getElementById("rMsg");if(m){m.textConte
 async function sendRSVP(ev){
   ev&&ev.preventDefault();
   if(RSVP_MODE==="link"){if(RSVP_URL)window.open(RSVP_URL,"_blank","noopener");return false}
-  const F_=form.elements,name=(F_.namedItem("name").value||"").trim(),attending=form.elements.attending.value,party=attending==="yes"?Number(F_.namedItem("party_size").value||1):0,dietary=(F_.namedItem("dietary").value||"").trim();
+  const F_=form.elements,name=(F_.namedItem("name").value||"").trim(),attending=form.elements.attending.value,party=attending==="yes"?Number(F_.namedItem("party_size").value||1):0,dietary=(F_.namedItem("dietary").value||"").trim(),contact=(F_.namedItem("contact")?.value||"").trim();
   if(!name){rsvpMsg(tt("err_name"));F_.namedItem("name").focus();return false}
   if(attending!=="yes"&&attending!=="no"){rsvpMsg(tt("err_att"));return false}
   if(RSVP_MODE==="email"||(!LIVE&&RSVP_EMAIL&&!PREVIEW)){
@@ -1716,9 +1722,9 @@ async function sendRSVP(ev){
   if(!LIVE){form.querySelectorAll("input,select,button").forEach(x=>x.disabled=true);rsvpMsg(tt(attending==="yes"?"thanks_yes":"thanks_no")+" ("+tt("preview_note")+")",true);return false}
   const btn=document.getElementById("rSend");btn.disabled=true;btn.textContent=tt("sending");
   try{
-    const r=await fetch((/^https?:/.test(API_BASE)?API_BASE:"")+"/api/invitations/"+INVITE_ID+"/rsvp",{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({name,attending,party_size:party,dietary,website:F_.namedItem("website").value})});
-    if(!r.ok)throw new Error(r.status);
-    form.querySelectorAll("input,select,.seg,#rPartyWrap,.rsvp-actions").forEach(x=>x.style.display="none");rsvpMsg(tt(attending==="yes"?"thanks_yes":"thanks_no"),true);
+    const r=await fetch((/^https?:/.test(API_BASE)?API_BASE:"")+"/api/invitations/"+INVITE_ID+"/rsvp",{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({name,attending,party_size:party,dietary,contact,website:F_.namedItem("website").value})});
+    if(!r.ok)throw new Error(r.status);const res=await r.json().catch(()=>({}));
+    form.querySelectorAll("input,select,.seg,#rPartyWrap,.rsvp-actions").forEach(x=>x.style.display="none");rsvpMsg((res.updated?tt("updated")+" ":"")+tt(attending==="yes"?"thanks_yes":"thanks_no"),true);
   }catch(e){btn.disabled=false;btn.textContent=tt("send");rsvpMsg(tt("err"))}
   return false
 }
@@ -1726,31 +1732,65 @@ ${F.countdown?`function tick(){const t=new Date(DATE_ISO).getTime()-Date.now();c
 <\/script>
 </body></html>`;
 }
-// Share image (og:image, 1200×630) drawn on a canvas with the site's colours and layout font.
-async function renderWeddingShareCard(p){
-  const W=1200,H=630,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
-  const layout=WEDDING_LAYOUTS.includes(p.layout)?p.layout:"classic",serif=WEDDING_SERIF[layout],accent=/^#[0-9a-fA-F]{6}$/.test(p.accent||"")?p.accent:"#9a6d57";
-  const col=p.sceneColors||["#d8cec2","#eadfd4","#c8b9ac"];
-  const g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,col[0]);g.addColorStop(.5,col[1]);g.addColorStop(1,col[2]||col[0]);x.fillStyle=g;x.fillRect(0,0,W,H);
-  const img=p.heroPhoto||(layout==="gallery"?(p.gallery||[])[0]:"");
-  if(img){try{const im=new Image();im.src=img;await im.decode();const s=Math.max(W/im.width,H/im.height);x.drawImage(im,(W-im.width*s)/2,(H-im.height*s)/2,im.width*s,im.height*s);x.fillStyle="rgba(25,20,17,.35)";x.fillRect(0,0,W,H)}catch(e){}}
-  x.fillStyle="rgba(255,253,249,.94)";const cw=layout==="editorial"?760:620,ch=500,cx=layout==="editorial"?70:(W-cw)/2,cy=(H-ch)/2;x.fillRect(cx,cy,cw,ch);
-  x.strokeStyle=accent;x.lineWidth=2;if(layout==="editorial"){x.fillStyle=accent;x.fillRect(cx,cy,cw,12)}else x.strokeRect(cx+18,cy+18,cw-36,ch-36);
-  const lang=["zh","en","de"].includes(p.lang)?p.lang:"en",T=WEDDING_INVITE_I18N[lang];
-  const d=new Date((p.date||"2027-06-18")+"T"+(p.time||"15:00")+":00");const ds=isNaN(d)?p.date:d.toLocaleDateString(lang==="zh"?"zh-CN":lang==="de"?"de-CH":"en-US",{year:"numeric",month:"long",day:"numeric"});
-  const left=layout==="editorial";x.textAlign=left?"left":"center";const tx=left?cx+56:W/2;
-  x.fillStyle=accent;x.font="600 20px Inter,system-ui,sans-serif";x.fillText(T.eyebrow.toUpperCase().split("").join(String.fromCharCode(8202)),tx,cy+(left?110:96));
-  x.fillStyle="#292521";let size=left?104:86;x.font=(left?"":"italic ")+size+"px "+serif;while(x.measureText(p.names||"").width>cw-100&&size>40){size-=4;x.font=(left?"":"italic ")+size+"px "+serif}
-  x.fillText(p.names||"",tx,cy+250);
-  x.fillStyle="#5d4f46";x.font="28px "+serif;x.fillText([ds,p.time].filter(Boolean).join(" · "),tx,cy+340);
-  x.fillStyle="#7e746d";x.font="22px Inter,system-ui,sans-serif";x.fillText([p.venue,p.address].filter(Boolean).join(" · ").slice(0,60),tx,cy+392);
-  return c.toDataURL("image/jpeg",.86);
+// Share image (og:image, 1200×630) drawn with the self-hosted webfonts and the active theme's palette, ornament and type.
+let wbFontsReady=null;
+function wbEnsureFonts(){
+  if(wbFontsReady)return wbFontsReady;
+  const faces=[["WB Serif","/fonts/cormorant-garamond-latin-var.woff2",{weight:"300 700",style:"normal"}],["WB Serif","/fonts/cormorant-garamond-italic-latin-var.woff2",{weight:"300 700",style:"italic"}],["WB Sans","/fonts/oswald-latin-var.woff2",{weight:"200 700"}]];
+  wbFontsReady=(async()=>{
+    try{if(window.FontFace&&document.fonts)faces.forEach(([f,u,d])=>{if(![...document.fonts].some(x=>x.family.replace(/"/g,"")===f&&x.style===(d.style||"normal")))document.fonts.add(new FontFace(f,`url(${u}) format("woff2")`,d))});
+      await Promise.all(['300 40px "WB Serif"','italic 300 40px "WB Serif"','400 20px "WB Sans"'].map(f=>document.fonts.load(f,"Aa&")));await document.fonts.ready}catch(e){}
+  })();
+  return wbFontsReady;
 }
+async function renderWeddingShareCard(p){
+  await wbEnsureFonts();
+  const W=1200,H=630,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  const layout=WEDDING_LAYOUTS.includes(p.layout)?p.layout:"classic",T=WEDDING_THEMES[layout],accent=/^#[0-9a-fA-F]{6}$/.test(p.accent||"")?p.accent:"#9a6d57";
+  const seal=T.seal==="ACCENT"?accent:T.seal,serif=WEDDING_SERIF[layout],sans='"WB Sans",Oswald,"Arial Narrow",Arial,sans-serif';
+  const ls=v=>{if("letterSpacing" in x)x.letterSpacing=v};
+  x.fillStyle=T.paper;x.fillRect(0,0,W,H);
+  const img=p.heroPhoto||(layout==="gallery"?(p.gallery||[])[0]:"");
+  let left=W/2,cw=W;
+  if(img){try{const im=new Image();im.src=img;await im.decode();const pw=layout==="editorial"||layout==="modern"?560:500,px=layout==="editorial"?W-pw:0;
+    const s=Math.max(pw/im.width,H/im.height);x.save();x.beginPath();x.rect(px,0,pw,H);x.clip();x.drawImage(im,px+(pw-im.width*s)/2,(H-im.height*s)/2,im.width*s,im.height*s);x.restore();
+    cw=W-pw;left=px?cw/2:pw+cw/2}catch(e){}}
+  if(cw===W){x.strokeStyle=T.ink;x.globalAlpha=.35;x.lineWidth=1;x.strokeRect(28,28,W-56,H-56);x.globalAlpha=1}
+  const lang=["zh","en","de"].includes(p.lang)?p.lang:"en",L=WEDDING_INVITE_I18N[lang];
+  const d=new Date((p.date||"2027-06-18")+"T"+(p.time||"15:00")+":00");const ds=isNaN(d)?p.date:d.toLocaleDateString(lang==="zh"?"zh-CN":lang==="de"?"de-CH":"en-US",{year:"numeric",month:"long",day:"numeric"});
+  x.textAlign="center";x.textBaseline="alphabetic";
+  x.fillStyle=seal;x.font=`400 18px ${sans}`;ls("6px");x.fillText(L.eyebrow.toUpperCase(),left,170);ls("0px");
+  const names=T.nmT==="uppercase"?(p.names||"").toUpperCase():(p.names||"");
+  x.fillStyle=T.ink;let size=T.nmT==="uppercase"?78:96;const st=T.nmS==="italic"?"italic ":"";
+  const setF=()=>{x.font=`${st}${T.nmW} ${size}px ${serif}`};setF();while(x.measureText(names).width>cw-120&&size>36){size-=4;setF()}
+  x.fillText(names,left,300);
+  if(T.orn){try{const o=new Image();o.src="data:image/svg+xml,"+encodeURIComponent(WB_ORN[T.orn](T.oc||T.ink));await o.decode();x.drawImage(o,left-90,330,180,60)}catch(e){}}
+  else{x.fillStyle=T.ink;x.fillRect(left-40,358,80,1)}
+  x.fillStyle=T.ink;x.font=`400 18px ${sans}`;ls("5px");x.fillText([ds,p.time].filter(Boolean).join(" · ").toUpperCase(),left,440);ls("0px");
+  x.globalAlpha=.68;x.font=`italic 300 28px ${serif}`;let v=[p.venue,p.address].filter(Boolean).join(" · ");while(x.measureText(v).width>cw-100&&v.length>8)v=v.slice(0,-2);x.fillText(v,left,490);x.globalAlpha=1;
+  return c.toDataURL("image/jpeg",.88);
+}
+// Client-side photo compression: resize to a max long edge and export WebP (JPEG if the browser cannot encode WebP).
+async function wbCompressImage(file,maxEdge){
+  if(!/^image\/(jpeg|png|webp|bmp)$/i.test(file.type))return readFileAsDataURL(file);
+  try{
+    let src;try{src=await createImageBitmap(file,{imageOrientation:"from-image"})}catch(e){const u=URL.createObjectURL(file);src=new Image();src.src=u;await src.decode();URL.revokeObjectURL(u)}
+    const w=src.width,h=src.height,k=Math.min(1,maxEdge/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);
+    const x=c.getContext("2d");x.imageSmoothingQuality="high";x.drawImage(src,0,0,c.width,c.height);src.close?.();
+    let out=c.toDataURL("image/webp",.8);if(!out.startsWith("data:image/webp"))out=c.toDataURL("image/jpeg",.82);
+    return out.length*.75<file.size||k<1?out:readFileAsDataURL(file);
+  }catch(e){return readFileAsDataURL(file)}
+}
+const wbKB=n=>n>1048576?(n/1048576).toFixed(1)+" MB":Math.round(n/1024)+" KB";
+// Theme sample photos (repo assets) for the builder preview only; published only if the user clicks "用示例照片发布".
+const WB_SAMPLE_PHOTOS={classic:"gifts.jpg",floral:"gifts.jpg",editorial:"gifts.jpg",botanical:"seasonal.jpg",minimal:"seasonal.jpg",gallery:"seasonal.jpg",destination:"cream.webp",modern:"cream.webp"};
+const wbSampleUrl=layout=>location.origin+"/assets/scenes/"+(WB_SAMPLE_PHOTOS[layout]||"gifts.jpg");
 let wbPreviewEnvelopeShown=false;
 function refreshWeddingPreview(ev){
   const p=weddingProfile();
   // Show the envelope intro on the first preview (or when its toggle changes); later edits jump straight to the site.
   const showEnv=!wbPreviewEnvelopeShown||ev?.target?.id==="ftEnvelope";wbPreviewEnvelopeShown=true;
+  if(!p.heroPhoto&&document.getElementById("wbSamplePhoto")?.checked)p.heroPhoto=wbSampleUrl(p.layout);
   document.getElementById("builderPreview").srcdoc=buildWeddingSite(p,{preview:true,skipEnvelope:!showEnv});
 }
 function localizeBuilderOptions(){document.querySelectorAll("#siteBuilder option[data-i18n-opt]").forEach(o=>{o.textContent=window.WeddingI18n?.t?.(o.dataset.i18nOpt)||o.dataset.i18nOpt})}
@@ -1806,13 +1846,17 @@ document.getElementById("builderPublish").onclick=async()=>{
   }
 };
 document.getElementById("wbHeroPhoto").onchange=async e=>{
-  const f=e.target.files?.[0];if(!f)return;wbHeroData=await readFileAsDataURL(f);
-  document.getElementById("wbHeroStatus").textContent=f.name;refreshWeddingPreview();
+  const f=e.target.files?.[0];if(!f)return;wbHeroData=await wbCompressImage(f,1600);
+  document.getElementById("wbHeroStatus").textContent=`${f.name} · ${wbKB(f.size)} → ${wbKB(wbHeroData.length*.75)}`;refreshWeddingPreview();
 };
+document.getElementById("wbSamplePhoto").onchange=refreshWeddingPreview;
+document.getElementById("wbUseSample").onclick=()=>{const l=document.getElementById("wbLayout").value;wbHeroData=wbSampleUrl(l);document.getElementById("wbHeroStatus").textContent="示例照片 · "+(WB_SAMPLE_PHOTOS[l]||"gifts.jpg");refreshWeddingPreview()};
+document.querySelectorAll(".preview-device button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".preview-device button").forEach(x=>x.classList.toggle("on",x===b));document.querySelector(".builder-preview-wrap").classList.toggle("phone",b.dataset.device==="phone")});
 document.getElementById("wbGallery").onchange=async e=>{
   const files=[...(e.target.files||[])].slice(0,12);
-  wbGalleryData=await Promise.all(files.map(readFileAsDataURL));
-  document.getElementById("wbGalleryStatus").textContent=files.length?`${files.length} 张图片：`+files.map(f=>f.name).join("、"):"未上传相册";
+  wbGalleryData=await Promise.all(files.map(f=>wbCompressImage(f,1200)));
+  const before=files.reduce((n,f)=>n+f.size,0),after=wbGalleryData.reduce((n,d)=>n+d.length*.75,0);
+  document.getElementById("wbGalleryStatus").textContent=files.length?`${files.length} 张图片 · ${wbKB(before)} → ${wbKB(after)}：`+files.map(f=>f.name).join("、"):"未上传相册";
   refreshWeddingPreview();
 };
 ["wbNames","wbDate","wbTime","wbVenue","wbAddress","wbMapUrl","wbIntro","wbSchedule","wbRsvpEmail","wbRsvpUrl","wbNote","wbAccent","wbDensity","wbHeroAlign","wbRadius","wbLayout","wbLang","wbRsvpMode","wbRsvpNotify","wbGiftUrl",
