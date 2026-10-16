@@ -1719,7 +1719,7 @@ ${F.rsvp?`<section class="rsvp" id="rsvp"><h2>${W("rsvp_title")}</h2><p>${W("rsv
 
 <div class="floating top" id="floatDock">
   ${F.map?`<a href="${e(mapUrl)}" target="_blank" rel="noopener" title="${e(WEDDING_INVITE_I18N[lang].map)}" aria-label="${e(WEDDING_INVITE_I18N[lang].map)}" data-wi-label="map">⌖</a>`:""}
-  ${F.rsvp?`<a href="#rsvp" title="RSVP" aria-label="RSVP">R</a>`:""}
+  ${F.rsvp?`<a href="#rsvp" onclick="event.preventDefault();document.getElementById('rsvp').scrollIntoView({behavior:'smooth'})" title="RSVP" aria-label="RSVP">R</a>`:""}
   ${F.card!==false?`<button onclick="openCard()" title="${e(WEDDING_INVITE_I18N[lang].card_short)}" aria-label="${e(WEDDING_INVITE_I18N[lang].card_short)}" data-wi-label="card_short">✉</button>`:""}
   ${F.share?`<button onclick="shareSite()" title="${e(WEDDING_INVITE_I18N[lang].share_short)}" aria-label="${e(WEDDING_INVITE_I18N[lang].share_short)}" data-wi-label="share_short">↗</button>`:""}
 </div>
