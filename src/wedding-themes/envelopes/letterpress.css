@@ -1,0 +1,31 @@
+/* ---------- 1 LETTERPRESS: folded card, debossed monogram ---------- */
+.x-letterpress{color:#1e2741}
+.x-letterpress .x-bg{background:radial-gradient(ellipse 70% 60% at 50% 40%,#e4ded2,#cfc7b8 70%,#bfb6a5)}
+.x-book{position:relative;width:min(340px,62vw);aspect-ratio:5/7;perspective:1700px}.x-book .x-sh{z-index:0}.x-page{z-index:1}.x-cover{z-index:2}
+.x-book .x-sh{transform-origin:0 50%}
+.x-page{position:absolute;inset:0;background-color:#f8f4ec;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:30px;font-family:BOD,serif;box-shadow:1px 1px 0 #e8e1d4,2px 2px 0 #ddd5c6,3px 3px 0 #e7e0d3,4px 4px 0 #d7cfbf,0 30px 50px -30px rgba(40,30,20,.5)}
+.x-page::before{content:"";position:absolute;inset:14px;border:.75px solid rgba(30,39,65,.45)}
+.x-page::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(40,30,20,.32),rgba(40,30,20,.06) 30%,transparent 60%);opacity:0;pointer-events:none}
+.x-page .k{font-size:8.5px;letter-spacing:.3em;text-transform:uppercase}.x-page .k.s{margin-top:8px;font-size:8px}
+.x-page .n{font-size:36px;font-weight:500;letter-spacing:.12em;line-height:1}.x-page .a{font:italic 15px BOD}.x-page .r{width:30px;border-top:.75px solid;opacity:.6;margin:10px 0}
+.x-cover{position:absolute;inset:0;transform-origin:0 50%;transform-style:preserve-3d}
+.x-cover .fr{background-color:#fbf8f1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;box-shadow:inset -1px 0 0 rgba(0,0,0,.04)}
+.x-cover .fr::after,.x-cover .bk::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0),rgba(30,20,10,.22));opacity:0;pointer-events:none}
+.x-cover .bk::after{background:linear-gradient(270deg,rgba(0,0,0,0),rgba(30,20,10,.18))}
+.x-cover .frame{position:absolute;inset:20px;box-shadow:inset 1px 1px 1.5px rgba(60,45,25,.2),1px 1px 0 rgba(255,255,255,.95)}
+.x-cover .mono{width:104px;height:104px;border-radius:50%;display:grid;place-items:center;font:italic 40px BOD;color:#f1ebdf;text-shadow:-1px -1px 0 rgba(70,55,35,.28),1px 1px 0 rgba(255,255,255,.95);box-shadow:inset 1.5px 1.5px 2px rgba(60,45,25,.22),inset -1px -1px 0 rgba(255,255,255,.9),1px 1px 0 rgba(255,255,255,.8)}
+.x-cover .dt{font:9.5px BOD;letter-spacing:.42em;color:#efe9dd;text-shadow:-.6px -.6px 0 rgba(70,55,35,.35),.6px .6px 0 #fff}
+.x-cover .bk{transform:rotateY(180deg);background-color:#f3eee4;display:flex;align-items:center;justify-content:center}
+.x-cover .lin{position:absolute;inset:16px;background:repeating-linear-gradient(45deg,rgba(30,39,65,.05) 0 1px,transparent 1px 7px),repeating-linear-gradient(-45deg,rgba(30,39,65,.05) 0 1px,transparent 1px 7px);border:.75px solid rgba(30,39,65,.2)}
+.x-cover .wl{position:relative;font:italic 15px/1.5 BOD;text-align:center;background:#f3eee4;padding:10px 18px;color:#2b3550}
+.x-letterpress .x-ping{color:#1e2741}
+.open .x-book{animation:lpBook 2.9s cubic-bezier(.45,.05,.25,1) both}
+@keyframes lpBook{0%{transform:translate3d(0,0,0)}12%{transform:translate3d(0,-8px,40px)}50%{transform:translate3d(50%,-8px,40px)}64%{transform:translate3d(50%,-8px,40px)}88%,100%{transform:translate3d(0,0,420px)}}
+.open .x-cover{animation:lpCover 2.9s both}
+@keyframes lpCover{0%,11%{transform:rotateY(0)}11%{animation-timing-function:cubic-bezier(.5,0,.25,1)}50%,100%{transform:rotateY(-174deg)}}
+.open .x-cover .x-face{animation:lpFace 2.9s both}
+@keyframes lpFace{0%,62%{opacity:1}76%,100%{opacity:0}}
+.open .x-cover .fr::after{animation:lpShadeF 2.9s both}@keyframes lpShadeF{0%,11%{opacity:0}32%{opacity:1}100%{opacity:1}}
+.open .x-cover .bk::after{animation:lpShadeB 2.9s both}@keyframes lpShadeB{0%,30%{opacity:1}50%,100%{opacity:0}}
+.open .x-page::after{animation:lpSpine 2.9s both}@keyframes lpSpine{0%,11%{opacity:0}30%{opacity:1}52%{opacity:.35}80%,100%{opacity:0}}
+.open .x-book .x-sh{animation:lpSh 2.9s cubic-bezier(.45,.05,.25,1) both}@keyframes lpSh{0%{transform:translateZ(-1px)}12%{transform:translateZ(-1px) translateY(10px) scale(1.06);opacity:.8}50%,64%{transform:translateZ(-1px) translateX(-100%) scaleX(2) translateY(10px);opacity:.8}88%,100%{transform:translateZ(-1px) scale(1.1);opacity:.4}}

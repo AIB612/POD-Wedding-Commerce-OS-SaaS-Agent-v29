@@ -1,0 +1,28 @@
+
+.env2{--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .25 0 0 0 0 .2 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .09' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .35 0 0 0 0 .3 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23f)'/%3E%3C/svg%3E");
+position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;perspective:1800px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.env2 *{box-sizing:border-box}
+.x-bg{position:absolute;inset:0}
+.x-bg::after{content:"";position:absolute;inset:0;background-image:var(--grain);opacity:.8}
+.x-zoom,.x-float{position:relative;transform-style:preserve-3d}
+.x-float{animation:flt 7s ease-in-out infinite}
+@keyframes flt{50%{transform:translateY(-4px)}}
+.pp{background-image:var(--grain),linear-gradient(135deg,rgba(255,255,255,.4),rgba(255,255,255,0) 42%,rgba(0,0,0,.035))}
+.x-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.x-sh{position:absolute;left:3%;right:3%;top:8%;bottom:-6%;background:radial-gradient(closest-side,rgba(40,28,18,.36),rgba(40,28,18,.12) 60%,transparent);filter:blur(10px);transform:translateZ(-1px);pointer-events:none}
+.x-cue{position:absolute;bottom:8vh;left:0;right:0;text-align:center;font:500 10.5px/1 JOS,sans-serif;letter-spacing:.38em;text-transform:uppercase;opacity:0;animation:cue .9s .7s ease forwards}
+.x-cue span{display:inline-block;animation:cueb 3.2s 1.6s ease-in-out infinite}
+@keyframes cue{to{opacity:.62}}@keyframes cueb{50%{opacity:.45}}
+.x-skip{position:absolute;bottom:4.5vh;left:0;right:0;text-align:center;font:500 9.5px JOS,sans-serif;letter-spacing:.3em;text-transform:uppercase;opacity:0;pointer-events:none}
+.x-ping{position:absolute;width:0;height:0;transform:translateZ(40px);pointer-events:none}
+.x-ping i{position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%;border:1px solid currentColor;opacity:0;animation:ping 2.6s 1.2s ease-out infinite}
+.x-ping i+i{animation-delay:1.65s}
+@keyframes ping{0%{transform:scale(.5);opacity:.55}100%{transform:scale(1.7);opacity:0}}
+.env2.open .x-cue,.env2.open .x-ping{opacity:0!important;transition:opacity .25s}
+.env2.open .x-float{animation:none}
+.env2.open .x-skip{animation:skp var(--fade) linear both}
+@keyframes skp{0%,14%{opacity:0}24%,80%{opacity:.45}100%{opacity:0}}
+.env2.open{animation:fadeout .45s ease var(--fade) both}
+@keyframes fadeout{to{opacity:0}}
+.env2.skip{animation:none;opacity:0;transition:opacity .25s}
+.env2.open .x-zoom{animation:none}

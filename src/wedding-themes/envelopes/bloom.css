@@ -1,0 +1,32 @@
+/* ---------- 4 BLOOM: classic envelope, wax seal, patterned liner ---------- */
+.x-bloom{color:#4a2b3b}
+.x-bloom .x-bg{background:radial-gradient(55% 45% at 28% 30%,rgba(251,211,214,.9),transparent 70%),radial-gradient(40% 40% at 78% 72%,rgba(230,215,239,.8),transparent 70%),radial-gradient(ellipse 80% 70% at 50% 45%,#fdf3f1,#f1dedb)}
+.x-envl{position:relative;width:min(500px,86vw);aspect-ratio:7/5;perspective:1300px}
+.x-rear{position:absolute;inset:0;z-index:1;background:#fbefec;background-image:radial-gradient(circle at 20% 30%,#eaa9b6 0 6%,transparent 6.5%),radial-gradient(circle at 60% 18%,#f2c8b2 0 5%,transparent 5.5%),radial-gradient(circle at 85% 40%,#cdb7dc 0 6%,transparent 6.5%),radial-gradient(circle at 40% 62%,#eaa9b6 0 4%,transparent 4.5%),radial-gradient(ellipse 8% 3% at 70% 66%,#a9c2a5 99%,transparent),radial-gradient(ellipse 3% 7% at 10% 75%,#a9c2a5 99%,transparent);background-size:90px 70px;box-shadow:inset 0 30px 40px -20px rgba(74,43,59,.35)}
+.x-envl .x-sh{z-index:0;top:14%;bottom:-8%}
+.x-bloom .x-letter{position:absolute;z-index:2;left:6%;right:6%;top:5%;height:92%;background-color:#fdf6f3;border-radius:200px 200px 6px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#4a2b3b;box-shadow:0 1px 0 #ecd8d5,0 10px 24px -10px rgba(74,43,59,.35)}
+.x-bloom .x-letter .k{font:9px JOS;letter-spacing:.3em;text-transform:uppercase;opacity:.7}
+.x-bloom .x-letter b{font:clamp(44px,11vw,64px)/.95 PIN;font-weight:400}.x-bloom .x-letter i{font:italic 15px PLA}.x-bloom .x-letter .d{font:10px JOS;letter-spacing:.28em;text-transform:uppercase;margin-top:10px}
+.x-pocket{position:absolute;inset:0;z-index:3;width:100%;height:100%;filter:drop-shadow(0 -1px 1px rgba(74,43,59,.1))}
+.x-bloom .x-flap{position:absolute;z-index:4;left:0;right:0;top:0;height:62%;transform-origin:50% 0;transform-style:preserve-3d}
+.x-bloom .x-flap>div{position:absolute;inset:0;clip-path:polygon(0 0,100% 0,52% 98%,50% 100%,48% 98%);backface-visibility:hidden}
+.x-bloom .fo{background:#f4dcdc;background-image:var(--grain),linear-gradient(180deg,#f7e5e4,#efd3d4)}
+.x-bloom .fo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 70%,rgba(74,43,59,.08))}
+.x-bloom .fi{transform:rotateY(180deg);background:#fbefec;background-image:radial-gradient(circle at 20% 30%,#eaa9b6 0 7%,transparent 7.5%),radial-gradient(circle at 60% 18%,#f2c8b2 0 6%,transparent 6.5%),radial-gradient(circle at 85% 45%,#cdb7dc 0 7%,transparent 7.5%),radial-gradient(ellipse 9% 3% at 45% 70%,#a9c2a5 99%,transparent);background-size:90px 70px}
+
+.x-seal{position:absolute;z-index:5;left:50%;top:62%;width:96px;height:96px;margin:-48px 0 0 -48px}
+.x-seal .h{position:absolute;inset:0}.x-seal svg{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 3px rgba(60,20,35,.35))}
+.x-seal .ck{position:absolute;left:44%;top:0;width:12%;height:100%;opacity:0;background:linear-gradient(180deg,transparent,rgba(255,230,240,.9) 30%,rgba(255,255,255,.95) 50%,rgba(255,230,240,.9) 70%,transparent);clip-path:polygon(50% 0,30% 14%,80% 25%,20% 38%,70% 49%,10% 61%,60% 72%,30% 86%,50% 100%,55% 100%,35% 86%,65% 72%,15% 61%,75% 49%,25% 38%,85% 25%,35% 14%,55% 0)}
+.x-seal .cr{position:absolute;left:46%;top:50%;width:7px;height:6px;border-radius:40% 60% 50% 50%;background:#6d3049;opacity:0}
+.x-bloom .x-ping{color:#5a2c42}
+.x-bloom.open .x-seal{animation:blSeal 3.3s both}@keyframes blSeal{0%{transform:none;animation-timing-function:ease-out}4%{transform:scale(.93)}8%,100%{transform:scale(1)}}
+.x-bloom.open .ck{animation:blCk 3.3s both}@keyframes blCk{0%,6%{opacity:0}8%{opacity:1}12%{opacity:.6}16%,100%{opacity:0}}
+.x-bloom.open .h1{animation:blH1 3.3s both}@keyframes blH1{0%,9%{transform:none;animation-timing-function:cubic-bezier(.2,.8,.4,1)}14%{transform:translate(-7px,2px) rotate(-12deg);animation-timing-function:cubic-bezier(.55,0,.95,.5)}36%{transform:translate(-40px,190px) rotate(-55deg);opacity:1}37%,100%{opacity:0;transform:translate(-40px,190px) rotate(-55deg)}}
+.x-bloom.open .h2{animation:blH2 3.3s both}@keyframes blH2{0%,9%{transform:none;animation-timing-function:cubic-bezier(.2,.8,.4,1)}14%{transform:translate(8px,3px) rotate(14deg);animation-timing-function:cubic-bezier(.55,0,.95,.5)}38%{transform:translate(46px,200px) rotate(62deg);opacity:1}39%,100%{opacity:0;transform:translate(46px,200px) rotate(62deg)}}
+.x-bloom.open .c1{animation:blC1 3.3s both}@keyframes blC1{0%,9%{opacity:0;transform:none}10%{opacity:1;animation-timing-function:cubic-bezier(.3,.6,.9,.5)}30%,100%{opacity:0;transform:translate(-30px,120px) rotate(200deg)}}
+.x-bloom.open .c2{animation:blC2 3.3s both}@keyframes blC2{0%,9%{opacity:0;transform:none}10%{opacity:1;animation-timing-function:cubic-bezier(.3,.6,.9,.5)}32%,100%{opacity:0;transform:translate(18px,150px) rotate(-160deg) scale(.7)}}
+.x-bloom.open .c3{animation:blC3 3.3s both}@keyframes blC3{0%,9%{opacity:0;transform:none}10%{opacity:1;animation-timing-function:cubic-bezier(.3,.6,.9,.5)}28%,100%{opacity:0;transform:translate(36px,90px) rotate(120deg) scale(.5)}}
+.x-bloom.open .x-flap{animation:blFlap 3.3s both}@keyframes blFlap{0%,16%{transform:rotateX(0);z-index:4;animation-timing-function:cubic-bezier(.45,0,.3,1)}29%{z-index:4}29.5%{z-index:1}42%{transform:rotateX(180deg);z-index:1}68%{transform:rotateX(180deg);opacity:1;animation-timing-function:cubic-bezier(.5,0,.75,0)}88%,100%{transform:translateY(64%) rotateX(180deg);opacity:0;z-index:1}}
+.x-bloom.open .x-letter{animation:blLet 3.3s both}@keyframes blLet{0%,40%{transform:none;z-index:2;animation-timing-function:cubic-bezier(.3,1.3,.45,1)}64%{transform:translateY(-58%);z-index:2;animation-timing-function:cubic-bezier(.55,0,.25,1)}66%{z-index:6}86%,100%{transform:translateY(-6%) translateZ(220px);z-index:6}}
+.x-bloom.open .x-pocket,.x-bloom.open .x-rear{animation:blDrop 3.3s both}@keyframes blDrop{0%,66%{transform:none;opacity:1;animation-timing-function:cubic-bezier(.5,0,.75,0)}88%,100%{transform:translateY(40%);opacity:0}}
+.x-bloom.open .x-envl .x-sh{animation:blSh 3.3s both}@keyframes blSh{0%,66%{opacity:1}88%,100%{opacity:0;transform:translateY(30%)}}

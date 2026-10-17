@@ -1,0 +1,56 @@
+*{box-sizing:border-box}html,body{margin:0}html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-wrap:break-word}
+img{display:block;max-width:100%}a{color:inherit}button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}
+[id]{scroll-margin-top:64px}
+.ph{width:100%;height:100%;object-fit:cover}[data-lb]{cursor:zoom-in}
+.wb-map{display:block;color:inherit}
+.wb-cta{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:28px;position:relative}
+.alt{opacity:.78}
+.wx-hint{flex-basis:100%;font-size:13px;line-height:1.5;margin:10px 0 0;opacity:.85}
+/* RSVP (shared structure; each theme styles .rs inside its reply section) */
+.rs label{display:block}.rs input:not([type=radio]),.rs select,.rs textarea{width:100%;background:transparent;border:0;outline:0;border-radius:0;-webkit-appearance:none;appearance:none}
+.rs select{background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);background-position:calc(100% - 12px) 55%,calc(100% - 7px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+.rs input:focus-visible,.rs select:focus-visible,.rs button:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.rs .att{display:flex;gap:10px;flex-wrap:wrap}.rs .att label{flex:1;min-width:140px;cursor:pointer;position:relative;overflow:hidden}
+.rs .att input{position:absolute;opacity:0;left:0;top:0;width:1px;height:1px}.rs .att input:focus-visible+span{outline:2px solid currentColor;outline-offset:2px}
+.rs .two{display:grid;grid-template-columns:1fr 2fr;gap:inherit}
+.rs .off{opacity:.35;pointer-events:none}
+.rs .hp{position:absolute!important;left:-9999px;width:1px;height:1px;opacity:0}
+.rs button{cursor:pointer}.rs button[disabled]{opacity:.6;cursor:default}
+.rs-more{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:13px;letter-spacing:.06em}.rs-more a{text-decoration:underline;text-underline-offset:3px}
+.rsvp-msg{margin:0;min-height:1.2em;font-size:15px;line-height:1.5}.rsvp-msg:empty{display:none}.rsvp-msg.ok{font-size:19px}
+.rs .privacy{margin:0;font-size:12px;opacity:.65;letter-spacing:.02em;text-transform:none}
+.rs-link{display:grid;gap:16px;justify-items:center;text-align:center}
+@media(max-width:700px){.rs .two{grid-template-columns:1fr}.rs .att label{flex-basis:100%}}
+/* reveal: transform/opacity only */
+.rv{transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.mo .rv:not(.in){opacity:0;transform:translateY(24px)}
+.mo .t-lp .rv:not(.in){transform:translateY(36px) rotate(var(--r,0deg))}
+.mo .t-md .rv:not(.in){transform:translateX(-28px)}
+.mo .t-gd .rv:not(.in){transform:translateY(14px)}
+.mo .t-bl .rv:not(.in){transform:translateY(18px) scale(.97)}
+.mo .t-pc .rv:not(.in){transform:translateY(24px) rotate(calc(var(--r,0deg) - 1.5deg))}
+.mo .t-gl .rv:not(.in){transform:translateY(32px)}
+@media(max-width:700px){.rv{transition-duration:.6s}.mo body[class] .rv:not(.in){transform:translateY(14px)}}
+/* chrome: language pill, floating dock, envelope layer, card viewer, lightbox */
+.invite-lang{position:fixed;left:12px;bottom:12px;z-index:60;display:flex;gap:2px;padding:4px;border-radius:30px;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 4px 18px rgba(0,0,0,.13);font:12px/1 system-ui,-apple-system,sans-serif;color:#222}
+.invite-lang button{border:0;background:none;padding:7px 9px;border-radius:20px;font:inherit}.invite-lang button.active{background:#222;color:#fff}
+.floating{position:fixed;right:12px;bottom:12px;z-index:60;display:flex;gap:6px;transition:opacity .3s,transform .3s}
+.floating.top{opacity:0;transform:translateY(10px);pointer-events:none}
+.floating a,.floating button{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;border:0;background:rgba(255,255,255,.9);color:#222;box-shadow:0 4px 18px rgba(0,0,0,.15);text-decoration:none;font:15px/1 system-ui,-apple-system,sans-serif;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.env{position:fixed;inset:0;z-index:100;outline:0}.env.gone{opacity:0;pointer-events:none;transition:opacity .35s}
+html.envon,html.envon body{overflow:hidden}
+.cardview{position:fixed;inset:0;z-index:90;background:rgba(20,18,16,.74);display:none;align-items:center;justify-content:center;padding:14px;overflow:auto}
+.cardview.open{display:flex}.card-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;max-width:100%}
+.card-actions{display:flex;gap:10px}.card-actions button{padding:12px 24px;border-radius:30px;border:0;background:#fff;color:#222;font:13px system-ui,-apple-system,sans-serif;letter-spacing:.04em}
+.ic{position:relative;box-shadow:0 2px 3px rgba(0,0,0,.08),0 40px 60px -34px rgba(0,0,0,.5);overflow:hidden;flex:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ic-qr{position:absolute;right:30px;bottom:30px;z-index:5;display:flex;flex-direction:column;align-items:center;gap:4px}
+.ic-qr .qr{width:62px;height:62px}.ic-qr .qr svg{display:block;width:100%;height:100%}.ic-qr .qr:empty{display:none}
+.ic-qr .url{font:7.5px/1.25 system-ui,-apple-system,sans-serif;letter-spacing:.02em;opacity:.7;max-width:160px;text-align:center;word-break:break-all}.ic-qr .url:empty{display:none}
+.lightbox{position:fixed;inset:0;z-index:95;background:rgba(10,10,10,.92);display:none;align-items:center;justify-content:center;padding:18px;cursor:zoom-out}.lightbox.open{display:flex}.lightbox img{max-width:100%;max-height:100%;object-fit:contain}
+@media print{body.printing>*:not(#cardView){display:none!important}body.printing{background:#fff!important;padding:0!important}
+ body.printing #cardView{position:static;display:block!important;background:none;padding:0;overflow:visible}body.printing .card-wrap{display:block}body.printing .card-actions{display:none}
+ body.printing .ic{zoom:var(--pz,1)!important;box-shadow:none;margin:0;break-inside:avoid;page-break-inside:avoid}.rv{opacity:1!important;transform:none!important}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.rv{transition:none}}
+.l-zh *,.cjk .lp-name,.cjk .gd-names{font-style:normal!important}
+h1,h2,h3{text-wrap:balance}

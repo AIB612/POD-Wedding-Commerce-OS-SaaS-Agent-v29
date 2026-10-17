@@ -21,7 +21,8 @@
     "scenes:build": "python3 scripts/build_scenes.py && node server/build-studio-data.js",
     "test:v29": "node server/v29-flow-test.js",
     "test:rsvp": "node server/rsvp-test.js",
-    "test:themes": "node server/wedding-themes-test.js"
+    "test:themes": "node server/wedding-themes-test.js",
+    "build:wedding-themes": "node src/wedding-themes/build.mjs"
   },
   "engines": {
     "node": ">=20"
