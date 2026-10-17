@@ -426,7 +426,7 @@ postcard:`body.t-pc{--ink:#1d2a3a;--red:#b8402a;--blue:#2b4f7a;--paper:#f4efe6;-
 .cjk .p2-intro h1{line-height:1.08}
 .p2-front .in .ph{height:100%}.pc-art{display:block}
 .p2-btn{background:none;color:inherit;cursor:pointer}.p2-btn.k{background:var(--ink);color:var(--sheet)}
-.p2-pass .sch{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));row-gap:18px}
+@media(min-width:701px){.p2-pass .sch{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));row-gap:18px}}
 .p2-prints .ph{height:auto}
 .p2-prints.n1{grid-template-columns:minmax(0,560px)}.p2-prints.n2{grid-template-columns:1.25fr 1fr}
 .p2-prints figure:nth-child(n+4){margin-top:0}
@@ -511,7 +511,8 @@ gallery:`.t-gl{--ink:#121212;background:#fff;color:var(--ink);font-family:TEN,sa
 .ic-in{font-size:12px;line-height:1.7;border-left:1px solid #ddd;padding-left:14px}
 .ic-gl .ic-qr{position:static;align-items:flex-start;margin-top:8px}.ic-gl .ic-qr .url{text-align:left}.ic-gl .ic-qr .qr{width:54px;height:54px}
 @media(max-width:700px){.gl-logo{font-size:min(23vw,calc(150vw / var(--nl)))}.gl-spread.one .gl-pg{padding:50px 16px 64px}.gl-notes.n2,.gl-notes.n3{grid-template-columns:1fr}.gl-mos figure.x{grid-column:span 3;grid-row:span 3}}
-.gl-notes.solo{display:flex;justify-content:center;text-align:center}.gl-notes.solo .cd{border:0;padding-left:0;margin:0}`};
+.gl-notes.solo{display:flex;justify-content:center;text-align:center}.gl-notes.solo .cd{border:0;padding-left:0;margin:0}
+@media(max-width:700px){.gl-band::after{background:linear-gradient(0deg,rgba(0,0,0,.78),rgba(0,0,0,.35) 60%,rgba(0,0,0,.1))}.gl-band:not(.np) .gl-btn:not(.f){background:rgba(0,0,0,.35)}}`};
 const ENVCSS={common:`.env2{--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .25 0 0 0 0 .2 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .09' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .35 0 0 0 0 .3 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23f)'/%3E%3C/svg%3E");
 position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;perspective:1800px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .env2 *{box-sizing:border-box}
