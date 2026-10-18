@@ -1,0 +1,34 @@
+/* ---------- 5 POSTCARD v2: airmail envelope ---------- */
+.x-postcard{--ink:#1d2a3a;--red:#b8402a;--blue:#2b4f7a;--sheet:#fbf8f2;--mut:#6b6a66;color:#1d2a3a}
+.x-postcard .x-bg{background:radial-gradient(ellipse 75% 65% at 50% 42%,#f7f3eb,#e9e2d4 75%,#ddd4c3)}
+.x-air{position:relative;width:min(600px,90vw);aspect-ratio:1.55;perspective:1600px}
+.x-air .x-sh{z-index:0;top:16%;bottom:-8%}
+.x-flip{position:absolute;inset:0;z-index:3;transform-style:preserve-3d}
+.x-flip .fr{background-color:var(--sheet);padding:16px;box-shadow:0 0 0 .5px rgba(0,0,0,.06),0 1px 0 #e3dccd,0 2px 0 #d9d1c0}
+.x-flip .fr::before{content:"";position:absolute;inset:0;padding:14px;background:repeating-linear-gradient(-45deg,var(--red) 0 18px,var(--sheet) 18px 28px,var(--blue) 28px 46px,var(--sheet) 46px 56px);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.x-flip .fr .p2-chip{position:absolute;left:40px;top:38px}
+.x-flip .fr .p2-stamp{position:absolute;right:36px;top:32px;transform:rotate(2deg)}.x-flip .fr .p2-stamp+.p2-stamp{right:150px;top:40px;transform:rotate(-4deg)}
+.x-flip .fr .pmw{position:absolute;right:120px;top:84px;width:250px;color:rgba(29,42,58,.75);z-index:4;transform:rotate(-7deg);mix-blend-mode:multiply}
+.x-flip .fr .addr{position:absolute;left:38%;bottom:16%;display:flex;flex-direction:column;gap:2px}.x-flip .fr .addr i{font:italic 30px DMS;margin-bottom:8px}.x-flip .fr .addr span{font-size:14px;color:var(--mut);border-bottom:1px solid rgba(29,42,58,.2);padding:6px 60px 4px 0;font-family:JOS}
+.x-flip .bk{transform:rotateY(180deg)}
+.x-live{position:absolute;inset:0;z-index:2;opacity:0}
+.x-postcard .x-rear{position:absolute;inset:0;z-index:1;background:#e7e0d1;background-image:repeating-linear-gradient(-45deg,#e3e9f0 0 7px,#d8e0ea 7px 14px);box-shadow:inset 0 30px 30px -18px rgba(29,42,58,.3)}
+.x-postcard .x-letter{position:absolute;z-index:2;left:5%;right:5%;top:6%;height:88%;background-color:var(--sheet);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;box-shadow:0 1px 0 #e3dccd,0 8px 20px -8px rgba(40,30,20,.35)}
+.x-postcard .x-letter b{font:clamp(30px,7vw,50px)/1 DMS;font-weight:400}.x-postcard .x-letter i{font:italic clamp(15px,3vw,19px) DMS;color:#3c4654}.x-postcard .x-letter .d{font:500 10.5px OSW;letter-spacing:.24em;color:var(--mut)}
+.x-postcard .x-letter::after{content:"";position:absolute;inset:0;border:7px solid transparent;border-image:repeating-linear-gradient(-45deg,var(--red) 0 10px,transparent 10px 16px,var(--blue) 16px 26px,transparent 26px 32px) 7}
+.x-postcard .x-pocket{position:absolute;inset:0;z-index:3;background:linear-gradient(to top right,#f8f4ec 49.8%,transparent 50%) left bottom/50.2% 100% no-repeat,linear-gradient(to top left,#f4efe5 49.8%,transparent 50%) right bottom/50.2% 100% no-repeat;filter:drop-shadow(0 -1px 1px rgba(0,0,0,.07))}
+.x-postcard .x-pocket::after{content:"";position:absolute;inset:0;border:8px solid transparent;border-image:repeating-linear-gradient(-45deg,var(--red) 0 12px,transparent 12px 20px,var(--blue) 20px 32px,transparent 32px 40px) 8;-webkit-mask:linear-gradient(transparent 0 0) top/100% 0 no-repeat,linear-gradient(#000 0 0);mask:linear-gradient(#000,#000)}
+.x-postcard .x-flap{position:absolute;z-index:4;left:0;right:0;top:0;height:58%;transform-origin:50% 0;transform-style:preserve-3d}
+.x-postcard .x-flap>div{position:absolute;inset:0;clip-path:polygon(0 0,100% 0,52% 97%,50% 100%,48% 97%);backface-visibility:hidden}
+.x-postcard .fo{background-color:#f8f4ec;background-image:var(--grain),linear-gradient(180deg,#faf6ef,#f1ebdf)}
+.x-postcard .fi{transform:rotateY(180deg);background:repeating-linear-gradient(-45deg,#e6ecf3 0 7px,#dbe3ed 7px 14px)}
+.x-stk{position:absolute;z-index:5;left:50%;top:58%;transform:translate(-50%,-50%);background:var(--red);color:#fff;font:500 11px OSW;letter-spacing:.2em;padding:8px 12px;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.x-flip .bk .x-rear,.x-flip .bk .x-pocket,.x-flip .bk .x-flap,.x-flip .bk .x-stk{animation:none!important}
+.x-postcard .x-ping{color:#2b4f7a}
+.x-postcard.open .x-flip{animation:pcFlip 3.45s both}@keyframes pcFlip{0%{transform:translateZ(0) rotateY(0);animation-timing-function:cubic-bezier(.3,0,.4,1)}7%{transform:translateZ(30px) rotateY(0);animation-timing-function:cubic-bezier(.5,0,.5,1)}19%{transform:translateZ(120px) rotateY(95deg);animation-timing-function:cubic-bezier(.2,.6,.3,1)}31%,100%{transform:translateZ(0) rotateY(180deg)}}
+.x-postcard.open .x-live{animation:pcLive 3.45s both}@keyframes pcLive{0%,31%{opacity:0}31.5%,100%{opacity:1}}
+.x-postcard.open .x-live .x-stk{animation:pcStk 3.45s both}@keyframes pcStk{0%,32%{transform:translate(-50%,-50%);opacity:1;animation-timing-function:cubic-bezier(.4,0,.6,1)}40%,100%{transform:translate(-80%,-160%) rotate(-28deg) scale(.9);opacity:0}}
+.x-postcard.open .x-live .x-flap{animation:pcFlap 3.45s both}@keyframes pcFlap{0%,37%{transform:rotateX(0);z-index:4;animation-timing-function:cubic-bezier(.45,0,.3,1)}46%{z-index:4}46.5%{z-index:1}55%{transform:rotateX(180deg);z-index:1}76%{transform:rotateX(180deg);opacity:1;animation-timing-function:cubic-bezier(.5,0,.75,0)}92%,100%{transform:translateY(69%) rotateX(180deg);opacity:0;z-index:1}}
+.x-postcard.open .x-live .x-letter{animation:pcLet 3.45s both}@keyframes pcLet{0%,52%{transform:none;z-index:2;animation-timing-function:cubic-bezier(.3,1.3,.45,1)}73%{transform:translateY(-60%);z-index:2;animation-timing-function:cubic-bezier(.55,0,.25,1)}75%{z-index:6}92%,100%{transform:translateY(-4%) translateZ(200px);z-index:6}}
+.x-postcard.open .x-live .x-pocket,.x-postcard.open .x-live .x-rear{animation:pcDrop 3.45s both}@keyframes pcDrop{0%,75%{transform:none;opacity:1;animation-timing-function:cubic-bezier(.5,0,.75,0)}92%,100%{transform:translateY(40%);opacity:0}}
+.x-postcard.open .x-air .x-sh{animation:pcSh 3.45s both}@keyframes pcSh{0%{opacity:1}19%{opacity:.35;transform:translateZ(-1px) scale(.85)}31%,75%{opacity:1;transform:translateZ(-1px)}92%,100%{opacity:0}}

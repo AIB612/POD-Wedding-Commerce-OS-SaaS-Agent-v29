@@ -1,0 +1,35 @@
+/* ---------- phone: lighter ---------- */
+@media(max-width:700px){
+.x-bg::after,.pp{background-image:none!important}
+.x-sh{filter:none;background:radial-gradient(closest-side,rgba(40,28,18,.28),transparent)}
+.x-cover .mono{width:84px;height:84px;font-size:32px}
+@keyframes lpBook{0%{transform:none}12%{transform:translate3d(0,-6px,20px)}50%,64%{transform:translate3d(50%,-6px,20px)}88%,100%{transform:translate3d(0,0,300px)}}
+.x-book{width:44vw}
+.x-tk{width:92vw;height:calc(92vw*.42)}
+.x-gw{--gz:1.9}
+.x-air{width:92vw;aspect-ratio:1.42}.x-flip .fr{padding:10px}.x-flip .fr::before{padding:9px;background:repeating-linear-gradient(-45deg,var(--red) 0 11px,var(--sheet) 11px 17px,var(--blue) 17px 28px,var(--sheet) 28px 34px)}.x-flip .fr .p2-chip{left:24px;top:24px;font-size:9px}.x-flip .fr .p2-stamp{width:62px;height:78px;padding:6px;right:22px;top:20px}.x-flip .fr .p2-stamp .st span{display:none}.x-flip .fr .p2-stamp .st{justify-content:flex-end}.x-flip .fr .p2-stamp .st b{font-size:13px}.x-flip .fr .p2-stamp+.p2-stamp{right:92px;top:26px}.x-flip .fr .pmw{right:60px;top:64px;width:150px}.x-flip .fr .addr{left:24px;bottom:22px}.x-flip .fr .addr i{font-size:21px;margin-bottom:2px}.x-flip .fr .addr span{font-size:12px;padding:4px 40px 3px 0}
+.x-postcard .x-letter::after{border-width:5px;border-image-width:5px}
+.x-pocket,.x-postcard .x-pocket{filter:none}.x-seal svg,.x-tag .tg,.x-bow{filter:none}
+.x-sleeve .sheen{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+.env2 *{animation:none!important}
+.env2.open{animation:fadeout .4s ease both!important}
+}
+
+.x-postcard.open .x-flip .fr{animation:pcFr 3.45s both}@keyframes pcFr{0%,18.5%{opacity:1}19%,100%{opacity:0}}
+.x-postcard.open .x-flip .bk{animation:pcBk 3.45s both}@keyframes pcBk{0%,18.5%{opacity:0}19%,31%{opacity:1}31.5%,100%{opacity:0}}.x-flip .bk{backface-visibility:visible;-webkit-backface-visibility:visible}
+.x-main .bk{box-shadow:inset 0 0 0 1px rgba(0,0,0,.1),0 1px 0 #d9d7cf}
+.x-postcard:not(.open) .x-flip .bk{opacity:0}
+.x-main .bk{box-shadow:inset 0 0 0 1px rgba(0,0,0,.1),0 1px 0 #d9d7cf,0 2px 0 #cfccc2,0 26px 50px -22px rgba(20,20,10,.45)}
+@media(min-width:701px){.x-gallery .x-gw{margin-top:22vh;width:300px;--gz:5}}
+.x-postcard svg.x-pocket{position:absolute;inset:0;width:100%;height:100%;z-index:3;background:none;filter:none;overflow:visible}
+.x-pkb{position:absolute;inset:0;z-index:3;pointer-events:none;border:8px solid transparent;border-image:repeating-linear-gradient(-45deg,var(--red) 0 12px,transparent 12px 20px,var(--blue) 20px 32px,transparent 32px 40px) 8;clip-path:polygon(0 0,50% 58%,100% 0,100% 100%,0 100%)}
+.x-postcard.open .x-live .x-pkb{animation:pcDrop 3.45s both}.x-flip .bk .x-pkb{animation:none!important}
+@media(max-width:700px){.x-pkb{border-width:5px;border-image-slice:5}}
+.x-bloom .x-flap>div,.x-postcard .x-flap>div{backface-visibility:visible;-webkit-backface-visibility:visible}
+.x-bloom:not(.open) .x-flap .fi,.x-postcard:not(.open) .x-flap .fi{opacity:0}
+.x-bloom.open .x-flap .fo{animation:blFo 3.3s both}@keyframes blFo{0%,29%{opacity:1}29.5%,100%{opacity:0}}
+.x-bloom.open .x-flap .fi{animation:blFi 3.3s both}@keyframes blFi{0%,29%{opacity:0}29.5%,100%{opacity:1}}
+.x-postcard.open .x-live .x-flap .fo{animation:pcFo 3.45s both}@keyframes pcFo{0%,46%{opacity:1}46.5%,100%{opacity:0}}
+.x-postcard.open .x-live .x-flap .fi{animation:pcFi 3.45s both}@keyframes pcFi{0%,46%{opacity:0}46.5%,100%{opacity:1}}

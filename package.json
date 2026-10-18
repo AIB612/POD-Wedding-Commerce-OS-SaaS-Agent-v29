@@ -19,7 +19,10 @@
     "mockups:generate": "python3 scripts/generate_mockups.py > /dev/null && node server/build-studio-data.js",
     "mockups:import": "python3 scripts/import_mockup.py",
     "scenes:build": "python3 scripts/build_scenes.py && node server/build-studio-data.js",
-    "test:v29": "node server/v29-flow-test.js"
+    "test:v29": "node server/v29-flow-test.js",
+    "test:rsvp": "node server/rsvp-test.js",
+    "test:themes": "node server/wedding-themes-test.js",
+    "build:wedding-themes": "node src/wedding-themes/build.mjs"
   },
   "engines": {
     "node": ">=20"
