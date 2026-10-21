@@ -733,6 +733,9 @@ const K={
 'acct.proof.ChangesRequested':{en:'Changes requested'},
 'pay.tl.proofSkip':{en:'Mockup approved at checkout'},
 'pay.tl.proofWait':{en:'Waiting for your proof approval'},
+'pay.tl.proofPrep':{en:'Proof in preparation — we e-mail you as soon as it is ready'},
+'acct.od.proofPreparing':{en:'Proof in preparation'},
+'acct.od.proofPreparingSub':{en:'we e-mail you a review link as soon as it is ready.'},
 'pay.delivery':{en:'Estimated delivery'},
 'acct.so.title':{en:'Sign in to your account'},
 'acct.so.text':{en:'See your orders, saved designs and addresses. One tap, no password.'}

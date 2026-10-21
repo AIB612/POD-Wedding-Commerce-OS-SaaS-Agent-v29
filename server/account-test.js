@@ -80,5 +80,29 @@ try {
   const ds = (await (await me("/api/account/designs")).json()).designs; assert.deepEqual(ds.map(x => x.id), ["prj_demo1"]);
   const ov = await (await me("/api/account/overview")).json(); assert.equal(ov.counts.orders, 3); assert.equal(ov.counts.designs, 1);
   result.profile_designs = "pass";
+  // 5. Proof timing: no "Review proof" link and no "Digital proof sent" until admin has uploaded the proof.
+  {
+    const { addRecord, findRecord } = await import("./saas-store.js");
+    const { updateProof } = await import("./services/proof-service.js");
+    const { proofNote } = await import("./services/checkout-service.js");
+    const src = demo.orders[0], uid = src.user_id, now = new Date().toISOString();
+    const o = await addRecord("orders", { id: "POD-2026-PROOF0000A1", tenant_id: src.tenant_id, user_id: uid, channel: "storefront", status: "Needs approval", payment_status: "paid", paid_at: now, production_blocked: true, proof_choice: "proof",
+      currency: "CHF", customer_email: src.customer_email, created_at: now, subtotal: 30, shipping_charged: 0, tax: 0, grand_total: 30,
+      items: [{ product_id: "mug", name: "Ceramic mug", quantity: 2, unit_price: 15, line_total: 30, studio_project_id: "prj_demo1", design_url: "/x.png" }] });
+    const pr = await addRecord("proofs", { id: "proof_t1", tenant_id: o.tenant_id, order_id: o.id, token: "tok_proof_timing_1", status: "Pending", proof_url: "", created_at: now });
+    let od = (await (await me(`/api/account/orders/${o.id}`)).json()).order;
+    assert.equal(od.proof.ready, false); assert.equal(od.proof.approval_url, "", "no review link before upload");
+    const tp = od.timeline.find(s => s.step === "proof"); assert.equal(tp.done, false, "proof step not done at Needs approval"); assert.equal(tp.pending_upload, true);
+    const dash = await (await import("./services/account-service.js")).dashboard(o.tenant_id, uid); const dp = dash.proofs.find(x => x.id === "proof_t1");
+    assert.equal(dp.approval_url, ""); assert.equal(dp.ready, false);
+    assert.match(proofNote(o, pr, "https://s"), /in preparation/); assert.doesNotMatch(proofNote(o, pr, "https://s"), /proof\.html/);
+    const js = fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "..", "account-app.js"), "utf8"); assert.match(js, /acct\.od\.proofPreparing/);
+    await updateProof(o.tenant_id, pr.id, { proof_url: "/assets/proof.png" });
+    od = (await (await me(`/api/account/orders/${o.id}`)).json()).order;
+    assert.equal(od.proof.ready, true); assert.equal(od.proof.approval_url, "/proof.html?token=tok_proof_timing_1");
+    assert.equal(od.timeline.find(s => s.step === "proof").done, true);
+    assert.match(proofNote(o, await findRecord("proofs", pr.id), "https://s"), /https:\/\/s\/proof\.html\?token=tok_proof_timing_1/);
+    result.proof_timing = "pass";
+  }
   console.log(JSON.stringify({ ok: true, ...result }, null, 2));
 } finally { server.close(); }

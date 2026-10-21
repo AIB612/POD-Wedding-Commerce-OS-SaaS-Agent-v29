@@ -82,6 +82,9 @@ try {
   assert.equal(again.status, "COMPLETED"); assert.equal(captures, 1);
   assert.equal((await findRecord("orders", co.order_id)).payment_status, "paid");
   result.idempotent_capture = "pass";
+  // No design items + default "approve" → no proof record is created at all.
+  { const { findWhere } = await import("./saas-store.js"); assert.equal((await findRecord("orders", co.order_id)).proof_choice, "approve");
+    assert.equal(await findWhere("proofs", p => p.order_id === co.order_id), null, "no proof record for plain approve orders"); result.no_proof_without_design = "pass"; }
 
   // 6. EUR for an EU address.
   const eu = await (await post("/api/payments/paypal/create", { ...body, shipping: { ...body.shipping, country: "AT", postal_code: "1010", city: "Wien" } })).json();
@@ -104,6 +107,9 @@ try {
     op = await findRecord("orders", cop.order_id); assert.equal(op.status, "Needs approval"); assert.equal(op.production_blocked, true);
     const r1 = await realFetch(base + `/api/saas/orders/${op.id}/status`, { method: "POST", headers: { "Content-Type": "application/json", "x-admin-api-key": "k", "x-action-approved": "true" }, body: JSON.stringify({ status: "Production" }) });
     assert.equal(r1.status, 409, "admin cannot start production before approval");
+    { const { orderConfirmation, orderToken } = await import("./services/checkout-service.js"); const c = await orderConfirmation(op.id, orderToken(op.id));
+      assert.equal(c.proof.ready, false); assert.equal(c.proof.review_url, "", "no review link before upload"); assert.equal(c.timeline.find(s => s.id === "proof").preparing, true);
+      const ps = fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "..", "payment-success.html"), "utf8"); assert.match(ps, /pay\.tl\.proofPrep/); }
     const html = fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "..", "checkout.html"), "utf8");
     assert.match(html, /id="proofOptions"/); assert.match(fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "..", "checkout.js"), "utf8"), /Send me a proof first|co\.proofFirst/);
     result.proof_choice = "pass";

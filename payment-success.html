@@ -67,7 +67,7 @@ function paint(){
   if(id){$("ono").hidden=false;$("ono").textContent=`${K("ps.order")}: ${id}`}
   const tl=data?.timeline||[{id:"paid",done:good},{id:"proof"},{id:"production"},{id:"shipping"}];
   const nowIdx=tl.findIndex(s=>!s.done);
-  $("timeline").innerHTML=tl.map((s,i)=>`<li class="${s.done?"done":i===nowIdx?"now":""}"><i>${s.done?"✓":i+1}</i><div><b>${esc(K("ps.step."+s.id))}</b><span>${esc(s.id==="proof"&&s.choice==="approve"?K("pay.tl.proofSkip"):s.id==="proof"&&s.waiting?K("pay.tl.proofWait"):K("ps.step."+s.id+".d"))}</span>${s.id==="shipping"&&data?.delivery_estimate&&window.PODDates?`<span class="eta">${esc(K("pay.delivery"))}: ${esc(window.PODDates.range(data.delivery_estimate.from,data.delivery_estimate.to))}</span>`:""}</div></li>`).join("");
+  $("timeline").innerHTML=tl.map((s,i)=>`<li class="${s.done?"done":i===nowIdx?"now":""}"><i>${s.done?"✓":i+1}</i><div><b>${esc(K("ps.step."+s.id))}</b><span>${esc(s.id==="proof"&&s.choice==="approve"?K("pay.tl.proofSkip"):s.id==="proof"&&s.preparing?K("pay.tl.proofPrep"):s.id==="proof"&&s.waiting?K("pay.tl.proofWait"):K("ps.step."+s.id+".d"))}</span>${s.id==="proof"&&data?.proof?.ready&&data.proof.review_url?`<a class="eta" href="${esc(data.proof.review_url)}">${esc(K("acct.od.proofOpen"))} →</a>`:""}${s.id==="shipping"&&data?.delivery_estimate&&window.PODDates?`<span class="eta">${esc(K("pay.delivery"))}: ${esc(window.PODDates.range(data.delivery_estimate.from,data.delivery_estimate.to))}</span>`:""}</div></li>`).join("");
   $("noToken").hidden=!!data||!id;$("noToken").textContent=K("ps.noToken");
   if(!data)return;
   const c=data.currency;

@@ -138,5 +138,21 @@
     return d.toISOString().slice(0, 10);
   }
 
-  g.StudioPricing = { quote, listPrice, fulfillment, deliveryDate, regionOf, facilityFor, effectiveDpi, charm, r2 };
+  /**
+   * Packaging add-ons (consumer Studio display) — same rule as the server checkout quote (checkout-service packagingAndWarnings):
+   * per line, Σ admin "Fees & tax" price of the selected ids the product supports, × units. fees = /api/storefront/fees.
+   * CHF market → CHF prices; any other market → EUR prices (USD display converts EUR × fx_from_eur, the cart charges EUR).
+   */
+  function packagingAddon(data, fees, input) {
+    const market = data.markets.find(m => m.id === input.market) || data.markets[0];
+    const cur = market.currency === "CHF" ? "CHF" : "EUR", fx = market.currency === cur ? 1 : (market.fx_from_eur || 1);
+    const sel = input.mode === "none" ? [] : (input.packaging || []);
+    const price = id => r2(Number(fees?.packaging?.[id]?.[cur] || 0) * fx);
+    const lines = (input.items || []).map(it => { const prod = data.products.find(p => p.id === it.product_id) || {};
+      const unit = r2(sel.filter(id => (prod.packaging || []).includes(id)).reduce((a, id) => a + price(id), 0));
+      return { product_id: it.product_id, unit, amount: r2(unit * (it.qty || 0)) }; });
+    return { currency: market.currency, price, lines, total: r2(lines.reduce((a, l) => a + l.amount, 0)) };
+  }
+
+  g.StudioPricing = { quote, packagingAddon, listPrice, fulfillment, deliveryDate, regionOf, facilityFor, effectiveDpi, charm, r2 };
 })(typeof globalThis !== "undefined" ? globalThis : window);

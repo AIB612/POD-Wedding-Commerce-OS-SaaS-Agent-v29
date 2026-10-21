@@ -239,6 +239,7 @@ export async function orderConfirmation(id, token) {
   if (!verifyOrderToken(id, token)) throw new HttpError(403, "invalid_token", "This confirmation link is invalid");
   const o = await findRecord("orders", String(id));
   if (!o) throw new HttpError(404, "order_not_found", "Order not found");
+  const proofRec = await findWhere("proofs", p => p.order_id === o.id);
   const t = orderToken(o.id), withTok = u => (u ? `${u}${u.includes("?") ? "&" : "?"}ot=${t}` : "");
   return {
     id: o.id, status: o.status, payment_status: o.payment_status, currency: o.currency, created_at: o.created_at, paid_at: o.paid_at || null,
@@ -246,9 +247,10 @@ export async function orderConfirmation(id, token) {
     items: (o.items || []).map(l => ({ name: l.name, product_id: l.product_id || "", material: l.material, quantity: l.quantity, unit_price: l.unit_price, line_total: l.line_total, sizes: l.sizes || {}, has_design: !!l.design_url, thumb_url: withTok(l.thumb_url), image: productImage(l.product_id) })),
     totals: { subtotal: o.subtotal, packaging: o.packaging_amount || 0, discount: o.discount_amount || 0, promo_code: o.promo?.code || "", shipping: o.shipping_charged, tax: o.tax, tax_rate: o.tax_rate ?? null, prices_include_vat: !!o.prices_include_vat, grand_total: o.grand_total },
     proof_choice: o.proof_choice || "proof", production_blocked: !!o.production_blocked, delivery_estimate: o.delivery_estimate || null,
+    proof: proofRec ? { status: proofRec.status, ready: !!proofRec.proof_url, review_url: proofRec.proof_url && proofRec.status !== "Approved" ? `/proof.html?token=${proofRec.token}` : "" } : null,
     timeline: [
       { id: "paid", done: o.payment_status === "paid" },
-      { id: "proof", choice: o.proof_choice || "proof", waiting: !!o.production_blocked && o.payment_status === "paid", done: (o.proof_choice === "approve" && o.payment_status === "paid") || ["AwaitingApproval", "Approved", "Production", "Shipped", "Delivered"].includes(o.status) },
+      { id: "proof", choice: o.proof_choice || "proof", waiting: !!o.production_blocked && o.payment_status === "paid", preparing: !!o.production_blocked && o.payment_status === "paid" && !proofRec?.proof_url, done: (o.proof_choice === "approve" && o.payment_status === "paid") || ["AwaitingApproval", "Approved", "Production", "Shipped", "Delivered"].includes(o.status) },
       { id: "production", done: ["Production", "Shipped", "Delivered"].includes(o.status) },
       { id: "shipping", done: ["Shipped", "Delivered"].includes(o.status) }
     ],
@@ -257,10 +259,19 @@ export async function orderConfirmation(id, token) {
 }
 function productImage(pid) { const p = pid && studioCatalog().products.find(x => x.id === pid); return p?.mockup_photo?.src ? `/${p.mockup_photo.src}` : ""; }
 
+/** Order has at least one personalised (Studio / uploaded design) line → needs a proof record. */
+export function hasDesignItems(order) { return (order?.items || []).some(l => l && (l.design_url || l.studio_project_id || l.project_id)); }
+/** Proof sentence for the confirmation e-mail: a review link only once admin has uploaded the proof, otherwise "in preparation". */
+export function proofNote(order, proof, base) {
+  if (!proof || (order.proof_choice || "proof") !== "proof") return "You approved the mockup at checkout — production starts right away.";
+  if (proof.proof_url && proof.token) return `Your proof is ready: ${base}/proof.html?token=${proof.token} — production starts once you approve it.`;
+  return "Your proof is in preparation — we will e-mail you a review link as soon as it is ready. Production starts once you approve it.";
+}
 const money = (n, cur) => `${cur} ${Number(n || 0).toFixed(2)}`;
 /** Order confirmation e-mail (itemised, absolute URLs). */
 export async function sendOrderConfirmation(order) {
   if (!order?.customer_email) return null;
+  const proof = await findWhere("proofs", p => p.order_id === order.id);
   const base = publicBaseUrl(), url = `${base}/payment-success.html?order=${encodeURIComponent(order.id)}&t=${orderToken(order.id)}`;
   const a = order.shipping_address || {};
   const rows = (order.items || []).map(l => ({ name: l.name, material: l.material || "", quantity: l.quantity, line_total: money(l.line_total, order.currency), image: productImage(l.product_id) ? base + productImage(l.product_id) : "", sizes: Object.entries(l.sizes || {}).map(([k, v]) => `${k}×${v}`).join(", ") }));
@@ -268,7 +279,7 @@ export async function sendOrderConfirmation(order) {
   const vars = { order_id: order.id, customer_name: order.customer_name || "", items: rows, subtotal: money(order.subtotal, order.currency),
     packaging: order.packaging_amount > 0 ? money(order.packaging_amount, order.currency) : "", discount: order.discount_amount > 0 ? `− ${money(order.discount_amount, order.currency)}` : "", promo_code: order.promo?.code || "",
     tax_label: order.prices_include_vat ? "incl. VAT" : "VAT", delivery: est ? `${fmtD(est.from)} – ${fmtD(est.to)}` : "",
-    proof_note: (order.proof_choice || "proof") === "proof" ? "We will e-mail you a proof. Production starts once you approve it." : "You approved the mockup at checkout — production starts right away.", shipping: money(order.shipping_charged, order.currency), tax: money(order.tax, order.currency), total: money(order.grand_total, order.currency),
+    proof_note: proofNote(order, proof, base), shipping: money(order.shipping_charged, order.currency), tax: money(order.tax, order.currency), total: money(order.grand_total, order.currency),
     address: [a.name, a.address1, a.address2, [a.postal_code, a.city].filter(Boolean).join(" "), a.country].filter(Boolean).join(", "), order_url: url, account_url: `${base}/account.html`, shop_url: `${base}/` };
   const r = await renderTemplate("order-confirmation", vars);
   return sendEmail({ tenantId: order.tenant_id, userId: order.user_id || null, to: order.customer_email, type: "order_confirmation", related_id: order.id, subject: `Order confirmed · ${order.id}`, text: r.text, html: r.html });
@@ -379,9 +390,12 @@ async function markPaid(order, { captureId, source }) {
   const now = new Date().toISOString();
   // Proof-first orders wait for the customer's approval in proof.html; "approve mockup" orders go straight to production.
   const proofFirst = (order.proof_choice || "proof") === "proof";
+  // Orders without design items that go straight to production ("approve", the default for plain catalogue carts) get no proof
+  // record at all; an explicit proof-first choice still creates one (production is blocked on it).
+  const needsProof = proofFirst || hasDesignItems(order);
   const updated = await updateRecord("orders", order.id, { status: proofFirst ? "Needs approval" : "Production", production_blocked: proofFirst, production_at: proofFirst ? null : now,
     payment_status: "paid", paypal_capture_id: captureId || order.paypal_capture_id || "", paid_at: now, updated_at: now, paid_via: source });
-  const proof = await createProofForOrder(updated);
+  const proof = needsProof ? await createProofForOrder(updated) : null;
   if (!proofFirst && proof && proof.status === "Pending") await updateRecord("proofs", proof.id, { status: "Approved", approved_at: now, auto_approved: true, note: "Customer approved the mockup at checkout" });
   try { await redeemPromo(updated); } catch (e) { console.error("[checkout] promo redeem failed:", e.message); }
   await markProjectsOrdered(updated);

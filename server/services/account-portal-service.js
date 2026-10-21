@@ -68,16 +68,21 @@ export async function orderDetail(user, id) {
   const ev = events.filter(e => e.order_id === o.id);
   const at = type => ev.find(e => e.event_type === type)?.event_time || "";
   const proof = proofs.find(p => p.order_id === o.id);
-  const when = { placed: o.created_at, paid: o.paid_at || "", proof: proof?.created_at || at("proof_ready"), in_production: proof?.approved_at || at("proof_approved") || o.production_at || "", shipped: o.shipped_at || at("shipped"), delivered: o.delivered_at || at("delivered") };
+  const proofUploaded = !!proof?.proof_url;
+  const when = { placed: o.created_at, paid: o.paid_at || "", proof: at("proof_ready") || (proof?.proof_url ? proof.updated_at || "" : ""), in_production: proof?.approved_at || at("proof_approved") || o.production_at || "", shipped: o.shipped_at || at("shipped"), delivered: o.delivered_at || at("delivered") };
   const timeline = status === "cancelled"
     ? [{ step: "placed", done: true, at: o.created_at }, { step: "cancelled", done: true, at: o.updated_at || "" }]
-    : STEPS.map((step, i) => ({ step, done: i === 0 || rank >= i, current: i === rank, at: (i === 0 || rank >= i) ? when[step] || "" : "" }));
+    : STEPS.map((step, i) => {
+      // "Digital proof sent" is done only once admin has actually uploaded a proof (or the order has moved past proofing).
+      const done = i === 0 || (step === "proof" ? rank > i || (rank === i && proofUploaded) : rank >= i);
+      return { step, done, current: i === rank, pending_upload: step === "proof" && rank === i && !proofUploaded, at: done ? when[step] || "" : "" };
+    });
   const a = o.shipping_address || {};
   return { order: { ...summary(o), items: (o.items || []).map(lineOut), subtotal: round2(o.subtotal), shipping: round2(o.shipping_charged), tax: round2(o.tax),
     shipping_method: typeof o.shipping_method === "object" ? clean(o.shipping_method?.label || o.shipping_method?.id) : clean(o.shipping_method),
     payment: { provider: o.payment_provider || "", status: o.payment_status || "pending" }, tracking: o.tracking_number ? { number: o.tracking_number, url: o.tracking_url || "" } : null,
     shipping_address: { name: a.name || "", address1: a.address1 || "", address2: a.address2 || "", postal_code: a.postal_code || "", city: a.city || "", country: a.country || "", phone: a.phone || "" },
-    proof: proof ? { status: proof.status, choice: o.proof_choice || "proof", production_blocked: !!o.production_blocked, approval_url: proof.token ? `/proof.html?token=${proof.token}` : "", ready: !!proof.proof_url } : null,
+    proof: proof ? { status: proof.status, choice: o.proof_choice || "proof", production_blocked: !!o.production_blocked, approval_url: proof.token && proofUploaded ? `/proof.html?token=${proof.token}` : "", ready: proofUploaded } : null,
     proof_choice: o.proof_choice || "proof", delivery_estimate: o.delivery_estimate || null, packaging: round2(o.packaging_amount || 0), discount: round2(o.discount_amount || 0), promo_code: o.promo?.code || "", prices_include_vat: !!o.prices_include_vat, timeline } };
 }
 

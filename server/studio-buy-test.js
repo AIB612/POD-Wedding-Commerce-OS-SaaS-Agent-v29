@@ -340,6 +340,14 @@ try {
     const c4 = await (await pay([{ ...line, project_id: p4.id }], me, { proof_choice: "approve" })).json();
     const pu = sent.purchase_units[0], o4 = await findRecord("orders", c4.order_id);
     assert.equal(o4.packaging_amount, r2(0.7 * 3)); assert.equal(Number(pu.amount.breakdown.item_total.value), r2(o4.subtotal + o4.packaging_amount));
+    // Studio display (studio.js packQ → StudioPricing.packagingAddon with /api/storefront/fees) = cart/checkout packaging amount.
+    { const ctx = { window: {} }; ctx.globalThis = ctx; vm.createContext(ctx); vm.runInContext(fs.readFileSync(path.join(root, "studio-data.js"), "utf8"), ctx); vm.runInContext(fs.readFileSync(path.join(root, "studio-pricing.js"), "utf8"), ctx);
+      const fees = await (await anon("/api/storefront/fees")).json(), proj0 = await findRecord("studio_projects", p4.id);
+      const sp = ctx.StudioPricing.packagingAddon(ctx.window.STUDIO_DATA, fees, { market: "CH", packaging: proj0.packaging, mode: proj0.packaging_mode, items: o4.items.map(l => ({ product_id: l.product_id, qty: l.quantity })) });
+      assert.ok(sp.total > 0); assert.equal(sp.total, o4.packaging_amount, "studio packaging = checkout packaging");
+      assert.equal(ctx.StudioPricing.packagingAddon(ctx.window.STUDIO_DATA, fees, { market: "CH", packaging: proj0.packaging, mode: "none", items: [{ product_id: o4.items[0].product_id, qty: 3 }] }).total, 0);
+      const sj = fs.readFileSync(path.join(root, "studio.js"), "utf8"); assert.match(sj, /\/api\/storefront\/fees/); assert.match(sj, /totalOf\(quoteFinal\(\)\) \+ packagingTotal\(items\)/, "sticky bar includes packaging");
+      result.studio_packaging_price = "pass"; }
     assert.equal(r2(pu.items.reduce((a, i) => a + Number(i.unit_amount.value) * Number(i.quantity), 0)), Number(pu.amount.breakdown.item_total.value), "PayPal items sum = item_total");
     assert.equal(Number(pu.amount.value), r2(Number(pu.amount.breakdown.item_total.value) + Number(pu.amount.breakdown.shipping.value) + Number(pu.amount.breakdown.tax_total.value)));
     assert.equal(Number(pu.amount.value), o4.grand_total); assert.equal(Number(pu.amount.breakdown.shipping.value), 9.9);

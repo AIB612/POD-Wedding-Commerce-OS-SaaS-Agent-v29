@@ -166,6 +166,12 @@
   const unitOf = l => consumer() ? l.price : l.unit_cost, lineOf = l => consumer() ? l.line_revenue : l.line_cost, totalOf = q => consumer() ? q.totals.revenue : q.totals.cost;
   /** Direct purchase (Add to cart) for consumers; multi-recipient company orders and merchant samples keep the request flow. */
   const buyDirect = () => consumer() && S.ship.mode !== "multi";
+  /** Packaging add-ons for consumers: per-unit prices from the admin "Fees & tax" settings (/api/storefront/fees), same rule as the
+   * checkout quote (selected ids ∩ product-supported ids, × units). CHF market → CHF prices; other markets → EUR prices (×fx for USD display). */
+  let FEES = null;
+  const packQ = items => P.packagingAddon(D, consumer() ? FEES : null, { market: S.market, packaging: S.packaging, mode: S.packagingMode, items: items.map(i => ({ product_id: i.product_id, qty: effQty(i) })) });
+  const packagingTotal = items => packQ(items).total;
+  const packPriceLabel = o => { if (consumer() && FEES) { const v = packQ([]).price(o.id); return v > 0 ? `+${money(v)}` : `+${money(0)}`; } return `€${o.cost_eur.toFixed(2)}`; };
   const quoteAll = () => P.quote(D, { market: S.market, margin: S.margin, ...qopts(), items: active().map(i => ({ product_id: i.product_id, qty: effQty(i), material_id: i.material_id })) });
   const finalItems = () => { if (S.buyer !== "merchant" || !S.autoExclude) return active(); const bad = new Set(quoteAll().totals.unreachable); return active().filter(i => !bad.has(i.product_id)); };
   const quoteFinal = () => P.quote(D, { market: S.market, margin: S.margin, ...qopts(), items: finalItems().map(i => ({ product_id: i.product_id, qty: effQty(i), material_id: i.material_id })) });
@@ -422,10 +428,11 @@
     const nextTier = (pid, qty) => { const tr = [...D.qty_tiers].sort((a, b) => a.min_qty - b.min_qty).find(x => x.min_qty > qty); if (!tr) return ""; const ln = finalItems().find(i => i.product_id === pid); const u = unitOf(P.quote(D, { market: S.market, ...qopts(), items: [{ product_id: pid, qty: tr.min_qty, material_id: ln?.material_id }] }).lines[0]); return t("nextTier", { n: tr.min_qty - qty, p: money(u) }); };
     const rows = q.lines.map(l => `<tr><td><b data-detail="${l.product_id}" style="cursor:pointer">${esc(nm(prod(l.product_id).name))}</b><div class="note">${(() => { const m = matsOf(l.product_id).find(x => x.id === l.material_id); return m ? esc(nm(m.name)) + " · " : ""; })()}${esc(l.facility_city)} · ${l.days} ${t("days")} ${t("leadTime")}</div></td>
       <td class="num">${l.qty}</td><td class="num">${money(unitOf(l))}</td><td class="note">${esc(nextTier(l.product_id, l.qty))}</td><td class="num"><b>${money(lineOf(l))}</b></td></tr>`).join("");
-    const d = delivery();
+    const d = delivery(), pk = packagingTotal(active());
     return `<div class="table-wrap"><table><thead><tr><th>${t("products_")}</th><th class="num">${t("qty")}</th><th class="num">${t("unitPrice")}</th><th>${t("tiers")}</th><th class="num">${t("lineTotal")}</th></tr></thead><tbody>${rows}
-      ${buyDirect() ? `<tr><td colspan="4">${t("delivery_")}</td><td class="num note">${t("shipAtCheckout")}</td></tr><tr><td colspan="4"><b>${t("s_subtotal")}</b></td><td class="num"><b>${money(totalOf(q))}</b></td></tr>`
-        : `<tr><td colspan="4">${t("delivery_")}</td><td class="num">${money(d.total_cost)}</td></tr><tr><td colspan="4"><b>${t("s_total")}</b></td><td class="num"><b>${money(totalOf(q) + d.total_cost)}</b></td></tr>`}</tbody></table></div><p class="note">${buyDirect() ? t("vatNote") : t("fxNote")}</p>`;
+      ${pk > 0 ? `<tr data-row="packaging"><td colspan="4">${t("t_packaging")}</td><td class="num">${money(pk)}</td></tr>` : ""}
+      ${buyDirect() ? `<tr><td colspan="4">${t("delivery_")}</td><td class="num note">${t("shipAtCheckout")}</td></tr><tr><td colspan="4"><b>${t("s_subtotal")}</b></td><td class="num"><b>${money(totalOf(q) + pk)}</b></td></tr>`
+        : `<tr><td colspan="4">${t("delivery_")}</td><td class="num">${money(d.total_cost)}</td></tr><tr><td colspan="4"><b>${t("s_total")}</b></td><td class="num"><b>${money(totalOf(q) + pk + d.total_cost)}</b></td></tr>`}</tbody></table></div><p class="note">${buyDirect() ? t("vatNote") : t("fxNote")}</p>`;
   }
   function deadlineCheck(d) {
     const earliest = P.deliveryDate(D, d.lead_days), dl = S.ship.deadline;
@@ -492,7 +499,7 @@
   function vPackaging() {
     const items = finalItems();
     const opts = D.packaging.map(o => { const n = items.filter(i => prod(i.product_id).packaging.includes(o.id)).length;
-      return `<label class="opt"><input type="checkbox" data-pkg="${o.id}" ${S.packaging.includes(o.id) ? "checked" : ""} ${n ? "" : "disabled"}><div><b>${esc(nm(o.name))}</b> · €${o.cost_eur.toFixed(2)} ${t("perUnit")}<small>${t("supported")} ${n}/${items.length} ${t("products")}</small></div></label>`; }).join("");
+      return `<label class="opt"><input type="checkbox" data-pkg="${o.id}" ${S.packaging.includes(o.id) ? "checked" : ""} ${n ? "" : "disabled"}><div><b>${esc(nm(o.name))}</b> · ${packPriceLabel(o)} ${t("perUnit")}<small>${t("supported")} ${n}/${items.length} ${t("products")}</small></div></label>`; }).join("");
     const mode = `<div class="box pack-choice"><h3>${t("packChoice")}</h3>
       <label class="radio ${S.packagingMode === "custom" ? "active" : ""}"><input type="radio" name="packmode" value="custom" ${S.packagingMode === "custom" ? "checked" : ""}><div><b>${t("packCustom")}</b><small>${t("packCustomLead")}</small></div></label>
       <label class="radio ${S.packagingMode === "none" ? "active" : ""}"><input type="radio" name="packmode" value="none" ${S.packagingMode === "none" ? "checked" : ""}><div><b>${t("packNone")}</b><small>${t("packNoneLead")}</small></div></label></div>`;
@@ -564,8 +571,8 @@
         <div class="kv"><span>${t("products_")}</span><b>${q.lines.length}</b></div><div class="kv"><span>${t("sample")}</span><b>${money(q.totals.cost + d.sample.cost)}</b></div>
         <div class="kv"><span>${t("avgDays")}</span><b>≈ ${avg} ${t("days")}</b></div></div>`;
     }
-    const direct = buyDirect(), total = totalOf(q) + (direct ? 0 : d.total_cost), people = S.ship.mode === "multi" ? d.recipients : 0, dc = deadlineCheck(d);
-    return `<div class="eyebrow">${t(direct ? "s_subtotal" : "s_total")}</div><div class="hero-num">${money(total)}</div><div class="note">${t("products_")} ${money(totalOf(q))} · ${t("delivery_")} ${direct ? t("shipAtCheckout") : money(d.total_cost)}</div>
+    const direct = buyDirect(), pk = packagingTotal(finalItems()), total = totalOf(q) + pk + (direct ? 0 : d.total_cost), people = S.ship.mode === "multi" ? d.recipients : 0, dc = deadlineCheck(d);
+    return `<div class="eyebrow">${t(direct ? "s_subtotal" : "s_total")}</div><div class="hero-num">${money(total)}</div><div class="note">${t("products_")} ${money(totalOf(q))}${pk > 0 ? ` · <span data-pk="sum">${t("t_packaging")} ${money(pk)}</span>` : ""} · ${t("delivery_")} ${direct ? t("shipAtCheckout") : money(d.total_cost)}</div>
       <div style="margin-top:10px">${head}<div class="kv"><span>${t("units")}</span><b>${q.totals.units}</b></div>${people ? `<div class="kv"><span>${t("perPersonCost")}</span><b>${money(total / people)}</b></div>` : ""}
       <div class="kv"><span>${t("shipments")}</span><b>${d.parcels}</b></div><div class="kv"><span>${t("earliest")}</span><b>${dc.earliest}</b></div>
       ${S.ship.deadline ? `<div class="check ${dc.ok ? "ok" : "bad"}"><i>${dc.ok ? "✓" : "!"}</i>${dc.ok ? t("onTime") : t("late")}</div>` : ""}</div>`;
@@ -641,7 +648,7 @@
       bar.addEventListener("click", e => { if (e.target.closest("#stickyAdd")) { if (S.tab !== "review") { S.tab = "review"; rerender(); } addToCart(); } }); }
     const items = finalItems();
     if (!buyDirect() || !items.length) { bar.hidden = true; document.body.classList.remove("has-sticky-buy"); return; }
-    let total = 0; try { total = totalOf(quoteFinal()); } catch { total = 0; }
+    let total = 0; try { total = totalOf(quoteFinal()) + packagingTotal(items); } catch { total = 0; }
     const why = blockReasons();
     bar.hidden = false; document.body.classList.add("has-sticky-buy");
     bar.setAttribute("aria-label", t("addToCart"));
@@ -893,6 +900,7 @@
   (async () => {
     // if (SERVER) { try { await window.PODAuth.require(); } catch { location.href = "index.html"; return; } }
     const qs = new URLSearchParams(location.search);
+    if (SERVER) fetch("/api/storefront/fees").then(r => r.ok ? r.json() : null).then(f => { if (f) { FEES = f; if (S.view === "work") rerender(); } }).catch(() => {});
     try {
       if (qs.get("project") && SERVER) { const r = await fetch(`/api/studio/projects/${encodeURIComponent(qs.get("project"))}`); if (r.ok) { const p = await r.json(); S.projectId = p.id; restore({ ...p, all_items: p.all_items || p.items, view: "work", tab: "review" }, p.design_url); toast(t("loaded")); } }
       else if (qs.get("local")) { const p = (store.get(LOCAL_KEY) || []).find(x => x.id === qs.get("local")); if (p) { S.projectId = p.id; restore(p); toast(t("loaded")); } }
