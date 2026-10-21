@@ -644,7 +644,7 @@ button{color:inherit}
     </div>
     <div class="actions"><div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div>
       <div class="topbar-row2"><button class="btn wedding-site-btn" id="weddingSiteBtn">生成专属婚礼网站</button>
-      <button class="btn" id="resetBtn">重置</button></div>
+      </div>
       <button class="btn dark" id="cartBtn">购物车 <span id="cartCount">0</span></button>
     </div>
   </header>
@@ -1337,7 +1337,7 @@ document.getElementById("materialLightboxClose").onclick=()=>document.getElement
 document.getElementById("materialLightbox").addEventListener("click",e=>{
   if(e.target.id==="materialLightbox") document.getElementById("materialLightbox").classList.remove("open");
 });
-document.getElementById("resetBtn").onclick=()=>{popover.classList.remove("open");document.querySelectorAll(".hotspot,.product").forEach(x=>x.classList.remove("active"));scene.style.transform=""};
+
 
 stage.addEventListener("mousemove",e=>{
   if(window.innerWidth<1000||sceneKey==="cream")return;
