@@ -1,68 +1,83 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>婚礼定制效果确认</title>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="robots" content="noindex"/>
+<title>Review your wedding proof · POD Wedding Studio</title>
 <style>
-body{margin:0;min-height:100vh;background:linear-gradient(145deg,#e8ddd3,#f9f5ef);font-family:Inter,system-ui,-apple-system,"Segoe UI","PingFang SC",sans-serif;color:#292521;display:grid;place-items:center;padding:20px}
+body{margin:0;min-height:100vh;background:linear-gradient(145deg,#e8ddd3,#f9f5ef);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#292521}
+.pf-wrap{display:grid;place-items:center;padding:28px 16px 8px}
 .card{width:min(760px,94vw);background:#fffdf9;border:1px solid rgba(50,40,34,.12);border-radius:28px;box-shadow:0 28px 80px rgba(45,34,28,.15);overflow:hidden}
-.hero{padding:28px 30px 20px;background:linear-gradient(145deg,#e8ddd2,#f8f3ed)}.hero small{font-size:9px;letter-spacing:.18em;color:#88766b}.hero h1{font:34px Georgia,serif;font-weight:500;margin:8px 0}.hero p{font-size:12px;line-height:1.7;color:#746a63;margin:0}
-.body{padding:24px 30px}.row{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid rgba(50,40,34,.1);font-size:11px}.row span:first-child{color:#887b73}
-.proof{margin:18px 0;border:1px solid rgba(50,40,34,.12);border-radius:18px;overflow:hidden;min-height:160px;display:grid;place-items:center;background:#f7f2ec}.proof img{width:100%;max-height:520px;object-fit:contain;display:block}.proof a{padding:12px 16px;border-radius:999px;background:#292622;color:#fff;text-decoration:none;font-size:11px}
-.notice{font-size:10px;line-height:1.65;color:#746a63;background:#f5eee8;border-radius:13px;padding:11px;margin-top:12px}
-.actions{display:flex;gap:8px;margin-top:18px}.actions button{border:0;border-radius:999px;padding:12px 18px;cursor:pointer}.approve{background:#292622;color:#fff;flex:1;font-weight:700}.secondary{background:#fff;border:1px solid rgba(50,40,34,.12)!important}
+.hero{padding:28px 30px 20px;background:linear-gradient(145deg,#e8ddd2,#f8f3ed)}.hero small{font-size:11px;letter-spacing:.18em;color:#88766b}.hero h1{font:34px Georgia,serif;font-weight:500;margin:8px 0}.hero p{font-size:14px;line-height:1.7;color:#746a63;margin:0}
+.body{padding:24px 30px}.row{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid rgba(50,40,34,.1);font-size:13.5px}.row span:first-child{color:#887b73}
+.proof{margin:18px 0;border:1px solid rgba(50,40,34,.12);border-radius:18px;overflow:hidden;min-height:160px;display:grid;place-items:center;background:#f7f2ec}.proof img{width:100%;max-height:520px;object-fit:contain;display:block}.proof a{padding:12px 16px;border-radius:999px;background:#292622;color:#fff;text-decoration:none;font-size:13px}
+.notice{font-size:13px;line-height:1.65;color:#746a63;background:#f5eee8;border-radius:13px;padding:11px;margin-top:12px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.actions button,.actions a.b{border:0;border-radius:999px;padding:12px 18px;cursor:pointer;font:600 14px Inter,system-ui,sans-serif;min-height:46px;text-decoration:none;color:#292521;display:inline-flex;align-items:center;justify-content:center}.approve{background:#292622;color:#fff;flex:1;font-weight:700}.secondary{background:#fff;border:1px solid rgba(50,40,34,.12)!important}
 .state{text-align:center;padding:50px 20px;color:#746a63}.ok{color:#4f755d;font-weight:700}
 
 .lang-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;background:#f2f1ee;border:1px solid #e7e4de;border-radius:8px}
 .lang-switch button{height:28px;min-width:34px;padding:0 9px;border:0;background:transparent;border-radius:6px;color:#77736d;font-size:11px;font-weight:600;cursor:pointer}
 .lang-switch button.active{background:#fff;color:#171717;box-shadow:0 1px 3px rgba(30,26,20,.08)}
-.page-lang{position:fixed;top:18px;right:18px;z-index:20}</style>
+.page-lang{position:fixed;top:18px;right:18px;z-index:20}
+.state{text-align:center;padding:40px 20px;color:#746a63}.state h2{font:26px Georgia,serif;font-weight:500;color:#292521;margin:10px 0 8px}.state p{max-width:52ch;margin:0 auto 18px;line-height:1.6;font-size:14.5px}
+.state .ic{width:56px;height:56px;border-radius:50%;background:#f1e6dc;display:grid;place-items:center;margin:0 auto;font-size:24px}
+.state .actions{justify-content:center}.actions a.b.approve{color:#fff}.state .approve{flex:0 1 auto}
+@media(max-width:600px){.hero{padding:22px 20px 16px}.hero h1{font-size:27px}.body{padding:18px 20px}.row{grid-template-columns:96px 1fr}.actions>*{flex:1 1 100%}}
+</style>
 </head>
 <body>
-<div class="page-lang"><div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div></div>
+<div id="site-header"></div><script src="/header.js"></script>
+<main class="pf-wrap">
 <div class="card">
-  <div class="hero"><small>WEDDING POD PROOF</small><h1>最终效果图与材质确认</h1><p>确认后订单会进入生产流程。请核对姓名、文字、材质和整体效果。</p></div>
-  <div class="body" id="content"><div class="state">正在读取确认信息…</div></div>
+  <div class="hero"><small>WEDDING PROOF</small><h1 data-i18n="pf.title">Review your wedding proof</h1><p data-i18n="pf.lead">Production starts once you approve. Please check names, text, material and the overall look.</p></div>
+  <div class="body" id="content"><div class="state" data-i18n="pf.loading">Loading your proof…</div></div>
 </div>
+</main>
 <script src="i18n.js"></script>
 <script>
 const token=new URLSearchParams(location.search).get("token");
+const K=(k,v)=>window.WeddingI18n?.k?WeddingI18n.k(k,v):k,$=id=>document.getElementById(id);
+const CONTACT="Sherryxuex@Gmail.com";
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+/** Friendly dead end: missing or invalid token → explain, offer sign-in, order lookup and contact. */
+function problem(kind){
+  document.title=K("pf."+kind+".title")+" · POD Wedding Studio";
+  $("content").innerHTML=`<div class="state" role="alert"><div class="ic" aria-hidden="true">✉</div><h2>${esc(K("pf."+kind+".title"))}</h2><p>${esc(K("pf."+kind+".text"))}</p>
+  <div class="actions"><a class="b approve" href="/account.html#orders">${esc(K("pf.signin"))}</a><a class="b secondary" href="/account#find-order">${esc(K("pf.find"))}</a><a class="b secondary" href="mailto:${CONTACT}?subject=${encodeURIComponent("Proof link")}">${esc(K("pf.contact"))}</a></div></div>`;
+}
 async function load(){
-  if(!token){fail("缺少确认 Token");return}
-  try{
-    const r=await fetch("/api/proofs/public/"+encodeURIComponent(token));
-    const d=await r.json();if(!r.ok)throw new Error(d.error||"读取失败");
-    const p=d.proof,o=d.order;
-    const preview=p.proof_url?(p.proof_url.match(/\.(png|jpe?g|webp|gif)(\?|$)/i)?`<img src="${esc(p.proof_url)}" alt="Proof"/>`:`<a href="${esc(p.proof_url)}" target="_blank" rel="noopener">打开最终效果图</a>`):`<div style="font-size:11px;color:#887b73">后台尚未填写效果图 URL，请联系工作人员。</div>`;
-    document.getElementById("content").innerHTML=`
-      <div class="row"><span>订单</span><b>${esc(o.id)}</b></div>
-      <div class="row"><span>材质</span><b>${esc(p.material||"—")}</b></div>
-      <div class="row"><span>商品</span><div>${(o.items||[]).map(i=>`${esc(i.name)} × ${i.quantity} · ${esc(i.material||"")}`).join("<br>")}</div></div>
-      <div class="row"><span>当前状态</span><b>${esc(p.status)}</b></div>
-      <div class="proof">${preview}</div>
-      <div class="notice">请核对文字、材质和整体效果。确认后进入生产；如需修改，请直接提交修改说明，后台会收到任务并重新发送新版效果图。</div>
-      <div class="actions">${p.status==="Approved"?'<div class="ok">您已完成确认。</div>':p.status==="ChangesRequested"?'<div class="notice" style="flex:1">已提交修改要求，正在等待新版效果图。</div>':'<button class="approve" id="approve">确认效果图与材质</button><button class="secondary" id="changes">需要修改</button>'}<button class="secondary" onclick="location.href='/account.html'">查看订单</button></div>`;
-    if(document.getElementById("approve")) document.getElementById("approve").onclick=approve;
-    if(document.getElementById("changes")) document.getElementById("changes").onclick=requestChanges;
-  }catch(e){fail(e.message)}
+  if(!token||token.length<8){problem("missing");return}
+  let r,d;
+  try{r=await fetch("/api/proofs/public/"+encodeURIComponent(token));d=await r.json().catch(()=>({}))}catch(e){$("content").innerHTML=`<div class="state">${esc(K("co.err.network"))}</div>`;return}
+  if(!r.ok){problem(r.status===404||r.status===403||r.status===400||r.status===410?"invalid":"invalid");return}
+  const p=d.proof,o=d.order;
+  const preview=p.proof_url?(p.proof_url.match(/\.(png|jpe?g|webp|gif)(\?|$)/i)?`<img src="${esc(p.proof_url)}" alt="${esc(K("pf.title"))}"/>`:`<a href="${esc(p.proof_url)}" target="_blank" rel="noopener">${esc(K("pf.open"))}</a>`):`<div style="font-size:13px;color:#887b73;padding:0 16px;text-align:center">${esc(K("pf.noUrl"))}</div>`;
+  $("content").innerHTML=`
+    <div class="row"><span>${esc(K("pf.order"))}</span><b>${esc(o.id)}</b></div>
+    <div class="row"><span>${esc(K("pf.material"))}</span><b>${esc(window.WeddingI18n?.t?WeddingI18n.t(p.material||"—"):p.material||"—")}</b></div>
+    <div class="row"><span>${esc(K("pf.items"))}</span><div>${(o.items||[]).map(i=>`${esc(i.name)} × ${i.quantity}${i.material?" · "+esc(window.WeddingI18n?.t?WeddingI18n.t(i.material):i.material):""}`).join("<br>")}</div></div>
+    <div class="row"><span>${esc(K("pf.status"))}</span><b>${esc(p.status)}</b></div>
+    <div class="proof">${preview}</div>
+    <div class="notice">${esc(K("pf.notice"))}</div>
+    <div class="actions">${p.status==="Approved"?`<div class="ok">${esc(K("pf.approved"))}</div>`:p.status==="ChangesRequested"?`<div class="notice" style="flex:1">${esc(K("pf.changesSent"))}</div>`:`<button class="approve" id="approve">${esc(K("pf.approve"))}</button><button class="secondary" id="changes">${esc(K("pf.changes"))}</button>`}<a class="b secondary" href="/account.html#orders">${esc(K("pf.viewOrder"))}</a></div>`;
+  if($("approve"))$("approve").onclick=approve;
+  if($("changes"))$("changes").onclick=requestChanges;
 }
 async function approve(){
-  if(!confirm("确认最终效果图与材质，并进入生产流程？"))return;
-  const b=document.getElementById("approve");b.disabled=true;b.textContent="确认中…";
+  if(!confirm(K("pf.confirm")))return;
+  const b=$("approve");b.disabled=true;b.textContent=K("pf.working");
   try{
     const r=await fetch("/api/proofs/public/"+encodeURIComponent(token)+"/approve",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
-    const d=await r.json();if(!r.ok)throw new Error(d.error||"确认失败");
-    document.getElementById("content").innerHTML='<div class="state"><div class="ok">确认成功</div><p>订单已进入 Approved 状态，下一步将安排生产。</p><p><a href="/" style="color:inherit">返回婚礼网站</a></p></div>';
-  }catch(e){alert(e.message);b.disabled=false;b.textContent="确认效果图与材质"}
+    const d=await r.json();if(!r.ok)throw new Error(d.message||K("pf.error"));
+    $("content").innerHTML=`<div class="state"><div class="ok">${esc(K("pf.done"))}</div><p>${esc(K("pf.doneText"))}</p><p><a href="/" style="color:inherit">POD Wedding Studio</a></p></div>`;
+  }catch(e){alert(e.message||K("pf.error"));b.disabled=false;b.textContent=K("pf.approve")}
 }
-
 async function requestChanges(){
-  const note=prompt("请说明需要修改的内容，例如：名字字号小一点、Logo 向上移动 5mm");if(!note||note.trim().length<3)return;
-  const b=document.getElementById("changes");b.disabled=true;b.textContent="提交中…";
-  try{const r=await fetch("/api/proofs/public/"+encodeURIComponent(token)+"/request-changes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({note})});const d=await r.json();if(!r.ok)throw new Error(d.message||d.error||"提交失败");document.getElementById("content").innerHTML='<div class="state"><div class="ok">修改要求已提交</div><p>后台已收到任务。新版效果图准备好后会自动发送邮件。</p><p><a href="/account.html" style="color:inherit">查看订单状态</a></p></div>';}catch(e){alert(e.message);b.disabled=false;b.textContent="需要修改"}
+  const note=prompt(K("pf.prompt"));if(!note||note.trim().length<3)return;
+  const b=$("changes");b.disabled=true;b.textContent=K("pf.working");
+  try{const r=await fetch("/api/proofs/public/"+encodeURIComponent(token)+"/request-changes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({note})});const d=await r.json();if(!r.ok)throw new Error(d.message||K("pf.error"));$("content").innerHTML=`<div class="state"><div class="ok">${esc(K("pf.chDone"))}</div><p>${esc(K("pf.chDoneText"))}</p><p><a href="/account.html#orders" style="color:inherit">${esc(K("pf.viewOrder"))}</a></p></div>`;}catch(e){alert(e.message||K("pf.error"));b.disabled=false;b.textContent=K("pf.changes")}
 }
-function fail(t){document.getElementById("content").innerHTML=`<div class="state">${esc(t)}</div>`}
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 window.addEventListener('wedding-language-change',()=>location.reload());load();
 </script>
-</body></html>
+<div id="site-footer"></div><script src="/footer.js" defer></script>
+</body>
+</html>

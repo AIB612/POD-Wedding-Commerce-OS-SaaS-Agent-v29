@@ -26,10 +26,11 @@
     privacy: ["设计在服务器上加密保存（AES-256-GCM），未下单的方案 30 天后自动删除，已询价的方案 90 天后删除。永久免费，无需订阅。", "Designs are stored encrypted on the server (AES-256-GCM); plans without an order are deleted after 30 days, plans with a quote request after 90 days. Free forever, no subscription.", "Designs werden verschlüsselt gespeichert (AES-256-GCM); Pläne ohne Bestellung werden nach 30 Tagen gelöscht, mit Anfrage nach 90 Tagen. Dauerhaft kostenlos, ohne Abo."],
     nav_scenes: ["场景套装", "Scenario kits", "Szenario-Sets"], nav_all: ["全部商品", "All products", "Alle Produkte"], nav_work: ["我的方案 · 设计工作室", "My selection · Studio", "Meine Auswahl · Studio"],
     pickScene: ["选择一个场景，右侧会显示它的套装。", "Pick a scenario — its kits appear on the right.", "Szenario wählen – die Sets erscheinen rechts."],
-    addToSel: ["＋ 加入方案", "＋ Add to selection", "＋ Zur Auswahl"], kitAdded: ["已在方案中", "In selection", "In der Auswahl"], designKit: ["用这个套装开始设计 →", "Design with this kit →", "Mit diesem Set gestalten →"],
+    addToSel: ["+ 加入方案", "+ Add to selection", "+ Zur Auswahl"], kitAdded: ["已在方案中", "In selection", "In der Auswahl"], designKit: ["用这个套装开始设计 →", "Design with this kit →", "Mit diesem Set gestalten →"],
+    weddingDefault: ["婚礼", "Wedding", "Hochzeit"], otherKits: ["其他套装：企业、创作者、小众社群等", "Other kits: corporate, creators, niche & more", "Weitere Sets: Firmen, Creator, Nischen & mehr"], otherKitsLead: ["不是婚礼？选择适合您的场景。", "Not a wedding? Pick the scenario that fits.", "Keine Hochzeit? Wählen Sie das passende Szenario."], studioName: ["设计工作室", "Design studio", "Design-Studio"],
     m_explore: ["场景与商品", "Scenarios & products", "Szenarien & Produkte"], m_work: ["设计工作室", "Design studio", "Design-Studio"],
     sub_kits: ["场景套装", "Scenario kits", "Szenario-Sets"], sub_all: ["全部商品", "All products", "Alle Produkte"],
-    replaceKit: ["用这个套装开始设计", "Start designing with this kit", "Mit diesem Set gestalten"], mergeKit: ["＋ 合并到方案", "＋ Add to selection", "＋ Zur Auswahl"],
+    replaceKit: ["用这个套装开始设计", "Start designing with this kit", "Mit diesem Set gestalten"], mergeKit: ["+ 合并到方案", "+ Add to selection", "+ Zur Auswahl"],
     details: ["明细", "Details", "Details"], hide: ["收起", "Hide", "Ausblenden"], inSelection: ["已在方案中", "In your selection", "In Ihrer Auswahl"],
     perSet: ["每套", "per set", "pro Set"], profitPerSet: ["每套利润", "Profit per set", "Gewinn pro Set"], retailSet: ["建议零售", "Suggested retail", "Empf. Verkaufspreis"],
     merged: ["已合并到方案", "Added to your selection", "Zur Auswahl hinzugefügt"], startDesign: ["开始设计 →", "Start designing →", "Gestalten →"], goDesign: ["去设计 →", "Go to design →", "Zum Design →"],
@@ -54,7 +55,7 @@
     cat_corporate_office: ["企业办公", "Corporate & office", "Firma & Büro"], cat_gifts: ["礼品", "Gifts", "Geschenke"], cat_pets: ["宠物", "Pets", "Haustiere"],
     cat_outdoor: ["户外", "Outdoor", "Outdoor"], cat_sports: ["运动", "Sports", "Sport"], cat_seasonal: ["节日", "Seasonal", "Saisonal"], cat_branding_packaging: ["品牌包装", "Branding & packaging", "Branding & Verpackung"],
     t_design: ["设计", "Design", "Design"], t_pricing: ["定价", "Pricing", "Preise"], t_delivery: ["寄送", "Delivery", "Versand"], t_packaging: ["包装", "Packaging", "Verpackung"], t_review: ["确认", "Review", "Übersicht"],
-    myLine: ["我的方案", "My selection", "Meine Auswahl"], addProducts: ["＋ 添加商品", "＋ Add products", "＋ Produkte"], backExplore: ["← 场景与商品", "← Scenarios & products", "← Szenarien & Produkte"],
+    myLine: ["我的方案", "My selection", "Meine Auswahl"], addProducts: ["+ 添加商品", "+ Add products", "+ Produkte"], backExplore: ["← 场景与商品", "← Scenarios & products", "← Szenarien & Produkte"],
     qty: ["数量", "Qty", "Menge"], perPerson: ["每人", "per person", "pro Person"], perSale: ["按单生产", "on demand", "auf Abruf"], market: ["市场", "Market", "Markt"],
     upload: ["上传设计图", "Upload design", "Design hochladen"], uploadHint: ["PNG / JPG / WebP，建议 3000px+、透明背景", "PNG / JPG / WebP, ideally 3000 px+, transparent", "PNG / JPG / WebP, ideal 3000 px+, transparent"],
     textPh: ["例如：Anna & Ben 2027", "e.g. Anna & Ben 2027", "z. B. Anna & Ben 2027"], useText: ["用文字生成", "Use text", "Text verwenden"],
@@ -151,9 +152,9 @@
 
   // ------------------------------------------------------------------ state
   const TABS = ["design", "pricing", "delivery", "packaging", "review"];
-  const S = { pendingMat: {}, view: "scenes", buyer: "company", scenario: null, kit: null, items: [], tab: "design", focus: null, cat: "all", search: "",
-    market: "CH", margin: 0.4, autoExclude: true, ship: { mode: "bulk", address_country: "CH", deadline: "", sample_country: "CH", recipients: [], recipients_text: "" },
-    packaging: ["insert_card", "sticker"], packagingMode: "custom", packagingRef: null, brand: { name: "", message: "" }, stores: [], publishStore: "", platform: "shopify", browse: null, sub: "kits", openKit: null, design: null, textDesign: { text: "Anna & Ben", style: "serif", color: "#28231f" }, projectId: null, submittedRef: null, submission: null };
+  const S = { pendingMat: {}, view: "scenes", buyer: "individual", othersOpen: false, scenario: null, kit: null, items: [], tab: "design", focus: null, cat: "all", search: "",
+    market: (window.PODMarket ? PODMarket.get() : "CH"), margin: 0.4, autoExclude: true, ship: { mode: "bulk", address_country: "CH", deadline: "", sample_country: "CH", recipients: [], recipients_text: "" },
+    packaging: ["insert_card", "sticker"], packagingMode: "custom", packagingRef: null, brand: { name: "", message: "" }, stores: [], publishStore: "", platform: "shopify", browse: "gifts", sub: "kits", openKit: null, design: null, textDesign: { text: "Anna & Ben", style: "serif", color: "#28231f" }, projectId: null, submittedRef: null, submission: null };
   const buyerDef = () => D.buyer_types.find(b => b.id === S.buyer);
   const newItem = pid => ({ product_id: pid, qty: buyerDef().default_qty, per_person: 1, include: true, sizes: {}, material_id: S.pendingMat[pid] || null, placement: { mode: null, scale: 1, dx: 0, dy: 0, color: null } });
   const inSel = pid => S.items.some(i => i.product_id === pid);
@@ -312,14 +313,24 @@
   }
   const NAV = [["scenes", "▦"], ["all", "◫"], ["work", "✎"]];
   /** Centre · scenario kits: every scenario as a card; clicking one shows its kits in the right column. */
+  // Wedding first: the wedding kit ("gifts" scenario) is the default; other kits (corporate, creator, niche …) sit in a collapsed selector.
+  const WEDDING_SCENARIO = "gifts";
+  /** Product notes are stored in Chinese in the catalog; show them through the shared i18n dictionary. */
+  function noteT(n) { if (!n) return n; const x = window.WeddingI18n?.t ? window.WeddingI18n.t(n) : n; if (lang === "zh") return n; return /[\u3400-\u9fff]/.test(x) ? "" : x; }
+  function sceneCard(sc) {
+    const pids = [...new Set(sc.kits.flatMap(k => k.items))].slice(0, 4);
+    const cover = sc.scene_image ? `<div class="cover" style="background-image:url('${esc(sc.scene_image.src)}')"></div>` : `<div class="collage">${pids.map(pid => thumb(pid)).join("")}</div>`;
+    return `<button class="scene-card2 ${S.browse === sc.id ? "active" : ""}" data-browse="${sc.id}" aria-pressed="${S.browse === sc.id}">${cover}
+        <div class="scene-meta"><div class="spread"><b>${esc(nm(sc.name))}</b>${sc.id === WEDDING_SCENARIO ? `<span class="chip ok">♥ ${t("weddingDefault")}</span>` : scenarioScore(sc) ? `<span class="chip ok">★ ${t("recommended")}</span>` : ""}</div><small>${esc(nm(sc.audience))}</small>
+        <span class="row" style="gap:5px;margin-top:8px">${sc.kits.map(k => `<span class="chip gray">${esc(nm(k.name))}</span>`).join("")}</span></div></button>`;
+  }
   function vScenes() {
-    const list = orderedScenarios();
-    if (!S.browse || !list.some(x => x.id === S.browse)) S.browse = list[0].id;
-    return `<div class="scene-grid">${list.map(sc => { const pids = [...new Set(sc.kits.flatMap(k => k.items))].slice(0, 4);
-      const cover = sc.scene_image ? `<div class="cover" style="background-image:url('${esc(sc.scene_image.src)}')"></div>` : `<div class="collage">${pids.map(pid => thumb(pid)).join("")}</div>`;
-      return `<button class="scene-card2 ${S.browse === sc.id ? "active" : ""}" data-browse="${sc.id}" aria-pressed="${S.browse === sc.id}">${cover}
-        <div class="scene-meta"><div class="spread"><b>${esc(nm(sc.name))}</b>${scenarioScore(sc) ? `<span class="chip ok">★ ${t("recommended")}</span>` : ""}</div><small>${esc(nm(sc.audience))}</small>
-        <span class="row" style="gap:5px;margin-top:8px">${sc.kits.map(k => `<span class="chip gray">${esc(nm(k.name))}</span>`).join("")}</span></div></button>`; }).join("")}</div>`;
+    const list = orderedScenarios(), wedding = list.find(x => x.id === WEDDING_SCENARIO), others = list.filter(x => x !== wedding);
+    if (!S.browse || !list.some(x => x.id === S.browse)) S.browse = (wedding || list[0]).id;
+    const open = S.othersOpen || (S.browse !== WEDDING_SCENARIO && others.some(x => x.id === S.browse));
+    return `${wedding ? `<div class="scene-grid wedding-first">${sceneCard(wedding)}</div>` : ""}
+      <div class="other-kits ${open ? "open" : ""}"><button class="btn ghost other-kits-toggle" data-others="1" aria-expanded="${open}" aria-controls="otherKits">${open ? "▾" : "▸"} ${t("otherKits")} <span class="note">(${others.length})</span></button>
+      <div id="otherKits" ${open ? "" : "hidden"}><p class="note" style="margin:6px 0 10px">${t("otherKitsLead")}</p><div class="scene-grid">${others.map(sceneCard).join("")}</div></div></div>`;
   }
   /** Centre · all products. */
   function vAll() {
@@ -338,7 +349,7 @@
       const lines = P.quote(D, { market: S.market, margin: S.margin, items: k.items.map(pid => ({ product_id: pid, qty: S.buyer === "merchant" ? 1 : k.default_qty })) }).lines;
       return `<article class="kit3 ${S.kit === k.id ? "current" : ""}"><h3>${esc(nm(k.name))}</h3><div class="note">${k.items.length} ${t("products")}</div>
         <div class="row" style="gap:6px;margin:8px 0 10px">${kitPrice(sc, k)}</div>
-        <ul class="kit3-list">${lines.map(l => { const p = prod(l.product_id); return `<li data-detail="${p.id}"><canvas data-p="${p.id}" data-size="80" data-nod="1" data-clean="1"></canvas><span>${esc(nm(p.name))}${p.note ? ` <span title="${esc(p.note)}">⚠</span>` : ""}</span>${inSel(p.id) ? `<i class="tick">✓</i>` : ""}
+        <ul class="kit3-list">${lines.map(l => { const p = prod(l.product_id); return `<li data-detail="${p.id}"><canvas data-p="${p.id}" data-size="80" data-nod="1" data-clean="1"></canvas><span>${esc(nm(p.name))}${p.note ? ` <span title="${esc(noteT(p.note))}">⚠</span>` : ""}</span>${inSel(p.id) ? `<i class="tick">✓</i>` : ""}
           ${open ? `<small>${esc(p.technique)} · ${p.print_area_mm[0]}×${p.print_area_mm[1]} mm · ${esc(l.facility_city)} ${l.days} ${t("days")} · ${money(S.buyer === "merchant" ? l.price : unitOf(l))}</small>` : ""}</li>`; }).join("")}</ul>
         <div class="spread" style="margin-top:10px"><button class="btn sm ghost" data-openkit="${k.id}">${open ? t("hide") + " ▴" : t("details") + " ▾"}</button></div>
         <button class="btn big ${inAll ? "added" : "dark"}" data-merge="${sc.id}:${k.id}" ${inAll ? "disabled" : ""}>${inAll ? "✓ " + t("kitAdded") : t("addToSel")}</button></article>`; }).join("");
@@ -386,7 +397,7 @@
   }
   function vPage() {
     const n = S.items.length, v = S.view;
-    const head = `<div class="modebar"><div><div class="eyebrow">POD Studio · ${esc(nm(buyerDef().name))}</div><h2 style="margin:2px 0 0">${t("nav_" + v)}</h2>${v === "scenes" ? `<div class="note">${t("pickScene")}</div>` : ""}</div>
+    const head = `<div class="modebar"><div><div class="eyebrow">${t("studioName")} · ${esc(nm(buyerDef().name))}</div><h2 style="margin:2px 0 0">${t("nav_" + v)}</h2>${v === "scenes" ? `<div class="note">${t("pickScene")}</div>` : ""}</div>
       <span class="row">${v === "all" ? `<input class="input" id="search" style="width:220px" placeholder="${t("search")}" value="${esc(S.search)}">` : ""}
       <select class="input" id="marketSel" style="width:auto;padding:6px 10px" aria-label="${t("market")}">${D.markets.map(m => `<option value="${m.id}" ${S.market === m.id ? "selected" : ""}>${esc(nm(m.name))} · ${m.currency}</option>`).join("")}</select></span></div>`;
     const centre = v === "scenes" ? vScenes() : v === "all" ? vAll() : vStudio();
@@ -411,7 +422,7 @@
       ${p.colors ? `<div><div class="note">${t("productColor")}</div><div class="swatches" style="margin-top:6px">${p.colors.map(c => `<button style="background:${c}" data-color="${c}" class="${(pl.color || p.colors[0]) === c ? "active" : ""}" aria-label="${c}"></button>`).join("")}</div></div>` : ""}
       ${matChips(p.id, f.material_id, "data-mat")}
       <div class="row"><button class="btn sm" data-resetpl="1">${t("resetPl")}</button><button class="btn sm" data-applyall="1">${t("applyAll")}</button><button class="btn sm" data-dl="${p.id}">⤓ ${t("download")}</button></div>
-      ${p.note ? `<div class="note">⚠ ${esc(p.note)}</div>` : ""}</div></div>`;
+      ${p.note ? `<div class="note">⚠ ${esc(noteT(p.note))}</div>` : ""}</div></div>`;
     const grid = `<div class="mgrid">${active().map(i => { const di = dpiInfo(i); return `<button class="mtile ${i.product_id === S.focus ? "active" : ""}" data-focus="${i.product_id}"><canvas data-p="${i.product_id}" data-size="260"></canvas>
       <div class="spread"><span>${esc(nm(prod(i.product_id).name))}</span>${di ? `<span class="chip ${di.level}" title="${di.dpi} dpi">${di.dpi}</span>` : ""}</div></button>`; }).join("")}</div>`;
     return toolbar + editor + grid;
@@ -555,7 +566,7 @@
     const packagingReview = `<div class="box"><div class="spread"><h3 style="margin:0">${t("packTitle")}</h3><button class="btn sm ghost" data-reviewfix="packaging">${t("t_packaging")} →</button></div>${S.packagingMode === "none" ? `<div class="pkg-ref none" style="margin-top:10px"><div><b>✓ ${t("packNone")}</b><small>${t("packNoneLead")}</small></div></div>` : `<div class="note" style="margin:6px 0 10px">${t("packSelected", { n: S.packaging.length })}</div>${packagingReferenceBlock(true)}`}</div>`;
     return `${alert}<div class="grid2"><div class="box review-checks"><h3>${t("checks")}</h3>${tasks}</div>
       <div>${packagingReview}<div class="box"><h3>${buyDirect() ? t("addToCart") : t(`cta_${S.buyer}`)}</h3><p class="note">${buyDirect() ? t("buyLead") : t(`ql_${S.buyer}`)}</p>
-        ${S.buyer === "merchant" ? `<label class="field" style="margin-top:10px">${t("publishTo")}<select class="input" id="publishSel"><option value="">${t("later")}</option>${S.stores.map(c => `<option value="${esc(c.id)}" ${S.publishStore === c.id ? "selected" : ""}>${c.platform === "shopify" ? "Shopify" : "WooCommerce"} · ${esc(c.store)} — ${t("st_" + c.status)}</option>`).join("")}</select></label><button class="btn sm" data-bind="1">＋ ${t("bindStore")}</button>` : ""}
+        ${S.buyer === "merchant" ? `<label class="field" style="margin-top:10px">${t("publishTo")}<select class="input" id="publishSel"><option value="">${t("later")}</option>${S.stores.map(c => `<option value="${esc(c.id)}" ${S.publishStore === c.id ? "selected" : ""}>${c.platform === "shopify" ? "Shopify" : "WooCommerce"} · ${esc(c.store)} — ${t("st_" + c.status)}</option>`).join("")}</select></label><button class="btn sm" data-bind="1">+ ${t("bindStore")}</button>` : ""}
         ${SERVER ? "" : `<p class="note" style="margin-top:8px">${t("needServer")}</p>`}</div></div></div>
       <div class="mgrid" style="margin-bottom:14px">${q.lines.map(l => `<div class="mtile" style="cursor:default"><canvas data-p="${l.product_id}" data-size="260"></canvas><div class="spread"><span>${esc(nm(prod(l.product_id).name))}</span><span class="note">${S.buyer === "merchant" ? money(l.price) : `${l.qty}×`}</span></div></div>`).join("")}</div>
       <div class="row"><button class="btn" id="dlAll">⤓ ${t("downloadAll")}</button><button class="btn" id="saveBtn">${t("save")}</button></div>`;
@@ -589,7 +600,7 @@
       <div class="kv"><span>${t("printArea")}</span><b>${p.print_area_mm[0]} × ${p.print_area_mm[1]} mm</b></div><div class="kv"><span>${t("weight")}</span><b>${p.weight_g} g</b></div>
       ${p.sizes ? `<div class="kv"><span>${t("sizes")}</span><b>${esc(p.sizes.join(" · "))}</b></div>` : ""}
       ${p.colors ? `<div class="kv"><span>${t("colors")}</span><b><span class="swatches">${p.colors.map(c => `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${c};border:1px solid var(--line)"></span>`).join("")}</span></b></div>` : ""}
-      ${p.note ? `<p class="note">⚠ ${esc(p.note)}</p>` : ""}
+      ${p.note ? `<p class="note">⚠ ${esc(noteT(p.note))}</p>` : ""}
       <div style="margin-top:12px">${matChips(pid, (S.items.find(i => i.product_id === pid) || {}).material_id || S.pendingMat[pid], "data-dmat")}</div></div></div>
       <h3 style="margin-top:18px">${t("production")}</h3>${facs}
       <h3 style="margin-top:18px">${t("tiers")}</h3><div class="table-wrap"><table><tbody><tr>${tiers.map(x => `<td class="num"><div class="note">≥ ${x.q}</div><b>${money(x.u)}</b></td>`).join("")}</tr></tbody></table></div>`;
@@ -607,7 +618,7 @@
   function catalogDrawer() {
     const body = `<div class="pgrid">${D.products.map(p => `<div class="ptile" data-detail="${p.id}"><canvas data-p="${p.id}" data-size="180" data-nod="${S.design ? 0 : 1}"></canvas><b>${esc(nm(p.name))}</b><small>${t("cat_" + p.category)}</small>
       <button class="add ${inSel(p.id) ? "in" : ""}" data-toggle="${p.id}">${inSel(p.id) ? "✓" : "+"}</button></div>`).join("")}</div>`;
-    openDrawer(t("addProducts").replace("＋ ", ""), body);
+    openDrawer(t("addProducts").replace("+ ", ""), body);
   }
 
   // ------------------------------------------------------------------ render
@@ -700,8 +711,8 @@
   }
   function saveDraft() { const s = snapshot(); s.view = S.view; s.tab = S.tab; store.set(DRAFT_KEY, s); }
   function restore(s, designUrl) {
-    S.buyer = D.buyer_types.some(b => b.id === s.buyer_type) ? s.buyer_type : "company"; S.scenario = s.scenario_id || null; S.kit = s.kit_id || null;
-    S.market = s.market || "CH"; S.margin = s.margin || 0.4; S.autoExclude = s.auto_exclude !== false; S.packaging = s.packaging || []; S.packagingMode = s.packaging_mode === "none" ? "none" : "custom"; S.packagingRef = s.packaging_reference?.data_url ? s.packaging_reference : null; S.brand = s.brand || { name: "", message: "" };
+    S.buyer = D.buyer_types.some(b => b.id === s.buyer_type) ? s.buyer_type : "individual"; S.scenario = s.scenario_id || null; S.kit = s.kit_id || null;
+    S.market = s.market || "CH"; if (window.PODMarket && S.market !== "US") S.market = PODMarket.get(); S.margin = s.margin || 0.4; S.autoExclude = s.auto_exclude !== false; S.packaging = s.packaging || []; S.packagingMode = s.packaging_mode === "none" ? "none" : "custom"; S.packagingRef = s.packaging_reference?.data_url ? s.packaging_reference : null; S.brand = s.brand || { name: "", message: "" };
     const f = s.fulfillment || {}; S.ship = { mode: f.mode || (S.buyer === "merchant" ? "dropship" : "bulk"), address_country: f.address_country || "CH", deadline: f.deadline || "", sample_country: f.sample_country || "CH", recipients: f.recipients || [], recipients_text: s.recipients_text || (f.recipients || []).map(r => [r.name, r.country, r.size].filter(Boolean).join(", ")).join("\n") };
     S.items = (s.all_items || s.items || []).filter(i => prod(i.product_id)).map(i => ({ ...newItem(i.product_id), ...i, placement: { mode: null, scale: 1, dx: 0, dy: 0, color: null, ...(i.placement || {}) } }));
     S.browse = s.browse || S.browse;
@@ -780,9 +791,10 @@
     window.scrollTo({ top: Math.min(top, centre ? centre.offsetTop + centre.offsetHeight : top), behavior: "instant" });
   }
   document.addEventListener("click", async e => {
-    const el = e.target.closest("[data-mat],[data-dmat],[data-browse],[data-sub],[data-openkit],[data-merge],[data-designkit],[data-designprod],[data-startflow],[data-bind],[data-platform],[data-unbind],[data-buyer],[data-usekit],[data-kitdetail],[data-detail],[data-toggle],[data-view],[data-tab],[data-cat],[data-catalog],[data-focus],[data-style],[data-mode],[data-color],[data-resetpl],[data-applyall],[data-dl],[data-lang],button,#drop,#drawerMask");
+    const el = e.target.closest("[data-others],[data-mat],[data-dmat],[data-browse],[data-sub],[data-openkit],[data-merge],[data-designkit],[data-designprod],[data-startflow],[data-bind],[data-platform],[data-unbind],[data-buyer],[data-usekit],[data-kitdetail],[data-detail],[data-toggle],[data-view],[data-tab],[data-cat],[data-catalog],[data-focus],[data-style],[data-mode],[data-color],[data-resetpl],[data-applyall],[data-dl],[data-lang],button,#drop,#drawerMask");
     if (!el) return;
     const d = el.dataset;
+    if (d.others) { S.othersOpen = !(S.othersOpen || (S.browse !== WEDDING_SCENARIO)); if (!S.othersOpen && S.browse !== WEDDING_SCENARIO) S.browse = WEDDING_SCENARIO; return render(); }
     if (d.reviewfix) { const [tab, pid] = d.reviewfix.split(":"); S.tab = TABS.includes(tab) ? tab : "review"; if (pid && prod(pid)) S.focus = pid; return rerender(); }
     if (d.pkgrefupload) return $("#pkgRefInput").click();
     if (d.pkgrefremove) { S.submittedRef = null; S.submission = null; S.packagingRef = null; return rerender(); }
@@ -871,7 +883,7 @@
     if (el.name === "packmode") { S.submittedRef = null; S.submission = null; S.packagingMode = el.value === "none" ? "none" : "custom"; if (S.packagingMode === "none") S.packaging = []; else if (!S.packaging.length) S.packaging = ["insert_card", "sticker"]; return rerender(); }
     if (el.name === "shipmode") { S.submittedRef = null; S.submission = null; S.ship.mode = el.value; return rerender(); }
     if (el.id === "autoExclude") { S.submittedRef = null; S.submission = null; S.autoExclude = el.checked; return rerender(); }
-    if (el.id === "marketSel") { S.submittedRef = null; S.submission = null; S.market = el.value; return rerender(); }
+    if (el.id === "marketSel") { S.submittedRef = null; S.submission = null; S.market = el.value; if (window.PODMarket && el.value !== "US") PODMarket.set(el.value, { silent: true }); return rerender(); }
     if (el.id === "langSelect") { lang = el.value; try { localStorage.setItem(LANG_KEY, lang); } catch {} window.PODCart?.relabel(); return render(); }
     if (el.id === "roleSel") { setBuyer(el.value); S.browse = null; return rerender(); }
     if (el.id === "publishSel") { S.submittedRef = null; S.submission = null; S.publishStore = el.value; return saveDraft(); }
@@ -897,6 +909,9 @@
   window.addEventListener("resize", () => { clearTimeout(timers.rs); timers.rs = setTimeout(drawAll, 150); });
 
   // ------------------------------------------------------------------ boot
+  // Shared header: language select (i18n.js) and the one market/currency selection (header.js PODMarket) drive the studio too.
+  window.addEventListener("wedding-language-change", e => { const l = e.detail?.lang; if (l && l !== lang && ["zh", "en", "de"].includes(l)) { lang = l; window.PODCart?.relabel(); render(); } });
+  window.addEventListener("pod-market-change", e => { e.preventDefault(); S.submittedRef = null; S.submission = null; S.market = e.detail.market; render(); saveDraft(); });
   (async () => {
     // if (SERVER) { try { await window.PODAuth.require(); } catch { location.href = "index.html"; return; } }
     const qs = new URLSearchParams(location.search);

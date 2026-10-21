@@ -50,7 +50,7 @@
   function fillCountries() {
     let dn = null;
     try { dn = new Intl.DisplayNames([LOCALE[I().lang()] || "en"], { type: "region" }); } catch (e) {}
-    const cur = $("country").value || saved.country || "CH";
+    const cur = $("country").value || saved.country || (window.PODMarket ? PODMarket.country() : "CH");
     $("country").innerHTML = COUNTRIES.map(c => `<option value="${c}">${esc(dn ? dn.of(c) : c)}</option>`).join("");
     $("country").value = COUNTRIES.includes(cur) ? cur : "CH";
   }
@@ -306,7 +306,7 @@
     const user = await A.ready;
     const paint = () => {
       if (user) { $("coSigned").hidden = false; $("coFast").hidden = true; $("coSignedText").textContent = K("co.signedIn", { e: user.email }); return; }
-      $("coFast").hidden = false; $("coFastBtns").innerHTML = A.buttonsHtml(A._prov);
+      $("coFast").hidden = !(A.anyProvider ? A.anyProvider(A._prov) : true); $("coFastBtns").innerHTML = A.buttonsHtml(A._prov);
     };
     paint(); window.addEventListener("wedding-language-change", paint);
     $("coSignOut").onclick = () => A.logout();
@@ -322,13 +322,16 @@
   };
   $("country").addEventListener("change", async () => {
     try { localStorage.setItem(CO_KEY, JSON.stringify({ country: $("country").value, method: state.method })); } catch (e) {}
+    window.PODMarket?.setCountry($("country").value); // one shared market/currency: CH/LI → CHF, EU → EUR
     try { state.quote = await fetchQuote(); } catch (e) {}
     if (state.step >= 2) { setStep(2); await loadShipping(); } else renderSummary();
   });
   window.addEventListener("wedding-language-change", () => { fillCountries(); if (state.quote && state.step >= 2) renderShipping(); if (state.step >= 3) { renderPayments(); renderReview(); } setStep(state.step); });
 
   if (!cart.length) {
-    $("coWrap").innerHTML = `<div class="co-empty" style="grid-column:1/-1"><h2 style="font:24px Georgia,serif;font-weight:500">${esc(K("co.emptyCart"))}</h2><a class="co-btn" style="display:inline-flex;align-items:center;text-decoration:none" href="/">${esc(K("cart.empty.cta"))}</a></div>`;
+    // Empty cart: best-sellers, "Start designing" CTA and (signed in) saved designs — shared with the cart drawer (cart.js fillEmpty).
+    $("coWrap").innerHTML = `<div class="co-empty pe-wide" style="grid-column:1/-1"><h2 style="font:28px Georgia,serif;font-weight:500;margin:0 0 6px">${esc(K("co.emptyCart"))}</h2><p style="color:#7c746c;margin:0 0 18px">${esc(K("empty.lead"))}</p><div class="cart-empty-ctas"><a class="cart-cta" href="/studio.html?scenario=gifts">${esc(K("empty.start"))}</a><a class="co-btn" style="display:inline-flex;align-items:center;text-decoration:none;width:auto;padding:0 20px" href="/">${esc(K("cart.empty.cta"))}</a></div><div id="coEmptyMore" style="max-width:980px;margin:0 auto"></div></div>`;
+    window.PODCart?.fillEmpty($("coEmptyMore"), {});
     return;
   }
   fillCountries();

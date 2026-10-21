@@ -1,5 +1,5 @@
 /* My account (customer dashboard): Overview · Orders (+ detail, reorder) · My designs · Addresses · Profile · Sign out.
- * Hash routes: #overview #orders #orders/<id> #designs #addresses #profile. Strings: i18n.js keys "acct.*". */
+ * Hash routes: #overview #orders #orders/<id> #designs #addresses #profile, #find-order (guest lookup, also signed out). Strings: i18n.js keys "acct.*", "fo.*". */
 (()=>{
 const $=id=>document.getElementById(id),app=$("app");
 const K=(k,v)=>window.WeddingI18n?.k?window.WeddingI18n.k(k,v):k;
@@ -42,6 +42,7 @@ async function render(){
  $("signOut").onclick=()=>PODAuth.logout();
  {const nav=app.querySelector(".nav"),a=nav.querySelector("[aria-current]");if(a&&nav.scrollWidth>nav.clientWidth)nav.scrollLeft=a.offsetLeft-(nav.clientWidth-a.offsetWidth)/2}
  const m=$("main");
+ if(location.hash==="#find-order"){m.innerHTML=findOrderCard();wireFindOrder();return}
  try{m.innerHTML=await VIEWS[sec](id);WIRE[sec]?.(m,id)}
  catch(e){if(e.status===401)return signedOut();m.innerHTML=e.status===404?`<div class="card">${empty("orders",K("acct.order.notFound"),K("acct.order.notFoundText"),`<a class="btn dark" href="#orders">${esc(K("acct.order.back"))}</a>`)}</div>`:`<div class="card err">${esc(K("acct.error"))}</div>`}
  window.scrollTo({top:0});
@@ -127,15 +128,30 @@ function addrForm(a){
   try{await api(a?`/api/account/addresses/${encodeURIComponent(a.id)}`:"/api/account/addresses",{method:a?"PUT":"POST",body:JSON.stringify(fd)});toast(K("acct.saved"));render()}
   catch(err){const x=$("aerr");x.hidden=false;x.textContent=err.data?.message||K("acct.error")}};
 }
+/** Guest "Find my order": order number + e-mail → POST /api/orders/lookup (rate-limited, same answer for every mismatch). */
+function findOrderCard(){return `<section class="card" id="find-order" aria-labelledby="foTitle"><h2 id="foTitle">${esc(K("fo.title"))}</h2><p class="muted small" style="margin:-4px 0 14px">${esc(K("fo.lead"))}</p>
+ <form class="form" id="foForm" novalidate><label>${esc(K("fo.order"))}<input id="foOrder" name="order" autocomplete="off" required maxlength="80" placeholder="e.g. ord_…"></label><label>${esc(K("fo.email"))}<input id="foEmail" name="email" type="email" autocomplete="email" required maxlength="254"></label>
+ <div class="full"><button class="btn dark" type="submit" id="foBtn">${esc(K("fo.submit"))}</button></div></form><div id="foOut" aria-live="polite" style="margin-top:14px"></div></section>`}
+function wireFindOrder(){const f=$("foForm");if(!f)return;f.onsubmit=async e=>{e.preventDefault();const out=$("foOut"),b=$("foBtn"),order=$("foOrder").value.trim(),email=$("foEmail").value.trim();
+ if(!order||!email){out.innerHTML=`<div class="err">${esc(K("fo.notFound"))}</div>`;return}
+ b.disabled=true;out.innerHTML="";
+ try{const r=await fetch("/api/orders/lookup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({order,email})});const d=await r.json().catch(()=>({}));
+  if(r.status===429){out.innerHTML=`<div class="err">${esc(K("fo.limit"))}</div>`;return}
+  if(!r.ok){out.innerHTML=`<div class="err">${esc(K("fo.notFound"))}</div>`;return}
+  const o=d.order,est=o.delivery_estimate&&window.PODDates?PODDates.range(o.delivery_estimate.from,o.delivery_estimate.to):"";
+  out.innerHTML=`<div class="addr def" style="gap:8px"><div class="card-h" style="margin:0"><b>${esc(o.id)}</b>${pill(o.stage)}</div><dl class="kv small"><dt>${esc(K("fo.placed"))}</dt><dd>${esc(dt(o.placed_at))||"—"}</dd><dt>${esc(K("fo.items"))}</dt><dd>${o.item_count}</dd>${est?`<dt>${esc(K("pay.delivery"))}</dt><dd>${esc(est)}</dd>`:""}${o.proof?`<dt>${esc(K("ps.step.proof"))}</dt><dd>${esc(o.proof.ready?(o.proof.status==="Approved"?K("pf.approved"):K("acct.od.proofOpen")):K("acct.od.proofPreparing"))}</dd>`:""}${o.tracking?`<dt>${esc(K("fo.tracking"))}</dt><dd>${esc(o.tracking.carrier)} ${o.tracking.url?`<a href="${esc(o.tracking.url)}" rel="noopener" target="_blank">${esc(o.tracking.number)}</a>`:esc(o.tracking.number)}</dd>`:""}</dl><p class="muted small" style="margin:0">${esc(K("ps.noToken"))}</p></div>`;
+ }catch(err){out.innerHTML=`<div class="err">${esc(K("co.err.network"))}</div>`}finally{b.disabled=false}}}
 async function signedOut(){
  document.title=`${K("acct.title")} · POD Wedding Studio`;
- const prov=await PODAuth.providers();
- app.innerHTML=`<div class="shell" style="grid-template-columns:1fr"><main class="card signin"><div class="empty" style="padding:10px 0 0"><div class="ic">${I.profile}</div></div><h1>${esc(K("acct.so.title"))}</h1><p>${esc(K("acct.so.text"))}</p><div class="pa-opts">${PODAuth.buttonsHtml(prov)}</div><p class="muted small" style="margin:16px 0 0">${esc(K("auth.terms"))}</p></main></div>`;
+ const prov=await PODAuth.providers(),any=PODAuth.anyProvider?PODAuth.anyProvider(prov):true;
+ const signin=any?`<main class="card signin"><div class="empty" style="padding:10px 0 0"><div class="ic">${I.profile}</div></div><h1>${esc(K("acct.so.title"))}</h1><p>${esc(K("acct.so.text"))}</p><div class="pa-opts">${PODAuth.buttonsHtml(prov)}</div><p class="muted small" style="margin:16px 0 0">${esc(K("auth.terms"))}</p></main>`:"";
+ app.innerHTML=`<div class="shell acct-out" style="grid-template-columns:${any?"minmax(0,1fr) minmax(0,1fr)":"minmax(0,560px)"};justify-content:center;align-items:start">${signin}<div style="${any?"margin-top:60px":"margin-top:40px"}">${findOrderCard()}</div></div>`;
+ wireFindOrder();if(location.hash==="#find-order")setTimeout(()=>$("foOrder")?.focus(),50);
 }
 async function boot(){
  window.PODCart?.init({});
  user=await PODAuth.ready;
- if(!user)return signedOut();
+ if(!user){window.addEventListener("hashchange",()=>{if(location.hash==="#find-order")$("foOrder")?.focus()});return signedOut();}
  render();window.addEventListener("hashchange",render);
 }
 window.addEventListener("wedding-language-change",()=>user?render():signedOut());

@@ -94,16 +94,10 @@ a{color:inherit}
 .co-note{display:block;margin-top:4px;padding:6px 8px;border-radius:8px;background:#fff7e0;color:#7a5a00;font-size:12px}.co-msg .co-retry{margin-left:8px;font-weight:700;text-decoration:underline;background:none;border:0;color:inherit;cursor:pointer;font:inherit}
 @media(max-width:900px){.co-aside{position:sticky;top:0;z-index:20}.co-sum.open{max-height:70vh;overflow:auto}}
 </style>
+<link rel="stylesheet" href="cart.css">
 </head>
 <body>
-<header class="co-top">
-  <a class="co-brand" href="/"><div class="co-logo">P</div><div><b>POD WEDDING STUDIO</b><span data-i18n="co.title">Checkout</span></div></a>
-  <div class="co-top-r">
-    <span class="co-secure"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i18n="co.secure">Secure checkout</span></span>
-    <div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div>
-    <div data-account-slot></div>
-  </div>
-</header>
+<div id="site-header" data-variant="checkout"><div data-slot="actions"><div data-account-slot></div></div></div><script src="/header.js"></script>
 
 <div class="co-wrap" id="coWrap">
   <aside class="co-aside">
@@ -204,6 +198,7 @@ a{color:inherit}
 
 <script src="i18n.js"></script>
 <script src="account-auth.js"></script>
+<script src="cart.js"></script>
 <script src="checkout.js"></script>
 <div id="site-footer"></div><script src="/footer.js" defer></script>
 </body>

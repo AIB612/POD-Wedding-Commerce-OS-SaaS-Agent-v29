@@ -13,7 +13,7 @@
     "test:flows": "node server/flow-test.js",
     "test:http": "node server/http-flow-test.js",
     "test:hardening": "node server/hardening-test.js",
-    "test:all": "node server/self-test.js && node server/studio-test.js && node server/flow-test.js && node server/hardening-test.js && node server/checkout-test.js && node server/http-flow-test.js",
+    "test:all": "node server/self-test.js && node server/studio-test.js && node server/flow-test.js && node server/hardening-test.js && node server/checkout-test.js && node server/http-flow-test.js && node server/order-lookup-test.js && node server/storefront-pages-test.js",
     "build:studio-data": "node server/build-studio-data.js",
     "test:studio": "node server/studio-test.js",
     "mockups:generate": "python3 scripts/generate_mockups.py > /dev/null && node server/build-studio-data.js",
@@ -27,7 +27,9 @@
     "test:auth": "node server/auth-test.js",
     "test:account": "node server/account-test.js",
     "test:studio-buy": "node server/studio-buy-test.js",
-    "test:promo": "node server/promo-test.js"
+    "test:promo": "node server/promo-test.js",
+    "test:lookup": "node server/order-lookup-test.js",
+    "test:pages": "node server/storefront-pages-test.js"
   },
   "engines": {
     "node": ">=20"

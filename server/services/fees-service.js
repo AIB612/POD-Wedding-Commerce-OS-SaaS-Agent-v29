@@ -62,7 +62,12 @@ export function carrierDays(zoneId, method) { return getFees().shipping?.[zoneId
 export function packagingPrice(id, currency) { return Number(getFees().packaging?.[id]?.[currency] || 0); }
 export function pricesIncludeVat() { return getFees().prices_include_vat === true; }
 
-export function publicFees() { const f = getFees(); return { version: f.version, prices_include_vat: !!f.prices_include_vat, packaging: f.packaging }; }
+export function publicFees() {
+  const f = getFees(), transit = {};
+  for (const [z, ms] of Object.entries(f.shipping || {})) { transit[z] = {}; for (const [m, v] of Object.entries(ms || {})) if (Array.isArray(v?.days)) transit[z][m] = v.days; }
+  // transit / production_days feed the public "Shipping & production times" page (no prices, no internal data).
+  return { version: f.version, prices_include_vat: !!f.prices_include_vat, packaging: f.packaging, production_days: Number(f.default_production_days ?? 3), transit_days: transit };
+}
 
 const num = (v, min, max, label) => { const n = Number(v); if (!Number.isFinite(n) || n < min || n > max) throw new HttpError(400, "invalid_fee", `Invalid ${label}`); return n; };
 /** Replace settings (validated). Body: { prices_include_vat, tax:{zones,countries}, shipping:{zone:{method:{CHF:{base,per_kg,free_over},EUR,days:[a,b]}}}, packaging:{id:{CHF,EUR}} } */

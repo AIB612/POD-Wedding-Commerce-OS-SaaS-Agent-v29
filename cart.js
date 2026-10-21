@@ -5,7 +5,7 @@
  * PODCart.init({onEdit(line), onChange(items)}) wires the page; PODCart.upsert(line) adds/replaces a line. */
 (function(){
 const CART_KEY="pod-cart-v1",CO_KEY="pod-checkout-v1";
-const DRAWER="<div class=\"cart-scrim\" id=\"cartScrim\"></div>\n<aside class=\"cart-panel\" id=\"cartPanel\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"cartTitle\" aria-hidden=\"true\">\n  <div class=\"cart-head\"><h3 id=\"cartTitle\"><span data-i18n=\"cart.title\">Your cart</span><small id=\"cartItemsLabel\"></small></h3><button class=\"cart-close\" id=\"cartClose\" type=\"button\" data-i18n-attr=\"aria-label:cart.close\" aria-label=\"Close cart\">\u00d7</button></div>\n  <div class=\"cart-list\" id=\"cartList\"></div>\n  <div class=\"cart-foot\" id=\"cartFoot\">\n    <div class=\"cart-row\"><span data-i18n=\"cart.subtotal\">Subtotal</span><strong id=\"cartSubtotal\">\u2014</strong></div>\n    <div class=\"cart-row\"><span data-i18n=\"cart.shipping\">Shipping</span><span data-i18n=\"cart.shippingLater\">Calculated at checkout</span></div>\n    <div class=\"cart-row\" id=\"cartVatRow\"><span id=\"cartVatLabel\">VAT</span><span id=\"cartVat\">\u2014</span></div>\n    <div class=\"cart-row total\"><span data-i18n=\"cart.total\">Total</span><strong id=\"cartTotal\">\u2014</strong></div>\n    <div class=\"cart-vat\" data-i18n=\"cart.vatIncl\">Incl. VAT where applicable</div>\n    <div class=\"cart-status\" id=\"cartStatus\" aria-live=\"polite\"></div>\n    <button class=\"cart-checkout\" id=\"checkoutBtn\" type=\"button\" data-i18n=\"cart.checkout\">Checkout</button>\n    <div class=\"pay-marks\"><span data-i18n=\"cart.weAccept\">We accept</span><span class=\"pay-mark\">TWINT</span><span class=\"pay-mark\">PayPal</span></div>\n    <ul class=\"cart-trust\"><li data-i18n=\"cart.trust.secure\">Secure, encrypted payment</li><li data-i18n=\"cart.trust.proof\">Digital proof by e-mail within 2 h of payment</li><li id=\"cartArrives\"></li></ul>\n  </div>\n</aside>";
+const DRAWER="<div class=\"cart-scrim\" id=\"cartScrim\"></div>\n<aside class=\"cart-panel\" id=\"cartPanel\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"cartTitle\" aria-hidden=\"true\">\n  <div class=\"cart-head\"><h3 id=\"cartTitle\"><span data-i18n=\"cart.title\">Your cart</span><small id=\"cartItemsLabel\"></small></h3><button class=\"cart-close\" id=\"cartClose\" type=\"button\" data-i18n-attr=\"aria-label:cart.close\" aria-label=\"Close cart\">\u00d7</button></div>\n  <div class=\"cart-list\" id=\"cartList\"></div>\n  <div class=\"cart-foot\" id=\"cartFoot\">\n    <div class=\"cart-row\"><span data-i18n=\"cart.subtotal\">Subtotal</span><strong id=\"cartSubtotal\">\u2014</strong></div>\n    <div class=\"cart-row\"><span data-i18n=\"cart.shipping\">Shipping</span><span data-i18n=\"cart.shippingLater\">Calculated at checkout</span></div>\n    <div class=\"cart-row\" id=\"cartVatRow\"><span id=\"cartVatLabel\">VAT</span><span id=\"cartVat\">\u2014</span></div>\n    <div class=\"cart-row total\"><span data-i18n=\"cart.total\">Total</span><strong id=\"cartTotal\">\u2014</strong></div>\n    <div class=\"cart-vat\" id=\"cartVatNote\">Prices exclude VAT; VAT is calculated for your delivery country and shown separately.</div>\n    <div class=\"cart-status\" id=\"cartStatus\" aria-live=\"polite\"></div>\n    <button class=\"cart-checkout\" id=\"checkoutBtn\" type=\"button\" data-i18n=\"cart.checkout\">Checkout</button>\n    <div class=\"pay-marks\"><span data-i18n=\"cart.weAccept\">We accept</span><span class=\"pay-mark\">TWINT</span><span class=\"pay-mark\">PayPal</span></div>\n    <ul class=\"cart-trust\"><li data-i18n=\"cart.trust.secure\">Secure, encrypted payment</li><li data-i18n=\"cart.trust.proof\">Digital proof by e-mail within 2 h of payment</li><li id=\"cartArrives\"></li></ul>\n  </div>\n</aside>";
 const HOME_LOCALE={zh:"zh-CN",en:"en-GB",de:"de-DE"};
 const $=id=>document.getElementById(id);
 let cart=loadCart(),cartQuote=null,opts={},seq=0,timer=null,notices={};
@@ -16,7 +16,7 @@ function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function loadCart(){try{const v=JSON.parse(localStorage.getItem(CART_KEY)||"[]");return Array.isArray(v)?v.filter(x=>x&&x.name&&x.qty>0).slice(0,50):[]}catch(e){return []}}
 function saveCart(){try{localStorage.setItem(CART_KEY,JSON.stringify(cart))}catch(e){}}
 function changed(){try{opts.onChange?.(cart)}catch(e){}}
-function cartCountry(){try{return JSON.parse(localStorage.getItem(CO_KEY)||"{}").country||"CH"}catch(e){return "CH"}}
+function cartCountry(){if(window.PODMarket)return PODMarket.country();try{return JSON.parse(localStorage.getItem(CO_KEY)||"{}").country||"CH"}catch(e){return "CH"}}
 function fmtMoney(n,cur){const l=lang();return new Intl.NumberFormat(l==="de"?(cur==="EUR"?"de-DE":"de-CH"):(HOME_LOCALE[l]||"en-GB"),{style:"currency",currency:cur||"CHF"}).format(Number(n)||0)}
 function sizesText(z){return Object.entries(z||{}).filter(([,n])=>n>0).map(([k,n])=>`${k}×${n}`).join(", ")}
 function cartVariant(i){
@@ -35,7 +35,8 @@ function render(bump){
   $("cartItemsLabel").textContent=n?K("cart.items",{n}):"";
   const list=$("cartList"),foot=$("cartFoot");
   foot.hidden=!cart.length;
-  if(!cart.length){list.innerHTML=`<div class="cart-empty"><b>${esc(K("cart.empty.title"))}</b><p>${esc(K("cart.empty.text"))}</p><button type="button" id="cartContinue">${esc(K("cart.empty.cta"))}</button></div>`;$("cartContinue").onclick=close;return}
+  vatNote();
+  if(!cart.length){list.innerHTML=`<div class="cart-empty"><b>${esc(K("cart.empty.title"))}</b><p>${esc(K("empty.lead"))}</p><div class="cart-empty-ctas"><a class="cart-cta" href="studio.html?scenario=gifts">${esc(K("empty.start"))}</a><button type="button" id="cartContinue">${esc(K("cart.empty.cta"))}</button></div><div id="cartEmptyMore"></div></div>`;$("cartContinue").onclick=close;fillEmpty($("cartEmptyMore"),{compact:true});return}
   const q=cartQuote,cur=q?.currency;
   list.innerHTML=cart.map((i,idx)=>{const ql=q?.items?.[idx];return `
     <div class="cart-item" data-id="${esc(i.id)}">
@@ -74,6 +75,33 @@ async function fetchQuote(){
   }catch(e){if(s!==seq)return;cartQuote=null;st.innerHTML=esc(e instanceof TypeError?K("co.err.network"):K("cart.priceError"))+` <button type="button" class="cart-link" id="cartRetry">${esc(K("co.retry"))}</button>`;const b=$("cartRetry");if(b)b.onclick=fetchQuote}
   render();
 }
+
+// ---- Prices excl./incl. VAT label: driven by the admin "Fees & tax" setting (default excl. VAT) ----
+let fees=null,feesP=null;
+function loadFees(){if(feesP)return feesP;feesP=(location.protocol==="file:"?Promise.resolve(null):fetch("/api/storefront/fees").then(r=>r.ok?r.json():null).catch(()=>null)).then(f=>{fees=f;window.POD_FEES=f;document.querySelectorAll("[data-vat-label]").forEach(e=>e.textContent=vatLabel());vatNote();try{window.dispatchEvent(new CustomEvent("pod-fees",{detail:f}))}catch(e){}return f});return feesP}
+function inclVat(){return cartQuote?!!cartQuote.prices_include_vat:!!fees?.prices_include_vat}
+/** Short label for price tags: "excl. VAT" (default) or "incl. VAT". */
+function vatLabel(){return K(inclVat()?"vat.incl":"vat.excl")}
+function vatNote(){const n=$("cartVatNote");if(n)n.textContent=K(inclVat()?"cart.vatInclNote":"cart.vatExclNote")}
+// ---- Empty cart: featured wedding best-sellers, "Start designing" CTA, saved designs when signed in ----
+const FEATURED=["invitation","save_date","menu_card","welcome_sign","place_card","gift_box"];
+let catP=null,priceP=null;
+function catalog(){if(window.STUDIO_DATA?.products)return Promise.resolve(window.STUDIO_DATA);return catP||(catP=fetch("/api/studio/catalog").then(r=>r.ok?r.json():null).catch(()=>null))}
+function prices(){return priceP||(priceP=fetch("/api/prices").then(r=>r.ok?r.json():null).catch(()=>null))}
+function nm(o){if(!o)return "";if(typeof o==="string")return o;return o[lang()]||o.en||""}
+function fromPrice(pl,pid,cur){const m=pl?.products?.[pid];if(!m)return null;const v=Object.values(m).map(x=>x?.[cur]?.[0]).filter(x=>x>0);return v.length?Math.min(...v):null}
+function thumbOf(src){const m=/^(.*)\/([^/]+)\.(jpe?g|png|webp)$/i.exec(src||"");return m?`${m[1]}/thumb/${m[2]}.webp`:src}
+async function fillEmpty(box,o={}){
+  if(!box||location.protocol==="file:")return;
+  const [D,pl]=await Promise.all([catalog(),prices(),loadFees()]);if(!box.isConnected)return;
+  const cur=window.PODMarket?PODMarket.currency():"CHF",n=o.compact?4:6;
+  const items=FEATURED.map(id=>(D?.products||[]).find(p=>p.id===id)).filter(Boolean).slice(0,n);
+  let html="";
+  if(items.length)html+=`<h4 class="pe-h">${esc(K("empty.best"))}</h4><div class="pe-grid">${items.map(p=>{const f=fromPrice(pl,p.id,cur),src=p.mockup_photo?.src?"/"+p.mockup_photo.src:"";return `<a class="pe-card" href="studio.html?scenario=gifts&amp;product=${encodeURIComponent(p.id)}">${src?`<img src="${esc(thumbOf(src))}" onerror="this.onerror=null;this.src='${esc(src)}'" alt="" width="160" height="160" loading="lazy">`:""}<b>${esc(nm(p.name))}</b>${f?`<span>${esc(K("empty.from",{p:fmtMoney(f,cur)}))} <small>${esc(vatLabel())}</small></span>`:""}</a>`}).join("")}</div>`;
+  try{const u=window.PODAuth?await PODAuth.ready:null;if(u){const r=await fetch("/api/account/designs",{credentials:"same-origin"});const d=r.ok?await r.json():null;const ds=(d?.designs||[]).slice(0,o.compact?3:4);
+    if(ds.length)html+=`<h4 class="pe-h">${esc(K("empty.saved"))}</h4><div class="pe-saved">${ds.map(x=>`<a class="pe-row" href="${esc(x.link||("studio.html?project="+encodeURIComponent(x.id)))}">${x.thumb?`<img src="${esc(x.thumb)}" alt="" width="48" height="48" loading="lazy">`:`<span class="pe-ph"></span>`}<span>${esc(x.name)}</span><em>${esc(K("empty.open"))} →</em></a>`).join("")}</div>`}}catch(e){}
+  if(box.isConnected)box.innerHTML=html;
+}
 function commit(bump){saveCart();changed();render(bump);refreshQuote()}
 function setQty(id,qty){const i=cart.find(x=>x.id===id);if(!i)return;if(i.sizes&&sizesText(i.sizes))return;i.qty=Math.max(1,Math.min(10000,parseInt(qty)||1));commit(true)}
 function upsert(line){const at=cart.findIndex(x=>x.id===line.id);if(at>=0)cart[at]=line;else cart.push(line);commit(true)}
@@ -99,8 +127,8 @@ function init(o){
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&isOpen())close()});
   window.addEventListener("storage",e=>{if(e.key===CART_KEY){cart=loadCart();changed();render();refreshQuote()}});
   window.addEventListener("wedding-language-change",()=>render());
-  changed();render();if(cart.length)refreshQuote();
+  changed();render();if(cart.length)refreshQuote();loadFees();
 }
 function relabel(){const b=$("cartBtn");const l=b&&b.querySelector("[data-i18n]");if(l&&window.WeddingI18n?.k)l.textContent=K(l.dataset.i18n);document.querySelectorAll("#cartPanel [data-i18n]").forEach(el=>el.textContent=K(el.dataset.i18n));const c=$("cartClose");if(c)c.setAttribute("aria-label",K("cart.close"));render()}
-window.PODCart={KEY:CART_KEY,init,upsert,remove,setQty,open,close,isOpen,render,relabel,refreshQuote,fmtMoney,get items(){return cart}};
+window.PODCart={KEY:CART_KEY,init,fillEmpty,vatLabel,loadFees,upsert,remove,setQty,open,close,isOpen,render,relabel,refreshQuote,fmtMoney,get items(){return cart}};
 })();

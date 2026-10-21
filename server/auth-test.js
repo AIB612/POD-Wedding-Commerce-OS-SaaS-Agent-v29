@@ -153,7 +153,9 @@ try {
   // 9. Front-end assets are served and wired.
   for (const f of ["/account-auth.js", "/checkout.html", "/", "/studio.html"]) assert.equal((await get(f)).status, 200, f);
   const js = await (await get("/account-auth.js")).text();
-  assert.match(js, /\/api\/auth\/\$\{p\}\/start/); assert.match(js, /auth\.notConfigured/);
+  assert.match(js, /\/api\/auth\/\$\{p\}\/start/);
+  // B5: unconfigured providers are filtered out (no "not configured" badge shown to customers).
+  assert.doesNotMatch(js, /auth\.notConfigured/); assert.match(js, /filter\(\(\[p\]\)=>!!prov\?\.\[p\]\?\.configured\)/);
   assert.match(await (await get("/checkout.html")).text(), /co\.fasterTitle/);
   result.frontend_wiring = "pass";
 } finally {

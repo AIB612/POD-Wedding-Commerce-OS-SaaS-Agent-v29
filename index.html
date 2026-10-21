@@ -591,22 +591,26 @@ button{color:inherit}
   .agent-launcher:after{display:none}
   .agent-panel{left:10px;right:10px;top:92px;bottom:auto;width:auto;height:min(640px,calc(100vh - 110px))}
 }
+
+/* B5 mobile: hero capped at ~60vh, bigger hotspot tap targets (≥44px), decluttered shared header */
+.app>header.sh{grid-row:1}
+@media(max-width:720px){
+  .layout{grid-template-rows:min(60vh,560px) auto!important}
+  .stage{max-height:60vh;min-height:300px}
+  .hotspot{width:44px;height:44px}
+  .hotspot:before{width:12px;height:12px}
+  .hotspot:after{inset:-6px}
+  .agent-launcher{top:auto!important;bottom:16px!important;right:14px!important;width:44px!important;height:44px!important}
+  .agent-panel{top:70px!important}
+}
+.vat-tag{font-size:.72em;font-weight:500;color:var(--muted);margin-left:4px;white-space:nowrap}
 </style>
 <link rel="stylesheet" href="cart.css">
 </head>
 <body>
 <div class="app">
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo">P</div>
-      <div><b>POD WEDDING STUDIO</b><span>场景式选品 · 定制 · 阶梯价 · 购物车</span></div>
-    </div>
-    <div class="actions"><div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div>
-      <div class="topbar-row2"><button class="btn wedding-site-btn" id="weddingSiteBtn">生成专属婚礼网站</button>
-      </div>
-      <button class="cart-btn" id="cartBtn" type="button" aria-haspopup="dialog" aria-controls="cartPanel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span class="cart-btn-label" data-i18n="cart.button">Cart</span><span class="cart-badge" id="cartCount" data-n="0">0</span></button>
-    </div>
-  </header>
+  <!-- Shared header (header.js). "Create wedding website" is a secondary action → lives in the header "Menu". -->
+  <div id="site-header" data-cart><button class="btn wedding-site-btn" id="weddingSiteBtn" type="button" data-header-menu>Create wedding website</button></div><script src="/header.js"></script>
 
   <main class="layout">
     <section class="stage" id="stage">
@@ -641,7 +645,7 @@ button{color:inherit}
           <button class="pop-close" id="popClose">×</button>
         </div>
         <div class="pop-body">
-          <div class="price-row"><span>单价会根据数量自动变化</span><strong id="unitPrice">€0.00</strong></div>
+          <div class="price-row"><span>单价会根据数量自动变化</span><strong id="unitPrice">—</strong></div><div class="vat-tag" data-vat-label style="text-align:right;margin-top:-4px">excl. VAT</div>
 
           <div class="mode-label">选择材质</div>
           <div class="material-grid" id="materialGrid"></div>
@@ -686,7 +690,7 @@ button{color:inherit}
             <div class="tier-pill" data-tier="4" style="display:none">100+</div>
           </div>
 
-          <div class="total"><span>商品小计</span><strong id="totalPrice">€0.00</strong></div>
+          <div class="total"><span>商品小计</span><strong id="totalPrice">—</strong></div><div class="vat-tag" data-vat-label style="text-align:right">excl. VAT</div>
           <div class="pop-actions">
             <button class="add" id="addCart">加入购物车</button>
             <button class="secondary" id="detailBtn">完整详情</button>
@@ -833,7 +837,7 @@ button{color:inherit}
   </div>
 </div>
 
-<button class="agent-launcher" id="agentLauncher" aria-label="打开婚礼定制 Agent">AI</button>
+<button class="agent-launcher" id="agentLauncher" aria-label="Open the wedding customisation agent">AI</button>
 <aside class="agent-panel" id="agentPanel">
   <div class="agent-head">
     <div class="agent-identity">
@@ -862,7 +866,7 @@ button{color:inherit}
       <b id="materialLightboxTitle">材质预览</b>
       <button class="pop-close" id="materialLightboxClose">×</button>
     </div>
-    <img class="material-lightbox-image" id="materialLightboxImage" alt="材质大图" decoding="async"/>
+    <img class="material-lightbox-image" id="materialLightboxImage" alt="Material close-up" decoding="async"/>
     <div class="material-lightbox-foot" id="materialLightboxDesc"></div>
   </div>
 </div>
@@ -875,7 +879,7 @@ button{color:inherit}
     <div class="cart-row"><span data-i18n="cart.subtotal">Subtotal</span><strong id="cartSubtotal">—</strong></div>
     <div class="cart-row"><span data-i18n="cart.shipping">Shipping</span><span data-i18n="cart.shippingLater">Calculated at checkout</span></div>
     <div class="cart-row total"><span data-i18n="cart.total">Total</span><strong id="cartTotal">—</strong></div>
-    <div class="cart-vat" data-i18n="cart.vatIncl">Incl. VAT where applicable</div>
+    <div class="cart-vat" id="cartVatNote">Prices exclude VAT; VAT is calculated for your delivery country and shown separately.</div>
     <div class="cart-status" id="cartStatus" aria-live="polite"></div>
     <button class="cart-checkout" id="checkoutBtn" type="button" data-i18n="cart.checkout">Checkout</button>
     <div class="pay-marks"><span data-i18n="cart.weAccept">We accept</span><span class="pay-mark">TWINT</span><span class="pay-mark">PayPal</span></div>
@@ -901,19 +905,26 @@ function pick(obj,fallback=""){if(!obj)return fallback;if(typeof obj==="string")
 const HOME_LOCALE={zh:"zh-CN",en:"en-GB",de:"de-DE"};
 function homeT(zh){return window.WeddingI18n?.t?.(zh)??zh}
 /** Format a EUR amount for the current language. opts.from adds the "From" / "起" prefix. */
+/** Shared market (header.js PODMarket: CH → CHF, EU → EUR), the same selection studio, cart and checkout use. */
+/** "excl. VAT" (default) / "incl. VAT" from the Fees & tax setting (cart.js loads /api/storefront/fees and refreshes [data-vat-label]). */
+function vatTag(){return window.PODCart?.vatLabel?PODCart.vatLabel():"excl. VAT"}
+window.addEventListener("wedding-language-change",()=>document.querySelectorAll("[data-vat-label]").forEach(e=>e.textContent=vatTag()));
+function homeMarket(){return window.PODMarket?PODMarket.get():"CH"}
+function homeCurrency(){return window.PODMarket?PODMarket.currency():"CHF"}
+/** Format an amount in the shared market currency (name kept for existing callers). opts.from adds the "From" prefix. */
 function fmtEur(n,opts={}){
-  const l=homeLang(),v=new Intl.NumberFormat(HOME_LOCALE[l]||"en-GB",{style:"currency",currency:"EUR",minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0);
+  const l=homeLang(),v=new Intl.NumberFormat(HOME_LOCALE[l]||"en-GB",{style:"currency",currency:homeCurrency(),minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0);
   if(!opts.from)return v;
   return l==="zh"?`${v} 起`:l==="de"?`ab ${v}`:`From ${v}`;
 }
 function fmtEurDelta(d){return (d>0?"+":"−")+fmtEur(Math.abs(d))}
-/** Retail ("From") price: shared studio pricing, EU market, default margin, 1 pc, cheapest material. */
+/** Retail ("From") price: shared studio pricing, shared market (CHF/EUR), default margin, 1 pc, cheapest material. */
 const HOME_MARGIN=0.4;
 function retailFrom(x){
   try{
     if(window.StudioPricing&&studioCatalog.markets){
       const mats=(x.materials||[]),cheapest=mats.slice().sort((a,b)=>a.delta_eur-b.delta_eur)[0];
-      const q=StudioPricing.quote(studioCatalog,{market:"EU",margin:HOME_MARGIN,items:[{product_id:x.id,qty:1,material_id:cheapest?.id}]});
+      const q=StudioPricing.quote(studioCatalog,{market:homeMarket(),margin:HOME_MARGIN,items:[{product_id:x.id,qty:1,material_id:cheapest?.id}]});
       if(q.lines[0])return q.lines[0].price;
     }
   }catch(e){}
@@ -1092,7 +1103,7 @@ function renderCatalog(){
         <button class="product" data-g="${gi}" data-p="${pi}" data-product="${p.id}">
           <div class="prod-img studio">${p.thumb?`<img src="${p.thumb}" srcset="${p.thumb} 1x, ${p.thumb2} 2x" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${p.thumbOrig}'" width="68" height="56" alt="${escHtml(p.name)}" loading="lazy" decoding="async">`:""}</div>
           <div><b>${escHtml(p.name)}</b><span>${escHtml(p.technique)}${p.eco?" · ♻ "+homeT("Eco"):""}</span></div>
-          <strong>${fmtEur(p.price,{from:true})}</strong>
+          <strong>${fmtEur(p.price,{from:true})}<span class="vat-tag" data-vat-label>${escHtml(vatTag())}</span></strong>
         </button>`).join("")}
     </section>`).join("");
   cat.querySelectorAll(".product").forEach(b=>b.onclick=()=>openProductModal(b.dataset.product));
@@ -1199,12 +1210,12 @@ function setMode(mode){
   document.getElementById("uploadField").style.display=mode==="upload"?"grid":"none";
   document.getElementById("laterField").style.display=mode==="later"?"block":"none";
 }
-/** Studio products: unit price from the admin price list (same StudioPricing.quote the server charges with), EU market, default material. */
+/** Studio products: unit price from the admin price list (same StudioPricing.quote the server charges with), shared market, default material. */
 function studioPriceInfo(qty){
   const p=current();
   try{
     const tiers=(studioCatalog.price_list?.tiers)||[...(studioCatalog.qty_tiers||[])].map(t=>t.min_qty).sort((a,b)=>a-b);
-    const unitAt=q=>StudioPricing.quote(studioCatalog,{market:"EU",margin:HOME_MARGIN,items:[{product_id:p.id,qty:q}]}).lines[0]?.price;
+    const unitAt=q=>StudioPricing.quote(studioCatalog,{market:homeMarket(),margin:HOME_MARGIN,items:[{product_id:p.id,qty:q}]}).lines[0]?.price;
     const unit=unitAt(qty);if(unit==null)return null;
     let tier=0;tiers.forEach((t,i)=>{if(qty>=t)tier=i});
     const next=tiers[tier+1],lo=tiers[tier],base=unitAt(1),off=base?Math.round((1-unit/base)*100):0;
@@ -1978,7 +1989,7 @@ document.getElementById("wbLang").addEventListener("change",()=>{wbApplySampleLa
     <div class="product-modal-info">
       <small id="productModalCat" style="color:var(--muted);font-size:11px;letter-spacing:.08em">PRODUCT</small>
       <h3 id="productModalName"></h3>
-      <div class="price" id="productModalPrice"></div>
+      <div class="price" id="productModalPrice"></div><div class="vat-tag" data-vat-label>excl. VAT</div>
       <div id="productModalColors" class="color-swatches"></div>
       <div class="product-modal-actions">
         <button class="primary" id="productModalDesign">开始设计</button>

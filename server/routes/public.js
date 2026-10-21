@@ -12,7 +12,7 @@ import { catalogOverview } from "../services/catalog-service.js";
 import { addRecord, findRecord, listForTenant, updateRecord } from "../saas-store.js";
 import { HttpError } from "../http/middleware.js";
 import { protocolRegistry, ucpProfile, a2aAgentCard, acpFeed } from "../protocols/commerce-protocols.js";
-import { createStorefrontCheckout, createTwintCheckout, twintOrderStatus, paymentMethods, handlePayPalReturn, publicOrderStatus, quoteStorefront, orderConfirmation, orderToken, handlePayPalCancel } from "../services/checkout-service.js";
+import { createStorefrontCheckout, createTwintCheckout, twintOrderStatus, paymentMethods, handlePayPalReturn, publicOrderStatus, quoteStorefront, orderConfirmation, orderToken, handlePayPalCancel, lookupOrder } from "../services/checkout-service.js";
 import { publicPriceList } from "../services/price-list-service.js";
 import { publicFees } from "../services/fees-service.js";
 import { publicProof, approvePublicProof, requestPublicProofChanges } from "../services/proof-service.js";
@@ -24,7 +24,7 @@ const VERSION = JSON.parse(fs.readFileSync(new URL("../../package.json", import.
 
 export function publicRouter({ root, generatedDir }) {
   const router = express.Router();
-  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html" };
+  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html", "/shipping": "shipping.html", "/shipping.html": "shipping.html", "/returns": "returns.html", "/returns.html": "returns.html", "/imprint": "imprint.html", "/imprint.html": "imprint.html", "/impressum": "imprint.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
   for (const [route, file] of Object.entries(pages)) router.get(route, (_, res) => res.sendFile(path.join(root, file), noStore));
 
@@ -39,7 +39,7 @@ export function publicRouter({ root, generatedDir }) {
   router.get("/robots.txt", (_, res) => res.type("text/plain").send("User-agent: *\nDisallow: /generated/\n"));
   // POD Studio page + its scripts (explicit allowlist, like the other pages)
   router.get("/studio.html", (_, res) => res.sendFile(path.join(root, "studio.html"), noStore));
-  for (const f of ["checkout.js", "cart.js", "cart.css", "studio.js", "studio-data.js", "studio-pricing.js", "studio-mockups.js", "account-auth.js", "account-app.js", "footer.js"]) router.get("/" + f, (_, res) => res.sendFile(path.join(root, f), { maxAge: "5m" }));
+  for (const f of ["checkout.js", "cart.js", "cart.css", "studio.js", "studio-data.js", "studio-pricing.js", "studio-mockups.js", "account-auth.js", "account-app.js", "footer.js", "header.js"]) router.get("/" + f, (_, res) => res.sendFile(path.join(root, f), { maxAge: "5m" }));
   router.use("/assets", express.static(path.join(root, "assets"), { maxAge: "7d", fallthrough: false }));
   // Self-hosted OFL webfonts for generated wedding sites (sandboxed /generated pages have an opaque origin, so CORS is required).
   router.use("/fonts", (_, res, next) => { res.setHeader("Access-Control-Allow-Origin", "*"); next(); }, express.static(path.join(root, "fonts"), { maxAge: "30d", fallthrough: false }));
@@ -111,6 +111,9 @@ export function publicRouter({ root, generatedDir }) {
   // Live sell prices (admin price list) for browsers: JSON, and as a script that attaches to window.STUDIO_DATA.
   router.get("/api/prices", (req, res) => { res.setHeader("Cache-Control", "no-cache"); res.json(publicPriceList()); });
   router.get("/price-list.js", (req, res) => { res.setHeader("Cache-Control", "no-cache"); res.type("application/javascript").send(`(function(){var l=${JSON.stringify(publicPriceList())};window.POD_PRICE_LIST=l;if(window.STUDIO_DATA)window.STUDIO_DATA.price_list=l;})();`); });
+  // Guest "Find my order": order number + e-mail → limited status info. Strict per-IP limit (plus per-order failure lock in the service).
+  const lookupLimit = rateLimit({ bucket: "order-lookup", windowMs: 15 * 60_000, max: 10 });
+  router.post("/api/orders/lookup", lookupLimit, ah(async (req, res) => { res.setHeader("Cache-Control", "private, no-store"); res.json({ order: await lookupOrder(req.body?.order, req.body?.email) }); }));
   router.get("/api/orders/:id/status", statusLimit, ah(async (req, res) => res.json(await publicOrderStatus(req.params.id))));
 
   // Legacy low-level PayPal endpoints (kept for compatibility).

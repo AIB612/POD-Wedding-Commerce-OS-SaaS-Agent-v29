@@ -45,6 +45,8 @@ a{color:var(--accent)}button{font:inherit}
 .signin{max-width:460px;margin:60px auto;text-align:center}.signin h1{font:600 28px/1.2 Georgia,serif;margin:0 0 8px}.signin p{color:var(--muted);margin:0 0 22px}.signin .pa-opts{display:grid;gap:10px;text-align:left}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--dark);color:#fff;padding:11px 18px;border-radius:999px;font-size:13px;z-index:200;display:none}.toast.show{display:block}
 .mcards{display:none}
+.pa-none{color:var(--muted);font-size:13px;text-align:center}
+@media(max-width:860px){.acct-out{grid-template-columns:minmax(0,1fr)!important}.acct-out>div,.acct-out .signin{margin-top:0!important}.signin{margin:20px auto}}
 @media(max-width:860px){
  .top{height:auto;min-height:56px;padding:8px 12px;gap:8px}.logo{width:30px;height:30px;border-radius:10px;font-size:13px}.top .brand span.t{font-size:14px}
  .shell{grid-template-columns:minmax(0,1fr);margin:12px 12px 0;gap:12px}.side{min-width:0}
@@ -56,9 +58,7 @@ a{color:var(--accent)}button{font:inherit}
 }
 </style></head>
 <body>
-<header class="top"><a class="brand" href="/"><span class="logo">P</span><span class="t">POD Wedding Studio</span></a>
- <div class="right"><button class="cart-btn" id="cartBtn" type="button" aria-haspopup="dialog" aria-controls="cartPanel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span class="cart-btn-label" data-i18n="cart.button">Cart</span><span class="cart-badge" id="cartCount" data-n="0">0</span></button></div>
-</header>
+<div id="site-header" data-cart></div><script src="/header.js"></script>
 <div id="app" aria-live="polite"><div class="signin"><p class="muted">Loading…</p></div></div>
 <div class="toast" id="toast" role="status"></div>
 <script src="i18n.js"></script>

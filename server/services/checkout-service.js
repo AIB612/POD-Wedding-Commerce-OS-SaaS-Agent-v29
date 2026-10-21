@@ -451,3 +451,43 @@ export async function publicOrderStatus(id) {
   if (!order) throw new HttpError(404, "order_not_found", "Order not found");
   return { id: order.id, status: order.status, financial_status: order.payment_status || "" };
 }
+
+// ---------- Guest "Find my order" (order number + e-mail) ----------
+// Safe against enumeration: unknown order, wrong e-mail and malformed input all give the same 404 "order_not_found";
+// the e-mail is compared in constant time on HMAC digests; failures are also counted per order number (independent
+// of whether it exists) so a known order number cannot be brute-forced from many IPs. Returns status info only —
+// no address, name, prices, e-mail or proof token.
+const lookupFails = new Map(); // normalised order id → { n, reset }
+const LOOKUP_MAX_FAILS = 5, LOOKUP_WINDOW_MS = 15 * 60_000;
+export function resetOrderLookupLimits() { lookupFails.clear(); }
+const STAGE = o => {
+  if (/^cancel/i.test(o.status || "") || o.payment_status === "cancelled") return "cancelled";
+  if (o.status === "Delivered") return "delivered";
+  if (o.status === "Shipped") return "shipped";
+  if (o.status === "Production") return "in_production";
+  if (o.payment_status !== "paid") return "awaiting_payment";
+  if (o.production_blocked || ["Proofing", "AwaitingApproval"].includes(o.status)) return "proof";
+  return "paid";
+};
+export async function lookupOrder(orderNo, email) {
+  const id = String(orderNo || "").trim().slice(0, 80), em = String(email || "").trim().toLowerCase().slice(0, 254);
+  const notFound = () => new HttpError(404, "order_not_found", "No order matches this order number and e-mail");
+  if (!id || !/^[A-Za-z0-9_.#-]+$/.test(id) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) throw notFound();
+  const key = id.toUpperCase().replace(/^#/, ""), now = Date.now();
+  let f = lookupFails.get(key); if (f && f.reset <= now) { lookupFails.delete(key); f = null; }
+  if (f && f.n >= LOOKUP_MAX_FAILS) throw new HttpError(429, "too_many_attempts", "Too many attempts for this order number, please try again later");
+  const o = (await findRecord("orders", id)) || (await findRecord("orders", id.replace(/^#/, "")));
+  const secret = process.env.APP_ENCRYPTION_KEY || "development-only-key-change-me";
+  const ok = timingSafeHexEqual(hmacHex(secret, String(o?.customer_email || "\u0000").trim().toLowerCase()), hmacHex(secret, em));
+  if (!o || !ok) { const e = f || { n: 0, reset: now + LOOKUP_WINDOW_MS }; e.n += 1; lookupFails.set(key, e); throw notFound(); }
+  lookupFails.delete(key);
+  const proofRec = await findWhere("proofs", p => p.order_id === o.id);
+  return {
+    id: o.id, stage: STAGE(o), payment_status: o.payment_status === "paid" ? "paid" : (o.payment_status || "pending"),
+    placed_at: String(o.created_at || "").slice(0, 10) || null,
+    item_count: (o.items || []).reduce((a, l) => a + (Number(l.quantity) || 0), 0),
+    delivery_estimate: o.delivery_estimate ? { from: o.delivery_estimate.from, to: o.delivery_estimate.to } : null,
+    proof: proofRec ? { status: proofRec.status, ready: !!proofRec.proof_url } : null,
+    tracking: o.tracking_number ? { carrier: o.carrier || "", number: o.tracking_number, url: o.tracking_url || "" } : null
+  };
+}

@@ -28,10 +28,10 @@ a{color:inherit}
 .actions{display:grid;gap:10px}.btn{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;text-decoration:none;font-weight:600;border:1px solid var(--line);background:#fff}.btn.primary{background:#292622;color:#fff;border-color:#292622}
 .note{font-size:12.5px;color:var(--muted);background:var(--soft);border-radius:12px;padding:10px 12px}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.wrap{padding:20px 16px 40px}.hero h1{font-size:25px}.top{padding:10px 14px}}
-.eta{display:block;color:#2f6b3f;font-weight:600}</style>
+.eta{display:block;color:#2f6b3f;font-weight:600}.eta-big{font:22px Georgia,serif;color:#2f6b3f}.small-muted{font-size:12.5px;color:var(--muted);margin-top:4px}.tl li.now i{animation:pspulse 1.4s ease-in-out infinite}@keyframes pspulse{50%{box-shadow:0 0 0 5px rgba(40,35,31,.12)}}</style>
 </head>
 <body>
-<header class="top"><a class="brand" href="/"><div class="logo">P</div><b>POD WEDDING STUDIO</b></a><div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div></header>
+<div id="site-header"></div><script src="/header.js"></script>
 <main class="wrap">
   <section class="hero"><div class="mark" id="mark">…</div><div><h1 id="title">Processing your order</h1><p id="lead"></p><span class="ono" id="ono" hidden></span></div></section>
   <div class="grid">
@@ -39,11 +39,13 @@ a{color:inherit}
       <section class="card" id="nextCard"><h2 data-i18n="ps.next">What happens next</h2><ol class="tl" id="timeline"></ol></section>
       <section class="card" id="itemsCard" hidden><h2 data-i18n="co.items">Items</h2><div id="lines"></div></section>
       <div class="note" id="noToken" hidden></div>
+      <div class="note" id="slowNote" role="status" hidden></div>
     </div>
     <aside>
+      <section class="card" id="etaCard" hidden><h2 data-i18n="ps.eta">Estimated delivery</h2><div class="eta-big" id="etaText"></div><div class="small-muted" id="etaSub"></div></section>
       <section class="card" id="totalsCard" hidden><h2 data-i18n="co.summary">Order summary</h2><div class="rows" id="totals"></div></section>
       <section class="card" id="addrCard" hidden><h2 data-i18n="ps.shipTo">Shipping address</h2><div class="addr" id="addr"></div></section>
-      <div class="actions"><a class="btn primary" id="accountLink" href="/account.html#orders" data-i18n="ps.viewOrder">View order in my account</a><a class="btn" href="/" data-i18n="ps.continue">Continue shopping</a><a class="btn" id="retry" href="/checkout.html?payment=cancelled" hidden data-i18n="ps.retry">Back to checkout</a></div>
+      <div class="actions"><a class="btn primary" id="accountLink" href="/account.html#orders" data-i18n="ps.viewOrder">View order in my account</a><a class="btn" href="/" data-i18n="ps.continue">Continue shopping</a><a class="btn" id="retry" href="/checkout.html?payment=cancelled" hidden data-i18n="ps.retry">Back to checkout</a><a class="btn" href="mailto:Sherryxuex@Gmail.com" data-i18n="ps.contact">Contact us</a></div>
     </aside>
   </div>
 </main>
@@ -54,10 +56,11 @@ const q=new URLSearchParams(location.search),id=q.get("order"),tok=q.get("t"),in
 const I=()=>window.WeddingI18n||{k:x=>x,lang:()=>"en"},K=(k,v)=>I().k(k,v),$=x=>document.getElementById(x);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=(n,c)=>new Intl.NumberFormat(I().lang()==="de"?(c==="EUR"?"de-DE":"de-CH"):(I().lang()==="zh"?"zh-CN":"en-GB"),{style:"currency",currency:c||"CHF"}).format(Number(n)||0);
-const GOOD=["Needs approval","Paid","Proofing","AwaitingApproval","Approved","Production","Shipped","Delivered","COMPLETED"];
-let data=null,status=initial;
+// Paid = the server says so (confirmation payment_status, or financial_status from /status) — never the ?status= URL hint alone.
+let data=null,status=initial,paid=false,polls=0,slow=false;
+const POST_PAY=["Approved","Production","Shipped","Delivered"],isPaid=(ps,st)=>ps==="paid"||POST_PAY.includes(st);
 function paint(){
-  const good=GOOD.includes(status)||data?.payment_status==="paid",cancelled=/^cancel/i.test(status||"");
+  const good=paid,cancelled=!good&&(/^cancel/i.test(status||"")||/^cancel/i.test(data?.status||""));
   if(good){try{localStorage.removeItem("pod-cart-v1")}catch(e){}}
   const kind=good?"paid":cancelled?"cancelled":"pending";
   $("mark").className="mark"+(kind==="paid"?"":" "+kind);$("mark").textContent=good?"✓":cancelled?"×":"…";
@@ -65,10 +68,12 @@ function paint(){
   $("lead").textContent=kind==="paid"?K("ps.lead.paid",{e:data?.email||"…"}):K("ps.lead."+kind);
   $("retry").hidden=!cancelled;
   if(id){$("ono").hidden=false;$("ono").textContent=`${K("ps.order")}: ${id}`}
-  const tl=data?.timeline||[{id:"paid",done:good},{id:"proof"},{id:"production"},{id:"shipping"}];
+  const tl=(data?.timeline||[{id:"paid"},{id:"proof"},{id:"production"},{id:"shipping"}]).map(x=>x.id==="paid"?{...x,done:good}:(!good?{...x,done:false}:x));
   const nowIdx=tl.findIndex(s=>!s.done);
-  $("timeline").innerHTML=tl.map((s,i)=>`<li class="${s.done?"done":i===nowIdx?"now":""}"><i>${s.done?"✓":i+1}</i><div><b>${esc(K("ps.step."+s.id))}</b><span>${esc(s.id==="proof"&&s.choice==="approve"?K("pay.tl.proofSkip"):s.id==="proof"&&s.preparing?K("pay.tl.proofPrep"):s.id==="proof"&&s.waiting?K("pay.tl.proofWait"):K("ps.step."+s.id+".d"))}</span>${s.id==="proof"&&data?.proof?.ready&&data.proof.review_url?`<a class="eta" href="${esc(data.proof.review_url)}">${esc(K("acct.od.proofOpen"))} →</a>`:""}${s.id==="shipping"&&data?.delivery_estimate&&window.PODDates?`<span class="eta">${esc(K("pay.delivery"))}: ${esc(window.PODDates.range(data.delivery_estimate.from,data.delivery_estimate.to))}</span>`:""}</div></li>`).join("");
+  $("timeline").innerHTML=tl.map((s,i)=>`<li class="${s.done?"done":i===nowIdx?"now":""}"><i>${s.done?"✓":i+1}</i><div><b>${esc(K(s.id==="paid"&&!good?"ps.step.paying":"ps.step."+s.id))}</b><span>${esc(s.id==="paid"&&!good&&!cancelled?K("ps.poll.check"):s.id==="paid"&&cancelled?K("ps.lead.cancelled"):s.id==="proof"&&s.choice==="approve"?K("pay.tl.proofSkip"):s.id==="proof"&&s.preparing?K("pay.tl.proofPrep"):s.id==="proof"&&s.waiting?K("pay.tl.proofWait"):K("ps.step."+s.id+".d"))}</span>${s.id==="proof"&&data?.proof?.ready&&data.proof.review_url?`<a class="eta" href="${esc(data.proof.review_url)}">${esc(K("acct.od.proofOpen"))} →</a>`:""}${s.id==="shipping"&&data?.delivery_estimate&&window.PODDates?`<span class="eta">${esc(K("pay.delivery"))}: ${esc(window.PODDates.range(data.delivery_estimate.from,data.delivery_estimate.to))}</span>`:""}</div></li>`).join("");
   $("noToken").hidden=!!data||!id;$("noToken").textContent=K("ps.noToken");
+  $("slowNote").hidden=!(slow&&!good&&!cancelled);$("slowNote").textContent=K("ps.poll.slow");
+  const est=data?.delivery_estimate;$("etaCard").hidden=!(est&&window.PODDates&&!cancelled);if(est&&window.PODDates){$("etaText").textContent=window.PODDates.range(est.from,est.to);$("etaSub").textContent=data.proof_choice==="proof"?K("pay.tl.proofWait"):""}
   if(!data)return;
   const c=data.currency;
   $("itemsCard").hidden=false;
@@ -78,17 +83,20 @@ function paint(){
   $("totalsCard").hidden=false;
   $("totals").innerHTML=`<div><span>${esc(K("cart.subtotal"))}</span><strong>${money(t.subtotal,c)}</strong></div>${t.packaging>0?`<div><span>${esc(K("co.packaging"))}</span><span>${money(t.packaging,c)}</span></div>`:""}${t.discount>0?`<div><span>${esc(K("co.discount",{c:t.promo_code}))}</span><span>− ${money(t.discount,c)}</span></div>`:""}<div><span>${esc(K("cart.shipping"))}</span><span>${Number(t.shipping)===0?esc(K("co.free")):money(t.shipping,c)}</span></div><div><span>${esc(rate?K(t.prices_include_vat?"co.taxIncl":"co.tax",{rate}):K("co.taxNone"))}</span><span>${money(t.tax,c)}</span></div><div class="total"><span>${esc(K("cart.total"))}</span><strong>${money(t.grand_total,c)}</strong></div>`;
   const a=data.shipping_address||{};
-  $("addrCard").hidden=false;$("addr").innerHTML=[a.name,a.address1,a.address2,[a.postal_code,a.city].filter(Boolean).join(" "),a.country].filter(Boolean).map(esc).join("<br>");
+  $("addrCard").hidden=!(a.name||a.address1);$("addr").innerHTML=[a.name,a.address1,a.address2,[a.postal_code,a.city].filter(Boolean).join(" "),a.country].filter(Boolean).map(esc).join("<br>");
   $("accountLink").href=data.account_url||"/account.html#orders";
 }
 async function load(){
-  if(id&&tok){try{const r=await fetch(`/api/orders/${encodeURIComponent(id)}/confirmation?t=${encodeURIComponent(tok)}`);if(r.ok){data=await r.json();status=data.status;}}catch(e){}}
-  if(!data&&id){try{const r=await fetch("/api/orders/"+encodeURIComponent(id)+"/status");const d=await r.json();if(r.ok)status=d.status}catch(e){}}
+  if(id&&tok){try{const r=await fetch(`/api/orders/${encodeURIComponent(id)}/confirmation?t=${encodeURIComponent(tok)}`);if(r.ok){data=await r.json();status=data.status;paid=isPaid(data.payment_status,data.status)}}catch(e){}}
+  if(!data&&id){try{const r=await fetch("/api/orders/"+encodeURIComponent(id)+"/status");const d=await r.json();if(r.ok){status=d.status;paid=isPaid(d.financial_status,d.status)}}catch(e){}}
   paint();
-  if(data&&data.payment_status!=="paid"&&!/^cancel/i.test(status||"")&&(load.n=(load.n||0)+1)<10)setTimeout(load,3000);
+  // Poll while the provider confirms (≈2 min, slowing down); afterwards show the "taking longer" fallback and keep checking every 30 s.
+  const cancelled=/^cancel/i.test(status||"");
+  if(id&&!paid&&!cancelled){polls++;if(polls>=25&&!slow){slow=true;paint()}setTimeout(load,polls<10?3000:polls<25?6000:30000)}
 }
 window.addEventListener("wedding-language-change",paint);
 paint();load();
 })();
 </script>
+<div id="site-footer"></div><script src="/footer.js" defer></script>
 </body></html>

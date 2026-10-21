@@ -256,10 +256,10 @@ const M={
 "达人、联盟、佣金":{en:"Creators, affiliates, commission",de:"Creator, Affiliates, Provision"},
 "统一财务汇总":{en:"Consolidated finance summary",de:"Konsolidierte Finanzübersicht"},
 "点击任意 API 卡片配置凭证、Webhook、启用状态并查看最近测试结果":{en:"Click any API card to set credentials, webhook and status and see the latest test",de:"API-Karte anklicken: Zugangsdaten, Webhook und Status festlegen, letzten Test ansehen"},
-"✦ POD 工作室":{en:"✦ POD Studio",de:"✦ POD-Studio"},
+"✦ POD 工作室":{en:"✦ Design studio",de:"✦ Design-Studio"},
 "场景 → 设计 → 定价 → 生产 一站式":{en:"Scenario → design → pricing → production, all in one",de:"Szenario → Design → Preis → Produktion in einem"},
 "你的设计，直接做到商品上":{en:"Your design, straight onto products",de:"Ihr Design direkt auf Produkten"},
-"上传一次设计，POD 工作室会把它自动放到每件商品的印刷区域，实时预览、定价并安排就近生产。":{en:"Upload your design once — POD Studio places it on every product's print area, previews and prices it live and routes production to the nearest facility.",de:"Design einmal hochladen – das POD Studio platziert es auf jedem Produkt, zeigt Vorschau und Preis live und produziert am nächsten Standort."},
+"上传一次设计，POD 工作室会把它自动放到每件商品的印刷区域，实时预览、定价并安排就近生产。":{en:"Upload your design once — the design studio places it on every product's print area, previews and prices it live and routes production to the nearest facility.",de:"Design einmal hochladen – das Design-Studio platziert es auf jedem Produkt, zeigt Vorschau und Preis live und produziert am nächsten Standort."},
 "永久免费使用":{en:"Free forever",de:"Dauerhaft kostenlos"},
 "无需订阅":{en:"No subscription",de:"Kein Abonnement"},
 "设计加密存储":{en:"Designs stored encrypted",de:"Verschlüsselte Speicherung"},
@@ -273,7 +273,7 @@ const M={
 "随行杯 · 企业团队":{en:"Tumbler · company team",de:"Becher · Firmenteam"},
 "隐私：上传到服务器的设计使用 AES-256-GCM 加密保存，不对外公开；未下单的设计方案 30 天后自动删除，已提交询价的方案在 90 天后删除。":{en:"Privacy: designs uploaded to our server are stored encrypted (AES-256-GCM) and never public; plans without an order are deleted automatically after 30 days, plans with a quote request after 90 days.",de:"Datenschutz: Auf unseren Server hochgeladene Designs werden verschlüsselt (AES-256-GCM) gespeichert und nie veröffentlicht; Pläne ohne Bestellung werden nach 30 Tagen automatisch gelöscht, Pläne mit Anfrage nach 90 Tagen."},
 "婚礼风格":{en:"Wedding styles",de:"Hochzeitsstile"},
-"POD 工作室场景":{en:"POD Studio scenes",de:"POD-Studio-Szenen"},
+"POD 工作室场景":{en:"Design studio scenes",de:"Design-Studio-Szenen"},
 "纸品与邀请卡":{en:"Stationery & invitations",de:"Papeterie & Einladungen"},
 "迎宾与标识":{en:"Welcome & signage",de:"Begrüßung & Beschilderung"},
 "桌面纸品":{en:"Table stationery",de:"Tischpapeterie"},
@@ -364,6 +364,29 @@ const M={
 "基础价":{en:"Base price",de:"Basispreis"},
 "支持 PNG / JPG / JPEG / WEBP / SVG / PDF / AI / PSD / EPS，可多文件上传":{en:"PNG / JPG / JPEG / WEBP / SVG / PDF / AI / PSD / EPS supported, multiple files allowed",de:"PNG / JPG / JPEG / WEBP / SVG / PDF / AI / PSD / EPS, mehrere Dateien möglich"},
 "先加入购物车，结算前再填写定制文字或上传设计文件。":{en:"Add to cart first, then enter your text or upload your design before checkout.",de:"Erst in den Warenkorb legen, dann vor dem Bezahlen Text eingeben oder Design hochladen."},
+"地图 / 导航链接（可手动替换）":{en:"Map / directions link (can be replaced manually)",de:"Karten-/Routenlink (manuell ersetzbar)"},
+"未上传，将使用极简场景占位视觉":{en:"Nothing uploaded – a minimal placeholder visual will be used",de:"Nichts hochgeladen – ein schlichtes Platzhalterbild wird verwendet"},
+"支持多张上传，点击相册图片可放大":{en:"Upload several photos; click a gallery photo to enlarge it",de:"Mehrere Fotos möglich; Galeriebild anklicken zum Vergrößern"},
+"未上传相册":{en:"No gallery uploaded",de:"Keine Galerie hochgeladen"},"绿叶":{en:"Greenery",de:"Grün"},"橄榄":{en:"Olive",de:"Oliv"},
+"素色（无亮色）":{en:"Plain (no accent colour)",de:"Schlicht (ohne Akzentfarbe)"},"每行：时间 | 标题 | 说明":{en:"One per line: time | title | description",de:"Pro Zeile: Uhrzeit | Titel | Beschreibung"},
+"Hero 对齐":{en:"Hero alignment",de:"Hero-Ausrichtung"},"圆角风格":{en:"Corner style",de:"Eckenstil"},
+"生成的网站是独立 HTML。地图默认使用你填写的地图链接；如果未填写，会根据地址生成通用 Google Maps 搜索导航链接。":{en:"The generated website is a standalone HTML file. The map uses the link you enter; if empty, a Google Maps search link is generated from the address.",de:"Die erstellte Website ist eine eigenständige HTML-Datei. Die Karte nutzt Ihren Link; ohne Link wird aus der Adresse ein Google-Maps-Suchlink erzeugt."},
+"定制 · 生成 · 订单 · 物流 · 交付":{en:"Customise · generate · order · ship · deliver",de:"Gestalten · erstellen · bestellen · versenden · liefern"},
+"运营任务":{en:"Operations tasks",de:"Betriebsaufgaben"},"发送":{en:"Send",de:"Senden"},
+"离线备份，不含 RSVP 收集":{en:"Offline backup, without RSVP collection",de:"Offline-Sicherung, ohne RSVP-Erfassung"},"网站链接":{en:"Website link",de:"Website-Link"},"步骤":{en:"Steps",de:"Schritte"},
+"Google Maps / Apple Maps / 高德 / 百度地图分享链接":{en:"Google Maps / Apple Maps share link",de:"Google-Maps-/Apple-Maps-Teilen-Link"},
+"例如：我想做50份法式婚礼菜单，用珠光纸；或者查询订单/物流":{en:"e.g. I'd like 50 French-style wedding menus on pearlescent paper — or ask about an order / shipping",de:"z. B. 50 Hochzeitsmenüs im französischen Stil auf Perlglanzpapier – oder Fragen zu Bestellung/Versand"},
+"婚礼定制效果确认":{en:"Review your wedding proof",de:"Hochzeits-Korrekturabzug prüfen"},
+"胸前刺绣位":{en:"Left-chest embroidery position",de:"Stickposition Brust links"},
+"儿童产品：需符合儿童纺织品安全要求，仅使用经认证的油墨与面料":{en:"Children's product: must meet children's textile safety requirements; certified inks and fabrics only",de:"Kinderprodukt: muss die Sicherheitsanforderungen für Kindertextilien erfüllen; nur zertifizierte Tinten und Stoffe"},
+"季节品：建议 9 月前下单":{en:"Seasonal item: we recommend ordering before September",de:"Saisonartikel: Bestellung vor September empfohlen"},
+"食品接触：仅使用食品级釉面，图案在外侧":{en:"Food contact: food-safe glaze only, design on the outside",de:"Lebensmittelkontakt: nur lebensmittelechte Glasur, Motiv außen"},
+"含小零件：不适合 3 岁以下儿童":{en:"Contains small parts: not suitable for children under 3",de:"Enthält Kleinteile: nicht für Kinder unter 3 Jahren"},
+"蜡烛需随附安全与成分标签（欧盟 CLP 标识）":{en:"Candles ship with a safety and ingredients label (EU CLP marking)",de:"Kerzen werden mit Sicherheits- und Inhaltsstoffetikett (EU-CLP) geliefert"},
+"仅使用皮肤安全的化妆品级油墨":{en:"Skin-safe, cosmetic-grade inks only",de:"Nur hautverträgliche Tinten in Kosmetikqualität"},
+"首饰：仅使用无镍合金；雕刻为单色线稿":{en:"Jewellery: nickel-free alloys only; engraving as a single-colour line drawing",de:"Schmuck: nur nickelfreie Legierungen; Gravur als einfarbige Strichzeichnung"},
+"皮革压印：设计转为单色":{en:"Leather debossing: the design is converted to one colour",de:"Lederprägung: Das Design wird einfarbig umgesetzt"},
+"刺绣：设计会简化为最多 12 种线色":{en:"Embroidery: the design is simplified to at most 12 thread colours",de:"Stickerei: Das Design wird auf max. 12 Garnfarben reduziert"},
 "材质大图":{en:"Material close-up",de:"Material-Nahaufnahme"},
 "打开婚礼定制 Agent":{en:"Open the wedding customisation agent",de:"Hochzeits-Agent öffnen"},
 // Hardcoded English storefront labels routed through i18n (zh keeps the English label as before)
@@ -397,7 +420,7 @@ function translate(root=document,l=lang()){
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),a=[];
   while(w.nextNode())a.push(w.currentNode);
   a.forEach(n=>{if(!n.parentElement||['SCRIPT','STYLE','TEXTAREA','OPTION'].includes(n.parentElement.tagName))return;const v=tr(n.nodeValue,l);if(v!==n.nodeValue)n.nodeValue=v});
-  if(root.querySelectorAll)root.querySelectorAll('[placeholder],[title],[aria-label]').forEach(el=>['placeholder','title','aria-label'].forEach(a=>{if(el.hasAttribute(a)){const o=el.getAttribute(a),v=tr(o,l);if(v!==o)el.setAttribute(a,v)}}));
+  if(root.querySelectorAll)root.querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(el=>['placeholder','title','aria-label','alt'].forEach(a=>{if(el.hasAttribute(a)){const o=el.getAttribute(a),v=tr(o,l);if(v!==o)el.setAttribute(a,v)}}));
   translateKeys(root);
   document.documentElement.lang=l==='zh'?'zh-CN':l;
   document.querySelectorAll('[data-lang-switch] [data-lang]').forEach(b=>b.classList.toggle('active',b.dataset.lang===l));
@@ -736,11 +759,38 @@ const K={
 'pay.tl.proofPrep':{en:'Proof in preparation — we e-mail you as soon as it is ready'},
 'acct.od.proofPreparing':{en:'Proof in preparation'},
 'acct.od.proofPreparingSub':{en:'we e-mail you a review link as soon as it is ready.'},
+'hdr.shop':{zh:'商店',en:'Shop',de:'Shop'},'hdr.studio':{zh:'设计工作室',en:'Design studio',de:'Design-Studio'},'hdr.account':{zh:'我的账户',en:'My account',de:'Mein Konto'},'hdr.menu':{zh:'菜单',en:'Menu',de:'Menü'},
+'hdr.shipping':{zh:'配送与生产时间',en:'Shipping & production times',de:'Versand & Produktionszeiten'},'hdr.returns':{zh:'退货与瑕疵',en:'Returns & defects',de:'Rückgabe & Mängel'},'hdr.findOrder':{zh:'查询订单',en:'Find my order',de:'Bestellung finden'},'hdr.prefs':{zh:'语言与货币',en:'Language & currency',de:'Sprache & Währung'},
+'vat.excl':{zh:'不含增值税',en:'excl. VAT',de:'exkl. MwSt.'},'vat.incl':{zh:'含增值税',en:'incl. VAT',de:'inkl. MwSt.'},
+'cart.vatExclNote':{zh:'商品价格不含增值税；增值税按配送国家计算，并在下方单独列出。',en:'Prices exclude VAT; VAT is calculated for your delivery country and shown separately.',de:'Preise exkl. MwSt.; die MwSt. wird für Ihr Lieferland berechnet und separat ausgewiesen.'},
+'cart.vatInclNote':{zh:'商品价格已含增值税（按配送国家计算），税额在下方列出。',en:'Prices include VAT for your delivery country; the VAT share is shown below.',de:'Preise inkl. MwSt. für Ihr Lieferland; der MwSt.-Anteil wird unten ausgewiesen.'},
+'empty.best':{zh:'热销商品',en:'Best-sellers',de:'Bestseller'},'empty.start':{zh:'开始设计',en:'Start designing',de:'Jetzt gestalten'},'empty.saved':{zh:'我保存的设计',en:'Your saved designs',de:'Ihre gespeicherten Designs'},'empty.open':{zh:'打开',en:'Open',de:'Öffnen'},'empty.lead':{zh:'从热销婚礼商品开始，或在工作室中创建整套设计。',en:'Start with a wedding best-seller or create a matching set in the studio.',de:'Starten Sie mit einem Hochzeits-Bestseller oder gestalten Sie ein passendes Set im Studio.'},'empty.from':{zh:'起 {p}',en:'From {p}',de:'ab {p}'},
+'ps.poll.slow':{zh:'支付确认时间比平时长。您不需要再次付款——确认后我们会发送邮件。',en:'The payment confirmation is taking longer than usual. You do not need to pay again — we will e-mail you as soon as it is confirmed.',de:'Die Zahlungsbestätigung dauert länger als üblich. Bitte nicht erneut bezahlen – wir senden Ihnen eine E-Mail, sobald sie bestätigt ist.'},
+'ps.poll.check':{zh:'正在确认支付…',en:'Checking payment status…',de:'Zahlungsstatus wird geprüft…'},'ps.step.paying':{zh:'确认支付',en:'Confirming payment',de:'Zahlung wird bestätigt'},'ps.eta':{zh:'预计送达',en:'Estimated delivery',de:'Voraussichtliche Lieferung'},'ps.contact':{zh:'联系我们',en:'Contact us',de:'Kontakt'},
+'pf.title':{zh:'确认您的婚礼效果图',en:'Review your wedding proof',de:'Hochzeits-Korrekturabzug prüfen'},'pf.lead':{zh:'确认后订单进入生产。请核对姓名、文字、材质和整体效果。',en:'Production starts once you approve. Please check names, text, material and the overall look.',de:'Die Produktion startet nach Ihrer Freigabe. Bitte prüfen Sie Namen, Text, Material und Gesamtwirkung.'},
+'pf.loading':{zh:'正在读取…',en:'Loading your proof…',de:'Korrekturabzug wird geladen…'},
+'pf.missing.title':{zh:'链接不完整',en:'This proof link is incomplete',de:'Dieser Freigabe-Link ist unvollständig'},'pf.missing.text':{zh:'请使用确认邮件中的完整链接，或登录账户在订单中打开效果图。',en:'Please open the full link from your proof e-mail, or sign in and open the proof from your order.',de:'Bitte öffnen Sie den vollständigen Link aus der E-Mail oder melden Sie sich an und öffnen Sie den Abzug in Ihrer Bestellung.'},
+'pf.invalid.title':{zh:'该链接已失效',en:'This proof link is not valid',de:'Dieser Freigabe-Link ist ungültig'},'pf.invalid.text':{zh:'链接可能已过期或已被新版本替换。请登录账户查看最新效果图，或联系我们。',en:'The link may have expired or been replaced by a newer proof. Sign in to see the latest proof for your order, or contact us.',de:'Der Link ist evtl. abgelaufen oder wurde durch einen neueren Abzug ersetzt. Melden Sie sich an oder kontaktieren Sie uns.'},
+'pf.signin':{zh:'登录查看订单',en:'Sign in to my orders',de:'Anmelden & Bestellungen ansehen'},'pf.contact':{zh:'联系我们',en:'Contact us',de:'Kontakt'},'pf.find':{zh:'查询订单',en:'Find my order',de:'Bestellung finden'},
+'pf.order':{zh:'订单',en:'Order',de:'Bestellung'},'pf.material':{zh:'材质',en:'Material',de:'Material'},'pf.items':{zh:'商品',en:'Items',de:'Artikel'},'pf.status':{zh:'当前状态',en:'Status',de:'Status'},
+'pf.open':{zh:'打开最终效果图',en:'Open the final proof',de:'Finalen Abzug öffnen'},'pf.noUrl':{zh:'效果图尚未上传，我们会在准备好后发邮件给您。',en:'Your proof is not uploaded yet — we will e-mail you as soon as it is ready.',de:'Der Abzug ist noch nicht hochgeladen – wir senden Ihnen eine E-Mail, sobald er bereit ist.'},
+'pf.notice':{zh:'确认后进入生产；如需修改，请提交修改说明，我们会发送新版效果图。',en:'Once approved, your order goes into production. Need changes? Describe them and we will send a new proof.',de:'Nach der Freigabe geht Ihre Bestellung in Produktion. Änderungen? Beschreiben Sie sie, wir senden einen neuen Abzug.'},
+'pf.approved':{zh:'您已完成确认。',en:'You approved this proof.',de:'Sie haben diesen Abzug freigegeben.'},'pf.changesSent':{zh:'已提交修改要求，正在等待新版效果图。',en:'Change request sent — waiting for the new proof.',de:'Änderungswunsch gesendet – neuer Abzug folgt.'},
+'pf.approve':{zh:'确认效果图与材质',en:'Approve proof & material',de:'Abzug & Material freigeben'},'pf.changes':{zh:'需要修改',en:'Request changes',de:'Änderungen anfragen'},'pf.viewOrder':{zh:'查看订单',en:'View order',de:'Bestellung ansehen'},
+'pf.confirm':{zh:'确认最终效果图与材质，并进入生产？',en:'Approve the final proof and material and start production?',de:'Finalen Abzug und Material freigeben und Produktion starten?'},'pf.working':{zh:'处理中…',en:'Working…',de:'Bitte warten…'},
+'pf.done':{zh:'确认成功',en:'Proof approved',de:'Abzug freigegeben'},'pf.doneText':{zh:'订单将安排生产。',en:'Thank you — your order is now scheduled for production.',de:'Danke – Ihre Bestellung wird jetzt produziert.'},
+'pf.prompt':{zh:'请说明需要修改的内容，例如：名字字号小一点',en:'What should we change? e.g. "names a bit smaller, logo 5 mm higher"',de:'Was sollen wir ändern? z. B. „Namen etwas kleiner, Logo 5 mm höher“'},
+'pf.chDone':{zh:'修改要求已提交',en:'Change request sent',de:'Änderungswunsch gesendet'},'pf.chDoneText':{zh:'新版效果图准备好后会发邮件给您。',en:'We will e-mail you as soon as the new proof is ready.',de:'Wir senden Ihnen eine E-Mail, sobald der neue Abzug bereit ist.'},'pf.error':{zh:'出错了，请重试。',en:'Something went wrong, please try again.',de:'Etwas ist schiefgelaufen, bitte erneut versuchen.'},
+'fo.title':{zh:'查询订单',en:'Find my order',de:'Bestellung finden'},'fo.lead':{zh:'无需登录：输入订单号和下单邮箱即可查看状态。',en:'No account needed — enter your order number and the e-mail you ordered with.',de:'Kein Konto nötig – Bestellnummer und Bestell-E-Mail eingeben.'},
+'fo.order':{zh:'订单号',en:'Order number',de:'Bestellnummer'},'fo.email':{zh:'邮箱',en:'E-mail',de:'E-Mail'},'fo.submit':{zh:'查询',en:'Find order',de:'Bestellung suchen'},
+'fo.notFound':{zh:'未找到匹配的订单。请检查订单号和邮箱。',en:'We could not find an order with this number and e-mail. Please check both and try again.',de:'Keine Bestellung mit dieser Nummer und E-Mail gefunden. Bitte prüfen.'},
+'fo.limit':{zh:'尝试次数过多，请稍后再试。',en:'Too many attempts. Please wait a few minutes and try again.',de:'Zu viele Versuche. Bitte in ein paar Minuten erneut versuchen.'},
+'fo.status':{zh:'状态',en:'Status',de:'Status'},'fo.placed':{zh:'下单日期',en:'Placed',de:'Bestellt am'},'fo.items':{zh:'件商品',en:'items',de:'Artikel'},'fo.tracking':{zh:'物流跟踪',en:'Tracking',de:'Sendungsverfolgung'},'fo.proof':{zh:'查看效果图',en:'Review proof',de:'Abzug prüfen'},
 'pay.delivery':{en:'Estimated delivery'},
 'acct.so.title':{en:'Sign in to your account'},
 'acct.so.text':{en:'See your orders, saved designs and addresses. One tap, no password.'}
 };
-function k(key,vars){const e=K[key];let s=e?(e[lang()]||e.en):key;if(vars)for(const [a,b] of Object.entries(vars))s=s.split('{'+a+'}').join(String(b));return s}
+function k(key,vars){const e=K[key];let s=e?(e[lang()]||e.en):t(key);if(vars)for(const [a,b] of Object.entries(vars))s=s.split('{'+a+'}').join(String(b));return s}
 function translateKeys(root=document){if(!root.querySelectorAll)return;root.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=k(el.dataset.i18n)});root.querySelectorAll('[data-i18n-attr]').forEach(el=>el.dataset.i18nAttr.split(';').forEach(pair=>{const [a,key]=pair.split(':');if(a&&key)el.setAttribute(a.trim(),k(key.trim()))}))}
 window.WeddingI18n={lang,setLanguage,translate,t,k,extend,mountSwitches};
 // Delivery window "Nov 4–8" (locale-formatted; ISO dates from the server quote).

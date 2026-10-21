@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>POD Studio · 场景到设计一站式</title>
+<title>Design studio · POD Wedding Studio</title>
 <style>
 :root{--paper:#fffdf9;--ink:#28231f;--muted:#7c746c;--line:rgba(45,36,30,.12);--accent:#9a6d57;--accent-soft:#f3e9e2;--ok:#3f7d55;--warn:#b7791f;--bad:#b4473a;--shadow:0 24px 70px rgba(58,43,34,.12)}
 *{box-sizing:border-box}
@@ -265,19 +265,12 @@ button.review-task{cursor:pointer;transition:border-color .15s,transform .15s,bo
 @media(max-width:720px){.sticky-buy{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;gap:12px;align-items:center;justify-content:space-between;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:#fffdf9;border-top:1px solid rgba(45,36,30,.14);box-shadow:0 -8px 24px rgba(40,30,20,.08)}
 .sticky-buy[hidden]{display:none}.sticky-buy .sb-price{display:flex;flex-direction:column;line-height:1.2}.sticky-buy .sb-price span,.sticky-buy small{font-size:11.5px;color:#7c746c}.sticky-buy b{font:20px Georgia,serif}.sticky-buy .btn{min-height:46px;padding:0 18px;white-space:nowrap}
 body.has-sticky-buy{padding-bottom:84px}}
+.other-kits{margin-top:18px}.other-kits-toggle{font-weight:600}.wedding-first{margin-bottom:4px}
 </style>
 <link rel="stylesheet" href="cart.css">
 </head>
 <body>
-<header class="topbar">
-  <a class="brand" href="index.html"><div class="logo">P</div><div><b>POD STUDIO</b><span data-t="tagline"></span></div></a>
-  <div class="actions">
-    <div class="row" id="roleBar"></div>
-    <select class="lang-select" id="langSelect" aria-label="Language"><option value="en">English</option><option value="de">Deutsch</option><option value="zh">中文</option></select>
-    <a class="btn" href="index.html" data-t="backToShop"></a>
-    <button class="cart-btn" id="cartBtn" type="button" aria-haspopup="dialog" aria-controls="cartPanel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span class="cart-btn-label" data-i18n="cart.button">Cart</span><span class="cart-badge" id="cartCount" data-n="0">0</span></button>
-  </div>
-</header>
+<div id="site-header" data-cart data-variant="studio"><div class="row" id="roleBar" data-slot="actions" data-mobile="menu"></div></div><script src="/header.js"></script>
 <div class="wrap" id="app"></div>
 
 <div class="drawer-mask" id="drawerMask"></div>
