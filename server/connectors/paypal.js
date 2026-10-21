@@ -39,17 +39,40 @@ async function pp(path, options = {}, creds) {
   return r.status === 204 ? {} : r.json();
 }
 
-export async function createPayPalOrder({ amount, currency = "USD", referenceId, returnUrl, cancelUrl, description, creds }) {
+const money = (currency, v) => ({ currency_code: currency, value: Number(v || 0).toFixed(2) });
+
+/**
+ * Orders v2 create. When `breakdown` + `items` are given, PayPal shows line items and validates
+ * item_total = Σ unit_amount × quantity and value = item_total + shipping + tax_total.
+ * `shipping` (name/address) pre-fills the buyer's address (SET_PROVIDED_ADDRESS).
+ */
+export async function createPayPalOrder({ amount, currency = "USD", referenceId, returnUrl, cancelUrl, description, items, breakdown, shipping, creds }) {
+  const unit = { reference_id: referenceId, ...(description ? { description: String(description).slice(0, 127) } : {}), amount: money(currency, amount) };
+  if (breakdown && Array.isArray(items) && items.length) {
+    unit.amount.breakdown = { item_total: money(currency, breakdown.item_total), shipping: money(currency, breakdown.shipping), tax_total: money(currency, breakdown.tax_total) };
+    unit.items = items.slice(0, 100).map(i => ({
+      name: String(i.name || i.sku || "Item").slice(0, 127), ...(i.sku ? { sku: String(i.sku).slice(0, 127) } : {}),
+      ...(i.description ? { description: String(i.description).slice(0, 127) } : {}),
+      quantity: String(i.quantity), unit_amount: money(currency, i.unit_amount), category: "PHYSICAL_GOODS"
+    }));
+  }
+  if (shipping?.address1 && shipping?.country) {
+    unit.shipping = {
+      ...(shipping.name ? { name: { full_name: String(shipping.name).slice(0, 300) } } : {}),
+      address: { address_line_1: shipping.address1, ...(shipping.address2 ? { address_line_2: shipping.address2 } : {}), admin_area_2: shipping.city || "", postal_code: shipping.postal_code || "", country_code: shipping.country }
+    };
+  }
   return pp("/v2/checkout/orders", {
     method: "POST",
     headers: { "PayPal-Request-Id": `create-${referenceId}` },
     body: JSON.stringify({
       intent: "CAPTURE",
-      purchase_units: [{ reference_id: referenceId, ...(description ? { description: String(description).slice(0, 127) } : {}), amount: { currency_code: currency, value: Number(amount).toFixed(2) } }],
+      purchase_units: [unit],
       payment_source: { paypal: { experience_context: {
         return_url: returnUrl || process.env.PAYPAL_RETURN_URL,
         cancel_url: cancelUrl || process.env.PAYPAL_CANCEL_URL,
-        user_action: "PAY_NOW"
+        user_action: "PAY_NOW",
+        shipping_preference: unit.shipping ? "SET_PROVIDED_ADDRESS" : "GET_FROM_FILE"
       } } }
     })
   }, creds);

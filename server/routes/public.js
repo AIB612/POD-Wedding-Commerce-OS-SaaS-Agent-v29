@@ -12,7 +12,7 @@ import { catalogOverview } from "../services/catalog-service.js";
 import { addRecord, findRecord, listForTenant, updateRecord } from "../saas-store.js";
 import { HttpError } from "../http/middleware.js";
 import { protocolRegistry, ucpProfile, a2aAgentCard, acpFeed } from "../protocols/commerce-protocols.js";
-import { createStorefrontCheckout, handlePayPalReturn, publicOrderStatus, quoteStorefront } from "../services/checkout-service.js";
+import { createStorefrontCheckout, createTwintCheckout, twintOrderStatus, paymentMethods, handlePayPalReturn, publicOrderStatus, quoteStorefront } from "../services/checkout-service.js";
 import { publicProof, approvePublicProof, requestPublicProofChanges } from "../services/proof-service.js";
 import { createPayPalOrder, capturePayPalOrder } from "../connectors/paypal.js";
 import { submitRsvp } from "../services/rsvp-service.js";
@@ -22,7 +22,7 @@ const VERSION = JSON.parse(fs.readFileSync(new URL("../../package.json", import.
 
 export function publicRouter({ root, generatedDir }) {
   const router = express.Router();
-  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/proof.html": "proof.html", "/account.html": "account.html" };
+  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
   for (const [route, file] of Object.entries(pages)) router.get(route, (_, res) => res.sendFile(path.join(root, file), noStore));
 
@@ -33,7 +33,7 @@ export function publicRouter({ root, generatedDir }) {
   router.get("/robots.txt", (_, res) => res.type("text/plain").send("User-agent: *\nDisallow: /generated/\n"));
   // POD Studio page + its scripts (explicit allowlist, like the other pages)
   router.get("/studio.html", (_, res) => res.sendFile(path.join(root, "studio.html"), noStore));
-  for (const f of ["studio.js", "studio-data.js", "studio-pricing.js", "studio-mockups.js", "account-auth.js"]) router.get("/" + f, (_, res) => res.sendFile(path.join(root, f), { maxAge: "5m" }));
+  for (const f of ["checkout.js", "studio.js", "studio-data.js", "studio-pricing.js", "studio-mockups.js", "account-auth.js"]) router.get("/" + f, (_, res) => res.sendFile(path.join(root, f), { maxAge: "5m" }));
   router.use("/assets", express.static(path.join(root, "assets"), { maxAge: "7d", fallthrough: false }));
   // Self-hosted OFL webfonts for generated wedding sites (sandboxed /generated pages have an opaque origin, so CORS is required).
   router.use("/fonts", (_, res, next) => { res.setHeader("Access-Control-Allow-Origin", "*"); next(); }, express.static(path.join(root, "fonts"), { maxAge: "30d", fallthrough: false }));
@@ -75,6 +75,13 @@ export function publicRouter({ root, generatedDir }) {
   router.post("/api/payments/paypal/create", payLimit, ah(async (req, res) => {
     res.json(await createStorefrontCheckout({ tenantId: req.tenantId, user: req.user || null, body: req.body || {}, baseUrl: baseUrl() }));
   }));
+  // Payment methods the storefront may show (configured flags only, no secrets)
+  router.get("/api/payments/methods", rateLimit({ bucket: "payment-methods", windowMs: 60_000, max: 60 }), ah(async (req, res) => res.json(await paymentMethods(req.tenantId))));
+  // TWINT (direct TWINT AG merchant integration — skeleton; fails closed with twint_not_configured / twint_not_implemented)
+  router.post("/api/payments/twint/create", payLimit, ah(async (req, res) => {
+    res.json(await createTwintCheckout({ tenantId: req.tenantId, user: req.user || null, body: req.body || {}, baseUrl: baseUrl() }));
+  }));
+  router.get("/api/payments/twint/status", payLimit, ah(async (req, res) => res.json(await twintOrderStatus(req.query.order))));
   // Cart / checkout preview: same server-side quote that checkout uses (merchandise + shipping + tax).
   const quoteLimit = rateLimit({ bucket: "shipping-quote", windowMs: 60_000, max: 60 });
   router.post("/api/storefront/shipping/quote", quoteLimit, ah(async (req, res) => {

@@ -3,6 +3,10 @@
 const KEY='wedding-commerce-language';
 const langs=['zh','en','de'];
 const M={
+'棉纹艺术纸':{en:'Cotton art paper',de:'Baumwoll-Kunstpapier'},'珠光纸':{en:'Pearlescent paper',de:'Perlglanzpapier'},'牛皮纸':{en:'Kraft paper',de:'Kraftpapier'},
+'半透明硫酸纸':{en:'Translucent vellum',de:'Transparentpapier (Vellum)'},'透明亚克力':{en:'Clear acrylic',de:'Klares Acryl'},'磨砂亚克力':{en:'Frosted acrylic',de:'Satiniertes Acryl'},
+'天然木板':{en:'Natural wood',de:'Naturholz'},'轻质硬板':{en:'Lightweight board',de:'Leichtplatte'},'棉帆布':{en:'Cotton canvas',de:'Baumwoll-Canvas'},
+'牛皮纸包装':{en:'Kraft packaging',de:'Kraftpapier-Verpackung'},'珠光包装纸':{en:'Pearlescent wrapping',de:'Perlglanz-Verpackung'},'陶瓷':{en:'Ceramic',de:'Keramik'},
 '运营':{en:'Operate',de:'Betrieb'},'增长':{en:'Grow',de:'Wachstum'},'AI 控制':{en:'AI Control',de:'KI-Steuerung'},
 '总览':{en:'Overview',de:'Übersicht'},'店铺中心':{en:'Stores',de:'Shops'},'订单 / 物流':{en:'Orders / Shipping',de:'Bestellungen / Versand'},
 '商品 / 采购':{en:'Catalog / Sourcing',de:'Katalog / Beschaffung'},'统一 Inbox':{en:'Unified Inbox',de:'Zentraler Posteingang'},
@@ -394,6 +398,7 @@ function translate(root=document,l=lang()){
   while(w.nextNode())a.push(w.currentNode);
   a.forEach(n=>{if(!n.parentElement||['SCRIPT','STYLE','TEXTAREA','OPTION'].includes(n.parentElement.tagName))return;const v=tr(n.nodeValue,l);if(v!==n.nodeValue)n.nodeValue=v});
   if(root.querySelectorAll)root.querySelectorAll('[placeholder],[title],[aria-label]').forEach(el=>['placeholder','title','aria-label'].forEach(a=>{if(el.hasAttribute(a)){const o=el.getAttribute(a),v=tr(o,l);if(v!==o)el.setAttribute(a,v)}}));
+  translateKeys(root);
   document.documentElement.lang=l==='zh'?'zh-CN':l;
   document.querySelectorAll('[data-lang-switch] [data-lang]').forEach(b=>b.classList.toggle('active',b.dataset.lang===l));
   document.querySelectorAll('select.lang-select').forEach(x=>{if(x.value!==l)x.value=l});
@@ -415,7 +420,103 @@ function mountSwitches(){
   st.textContent='.lang-dropdown{padding:0!important;border:0!important;background:none!important}.lang-select{appearance:none;-webkit-appearance:none;border:1px solid rgba(45,36,30,.14);background:#fff url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M1 1l4 4 4-4%27 stroke=%27%2328231f%27 fill=%27none%27 stroke-width=%271.4%27/%3E%3C/svg%3E") no-repeat right 11px center;border-radius:999px;padding:7px 30px 7px 13px;font:inherit;font-size:12px;color:#28231f;cursor:pointer}';
   document.head.appendChild(st)}
 }
-window.WeddingI18n={lang,setLanguage,translate,t,extend,mountSwitches};
+/** Keyed UI strings (cart drawer + checkout). Use WeddingI18n.k(key, {var}) or data-i18n="key" / data-i18n-attr="placeholder:key". */
+const K={
+'cart.title':{zh:'购物车',en:'Your cart',de:'Warenkorb'},
+'cart.button':{zh:'购物车',en:'Cart',de:'Warenkorb'},
+'cart.open':{zh:'打开购物车，{n} 件商品',en:'Open cart, {n} items',de:'Warenkorb öffnen, {n} Artikel'},
+'cart.close':{zh:'关闭购物车',en:'Close cart',de:'Warenkorb schliessen'},
+'cart.empty.title':{zh:'购物车还是空的',en:'Your cart is empty',de:'Dein Warenkorb ist leer'},
+'cart.empty.text':{zh:'点击场景中的商品，个性化后加入购物车。',en:'Pick a product in the scene, personalise it and add it here.',de:'Wähle ein Produkt in der Szene, personalisiere es und lege es hier ab.'},
+'cart.empty.cta':{zh:'继续选品',en:'Continue shopping',de:'Weiter einkaufen'},
+'cart.items':{zh:'{n} 件商品',en:'{n} items',de:'{n} Artikel'},
+'cart.qty':{zh:'数量',en:'Quantity',de:'Menge'},
+'cart.decrease':{zh:'减少数量',en:'Decrease quantity',de:'Menge verringern'},
+'cart.increase':{zh:'增加数量',en:'Increase quantity',de:'Menge erhöhen'},
+'cart.remove':{zh:'移除',en:'Remove',de:'Entfernen'},
+'cart.edit':{zh:'编辑',en:'Edit',de:'Bearbeiten'},
+'cart.each':{zh:'{p} / 件',en:'{p} each',de:'{p} pro Stück'},
+'cart.material':{zh:'材质：{m}',en:'Material: {m}',de:'Material: {m}'},
+'cart.text':{zh:'文字：{t}',en:'Text: {t}',de:'Text: {t}'},
+'cart.files':{zh:'设计文件：{t}',en:'Design files: {t}',de:'Design-Dateien: {t}'},
+'cart.noText':{zh:'文字稍后填写',en:'Text to be added later',de:'Text folgt später'},
+'cart.later':{zh:'结账后再提供设计',en:'Design details after checkout',de:'Design-Angaben nach dem Kauf'},
+'cart.subtotal':{zh:'商品小计',en:'Subtotal',de:'Zwischensumme'},
+'cart.shipping':{zh:'运费',en:'Shipping',de:'Versand'},
+'cart.shippingLater':{zh:'结账时计算',en:'Calculated at checkout',de:'Wird im Checkout berechnet'},
+'cart.vatIncl':{zh:'含增值税（按配送国家）',en:'Incl. VAT where applicable',de:'Inkl. MwSt., falls anwendbar'},
+'cart.total':{zh:'合计',en:'Total',de:'Total'},
+'cart.checkout':{zh:'去结账',en:'Checkout',de:'Zur Kasse'},
+'cart.weAccept':{zh:'支持的支付方式',en:'We accept',de:'Wir akzeptieren'},
+'cart.trust.secure':{zh:'安全加密支付',en:'Secure, encrypted payment',de:'Sichere, verschlüsselte Zahlung'},
+'cart.trust.proof':{zh:'付款后 2 小时内邮件确认效果图',en:'Digital proof by e-mail within 2 h of payment',de:'Digitaler Proof per E-Mail innert 2 Std. nach Zahlung'},
+'cart.trust.delivery':{zh:'确认后约 14 天送达',en:'Delivered in about 14 days after approval',de:'Lieferung ca. 14 Tage nach Freigabe'},
+'cart.added':{zh:'已加入购物车：{name}',en:'Added to cart: {name}',de:'In den Warenkorb gelegt: {name}'},
+'cart.updating':{zh:'正在更新价格…',en:'Updating prices…',de:'Preise werden aktualisiert…'},
+'cart.priceError':{zh:'暂时无法获取价格',en:'Prices could not be loaded',de:'Preise konnten nicht geladen werden'},
+'co.title':{zh:'结账',en:'Checkout',de:'Kasse'},
+'co.back':{zh:'返回商店',en:'Back to shop',de:'Zurück zum Shop'},
+'co.step1':{zh:'联系与地址',en:'Contact & address',de:'Kontakt & Adresse'},
+'co.step2':{zh:'配送方式',en:'Shipping',de:'Versand'},
+'co.step3':{zh:'支付与确认',en:'Payment & review',de:'Zahlung & Prüfung'},
+'co.stepOf':{zh:'第 {n} 步，共 3 步',en:'Step {n} of 3',de:'Schritt {n} von 3'},
+'co.contact':{zh:'联系方式',en:'Contact',de:'Kontakt'},
+'co.guest':{zh:'无需注册，以访客身份结账。',en:'No account needed — check out as a guest.',de:'Kein Konto nötig – als Gast bestellen.'},
+'co.email':{zh:'邮箱',en:'E-mail',de:'E-Mail'},
+'co.emailHint':{zh:'用于订单确认和效果图',en:'For your order confirmation and proof',de:'Für Bestellbestätigung und Proof'},
+'co.address':{zh:'配送地址',en:'Shipping address',de:'Lieferadresse'},
+'co.name':{zh:'姓名',en:'Full name',de:'Vor- und Nachname'},
+'co.line1':{zh:'街道与门牌号',en:'Street and house number',de:'Strasse und Hausnummer'},
+'co.line2':{zh:'地址第二行（可选）',en:'Address line 2 (optional)',de:'Adresszusatz (optional)'},
+'co.postal':{zh:'邮编',en:'Postcode',de:'PLZ'},
+'co.city':{zh:'城市',en:'City',de:'Ort'},
+'co.country':{zh:'国家/地区',en:'Country',de:'Land'},
+'co.phone':{zh:'电话（可选，快递需要）',en:'Phone (optional, needed for express)',de:'Telefon (optional, für Express nötig)'},
+'co.continueShipping':{zh:'继续选择配送',en:'Continue to shipping',de:'Weiter zum Versand'},
+'co.continuePayment':{zh:'继续支付',en:'Continue to payment',de:'Weiter zur Zahlung'},
+'co.edit':{zh:'修改',en:'Change',de:'Ändern'},
+'co.shipTo':{zh:'寄送至',en:'Ship to',de:'Lieferung an'},
+'co.method':{zh:'配送方式',en:'Method',de:'Versandart'},
+'co.standard':{zh:'标准配送',en:'Standard shipping',de:'Standardversand'},
+'co.express':{zh:'加急快递',en:'Express shipping',de:'Expressversand'},
+'co.days':{zh:'{d} 个工作日',en:'{d} business days',de:'{d} Werktage'},
+'co.free':{zh:'免费',en:'Free',de:'Gratis'},
+'co.expressPhone':{zh:'快递需要电话号码，请在第 1 步填写。',en:'Express needs a phone number — please add it in step 1.',de:'Express benötigt eine Telefonnummer – bitte in Schritt 1 ergänzen.'},
+'co.loadingRates':{zh:'正在计算运费…',en:'Calculating shipping…',de:'Versandkosten werden berechnet…'},
+'co.payment':{zh:'支付方式',en:'Payment method',de:'Zahlungsart'},
+'co.twint':{zh:'TWINT',en:'TWINT',de:'TWINT'},
+'co.twintDesc':{zh:'使用 TWINT App 扫码或跳转支付（仅 CHF）',en:'Pay in the TWINT app via QR code or app switch (CHF only)',de:'Mit der TWINT-App per QR-Code oder App-Wechsel bezahlen (nur CHF)'},
+'co.twintSoon':{zh:'TWINT 即将开放',en:'TWINT coming soon',de:'TWINT bald verfügbar'},
+'co.twintChf':{zh:'TWINT 仅支持瑞士/列支敦士登（CHF）订单',en:'TWINT is available for CHF orders (CH/LI) only',de:'TWINT ist nur für CHF-Bestellungen (CH/LI) verfügbar'},
+'co.paypal':{zh:'PayPal',en:'PayPal',de:'PayPal'},
+'co.paypalDesc':{zh:'跳转到 PayPal 完成付款',en:'You will be redirected to PayPal to complete payment',de:'Du wirst zur Zahlung zu PayPal weitergeleitet'},
+'co.paypalOff':{zh:'PayPal 暂不可用',en:'PayPal is currently unavailable',de:'PayPal ist derzeit nicht verfügbar'},
+'co.review':{zh:'核对订单',en:'Review your order',de:'Bestellung prüfen'},
+'co.terms':{zh:'我已阅读并同意销售条款与隐私政策，并知悉定制商品不可退换。',en:'I accept the terms of sale and privacy policy and understand personalised items cannot be returned.',de:'Ich akzeptiere die AGB und Datenschutzerklärung und weiss, dass personalisierte Artikel vom Umtausch ausgeschlossen sind.'},
+'co.pay':{zh:'支付 {amount}',en:'Pay {amount}',de:'{amount} bezahlen'},
+'co.paying':{zh:'正在创建支付…',en:'Creating payment…',de:'Zahlung wird erstellt…'},
+'co.summary':{zh:'订单摘要',en:'Order summary',de:'Bestellübersicht'},
+'co.showSummary':{zh:'显示订单摘要',en:'Show order summary',de:'Bestellübersicht anzeigen'},
+'co.hideSummary':{zh:'隐藏订单摘要',en:'Hide order summary',de:'Bestellübersicht ausblenden'},
+'co.tax':{zh:'增值税（{rate}%）',en:'VAT ({rate}%)',de:'MwSt. ({rate}%)'},
+'co.taxNone':{zh:'增值税',en:'VAT',de:'MwSt.'},
+'co.duties':{zh:'欧盟订单可能产生进口关税/税费，由收件人承担。',en:'EU orders ship from Switzerland; import duties/VAT may be charged on delivery.',de:'EU-Bestellungen werden aus der Schweiz versandt; Einfuhrabgaben können bei Lieferung anfallen.'},
+'co.currencyNote':{zh:'币种：{c}',en:'Charged in {c}',de:'Abrechnung in {c}'},
+'co.serverNote':{zh:'最终金额由服务器重新计算。',en:'Final amount is recalculated securely on our server.',de:'Der Endbetrag wird sicher auf unserem Server berechnet.'},
+'co.emptyCart':{zh:'购物车是空的。',en:'Your cart is empty.',de:'Dein Warenkorb ist leer.'},
+'co.required':{zh:'请填写此项',en:'Please fill in this field',de:'Bitte ausfüllen'},
+'co.invalidEmail':{zh:'请输入有效的邮箱',en:'Please enter a valid e-mail',de:'Bitte gültige E-Mail eingeben'},
+'co.acceptTerms':{zh:'请先同意条款',en:'Please accept the terms',de:'Bitte AGB akzeptieren'},
+'co.err.paypal_not_configured':{zh:'PayPal 尚未配置，暂时无法付款。',en:'PayPal is not set up yet, so payment is not possible right now.',de:'PayPal ist noch nicht eingerichtet, eine Zahlung ist derzeit nicht möglich.'},
+'co.err.twint_not_configured':{zh:'TWINT 尚未开通。',en:'TWINT is not available yet.',de:'TWINT ist noch nicht verfügbar.'},
+'co.err.twint_not_implemented':{zh:'TWINT 尚未开通。',en:'TWINT is not available yet.',de:'TWINT ist noch nicht verfügbar.'},
+'co.err.shipping_zone_not_found':{zh:'暂不支持配送到该地区。',en:'We do not ship to this destination yet.',de:'Wir liefern noch nicht in dieses Land.'},
+'co.err.generic':{zh:'出了点问题，请稍后重试。',en:'Something went wrong, please try again.',de:'Etwas ist schiefgelaufen, bitte erneut versuchen.'},
+'co.secure':{zh:'安全结账',en:'Secure checkout',de:'Sicherer Checkout'}
+};
+function k(key,vars){const e=K[key];let s=e?(e[lang()]||e.en):key;if(vars)for(const [a,b] of Object.entries(vars))s=s.split('{'+a+'}').join(String(b));return s}
+function translateKeys(root=document){if(!root.querySelectorAll)return;root.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=k(el.dataset.i18n)});root.querySelectorAll('[data-i18n-attr]').forEach(el=>el.dataset.i18nAttr.split(';').forEach(pair=>{const [a,key]=pair.split(':');if(a&&key)el.setAttribute(a.trim(),k(key.trim()))}))}
+window.WeddingI18n={lang,setLanguage,translate,t,k,extend,mountSwitches};
 document.addEventListener('DOMContentLoaded',()=>{
  mountSwitches();
  translate(document,lang());

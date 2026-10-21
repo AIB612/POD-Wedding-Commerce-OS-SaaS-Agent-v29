@@ -1,6 +1,49 @@
 {
   "_comment": "Server-side price list mirrored from index.html (sceneData / materialsByType / priceInfo). self-test verifies it stays in sync.",
   "currency": "CNY",
+  "storefront_currencies": {
+    "_comment": "Storefront charges CHF (CH/LI) or EUR (EU). Base prices and shipping zones stay in the internal base currency and are converted with these factors (1 base unit = rate). PLACEHOLDER rates: the shop owner must set real CHF/EUR prices or rates before going live.",
+    "CHF": {
+      "rate": 0.12,
+      "countries": [
+        "CH",
+        "LI"
+      ]
+    },
+    "EUR": {
+      "rate": 0.13,
+      "countries": [
+        "AT",
+        "BE",
+        "BG",
+        "CY",
+        "CZ",
+        "DE",
+        "DK",
+        "EE",
+        "ES",
+        "FI",
+        "FR",
+        "GR",
+        "HR",
+        "HU",
+        "IE",
+        "IT",
+        "LT",
+        "LU",
+        "LV",
+        "MT",
+        "NL",
+        "PL",
+        "PT",
+        "RO",
+        "SE",
+        "SI",
+        "SK"
+      ]
+    },
+    "default": "CHF"
+  },
   "tiers": [
     {
       "min_qty": 50,
@@ -35,7 +78,7 @@
     },
     "ACRYLIC-WELCOME-SIGN": {
       "name": "Acrylic Welcome Sign",
-      "price": 68.0,
+      "price": 68,
       "type": "sign",
       "scene": "cream"
     },
@@ -59,7 +102,7 @@
     },
     "PERSONALIZED-GIFT-BOX": {
       "name": "Personalized Gift Box",
-      "price": 32.0,
+      "price": 32,
       "type": "gift",
       "scene": "cream"
     },
@@ -83,13 +126,13 @@
     },
     "SEATING-CHART-BOARD": {
       "name": "Seating Chart Board",
-      "price": 118.0,
+      "price": 118,
       "type": "sign",
       "scene": "french"
     },
     "BAR-MENU-SIGN": {
       "name": "Bar Menu Sign",
-      "price": 52.0,
+      "price": 52,
       "type": "sign",
       "scene": "french"
     },
@@ -119,13 +162,13 @@
     },
     "WOOD-WELCOME-SIGN": {
       "name": "Wood Welcome Sign",
-      "price": 76.0,
+      "price": 76,
       "type": "sign",
       "scene": "botanical"
     },
     "FABRIC-DIRECTION-BANNER": {
       "name": "Fabric Direction Banner",
-      "price": 48.0,
+      "price": 48,
       "type": "sign",
       "scene": "botanical"
     },
@@ -167,13 +210,13 @@
     },
     "CLEAR-ACRYLIC-WELCOME": {
       "name": "Clear Acrylic Welcome",
-      "price": 72.0,
+      "price": 72,
       "type": "sign",
       "scene": "beach"
     },
     "BEACH-DIRECTION-SIGN": {
       "name": "Beach Direction Sign",
-      "price": 45.0,
+      "price": 45,
       "type": "sign",
       "scene": "beach"
     },
@@ -215,13 +258,13 @@
     },
     "BLACK-ACRYLIC-SIGN": {
       "name": "Black Acrylic Sign",
-      "price": 78.0,
+      "price": 78,
       "type": "sign",
       "scene": "modern"
     },
     "PHOTO-WELCOME-BOARD": {
       "name": "Photo Welcome Board",
-      "price": 88.0,
+      "price": 88,
       "type": "sign",
       "scene": "modern"
     },
@@ -263,13 +306,13 @@
     },
     "RUSTIC-WOOD-SIGN": {
       "name": "Rustic Wood Sign",
-      "price": 69.0,
+      "price": 69,
       "type": "sign",
       "scene": "rustic"
     },
     "BARN-SEATING-BOARD": {
       "name": "Barn Seating Board",
-      "price": 96.0,
+      "price": 96,
       "type": "sign",
       "scene": "rustic"
     },
@@ -299,13 +342,13 @@
     },
     "FABRIC-WELCOME-BANNER": {
       "name": "Fabric Welcome Banner",
-      "price": 39.0,
+      "price": 39,
       "type": "sign",
       "scene": "rustic"
     },
     "TABLE-RUNNER-PRINT": {
       "name": "Table Runner Print",
-      "price": 29.0,
+      "price": 29,
       "type": "table",
       "scene": "rustic"
     }
@@ -315,7 +358,7 @@
       {
         "id": "cotton",
         "name": "棉纹艺术纸",
-        "delta": 0.0
+        "delta": 0
       },
       {
         "id": "pearl",
@@ -337,17 +380,17 @@
       {
         "id": "cotton",
         "name": "棉纹艺术纸",
-        "delta": 0.0
+        "delta": 0
       },
       {
         "id": "pearl",
         "name": "珠光纸",
-        "delta": 2.0
+        "delta": 2
       },
       {
         "id": "kraft",
         "name": "牛皮纸",
-        "delta": -1.0
+        "delta": -1
       },
       {
         "id": "vellum",
@@ -359,29 +402,29 @@
       {
         "id": "clear",
         "name": "透明亚克力",
-        "delta": 0.0
+        "delta": 0
       },
       {
         "id": "frosted",
         "name": "磨砂亚克力",
-        "delta": 8.0
+        "delta": 8
       },
       {
         "id": "wood",
         "name": "天然木板",
-        "delta": 12.0
+        "delta": 12
       },
       {
         "id": "kraft",
         "name": "轻质硬板",
-        "delta": -6.0
+        "delta": -6
       }
     ],
     "gift": [
       {
         "id": "canvas",
         "name": "棉帆布",
-        "delta": 0.0
+        "delta": 0
       },
       {
         "id": "ceramic",

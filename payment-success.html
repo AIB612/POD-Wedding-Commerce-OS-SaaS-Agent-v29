@@ -14,6 +14,7 @@ async function load(){
 }
 function render(s,d={}){
  const I=window.WeddingI18n||{t:x=>x,lang:()=>"zh"},good=["Paid","Proofing","AwaitingApproval","Approved","Production","Shipped","Delivered","COMPLETED"].includes(s),cancelled=["CANCELLED","Cancelled"].includes(s);
+ if(good){try{localStorage.removeItem("pod-cart-v1")}catch(e){}}
  document.getElementById("mark").textContent=good?"✓":cancelled?"×":"…";
  document.getElementById("title").textContent=I.t(good?"支付已确认":cancelled?"支付已取消":"订单处理中");
  document.getElementById("desc").textContent=I.t(good?"订单已进入定制与效果确认流程。":cancelled?"本次支付没有完成，购物车内容仍可重新提交。":"支付平台和订单系统可能需要几秒钟完成同步。");

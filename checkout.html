@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="robots" content="noindex"/>
+<title>Checkout · POD Wedding Studio</title>
+<style>
+:root{--paper:#fffdf9;--ink:#28231f;--muted:#7c746c;--line:rgba(45,36,30,.12);--accent:#9a6d57;--soft:#f6f1eb;--err:#a8402f}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(160deg,#f3ece5,#fbf8f4 40%);color:var(--ink);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+a{color:inherit}
+.co-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px;border-bottom:1px solid var(--line);background:rgba(255,253,249,.9);position:sticky;top:0;z-index:20;backdrop-filter:blur(14px)}
+.co-brand{display:flex;align-items:center;gap:10px;text-decoration:none}.co-logo{width:34px;height:34px;border-radius:11px;background:#292622;color:#fff;display:grid;place-items:center;font-weight:700}
+.co-brand b{font-size:13px;letter-spacing:.04em}.co-brand span{display:block;font-size:11px;color:var(--muted)}
+.co-top-r{display:flex;align-items:center;gap:12px}.co-secure{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.co-back{font-size:12.5px;color:var(--muted)}
+.co-wrap{max-width:1120px;margin:0 auto;padding:26px 24px 60px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:36px;align-items:start}
+.co-main{order:1;min-width:0}.co-aside{order:2;min-width:0}
+.co-progress{display:flex;gap:0;list-style:none;margin:0 0 22px;padding:0;counter-reset:s}
+.co-progress li{flex:1;position:relative;padding-top:30px;font-size:12px;color:var(--muted);text-align:center}
+.co-progress li:before{counter-increment:s;content:counter(s);position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;border:1.5px solid #cfc5bb;background:#fff;display:grid;place-items:center;font-size:11.5px;font-weight:700;z-index:1}
+.co-progress li:after{content:"";position:absolute;top:12px;left:-50%;width:100%;height:1.5px;background:#ddd3c9}
+.co-progress li:first-child:after{display:none}
+.co-progress li.done:before{content:"✓";background:var(--accent);border-color:var(--accent);color:#fff}
+.co-progress li.done:after,.co-progress li.active:after{background:var(--accent)}
+.co-progress li.active{color:var(--ink);font-weight:600}.co-progress li.active:before{border-color:var(--ink);background:var(--ink);color:#fff}
+.co-step{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin-bottom:14px}
+.co-step h2{font:21px Georgia,serif;font-weight:500;margin:0 0 4px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.co-step h2 small{font:12px Inter,system-ui,sans-serif;color:var(--muted)}
+.co-step.collapsed .co-body{display:none}.co-step.locked{opacity:.55}.co-step.locked .co-body{display:none}
+.co-done{display:none;font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px}.co-step.collapsed .co-done{display:block}
+.co-change{border:0;background:none;color:var(--ink);text-decoration:underline;cursor:pointer;font:inherit;font-size:12.5px;padding:6px;min-height:36px}
+.co-step.collapsed .co-change{display:inline}.co-change{display:none}
+.co-sub{font-size:13px;color:var(--muted);margin:0 0 14px}
+.co-h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+.co-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.co-full{grid-column:1/-1}
+.co-field{display:grid;gap:5px;min-width:0}
+.co-field label{font-size:12.5px;font-weight:500}
+.co-field input,.co-field select{width:100%;min-width:0;min-height:46px;border:1px solid rgba(45,36,30,.22);border-radius:11px;padding:10px 12px;background:#fff;font:inherit;font-size:15px;color:var(--ink);outline:none}
+.co-field input:focus,.co-field select:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(40,35,31,.08)}
+.co-field.invalid input,.co-field.invalid select{border-color:var(--err)}
+.co-err{font-size:12px;color:var(--err);min-height:0}
+.co-hint{font-size:12px;color:var(--muted)}
+.co-btn{min-height:50px;border:0;border-radius:999px;background:#292622;color:#fff;font:inherit;font-size:15px;font-weight:600;padding:0 26px;cursor:pointer;margin-top:18px}
+.co-btn:disabled{opacity:.45;cursor:default}.co-btn.wide{width:100%}
+.co-options{display:grid;gap:10px}
+.co-opt{display:grid;grid-template-columns:22px 1fr auto;gap:12px;align-items:center;border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;background:#fff;cursor:pointer;min-height:60px}
+.co-opt input{width:18px;height:18px;accent-color:#292622;margin:0}
+.co-opt b{display:block;font-size:14px}.co-opt span{display:block;font-size:12.5px;color:var(--muted)}
+.co-opt strong{font-size:14px;white-space:nowrap}
+.co-opt:has(input:checked){border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.co-opt.disabled{opacity:.55;cursor:not-allowed;background:var(--soft)}
+.co-badge{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:7px;border:1px solid var(--line);background:#fff;font-size:12px;font-weight:700;letter-spacing:.02em}
+.co-opt .co-soon,.co-soon{display:inline-block;margin:0 0 0 6px;vertical-align:1px;white-space:nowrap;font-size:11px;font-weight:600;color:var(--accent);background:#f4e9e2;border-radius:999px;padding:2px 8px}
+.co-review{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff;font-size:13px;display:grid;gap:8px}
+.co-review div{display:flex;justify-content:space-between;gap:12px}.co-review dt{color:var(--muted)}.co-review dd{margin:0;text-align:right}
+.co-terms{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13px;line-height:1.45}.co-terms input{width:20px;height:20px;margin-top:1px;accent-color:#292622;flex:none}
+.co-msg{margin-top:12px;font-size:13px;border-radius:11px;padding:10px 12px;display:none}.co-msg.show{display:block}.co-msg.err{background:#fbeeea;color:var(--err)}.co-msg.info{background:var(--soft);color:var(--ink)}
+.co-sum{position:sticky;top:86px;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px 20px}
+.co-sum h2{font:19px Georgia,serif;font-weight:500;margin:0 0 10px}
+.co-lines{display:grid;gap:12px;margin-bottom:12px}
+.co-line{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center}
+.co-th{position:relative;width:56px;height:56px;border-radius:11px;background:#f2ece5;overflow:hidden}.co-th img{width:100%;height:100%;object-fit:cover}
+.co-th i{position:absolute;top:-1px;right:-1px;min-width:20px;height:20px;border-radius:999px;background:#6f6258;color:#fff;font:700 11px/20px Inter,system-ui;text-align:center;font-style:normal;padding:0 5px}
+.co-line b{display:block;font-size:13px}.co-line span{display:block;font-size:11.5px;color:var(--muted);overflow-wrap:anywhere}.co-line strong{font-size:13px;white-space:nowrap}
+.co-rows{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:6px;font-size:13.5px}
+.co-rows div{display:flex;justify-content:space-between}.co-rows span:last-child{color:var(--muted)}
+.co-rows .total{font-size:15px;font-weight:600;border-top:1px solid var(--line);padding-top:10px;margin-top:4px}.co-rows .total strong{font:22px Georgia,serif}
+.co-fine{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.5}
+.co-trust{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:5px;font-size:12px;color:var(--muted)}.co-trust li:before{content:"✓ ";color:var(--accent);font-weight:700}
+.co-sumtoggle{display:none}
+.co-empty{text-align:center;padding:60px 20px}
+.lang-switch{display:inline-flex}
+.co-twint{margin-top:14px;text-align:center}.co-twint img{width:220px;height:220px}.co-twint .tok{font:600 28px/1.2 ui-monospace,monospace;letter-spacing:.2em}
+@media(max-width:900px){
+ .co-wrap{grid-template-columns:1fr;padding:0 0 40px;gap:0}
+ .co-main{padding:16px}
+ .co-aside{order:-1}
+ .co-sumtoggle{display:flex;width:100%;justify-content:space-between;align-items:center;min-height:52px;padding:0 16px;border:0;border-bottom:1px solid var(--line);background:var(--soft);font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+ .co-sumtoggle strong{font:18px Georgia,serif}
+ .co-sum{position:static;border-radius:0;border-width:0 0 1px;display:none}
+ .co-sum.open{display:block}
+ .co-top{padding:10px 14px}.co-brand span,.co-secure span{display:none}
+ .co-step{padding:16px;border-radius:16px}
+}
+@media(max-width:520px){.co-grid{grid-template-columns:1fr}.co-progress li{font-size:11px}.co-btn{width:100%}}
+</style>
+</head>
+<body>
+<header class="co-top">
+  <a class="co-brand" href="/"><div class="co-logo">P</div><div><b>POD WEDDING STUDIO</b><span data-i18n="co.title">Checkout</span></div></a>
+  <div class="co-top-r">
+    <span class="co-secure"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i18n="co.secure">Secure checkout</span></span>
+    <div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div>
+  </div>
+</header>
+
+<div class="co-wrap" id="coWrap">
+  <aside class="co-aside">
+    <button class="co-sumtoggle" id="sumToggle" type="button" aria-expanded="false" aria-controls="coSum"><span id="sumToggleLabel" data-i18n="co.showSummary">Show order summary</span><strong id="sumToggleTotal">—</strong></button>
+    <section class="co-sum" id="coSum" aria-labelledby="sumTitle">
+      <h2 id="sumTitle" data-i18n="co.summary">Order summary</h2>
+      <div class="co-lines" id="sumLines"></div>
+      <div class="co-rows">
+        <div><span data-i18n="cart.subtotal">Subtotal</span><strong id="sumSubtotal">—</strong></div>
+        <div><span data-i18n="cart.shipping">Shipping</span><span id="sumShipping" data-i18n="cart.shippingLater">Calculated at checkout</span></div>
+        <div><span id="sumTaxLabel" data-i18n="co.taxNone">VAT</span><span id="sumTax">—</span></div>
+        <div class="total"><span data-i18n="cart.total">Total</span><strong id="sumTotal">—</strong></div>
+      </div>
+      <div class="co-fine" id="sumFine"></div>
+      <ul class="co-trust"><li data-i18n="cart.trust.secure">Secure, encrypted payment</li><li data-i18n="cart.trust.proof">Digital proof by e-mail within 2 h of payment</li><li data-i18n="cart.trust.delivery">Delivered in about 14 days after approval</li></ul>
+    </section>
+  </aside>
+
+  <main class="co-main">
+    <a class="co-back" href="/" data-i18n="co.back">Back to shop</a>
+    <ol class="co-progress" id="coProgress" aria-label="Checkout progress">
+      <li data-step="1" data-i18n="co.step1">Contact &amp; address</li>
+      <li data-step="2" data-i18n="co.step2">Shipping</li>
+      <li data-step="3" data-i18n="co.step3">Payment &amp; review</li>
+    </ol>
+
+    <section class="co-step" id="step1" data-step="1">
+      <h2><span data-i18n="co.step1">Contact &amp; address</span><button class="co-change" type="button" data-goto="1" data-i18n="co.edit">Change</button></h2>
+      <div class="co-done" id="done1"></div>
+      <form class="co-body" id="form1" novalidate>
+        <p class="co-sub" data-i18n="co.guest">No account needed — check out as a guest.</p>
+        <div class="co-grid">
+          <div class="co-field co-full"><label for="email" data-i18n="co.email">E-mail</label><input id="email" name="email" type="email" autocomplete="email" inputmode="email" required><span class="co-hint" data-i18n="co.emailHint">For your order confirmation and proof</span><span class="co-err"></span></div>
+        </div>
+        <div class="co-h3" data-i18n="co.address">Shipping address</div>
+        <div class="co-grid">
+          <div class="co-field co-full"><label for="country" data-i18n="co.country">Country</label><select id="country" name="country" autocomplete="country" required></select><span class="co-err"></span></div>
+          <div class="co-field co-full"><label for="name" data-i18n="co.name">Full name</label><input id="name" name="name" autocomplete="name" required><span class="co-err"></span></div>
+          <div class="co-field co-full"><label for="address1" data-i18n="co.line1">Street and house number</label><input id="address1" name="address1" autocomplete="address-line1" required><span class="co-err"></span></div>
+          <div class="co-field co-full"><label for="address2" data-i18n="co.line2">Address line 2 (optional)</label><input id="address2" name="address2" autocomplete="address-line2"></div>
+          <div class="co-field"><label for="postal" data-i18n="co.postal">Postcode</label><input id="postal" name="postal" autocomplete="postal-code" inputmode="numeric" required><span class="co-err"></span></div>
+          <div class="co-field"><label for="city" data-i18n="co.city">City</label><input id="city" name="city" autocomplete="address-level2" required><span class="co-err"></span></div>
+          <div class="co-field co-full"><label for="phone" data-i18n="co.phone">Phone (optional, needed for express)</label><input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel"></div>
+        </div>
+        <button class="co-btn" type="submit" data-i18n="co.continueShipping">Continue to shipping</button>
+      </form>
+    </section>
+
+    <section class="co-step locked" id="step2" data-step="2">
+      <h2><span data-i18n="co.step2">Shipping</span><button class="co-change" type="button" data-goto="2" data-i18n="co.edit">Change</button></h2>
+      <div class="co-done" id="done2"></div>
+      <div class="co-body">
+        <div class="co-options" id="shipOptions" role="radiogroup" data-i18n-attr="aria-label:co.method"></div>
+        <div class="co-msg" id="msg2" role="alert"></div>
+        <button class="co-btn" type="button" id="toStep3" data-i18n="co.continuePayment">Continue to payment</button>
+      </div>
+    </section>
+
+    <section class="co-step locked" id="step3" data-step="3">
+      <h2><span data-i18n="co.step3">Payment &amp; review</span></h2>
+      <div class="co-body">
+        <div class="co-options" id="payOptions" role="radiogroup" data-i18n-attr="aria-label:co.payment"></div>
+        <div class="co-h3" data-i18n="co.review">Review your order</div>
+        <dl class="co-review" id="review"></dl>
+        <label class="co-terms"><input type="checkbox" id="terms"><span data-i18n="co.terms">I accept the terms of sale and privacy policy and understand personalised items cannot be returned.</span></label>
+        <div class="co-msg" id="msg3" role="alert"></div>
+        <button class="co-btn wide" type="button" id="payBtn">Pay</button>
+        <div class="co-twint" id="twintBox" hidden></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="i18n.js"></script>
+<script src="checkout.js"></script>
+</body>
+</html>

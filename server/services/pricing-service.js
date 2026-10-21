@@ -44,10 +44,32 @@ export function quoteLine(raw = {}) {
   };
 }
 
+/** Storefront currency for a destination: CHF for CH/LI, EUR for the EU, otherwise the configured default. */
+export function currencyForCountry(country) {
+  const c = String(country || "").toUpperCase();
+  const cfg = pricing.storefront_currencies || {};
+  for (const [code, v] of Object.entries(cfg)) if (v && Array.isArray(v.countries) && v.countries.includes(c)) return code;
+  return cfg.default || pricing.currency;
+}
+
+/** Conversion factor from the internal base currency (storefront-pricing.json "currency") to `currency`. */
+export function rateFor(currency) {
+  if (!currency || currency === pricing.currency) return 1;
+  const r = Number(pricing.storefront_currencies?.[currency]?.rate);
+  if (!(r > 0)) throw new HttpError(400, "unsupported_currency", `Unsupported currency: ${currency}`);
+  return r;
+}
+
 export function quoteCart(items, currency = pricing.currency) {
   if (!Array.isArray(items) || items.length === 0) throw new HttpError(400, "empty_cart", "Cart is empty");
   if (items.length > MAX_LINES) throw new HttpError(400, "cart_too_large", `At most ${MAX_LINES} cart lines`);
-  if (currency && currency !== pricing.currency) throw new HttpError(400, "unsupported_currency", `Only ${pricing.currency} is supported`);
-  const lines = items.map(quoteLine);
-  return { currency: pricing.currency, lines, total: round2(lines.reduce((a, l) => a + l.line_total, 0)) };
+  const cur = String(currency || pricing.currency).toUpperCase();
+  const rate = rateFor(cur);
+  // Unit prices are rounded in the charge currency first, so line_total = unit × qty exactly (PayPal item_total must match).
+  const lines = items.map(quoteLine).map(l => {
+    if (rate === 1) return l;
+    const unit = round2(l.unit_price * rate);
+    return { ...l, unit_price: unit, line_total: round2(unit * l.quantity) };
+  });
+  return { currency: cur, base_currency: pricing.currency, rate, lines, total: round2(lines.reduce((a, l) => a + l.line_total, 0)) };
 }
