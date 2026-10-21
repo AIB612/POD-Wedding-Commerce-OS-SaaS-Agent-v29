@@ -22,7 +22,7 @@ const VERSION = JSON.parse(fs.readFileSync(new URL("../../package.json", import.
 
 export function publicRouter({ root, generatedDir }) {
   const router = express.Router();
-  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html" };
+  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
   for (const [route, file] of Object.entries(pages)) router.get(route, (_, res) => res.sendFile(path.join(root, file), noStore));
 

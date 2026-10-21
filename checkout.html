@@ -71,6 +71,7 @@ a{color:inherit}
 .co-trust{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:5px;font-size:12px;color:var(--muted)}.co-trust li:before{content:"✓ ";color:var(--accent);font-weight:700}
 .co-sumtoggle{display:none}
 .co-empty{text-align:center;padding:60px 20px}
+.co-fast{display:grid;gap:4px;border:1px solid var(--line);border-radius:14px;background:var(--soft);padding:14px 16px;margin:6px 0 16px}.co-fast b{font-size:14px}.co-fast>span{font-size:12.5px;color:var(--muted)}.co-fast-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px}.co-fast-btns .pa-opt{min-height:46px;font-size:13.5px}.co-fast .co-fast-or{text-align:center;margin-top:4px}.co-signed{font-size:13px;background:#eef5ef;border-radius:12px;padding:10px 12px;margin:6px 0 14px}@media(max-width:520px){.co-fast-btns{grid-template-columns:1fr}}
 .lang-switch{display:inline-flex}
 .co-twint{margin-top:14px;text-align:center}.co-twint img{width:220px;height:220px}.co-twint .tok{font:600 28px/1.2 ui-monospace,monospace;letter-spacing:.2em}
 @media(max-width:900px){
@@ -93,6 +94,7 @@ a{color:inherit}
   <div class="co-top-r">
     <span class="co-secure"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i18n="co.secure">Secure checkout</span></span>
     <div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div>
+    <div data-account-slot></div>
   </div>
 </header>
 
@@ -125,6 +127,8 @@ a{color:inherit}
       <h2><span data-i18n="co.step1">Contact &amp; address</span><button class="co-change" type="button" data-goto="1" data-i18n="co.edit">Change</button></h2>
       <div class="co-done" id="done1"></div>
       <form class="co-body" id="form1" novalidate>
+        <div class="co-fast" id="coFast" hidden><b data-i18n="co.fasterTitle">Sign in for faster checkout</b><span data-i18n="co.fasterSub">We fill in your e-mail, name and address for you.</span><div class="co-fast-btns" id="coFastBtns"></div><span class="co-fast-or" data-i18n="co.orGuest">or continue as a guest below ↓</span></div>
+        <div class="co-signed" id="coSigned" hidden><span id="coSignedText"></span> <button type="button" class="co-change" style="display:inline" id="coSignOut" data-i18n="co.notYou">Not you? Sign out</button></div>
         <p class="co-sub" data-i18n="co.guest">No account needed — check out as a guest.</p>
         <div class="co-grid">
           <div class="co-field co-full"><label for="email" data-i18n="co.email">E-mail</label><input id="email" name="email" type="email" autocomplete="email" inputmode="email" required><span class="co-hint" data-i18n="co.emailHint">For your order confirmation and proof</span><span class="co-err"></span></div>
@@ -169,6 +173,7 @@ a{color:inherit}
 </div>
 
 <script src="i18n.js"></script>
+<script src="account-auth.js"></script>
 <script src="checkout.js"></script>
 </body>
 </html>

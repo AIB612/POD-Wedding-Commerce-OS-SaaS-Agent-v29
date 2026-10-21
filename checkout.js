@@ -207,6 +207,25 @@
     setTimeout(poll, 2500);
   }
 
+  // ---- Sign in for faster checkout (optional; guest checkout always works) ----
+  function prefill(p) {
+    const a = p.shipping_address || {}, set = (id, v) => { if (v && $(id) && !$(id).value) $(id).value = v; };
+    set("email", p.email); set("name", a.name || p.name); set("address1", a.address1); set("address2", a.address2);
+    set("postal", a.postal_code); set("city", a.city); set("phone", a.phone);
+    if (a.country && COUNTRIES.includes(a.country) && !saved.country) $("country").value = a.country;
+  }
+  async function initSignIn() {
+    const A = window.PODAuth; if (!A?.ready) return;
+    const user = await A.ready;
+    const paint = () => {
+      if (user) { $("coSigned").hidden = false; $("coFast").hidden = true; $("coSignedText").textContent = K("co.signedIn", { e: user.email }); return; }
+      $("coFast").hidden = false; $("coFastBtns").innerHTML = A.buttonsHtml(A._prov);
+    };
+    paint(); window.addEventListener("wedding-language-change", paint);
+    $("coSignOut").onclick = () => A.logout();
+    if (user) { try { const r = await fetch("/api/account/profile"); if (r.ok) prefill(await r.json()); } catch (e) {} }
+  }
+
   // ---- shell ----
   document.querySelectorAll("[data-goto]").forEach(b => b.onclick = () => setStep(+b.dataset.goto));
   $("sumToggle").onclick = () => {
@@ -227,6 +246,7 @@
   }
   fillCountries();
   setStep(1);
+  initSignIn();
   window.scrollTo(0, 0);
   fetchQuote("standard").then(q => { state.quote = q; renderSummary(); }).catch(() => {});
 })();

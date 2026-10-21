@@ -11,7 +11,7 @@ const uid=()=>`usr_${crypto.randomBytes(8).toString("hex")}`;
 const hashToken=t=>crypto.createHash("sha256").update(t).digest("hex");
 function hashPassword(password,salt=crypto.randomBytes(16).toString("hex")){const hash=crypto.scryptSync(String(password),salt,64).toString("hex");return {salt,hash};}
 function verifyPassword(password,u){if(!u?.password_hash||!u?.password_salt)return false;const h=crypto.scryptSync(String(password),u.password_salt,64);const b=Buffer.from(u.password_hash,"hex");return b.length===h.length&&crypto.timingSafeEqual(b,h);}
-export function publicUser(u){return u?{id:u.id,email:u.email,name:u.name||"",role:u.role||"customer",created_at:u.created_at}:null;}
+export function publicUser(u){return u?{id:u.id,email:u.email,name:u.name||"",role:u.role||"customer",created_at:u.created_at,avatar_url:u.avatar_url||"",providers:Object.keys(u.identities||{})}:null;}
 
 export async function register({tenantId,email,password,name}){
   email=cleanEmail(email);if(!EMAIL.test(email))throw new HttpError(400,"invalid_email","请输入有效邮箱");
@@ -30,7 +30,7 @@ export async function login({tenantId,email,password}){
   if(!u||!verifyPassword(password,u))throw new HttpError(401,"invalid_credentials","邮箱或密码不正确");
   await updateRecord("customer_accounts",u.id,{last_login_at:now(),updated_at:now()});return {user:u,...await createSession(tenantId,u.id)};
 }
-async function createSession(tenantId,userId){const token=sid();await addRecord("customer_sessions",{id:`ses_${crypto.randomBytes(6).toString("hex")}`,tenant_id:tenantId,user_id:userId,token_hash:hashToken(token),expires_at:new Date(Date.now()+30*864e5).toISOString(),created_at:now()});return {token};}
+export async function createSession(tenantId,userId){const token=sid();await addRecord("customer_sessions",{id:`ses_${crypto.randomBytes(6).toString("hex")}`,tenant_id:tenantId,user_id:userId,token_hash:hashToken(token),expires_at:new Date(Date.now()+30*864e5).toISOString(),created_at:now()});return {token};}
 export async function userFromToken(token){if(!token)return null;const h=hashToken(token),s=await findWhere("customer_sessions",x=>x.token_hash===h&&Date.parse(x.expires_at)>Date.now());if(!s)return null;return findWhere("customer_accounts",x=>x.id===s.user_id&&x.tenant_id===s.tenant_id&&x.status!=="disabled");}
 export async function logoutToken(token){if(token)await removeWhere("customer_sessions",x=>x.token_hash===hashToken(token));return {ok:true};}
 

@@ -512,7 +512,30 @@ const K={
 'co.err.twint_not_implemented':{zh:'TWINT 尚未开通。',en:'TWINT is not available yet.',de:'TWINT ist noch nicht verfügbar.'},
 'co.err.shipping_zone_not_found':{zh:'暂不支持配送到该地区。',en:'We do not ship to this destination yet.',de:'Wir liefern noch nicht in dieses Land.'},
 'co.err.generic':{zh:'出了点问题，请稍后重试。',en:'Something went wrong, please try again.',de:'Etwas ist schiefgelaufen, bitte erneut versuchen.'},
-'co.secure':{zh:'安全结账',en:'Secure checkout',de:'Sicherer Checkout'}
+'co.secure':{zh:'安全结账',en:'Secure checkout',de:'Sicherer Checkout'},
+'auth.signIn':{zh:'登录',en:'Sign in',de:'Anmelden'},
+'auth.account':{zh:'账户',en:'Account',de:'Konto'},
+'auth.title':{zh:'登录或创建账户',en:'Sign in or create an account',de:'Anmelden oder Konto erstellen'},
+'auth.sub':{zh:'一键登录，无需密码。首次登录会自动创建账户。',en:'One tap, no password. Your first sign-in creates your account automatically.',de:'Ein Klick, kein Passwort. Beim ersten Anmelden wird dein Konto automatisch erstellt.'},
+'auth.google':{zh:'使用 Google 继续',en:'Continue with Google',de:'Weiter mit Google'},
+'auth.shop':{zh:'使用 Shop 继续',en:'Continue with Shop',de:'Weiter mit Shop'},
+'auth.notConfigured':{zh:'未配置',en:'not configured',de:'nicht eingerichtet'},
+'auth.terms':{zh:'继续即表示你同意我们的销售条款和隐私政策。',en:'By continuing you agree to our terms of sale and privacy policy.',de:'Mit dem Fortfahren akzeptierst du unsere AGB und Datenschutzerklärung.'},
+'auth.close':{zh:'关闭',en:'Close',de:'Schliessen'},
+'auth.myOrders':{zh:'我的订单',en:'My orders',de:'Meine Bestellungen'},
+'auth.signOut':{zh:'退出登录',en:'Sign out',de:'Abmelden'},
+'auth.signedInAs':{zh:'已登录：{e}',en:'Signed in as {e}',de:'Angemeldet als {e}'},
+'auth.or':{zh:'或',en:'or',de:'oder'},
+'auth.err.not_configured':{zh:'此登录方式尚未配置。',en:'This sign-in option is not configured yet.',de:'Diese Anmeldeoption ist noch nicht eingerichtet.'},
+'auth.err.access_denied':{zh:'登录已取消。',en:'Sign-in was cancelled.',de:'Die Anmeldung wurde abgebrochen.'},
+'auth.err.invalid_state':{zh:'登录会话已过期，请重试。',en:'Your sign-in session expired. Please try again.',de:'Deine Anmeldesitzung ist abgelaufen. Bitte erneut versuchen.'},
+'auth.err.email_not_verified':{zh:'该邮箱尚未验证。',en:'This e-mail address is not verified with the provider.',de:'Diese E-Mail-Adresse ist beim Anbieter nicht bestätigt.'},
+'auth.err.generic':{zh:'登录未完成，请重试。',en:'Sign-in did not complete. Please try again.',de:'Die Anmeldung wurde nicht abgeschlossen. Bitte erneut versuchen.'},
+'co.fasterTitle':{zh:'登录以更快结账',en:'Sign in for faster checkout',de:'Anmelden für schnelleren Checkout'},
+'co.fasterSub':{zh:'我们会自动填写你的邮箱、姓名和地址。',en:'We fill in your e-mail, name and address for you.',de:'Wir füllen E-Mail, Name und Adresse für dich aus.'},
+'co.orGuest':{zh:'或以访客身份继续 ↓',en:'or continue as a guest below ↓',de:'oder unten als Gast fortfahren ↓'},
+'co.signedIn':{zh:'已登录：{e} · 信息已预填',en:'Signed in as {e} · details prefilled',de:'Angemeldet als {e} · Angaben vorausgefüllt'},
+'co.notYou':{zh:'不是你？退出',en:'Not you? Sign out',de:'Nicht du? Abmelden'}
 };
 function k(key,vars){const e=K[key];let s=e?(e[lang()]||e.en):key;if(vars)for(const [a,b] of Object.entries(vars))s=s.split('{'+a+'}').join(String(b));return s}
 function translateKeys(root=document){if(!root.querySelectorAll)return;root.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=k(el.dataset.i18n)});root.querySelectorAll('[data-i18n-attr]').forEach(el=>el.dataset.i18nAttr.split(';').forEach(pair=>{const [a,key]=pair.split(':');if(a&&key)el.setAttribute(a.trim(),k(key.trim()))}))}
