@@ -258,7 +258,11 @@ button.review-task{cursor:pointer;transition:border-color .15s,transform .15s,bo
 .review-task-copy b{display:block;font-size:12px;line-height:1.35}.review-task-copy small{display:block;color:#6f655d;font-size:11px;line-height:1.55;margin-top:4px;max-width:640px}
 .review-task-state{font-size:11px;color:var(--ok);white-space:nowrap;padding-top:2px}.review-task-cta{font-size:11px;font-weight:700;color:#6f4b3c;white-space:nowrap;padding-top:2px}
 @media(max-width:640px){.review-task{grid-template-columns:22px 1fr}.review-task-state,.review-task-cta{grid-column:2;justify-self:start}.pkg-ref{grid-template-columns:58px 1fr}.pkg-ref img,.pkg-ref-empty{width:58px;height:58px}}
+/* cart button sized to the studio top bar (36px controls, 999px pills) */
+.topbar .cart-btn{min-height:36px;padding:0 12px 0 10px;font-size:12px}.topbar .cart-btn svg{width:18px;height:18px}.topbar .cart-badge{left:22px;box-shadow:0 0 0 2px #fffdf9}
+@media(max-width:860px){.topbar .cart-btn{min-width:40px;min-height:40px}}
 </style>
+<link rel="stylesheet" href="cart.css">
 </head>
 <body>
 <header class="topbar">
@@ -267,6 +271,7 @@ button.review-task{cursor:pointer;transition:border-color .15s,transform .15s,bo
     <div class="row" id="roleBar"></div>
     <select class="lang-select" id="langSelect" aria-label="Language"><option value="en">English</option><option value="de">Deutsch</option><option value="zh">中文</option></select>
     <a class="btn" href="account.html" id="accountBtn">Account</a><a class="btn" href="index.html" data-t="backToShop"></a>
+    <button class="cart-btn" id="cartBtn" type="button" aria-haspopup="dialog" aria-controls="cartPanel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span class="cart-btn-label" data-i18n="cart.button">Cart</span><span class="cart-badge" id="cartCount" data-n="0">0</span></button>
   </div>
 </header>
 <div class="wrap" id="app"></div>
@@ -306,5 +311,9 @@ if (location.protocol === "file:") document.write('<script src="studio-mockup-as
 <script src="studio-mockups.js"></script>
 <script src="account-auth.js"></script>
 <script src="studio.js"></script>
+<script>window.WEDDING_I18N_KEYS_ONLY=true</script>
+<script src="i18n.js"></script>
+<script src="cart.js"></script>
+<script>PODCart.init({onEdit:line=>{location.href="index.html?cartEdit="+encodeURIComponent(line.id)}})</script>
 </body>
 </html>

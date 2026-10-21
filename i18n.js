@@ -517,7 +517,8 @@ const K={
 function k(key,vars){const e=K[key];let s=e?(e[lang()]||e.en):key;if(vars)for(const [a,b] of Object.entries(vars))s=s.split('{'+a+'}').join(String(b));return s}
 function translateKeys(root=document){if(!root.querySelectorAll)return;root.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=k(el.dataset.i18n)});root.querySelectorAll('[data-i18n-attr]').forEach(el=>el.dataset.i18nAttr.split(';').forEach(pair=>{const [a,key]=pair.split(':');if(a&&key)el.setAttribute(a.trim(),k(key.trim()))}))}
 window.WeddingI18n={lang,setLanguage,translate,t,k,extend,mountSwitches};
-document.addEventListener('DOMContentLoaded',()=>{
+// Pages with their own i18n (POD Studio) set window.WEDDING_I18N_KEYS_ONLY=true: keyed strings (cart) only, no DOM auto-translation.
+if(!window.WEDDING_I18N_KEYS_ONLY)document.addEventListener('DOMContentLoaded',()=>{
  mountSwitches();
  translate(document,lang());
  const mo=new MutationObserver(ms=>{if(busy)return;ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)translate(n,lang());else if(n.nodeType===3&&n.parentElement)translate(n.parentElement,lang())}))});

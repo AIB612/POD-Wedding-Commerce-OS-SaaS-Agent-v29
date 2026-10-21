@@ -764,7 +764,7 @@
     if (d.resetpl && f) { S.submittedRef = null; S.submission = null; f.placement = { mode: null, scale: 1, dx: 0, dy: 0, color: f.placement.color }; return rerender(); }
     if (d.applyall && f) { S.submittedRef = null; S.submission = null; const shape = prod(f.product_id).shape; S.items.forEach(i => { if (i !== f && prod(i.product_id).shape === shape) i.placement = { ...f.placement, color: i.placement.color }; }); return rerender(); }
     if (d.dl) return downloadMock(d.dl);
-    if (d.lang) { lang = d.lang; try { localStorage.setItem(LANG_KEY, lang); } catch {} return render(); }
+    if (d.lang) { lang = d.lang; try { localStorage.setItem(LANG_KEY, lang); } catch {} window.PODCart?.relabel(); return render(); }
     if (el.id === "drop") return $("#fileInput").click();
     if (el.id === "drawerMask" || el.id === "drawerClose") return closeDrawer();
     if (el.id === "tdUse") { S.submittedRef = null; S.submission = null; S.textDesign.text = ($("#tdText").value.trim() || "A & B").split(/\s*\/\s*/).join("\n"); S.textDesign.color = $("#tdColor").value; S.design = { canvas: textDesignCanvas(), width: 1600, height: 1600, name: S.textDesign.text.replace(/\n/g, " ").slice(0, 30), source: "text", transparent: true }; return rerender(); }
@@ -802,7 +802,7 @@
     if (el.name === "shipmode") { S.submittedRef = null; S.submission = null; S.ship.mode = el.value; return rerender(); }
     if (el.id === "autoExclude") { S.submittedRef = null; S.submission = null; S.autoExclude = el.checked; return rerender(); }
     if (el.id === "marketSel") { S.submittedRef = null; S.submission = null; S.market = el.value; return rerender(); }
-    if (el.id === "langSelect") { lang = el.value; try { localStorage.setItem(LANG_KEY, lang); } catch {} return render(); }
+    if (el.id === "langSelect") { lang = el.value; try { localStorage.setItem(LANG_KEY, lang); } catch {} window.PODCart?.relabel(); return render(); }
     if (el.id === "roleSel") { setBuyer(el.value); S.browse = null; return rerender(); }
     if (el.id === "publishSel") { S.submittedRef = null; S.submission = null; S.publishStore = el.value; return saveDraft(); }
     if (el.id === "addressCountry") { S.submittedRef = null; S.submission = null; S.ship.address_country = el.value; return rerender(); }
