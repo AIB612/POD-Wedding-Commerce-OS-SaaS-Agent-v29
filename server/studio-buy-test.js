@@ -358,8 +358,8 @@ try {
     // Persisted in the data store; restore.
     assert.equal((await getState()).fee_settings.find(x => x.id === "fees_default").tax.zones.zone_ch, 0.077);
     assert.equal((await put({ prices_include_vat: false, tax: { zones: { zone_ch: 0.081 } }, packaging: { insert_card: { CHF: 0 }, sticker: { CHF: 0 } } })).status, 200);
-    assert.ok(fs.readFileSync(path.join(root, "admin.html"), "utf8").includes('href="/admin-fees.html"'));
-    assert.equal((await anon("/admin-fees.html")).status, 200);
+    assert.ok(fs.readFileSync(path.join(root, "admin.html"), "utf8").includes('data-page="fees"'));
+    for (const u of ["/admin-fees.html", "/admin/fees"]) { const rr = await anon(u, { redirect: "manual" }); assert.equal(rr.status, 302); assert.equal(rr.headers.get("location"), "/admin#fees"); }
     result.fees_admin_propagate = "pass";
   }
 } finally { globalThis.fetch = realFetch; server.close(); }

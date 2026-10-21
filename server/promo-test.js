@@ -107,8 +107,8 @@ try {
   // 5. UI wiring: Review step field + admin page linked in the admin menu.
   const chtml = fs.readFileSync(path.join(root, "checkout.html"), "utf8"), kjs = fs.readFileSync(path.join(root, "checkout.js"), "utf8");
   assert.match(chtml, /id="promo"/); assert.match(chtml, /data-i18n="co\.promoLabel">Discount code/); assert.match(kjs, /promo_code: state\.promo/);
-  assert.ok(fs.readFileSync(path.join(root, "admin.html"), "utf8").includes('href="/admin-promos.html"'));
-  assert.equal((await anon("/admin-promos.html")).status, 200);
+  assert.ok(fs.readFileSync(path.join(root, "admin.html"), "utf8").includes('data-page="promos"'));
+  for (const u of ["/admin-promos.html", "/admin/promos"]) { const rr = await anon(u, { redirect: "manual" }); assert.equal(rr.status, 302); assert.equal(rr.headers.get("location"), "/admin#promos"); }
   result.ui_wiring = "pass";
 } finally { globalThis.fetch = realFetch; server.close(); }
 console.log(JSON.stringify(result, null, 2));

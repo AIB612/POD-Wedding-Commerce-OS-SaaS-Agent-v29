@@ -24,10 +24,14 @@ const VERSION = JSON.parse(fs.readFileSync(new URL("../../package.json", import.
 
 export function publicRouter({ root, generatedDir }) {
   const router = express.Router();
-  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/admin-prices.html": "admin-prices.html", "/admin/prices": "admin-prices.html", "/admin-fees.html": "admin-fees.html", "/admin/fees": "admin-fees.html", "/admin-promos.html": "admin-promos.html", "/admin/promos": "admin-promos.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html" };
+  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
   for (const [route, file] of Object.entries(pages)) router.get(route, (_, res) => res.sendFile(path.join(root, file), noStore));
 
+  // Price list / Fees & tax / Promo codes are sections inside admin.html; the old standalone URLs redirect there.
+  for (const [section, routes] of Object.entries({ prices: ["/admin-prices.html", "/admin/prices"], fees: ["/admin-fees.html", "/admin/fees"], promos: ["/admin-promos.html", "/admin/promos"] }))
+    for (const route of routes) router.get(route, (_, res) => res.redirect(302, `/admin#${section}`));
+  router.get("/admin-sections.js", (_, res) => res.sendFile(path.join(root, "admin-sections.js"), { maxAge: "5m" }));
   // Shared front-end assets (explicit allowlist — server code and .env are never exposed).
   router.get("/i18n.js", (_, res) => res.sendFile(path.join(root, "i18n.js"), { maxAge: "1h" }));
   router.get("/wedding-qr.js", (_, res) => res.sendFile(path.join(root, "wedding-qr.js"), { maxAge: "1h" }));

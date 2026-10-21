@@ -1,4 +1,4 @@
-// Promo / discount codes (admin-promos.html). One code per order (not stackable), applied after the volume
+// Promo / discount codes (admin.html #promos section, admin-sections.js). One code per order (not stackable), applied after the volume
 // tiers on the merchandise subtotal. Percent or fixed (CHF / EUR amount), optional expiry, minimum order,
 // usage limit and active flag. Usage is counted only when the payment is captured (markPaid).
 import crypto from "node:crypto";

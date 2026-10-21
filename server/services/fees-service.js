@@ -1,4 +1,4 @@
-// Admin-managed fees & tax ("Fees & tax" page, admin-fees.html): VAT rates per zone / country, the global
+// Admin-managed fees & tax ("Fees & tax" page, admin.html #fees section, admin-sections.js): VAT rates per zone / country, the global
 // "prices shown excl./incl. VAT" switch (default excl.), shipping rates per zone + method in CHF and EUR,
 // carrier day ranges (delivery estimates) and packaging add-on prices. Seeded from the previous values
 // (saas-seed.json zones converted with storefront-pricing.json rates; packaging at 0) so nothing changes until edited.
