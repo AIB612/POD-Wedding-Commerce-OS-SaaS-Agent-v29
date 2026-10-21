@@ -989,14 +989,13 @@ function retailFrom(x){
   }catch(e){}
   return Number(x.base_cost_eur||0)/(1-HOME_MARGIN);
 }
-function thumbFor(src){const m=/assets\/mockups\/([^/]+)\.jpg$/.exec(src||"");return m?{src:`assets/mockups/thumb/${m[1]}.webp`,src2:`assets/mockups/thumb/${m[1]}@2x.webp`}:(src?{src,src2:src}:null)}
-// Real sample photos (designed products) shown instead of blank/shade mockups where one exists for that product type.
-const SAMPLE_PHOTOS={invitation:"invitation-monogram",mug:"mug-cafe",magic_mug:"mug-cafe",tote:"tote-leaves",tee:"tee-brand",hoodie:"hoodie-wave",tumbler:"tumbler-team"};
-function sampleFor(id){const n=SAMPLE_PHOTOS[id];return n?{src:`assets/showcase/thumb/${n}-160.webp`,src2:`assets/showcase/thumb/${n}-320.webp`,full:`assets/showcase/thumb/${n}.webp`}:null}
+// Single source of truth: the Studio's product image (studio-data.js products[].mockup_photo.src, default colour).
+// Thumbs are keyed by that path: <dir>/thumb/<stem>.webp (+@2x), built by scripts/build_thumbs.py; img onerror falls back to the original.
+function studioImageFor(x){return x?.mockup_photo?.src||""}
+function thumbFor(src){const m=/^(.*)\/([^/]+)\.(jpe?g|png|webp)$/i.exec(src||"");return m?{src:`${m[1]}/thumb/${m[2]}.webp`,src2:`${m[1]}/thumb/${m[2]}@2x.webp`,orig:src}:(src?{src,src2:src,orig:src}:null)}
 function homeProduct(id){
   const x=studioProductsById[id]||{id,name:{en:id},base_cost_eur:0};
-  const sp=sampleFor(x.id);
-  const tb=sp||thumbFor(x.mockup_photo?.src);
+  const img=studioImageFor(x),tb=thumbFor(img);
   return {
     id:x.id,
     name:pick(x.name,x.id),
@@ -1007,9 +1006,10 @@ function homeProduct(id){
     lead:"Studio",
     custom:"POD Design Studio",
     studio:true,
-    image:sp?.full||x.mockup_photo?.src||"",
+    image:img,
     thumb:tb?.src||"",
     thumb2:tb?.src2||"",
+    thumbOrig:tb?.orig||"",
     colors:x.colors||[],
     category:x.category||"",
     technique:x.technique||"POD",
@@ -1160,7 +1160,7 @@ function renderCatalog(){
       <div class="group-title"><b>${escHtml(g[0])}</b><span>${g[1].length} ${homeT("PRODUCTS")}</span></div>
       ${g[1].map((p,pi)=>`
         <button class="product" data-g="${gi}" data-p="${pi}" data-product="${p.id}">
-          <div class="prod-img studio">${p.thumb?`<img src="${p.thumb}" srcset="${p.thumb} 1x, ${p.thumb2} 2x" width="68" height="56" alt="${escHtml(p.name)}" loading="lazy" decoding="async">`:""}</div>
+          <div class="prod-img studio">${p.thumb?`<img src="${p.thumb}" srcset="${p.thumb} 1x, ${p.thumb2} 2x" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${p.thumbOrig}'" width="68" height="56" alt="${escHtml(p.name)}" loading="lazy" decoding="async">`:""}</div>
           <div><b>${escHtml(p.name)}</b><span>${escHtml(p.technique)}${p.eco?" · ♻ "+homeT("Eco"):""}</span></div>
           <strong>${fmtEur(p.price,{from:true})}</strong>
         </button>`).join("")}

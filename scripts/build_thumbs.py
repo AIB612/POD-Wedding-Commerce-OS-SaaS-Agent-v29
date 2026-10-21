@@ -38,6 +38,15 @@ def main():
         # small catalog thumbnails: real sample photos replacing blank mockups
         save(im, ROOT / "assets/showcase/thumb" / f"{f.stem}-160.webp", 160)
         save(im, ROOT / "assets/showcase/thumb" / f"{f.stem}-320.webp", 320, 72)
+    # homepage catalog thumbs keyed by the Studio's own image path (studio-data.js products[].mockup_photo.src)
+    data = (ROOT / "studio-data.js").read_text(encoding="utf-8")
+    for src in sorted(set(re.findall(r'"mockup_photo":\{"src":"([^"]+)"', data))):
+        f = ROOT / src
+        if not f.exists():
+            continue
+        im = Image.open(f)
+        save(im, f.parent / "thumb" / f"{f.stem}.webp", 160)
+        save(im, f.parent / "thumb" / f"{f.stem}@2x.webp", 320, 72)
     # generated photo-style samples (product wall + upload-your-design section)
     for f in sorted((ROOT / "assets/samples").glob("*.jpg")):
         im = Image.open(f)
