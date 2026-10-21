@@ -1,9 +1,11 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>POD Wedding Scene Studio</title>
+<title>POD Wedding Studio — custom wedding stationery, signs &amp; gifts</title>
+<meta name="description" content="Design matching wedding invitations, welcome signs, favours and gifts in one scene-based studio. Printed on demand and shipped across Europe."/>
+<link rel="preload" as="image" href="assets/scenes/gifts-1200.webp" imagesrcset="assets/scenes/gifts-800.webp 800w, assets/scenes/gifts-1200.webp 1200w" imagesizes="(max-width:1000px) 100vw, calc(100vw - 420px)" fetchpriority="high"/>
 <style>
 :root{
   --paper:#fffdf9;--ink:#28231f;--muted:#7c746c;--line:rgba(45,36,30,.12);
@@ -503,7 +505,7 @@ button{color:inherit}
 .scene.home-photo-scene{
   background-image:
     linear-gradient(180deg,rgba(255,252,248,.08) 0%,rgba(255,252,248,0) 35%,rgba(31,24,20,.08) 100%),
-    url("assets/scenes/cream.webp") !important;
+    url("assets/scenes/cream-800.webp") !important;
   background-size:cover !important;
   background-position:50% 50% !important;
   background-repeat:no-repeat !important;
@@ -540,6 +542,7 @@ button{color:inherit}
 
 /* v18: POD Studio entry (scenario → design one-stop flow) */
 .btn.studio-entry{display:inline-flex;align-items:center;gap:4px;text-decoration:none;color:#fff;background:linear-gradient(135deg,#292622,#4a3a30);border-color:#292622;box-shadow:0 0 0 2px rgba(154,109,87,.35)}
+.topbar-row2{display:contents}
 .btn.studio-entry:hover{box-shadow:0 0 0 3px rgba(154,109,87,.55)}
 @media(max-width:720px){.actions{flex-wrap:wrap;justify-content:flex-end}}
 
@@ -590,6 +593,46 @@ button{color:inherit}
 .product-modal-actions .secondary{background:#f3ece4;color:#28231f}
 .product-modal-close{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:0;background:#fff;cursor:pointer;font-size:18px}
 @media(max-width:640px){.product-modal-card{grid-template-columns:1fr}}
+
+/* home-en-images: hero <img>, thumbnails, mobile header, AI launcher, touch hotspot labels */
+.scene-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;user-select:none}
+.prod-img.studio{background:#fff;display:grid;place-items:center}
+.prod-img.studio img{width:100%;height:100%;object-fit:contain;display:block}
+.product strong{white-space:nowrap;font-size:11px}
+.product-shot img{object-fit:cover}
+.product-modal-img img{object-fit:contain;background:#fff}
+.material-photo{object-fit:cover}
+.hotspot-label{max-width:min(46%,200px);overflow:hidden;text-overflow:ellipsis}
+.hotspot-label.pos{left:calc(var(--x) + 26px)!important;top:var(--y)!important;bottom:auto!important;transform:translateY(-50%)}
+.hotspot-label.pos.flip{left:auto!important;right:calc(100% - var(--x) + 26px)}
+.catalog-scroll{padding-bottom:84px}
+@media (hover:none),(pointer:coarse){
+  /* Touch: no hover, so labels are always visible, centred under their dot and wrapped instead of overflowing. */
+  .hotspot-label,.hotspot-label.pos,.hotspot-label.pos.flip{opacity:1;pointer-events:none;font-size:10px;line-height:1.25;padding:4px 7px;border-radius:8px;
+    left:var(--x,50%)!important;right:auto;top:calc(var(--y,50%) + 26px)!important;bottom:auto!important;transform:translateX(-50%);white-space:normal;text-align:center;width:max-content;max-width:min(27%,120px)}
+}
+@media(max-width:720px){
+  .app{grid-template-rows:auto auto}
+  .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto auto;row-gap:6px;column-gap:8px;padding:8px 12px;height:auto;align-items:center}
+  .brand{gap:8px;min-width:0}
+  .logo{width:30px;height:30px;border-radius:10px;font-size:13px}
+  .brand b{font-size:12px;white-space:nowrap;letter-spacing:.03em}
+  .brand span{display:none}
+  .actions{display:contents}
+  .topbar .lang-switch{grid-column:2;grid-row:1}
+  .topbar .lang-select{padding:5px 24px 5px 10px;font-size:11px;background-position:right 8px center}
+  #cartBtn{grid-column:3;grid-row:1}
+  .topbar .btn{padding:6px 10px;font-size:11px;white-space:nowrap}
+  .topbar-row2{grid-column:1/-1;grid-row:2;display:flex;gap:6px;min-width:0}
+  .topbar-row2 .btn{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .wedding-site-btn{max-width:none}
+  .layout{height:auto;padding:10px}
+  /* AI launcher docks into the compact header's second row instead of floating over prices/content. */
+  .topbar-row2{margin-right:40px}
+  .agent-launcher{width:32px;height:32px;font-size:13px;top:46px;right:12px;bottom:auto;box-shadow:0 4px 12px rgba(38,31,27,.22)}
+  .agent-launcher:after{display:none}
+  .agent-panel{left:10px;right:10px;top:92px;bottom:auto;width:auto;height:min(640px,calc(100vh - 110px))}
+}
 </style>
 </head>
 <body>
@@ -600,8 +643,8 @@ button{color:inherit}
       <div><b>POD WEDDING STUDIO</b><span>场景式选品 · 定制 · 阶梯价 · 购物车</span></div>
     </div>
     <div class="actions"><div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div>
-      <button class="btn wedding-site-btn" id="weddingSiteBtn">生成专属婚礼网站</button>
-      <button class="btn" id="resetBtn">重置</button>
+      <div class="topbar-row2"><button class="btn wedding-site-btn" id="weddingSiteBtn">生成专属婚礼网站</button>
+      <button class="btn" id="resetBtn">重置</button></div>
       <button class="btn dark" id="cartBtn">购物车 <span id="cartCount">0</span></button>
     </div>
   </header>
@@ -609,6 +652,7 @@ button{color:inherit}
   <main class="layout">
     <section class="stage" id="stage">
       <div class="scene" id="scene">
+        <img class="scene-img" id="sceneImg" src="assets/scenes/gifts-1200.webp" srcset="assets/scenes/gifts-800.webp 800w, assets/scenes/gifts-1200.webp 1200w" sizes="(max-width:1000px) 100vw, calc(100vw - 420px)" fetchpriority="high" decoding="async" alt="Wedding table scene with personalised gifts" data-i18n-alt="scene"/>
         <div class="wall-line a"></div><div class="wall-line b"></div><div class="wall-line c"></div>
         <div class="floor"></div><div class="arch"></div>
         <div class="names"><strong id="coupleNames">Amelia & Noah</strong><span id="sceneDate">06 · 18 · 2027</span></div>
@@ -639,7 +683,7 @@ button{color:inherit}
           <button class="pop-close" id="popClose">×</button>
         </div>
         <div class="pop-body">
-          <div class="price-row"><span>单价会根据数量自动变化</span><strong id="unitPrice">¥0.00</strong></div>
+          <div class="price-row"><span>单价会根据数量自动变化</span><strong id="unitPrice">€0.00</strong></div>
 
           <div class="mode-label">选择材质</div>
           <div class="material-grid" id="materialGrid"></div>
@@ -683,7 +727,7 @@ button{color:inherit}
             <div class="tier-pill" data-tier="3">50+<br>-15%</div>
           </div>
 
-          <div class="total"><span>商品小计</span><strong id="totalPrice">¥0.00</strong></div>
+          <div class="total"><span>商品小计</span><strong id="totalPrice">€0.00</strong></div>
           <div class="pop-actions">
             <button class="add" id="addCart">加入购物车</button>
             <button class="secondary" id="detailBtn">完整详情</button>
@@ -859,7 +903,7 @@ button{color:inherit}
       <b id="materialLightboxTitle">材质预览</b>
       <button class="pop-close" id="materialLightboxClose">×</button>
     </div>
-    <img class="material-lightbox-image" id="materialLightboxImage" alt="材质大图"/>
+    <img class="material-lightbox-image" id="materialLightboxImage" alt="材质大图" decoding="async"/>
     <div class="material-lightbox-foot" id="materialLightboxDesc"></div>
   </div>
 </div>
@@ -913,6 +957,7 @@ button{color:inherit}
 </div>
 
 <script src="studio-data.js"></script>
+<script src="studio-pricing.js"></script>
 <script src="i18n.js"></script>
 <script src="wedding-qr.js"></script>
 <script>
@@ -921,39 +966,87 @@ const HOME_RECOMMENDED = new Set(["gifts","seasonal"]);
 const studioCatalog = window.STUDIO_DATA || {scenarios:[],products:[]};
 const studioProductsById = Object.fromEntries((studioCatalog.products||[]).map(x=>[x.id,x]));
 
+// ---- Language-aware storefront data (studio-data.js carries zh/en/de; fall back en → zh → id) ----
+function homeLang(){return window.WeddingI18n?.lang?.()||"en"}
+function pick(obj,fallback=""){if(!obj)return fallback;if(typeof obj==="string")return obj;const l=homeLang();return obj[l]||obj.en||obj.zh||fallback}
+const HOME_LOCALE={zh:"zh-CN",en:"en-GB",de:"de-DE"};
+function homeT(zh){return window.WeddingI18n?.t?.(zh)??zh}
+/** Format a EUR amount for the current language. opts.from adds the "From" / "起" prefix. */
+function fmtEur(n,opts={}){
+  const l=homeLang(),v=new Intl.NumberFormat(HOME_LOCALE[l]||"en-GB",{style:"currency",currency:"EUR",minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0);
+  if(!opts.from)return v;
+  return l==="zh"?`${v} 起`:l==="de"?`ab ${v}`:`From ${v}`;
+}
+function fmtEurDelta(d){return (d>0?"+":"−")+fmtEur(Math.abs(d))}
+/** Retail ("From") price: shared studio pricing, EU market, default margin, 1 pc, cheapest material. */
+const HOME_MARGIN=0.4;
+function retailFrom(x){
+  try{
+    if(window.StudioPricing&&studioCatalog.markets){
+      const mats=(x.materials||[]),cheapest=mats.slice().sort((a,b)=>a.delta_eur-b.delta_eur)[0];
+      const q=StudioPricing.quote(studioCatalog,{market:"EU",margin:HOME_MARGIN,items:[{product_id:x.id,qty:1,material_id:cheapest?.id}]});
+      if(q.lines[0])return q.lines[0].price;
+    }
+  }catch(e){}
+  return Number(x.base_cost_eur||0)/(1-HOME_MARGIN);
+}
+function thumbFor(src){const m=/assets\/mockups\/([^/]+)\.jpg$/.exec(src||"");return m?{src:`assets/mockups/thumb/${m[1]}.webp`,src2:`assets/mockups/thumb/${m[1]}@2x.webp`}:(src?{src,src2:src}:null)}
 function homeProduct(id){
   const x=studioProductsById[id]||{id,name:{en:id},base_cost_eur:0};
+  const tb=thumbFor(x.mockup_photo?.src);
   return {
     id:x.id,
-    name:x.name?.en||x.name?.zh||x.id,
-    price:Number(x.base_cost_eur||0),
+    name:pick(x.name,x.id),
+    price:retailFrom(x),
     type:"studio",
     desc:[x.technique,(x.sizes||[]).slice(0,4).join(" / ")].filter(Boolean).join(" · "),
     moq:"POD",
     lead:"Studio",
     custom:"POD Design Studio",
     studio:true,
-    thumb:x.mockup_photo?.src||"",
+    image:x.mockup_photo?.src||"",
+    thumb:tb?.src||"",
+    thumb2:tb?.src2||"",
+    colors:x.colors||[],
+    category:x.category||"",
     technique:x.technique||"POD",
     eco:Array.isArray(x.eco_tags)&&x.eco_tags.length>0
   };
 }
+function sceneVariants(src){const m=/^(assets\/scenes\/[^/.]+)\.(jpg|webp)$/.exec(src||"");return m?{src:`${m[1]}-1200.webp`,srcset:`${m[1]}-800.webp 800w, ${m[1]}-1200.webp 1200w`}:{src:src||"",srcset:""}}
+function buildSceneData(){
+  return Object.fromEntries(HOME_SCENARIO_ORDER.map(id=>{
+    const sc=(studioCatalog.scenarios||[]).find(x=>x.id===id);
+    if(!sc) return [id,{name:id,subtitle:"",note:"",groups:[],hotspots:[],image:"",colors:["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"]}];
+    return [id,{
+      id,
+      name:pick(sc.name,id),
+      subtitle:sc.name?.zh||sc.name?.en||id,
+      note:pick(sc.audience,""),
+      recommended:HOME_RECOMMENDED.has(id),
+      image:sc.scene_image?.src||"",
+      hotspots:sc.scene_image?.hotspots||[],
+      colors:["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"],
+      groups:(sc.kits||[]).map(k=>[pick(k.name,k.id),(k.items||[]).map(homeProduct),k.id])
+    }];
+  }));
+}
+let sceneData = buildSceneData();
 
-const sceneData = Object.fromEntries(HOME_SCENARIO_ORDER.map(id=>{
-  const sc=(studioCatalog.scenarios||[]).find(x=>x.id===id);
-  if(!sc) return [id,{name:id,subtitle:"",note:"",groups:[],hotspots:[],image:"",colors:["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"]}];
-  return [id,{
-    id,
-    name:sc.name?.en||sc.name?.zh||id,
-    subtitle:sc.name?.zh||sc.name?.en||id,
-    note:sc.audience?.en||sc.audience?.zh||"",
-    recommended:HOME_RECOMMENDED.has(id),
-    image:sc.scene_image?.src||"",
-    hotspots:sc.scene_image?.hotspots||[],
-    colors:["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"],
-    groups:(sc.kits||[]).map(k=>[k.name?.en||k.name?.zh||k.id,(k.items||[]).map(homeProduct),k.id])
-  }];
-}));
+/** Per-language document metadata (html lang, title, description). */
+const HOME_META={
+  en:{title:"POD Wedding Studio — custom wedding stationery, signs & gifts",desc:"Design matching wedding invitations, welcome signs, favours and gifts in one scene-based studio. Printed on demand and shipped across Europe.",alt:"Wedding table scene with personalised gifts",agent:"Open the wedding customisation agent",lightbox:"Material close-up",placeholder:"e.g. Amelia & Noah / 18 June 2027 / Welcome to our wedding"},
+  zh:{title:"POD Wedding Scene Studio",desc:"在一个场景式工作室中统一设计婚礼邀请卡、迎宾标识、伴手礼与周边，按需生产并配送至欧洲各地。",alt:"婚礼餐桌场景与定制礼品",agent:"打开婚礼定制 Agent",lightbox:"材质大图",placeholder:"例如：Amelia & Noah / 18 June 2027 / Welcome to our wedding"},
+  de:{title:"POD Wedding Studio — individuelle Hochzeitspapeterie, Schilder & Geschenke",desc:"Gestalten Sie passende Hochzeitseinladungen, Willkommensschilder, Gastgeschenke und Präsente in einem szenenbasierten Studio. Print on Demand, Versand in ganz Europa.",alt:"Hochzeitstisch-Szene mit personalisierten Geschenken",agent:"Hochzeits-Agent öffnen",lightbox:"Material-Nahaufnahme",placeholder:"z. B. Amelia & Noah / 18 June 2027 / Welcome to our wedding"}
+};
+function applyHomeMeta(){
+  const l=homeLang(),m=HOME_META[l]||HOME_META.en;
+  document.documentElement.lang=l==="zh"?"zh-CN":l;
+  document.title=m.title;
+  let d=document.querySelector('meta[name="description"]');if(!d){d=document.createElement("meta");d.name="description";document.head.appendChild(d)}d.content=m.desc;
+  const set=(id,attr,v)=>{const el=document.getElementById(id);if(el)el.setAttribute(attr,v)};
+  set("sceneImg","alt",m.alt);set("agentLauncher","aria-label",m.agent);set("materialLightboxImage","alt",m.lightbox);set("customText","placeholder",m.placeholder);
+}
 
 
 const materialPhotos = {
@@ -1004,7 +1097,7 @@ function renderSceneMenu(){
   const menu=document.getElementById("sceneMenu");
   menu.innerHTML=HOME_SCENARIO_ORDER.map(key=>{
     const s=sceneData[key];
-    return `<button class="scene-option ${key===sceneKey?"active":""}" data-scene="${key}"><b>${s.name}</b>${s.recommended?`<span>★ Recommended for you</span>`:""}<span>${s.note}</span></button>`;
+    return `<button class="scene-option ${key===sceneKey?"active":""}" data-scene="${key}"><b>${s.name}</b>${s.recommended?`<span>★ ${homeT("Recommended for you")}</span>`:""}<span>${s.note}</span></button>`;
   }).join("");
   menu.querySelectorAll("[data-scene]").forEach(b=>b.onclick=e=>{e.stopPropagation();switchScene(b.dataset.scene);menu.classList.remove("open")});
 }
@@ -1024,13 +1117,16 @@ function switchScene(key=sceneKey){
   sessionStorage.setItem("pod-home-scenario",sceneKey);
   const s=sceneData[sceneKey];
   scene.classList.remove("home-photo-scene");scene.classList.add("generated-scene","studio-scene");
-  scene.style.backgroundImage=s.image?`url("${s.image}")`:"";
+  const hero=document.getElementById("sceneImg"),v=sceneVariants(s.image);
+  scene.style.backgroundImage="";
+  if(hero&&v.src&&hero.getAttribute("src")!==v.src){hero.srcset=v.srcset;hero.src=v.src}
+  if(hero)hero.style.display=v.src?"":"none";
   document.getElementById("sceneTitle").textContent=s.name;
   document.getElementById("catalogTitle").textContent=s.name;
-  document.getElementById("catalogAudience").textContent=(s.recommended?"★ Recommended for you · ":"")+s.note;
+  document.getElementById("catalogAudience").textContent=(s.recommended?"★ "+homeT("Recommended for you")+" · ":"")+s.note;
   document.getElementById("sceneNoteTitle").textContent=s.name;
   document.getElementById("sceneNoteText").textContent=s.note;
-  document.getElementById("hotspotCount").textContent=s.groups.length+" Kits";
+  document.getElementById("hotspotCount").textContent=s.groups.length+" "+homeT("Kits");
   document.getElementById("studioStartBtn").href=studioHref();
   renderSceneMenu();renderHotspots();renderCatalog();popover.classList.remove("open");
 }
@@ -1044,22 +1140,26 @@ function focusKit(gi){
 function renderHotspots(){
   const wrap=document.getElementById("hotspots");
   const s=sceneData[sceneKey];
-  const pos=i=>s.hotspots&&s.hotspots[i]?[` style="left:${s.hotspots[i][0]}%;top:${s.hotspots[i][1]}%;bottom:auto;transform:translate(-50%,-50%)"`,` style="left:calc(${s.hotspots[i][0]}% + 26px);top:${s.hotspots[i][1]}%;bottom:auto"`]:["",""];
+  const pos=i=>{
+    if(!(s.hotspots&&s.hotspots[i]))return ["","",""];
+    const [x,y]=s.hotspots[i],flip=x>55;
+    return [` style="left:${x}%;top:${y}%;bottom:auto;transform:translate(-50%,-50%)"`,` style="--x:${x}%;--y:${y}%"`,flip?" pos flip":" pos"];
+  };
   wrap.innerHTML=s.groups.map((g,i)=>`
-    <button class="hotspot" data-slot="${i}" data-group="${i}" aria-label="${g[0]}"${pos(i)[0]}></button>
-    <div class="hotspot-label"${pos(i)[1]}>${g[0]}</div>`).join("");
+    <button class="hotspot" data-slot="${i}" data-group="${i}" aria-label="${escHtml(g[0])}"${pos(i)[0]}></button>
+    <div class="hotspot-label${pos(i)[2]}"${pos(i)[1]}>${escHtml(g[0])}</div>`).join("");
   wrap.querySelectorAll(".hotspot").forEach(h=>h.onclick=()=>focusKit(+h.dataset.group));
 }
 function renderCatalog(){
   const s=sceneData[sceneKey],cat=document.getElementById("catalog");
   cat.innerHTML=s.groups.map((g,gi)=>`
     <section class="group" data-group="${gi}">
-      <div class="group-title"><b>${g[0]}</b><span>${g[1].length} PRODUCTS</span></div>
+      <div class="group-title"><b>${escHtml(g[0])}</b><span>${g[1].length} ${homeT("PRODUCTS")}</span></div>
       ${g[1].map((p,pi)=>`
         <button class="product" data-g="${gi}" data-p="${pi}" data-product="${p.id}">
-          <div class="prod-img studio"${p.thumb?` style="background-image:url('${p.thumb}')"`:""}></div>
-          <div><b>${p.name}</b><span>${p.technique}${p.eco?" · ♻ Eco":""}</span></div>
-          <strong>€${p.price.toFixed(2)}</strong>
+          <div class="prod-img studio">${p.thumb?`<img src="${p.thumb}" srcset="${p.thumb} 1x, ${p.thumb2} 2x" width="68" height="56" alt="${escHtml(p.name)}" loading="lazy" decoding="async">`:""}</div>
+          <div><b>${escHtml(p.name)}</b><span>${escHtml(p.technique)}${p.eco?" · ♻ "+homeT("Eco"):""}</span></div>
+          <strong>${fmtEur(p.price,{from:true})}</strong>
         </button>`).join("")}
     </section>`).join("");
   cat.querySelectorAll(".product").forEach(b=>b.onclick=()=>openProductModal(b.dataset.product));
@@ -1079,9 +1179,9 @@ function renderMaterials(){
   const options=materialOptions();
   grid.innerHTML=options.map((m,i)=>`
     <button class="material-option ${i===0?"active":""}" data-index="${i}">
-      <img class="material-photo" src="${materialPhotos[m.id]}" alt="${m.name}" data-preview="${i}">
+      <img class="material-photo" src="${materialPhotos[m.id]}" alt="${escHtml(m.name)}" loading="lazy" decoding="async" data-preview="${i}">
       <b>${m.name}</b>
-      <span>${m.delta===0?"基础价":(m.delta>0?"+¥"+m.delta.toFixed(2):"-¥"+Math.abs(m.delta).toFixed(2))}</span>
+      <span>${m.delta===0?homeT("基础价"):fmtEurDelta(m.delta)}</span>
     </button>
   `).join("");
 
@@ -1178,8 +1278,8 @@ function priceInfo(qty){
 }
 function updatePrice(){
   const qty=Math.max(1,parseInt(document.getElementById("qty").value)||1),info=priceInfo(qty);
-  document.getElementById("unitPrice").textContent="¥"+info.unit.toFixed(2);
-  document.getElementById("totalPrice").textContent="¥"+info.total.toFixed(2);
+  document.getElementById("unitPrice").textContent=fmtEur(info.unit);
+  document.getElementById("totalPrice").textContent=fmtEur(info.total);
   document.getElementById("tierText").textContent=info.label;
   document.querySelectorAll(".tier-pill").forEach(x=>x.classList.toggle("active",+x.dataset.tier===info.tier));
 }
@@ -1426,7 +1526,9 @@ document.getElementById("paypalPayBtn").onclick=async()=>{
   finally{btn.disabled=false;btn.textContent="前往 PayPal 支付"}
 };
 
-renderSceneMenu();renderCart();switchScene(sceneKey);
+renderSceneMenu();renderCart();switchScene(sceneKey);applyHomeMeta();
+// Re-render the localized product area when the visitor switches language (keeps the current scene).
+window.addEventListener("wedding-language-change",()=>{sceneData=buildSceneData();switchScene(sceneKey);applyHomeMeta()});
 </script>
 
 
@@ -1442,10 +1544,10 @@ renderSceneMenu();renderCart();switchScene(sceneKey);
         <div class="focus-steps"><span>01 场景</span><span>02 套装</span><span>03 商品</span><span>04 设计</span><span>05 寄送</span></div>
       </div>
       <div class="product-wall">
-        <figure class="product-shot"><img src="assets/mockups/invitation.jpg" alt="Invitation"><figcaption><b>邀请卡</b><span>Stationery</span></figcaption></figure>
-        <figure class="product-shot"><img src="assets/mockups/welcome_sign.jpg" alt="Welcome sign"><figcaption><b>迎宾标识</b><span>Signage</span></figcaption></figure>
-        <figure class="product-shot"><img src="assets/mockups/tote.jpg" alt="Tote bag"><figcaption><b>伴手礼包</b><span>Gift & bag</span></figcaption></figure>
-        <figure class="product-shot"><img src="assets/mockups/mug.jpg" alt="Mug"><figcaption><b>纪念杯具</b><span>Drinkware</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/showcase/thumb/invitation-monogram.webp" width="480" height="480" loading="lazy" decoding="async" alt="Monogram wedding invitation"><figcaption><b>邀请卡</b><span>Stationery</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/showcase/thumb/tote-leaves.webp" width="480" height="480" loading="lazy" decoding="async" alt="Printed tote bag favour"><figcaption><b>伴手礼包</b><span>Gift & bag</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/showcase/thumb/mug-cafe.webp" width="480" height="480" loading="lazy" decoding="async" alt="Personalised ceramic mug"><figcaption><b>纪念杯具</b><span>Drinkware</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/showcase/thumb/tee-brand.webp" width="480" height="480" loading="lazy" decoding="async" alt="Custom printed T-shirt"><figcaption><b>定制服饰</b><span>Apparel</span></figcaption></figure>
       </div>
     </div>
   </div>
@@ -1456,9 +1558,9 @@ renderSceneMenu();renderCart();switchScene(sceneKey);
     <div class="focus-grid">
       <div class="studio-visual">
         <div class="studio-stack">
-          <img src="assets/showcase/invitation-monogram.jpg" alt="Invitation design">
-          <img src="assets/showcase/tote-leaves.jpg" alt="Tote design">
-          <img src="assets/showcase/hoodie-wave.jpg" alt="Hoodie design">
+          <img src="assets/showcase/thumb/invitation-monogram.webp" width="480" height="480" loading="lazy" decoding="async" alt="Invitation design">
+          <img src="assets/showcase/thumb/tote-leaves.webp" width="480" height="480" loading="lazy" decoding="async" alt="Tote design">
+          <img src="assets/showcase/thumb/hoodie-wave.webp" width="480" height="480" loading="lazy" decoding="async" alt="Hoodie design">
         </div>
       </div>
       <div class="focus-copy">
@@ -1995,18 +2097,35 @@ const wbThumbFonts=()=>{wbThemesReady().catch(()=>{});return Promise.all(WEDDING
 document.getElementById("wbLang").addEventListener("change",()=>{wbApplySampleLang();refreshWeddingPreview()});
 
 </script>
-<script src="account-auth.js">
+<div class="product-modal" id="productModal">
+  <div class="product-modal-card" style="position:relative">
+    <button class="product-modal-close" id="productModalClose">×</button>
+    <div class="product-modal-img"><img id="productModalImg" alt="" decoding="async"></div>
+    <div class="product-modal-info">
+      <small id="productModalCat" style="color:var(--muted);font-size:11px;letter-spacing:.08em">PRODUCT</small>
+      <h3 id="productModalName"></h3>
+      <div class="price" id="productModalPrice"></div>
+      <div id="productModalColors" class="color-swatches"></div>
+      <div class="product-modal-actions">
+        <button class="primary" id="productModalDesign">开始设计</button>
+        <button class="secondary" id="productModalClose2">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="account-auth.js"></script>
+<script>
 // Product detail modal (no page navigation)
 let currentModalProduct = null;
 function openProductModal(productId) {
-  const p = studioProductsById[productId];
-  if (!p) return;
+  if (!studioProductsById[productId]) return;
+  const p = homeProduct(productId);
   currentModalProduct = p;
   document.getElementById("productModalName").textContent = p.name || productId;
-  document.getElementById("productModalPrice").textContent = "€" + (p.price || p.base_cost_eur || 0).toFixed(2);
+  document.getElementById("productModalPrice").textContent = fmtEur(p.price, {from:true});
   document.getElementById("productModalCat").textContent = (p.category || "PRODUCT").toUpperCase();
   const img = document.getElementById("productModalImg");
-  img.src = p.thumb || p.mockup_photo?.src || "";
+  img.src = p.image || p.thumb || "";
   img.alt = p.name || productId;
   // Color swatches
   const colorsEl = document.getElementById("productModalColors");
@@ -2022,7 +2141,7 @@ function openProductModal(productId) {
         // Try color-specific image, fall back to main
         const colorKey = (btn.dataset.color || "").replace("#","").toLowerCase();
         const colorImg = `/assets/mockups/${productId}_${colorKey}.jpg`;
-        const mainImg = p.thumb || p.mockup_photo?.src || "";
+        const mainImg = p.image || p.thumb || "";
         const test = new Image();
         test.onload = () => { img.src = colorImg; };
         test.onerror = () => { img.src = mainImg; };
@@ -2044,21 +2163,5 @@ document.getElementById("productModal").onclick = e => {
 };
 </script>
 
-<div class="product-modal" id="productModal">
-  <div class="product-modal-card" style="position:relative">
-    <button class="product-modal-close" id="productModalClose">×</button>
-    <div class="product-modal-img"><img id="productModalImg" src="" alt=""></div>
-    <div class="product-modal-info">
-      <small id="productModalCat" style="color:var(--muted);font-size:11px;letter-spacing:.08em">PRODUCT</small>
-      <h3 id="productModalName"></h3>
-      <div class="price" id="productModalPrice"></div>
-      <div id="productModalColors" class="color-swatches"></div>
-      <div class="product-modal-actions">
-        <button class="primary" id="productModalDesign">开始设计</button>
-        <button class="secondary" id="productModalClose2">关闭</button>
-      </div>
-    </div>
-  </div>
-</div>
 </body>
 </html>
