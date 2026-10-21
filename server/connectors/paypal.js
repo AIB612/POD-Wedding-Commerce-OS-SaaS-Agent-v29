@@ -43,13 +43,13 @@ const money = (currency, v) => ({ currency_code: currency, value: Number(v || 0)
 
 /**
  * Orders v2 create. When `breakdown` + `items` are given, PayPal shows line items and validates
- * item_total = Σ unit_amount × quantity and value = item_total + shipping + tax_total.
+ * item_total = Σ unit_amount × quantity and value = item_total + shipping + tax_total − discount.
  * `shipping` (name/address) pre-fills the buyer's address (SET_PROVIDED_ADDRESS).
  */
 export async function createPayPalOrder({ amount, currency = "USD", referenceId, returnUrl, cancelUrl, description, items, breakdown, shipping, creds }) {
   const unit = { reference_id: referenceId, ...(description ? { description: String(description).slice(0, 127) } : {}), amount: money(currency, amount) };
   if (breakdown && Array.isArray(items) && items.length) {
-    unit.amount.breakdown = { item_total: money(currency, breakdown.item_total), shipping: money(currency, breakdown.shipping), tax_total: money(currency, breakdown.tax_total) };
+    unit.amount.breakdown = { item_total: money(currency, breakdown.item_total), shipping: money(currency, breakdown.shipping), tax_total: money(currency, breakdown.tax_total), ...(Number(breakdown.discount) > 0 ? { discount: money(currency, breakdown.discount) } : {}) };
     unit.items = items.slice(0, 100).map(i => ({
       name: String(i.name || i.sku || "Item").slice(0, 127), ...(i.sku ? { sku: String(i.sku).slice(0, 127) } : {}),
       ...(i.description ? { description: String(i.description).slice(0, 127) } : {}),

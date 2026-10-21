@@ -12,8 +12,9 @@ import { catalogOverview } from "../services/catalog-service.js";
 import { addRecord, findRecord, listForTenant, updateRecord } from "../saas-store.js";
 import { HttpError } from "../http/middleware.js";
 import { protocolRegistry, ucpProfile, a2aAgentCard, acpFeed } from "../protocols/commerce-protocols.js";
-import { createStorefrontCheckout, createTwintCheckout, twintOrderStatus, paymentMethods, handlePayPalReturn, publicOrderStatus, quoteStorefront, orderConfirmation, orderToken } from "../services/checkout-service.js";
+import { createStorefrontCheckout, createTwintCheckout, twintOrderStatus, paymentMethods, handlePayPalReturn, publicOrderStatus, quoteStorefront, orderConfirmation, orderToken, handlePayPalCancel } from "../services/checkout-service.js";
 import { publicPriceList } from "../services/price-list-service.js";
+import { publicFees } from "../services/fees-service.js";
 import { publicProof, approvePublicProof, requestPublicProofChanges } from "../services/proof-service.js";
 import { createPayPalOrder, capturePayPalOrder } from "../connectors/paypal.js";
 import { submitRsvp } from "../services/rsvp-service.js";
@@ -23,7 +24,7 @@ const VERSION = JSON.parse(fs.readFileSync(new URL("../../package.json", import.
 
 export function publicRouter({ root, generatedDir }) {
   const router = express.Router();
-  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/admin-prices.html": "admin-prices.html", "/admin/prices": "admin-prices.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html" };
+  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/admin-prices.html": "admin-prices.html", "/admin/prices": "admin-prices.html", "/admin-fees.html": "admin-fees.html", "/admin/fees": "admin-fees.html", "/admin-promos.html": "admin-promos.html", "/admin/promos": "admin-promos.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
   for (const [route, file] of Object.entries(pages)) router.get(route, (_, res) => res.sendFile(path.join(root, file), noStore));
 
@@ -74,25 +75,32 @@ export function publicRouter({ root, generatedDir }) {
   // Storefront checkout (server-side quote → PayPal)
   const payLimit = rateLimit({ bucket: "checkout", windowMs: 60_000, max: 20 });
   router.post("/api/payments/paypal/create", payLimit, ah(async (req, res) => {
-    res.json(await createStorefrontCheckout({ tenantId: req.tenantId, user: req.user || null, body: req.body || {}, baseUrl: baseUrl() }));
+    res.json(await createStorefrontCheckout({ tenantId: req.tenantId, user: req.user || null, guestId: req.guestId || null, body: req.body || {}, baseUrl: baseUrl() }));
   }));
   // Payment methods the storefront may show (configured flags only, no secrets)
   router.get("/api/payments/methods", rateLimit({ bucket: "payment-methods", windowMs: 60_000, max: 60 }), ah(async (req, res) => res.json(await paymentMethods(req.tenantId))));
   // TWINT (direct TWINT AG merchant integration — skeleton; fails closed with twint_not_configured / twint_not_implemented)
   router.post("/api/payments/twint/create", payLimit, ah(async (req, res) => {
-    res.json(await createTwintCheckout({ tenantId: req.tenantId, user: req.user || null, body: req.body || {}, baseUrl: baseUrl() }));
+    res.json(await createTwintCheckout({ tenantId: req.tenantId, user: req.user || null, guestId: req.guestId || null, body: req.body || {}, baseUrl: baseUrl() }));
   }));
   router.get("/api/payments/twint/status", payLimit, ah(async (req, res) => res.json(await twintOrderStatus(req.query.order))));
   // Cart / checkout preview: same server-side quote that checkout uses (merchandise + shipping + tax).
   const quoteLimit = rateLimit({ bucket: "shipping-quote", windowMs: 60_000, max: 60 });
   router.post("/api/storefront/shipping/quote", quoteLimit, ah(async (req, res) => {
     const b = req.body || {};
-    res.json(await quoteStorefront({ tenantId: req.tenantId, cart: b.cart, currency: b.currency, country: b.country, postal_code: b.postal_code, shipping_method: b.shipping_method }));
+    res.json(await quoteStorefront({ tenantId: req.tenantId, cart: b.cart, currency: b.currency, country: b.country, postal_code: b.postal_code, shipping_method: b.shipping_method, promo_code: b.promo_code, proof_choice: b.proof_choice }));
   }));
   router.get("/api/payments/paypal/return", payLimit, ah(async (req, res) => {
     const { orderId, status } = await handlePayPalReturn({ orderId: req.query.order, paypalToken: req.query.token });
+    // Declined / voided payment → back to the Review step with the cart intact; pending stays on the status page.
+    if (/^(FAILED|DECLINED|VOIDED|UNKNOWN)$/.test(status)) return res.redirect(`/checkout.html?payment=failed`);
     res.redirect(`/payment-success.html?order=${encodeURIComponent(orderId || "")}${orderId ? `&t=${orderToken(orderId)}` : ""}&status=${encodeURIComponent(status)}`);
   }));
+  router.get("/api/payments/paypal/cancel", payLimit, ah(async (req, res) => {
+    await handlePayPalCancel({ orderId: req.query.order, token: req.query.t });
+    res.redirect(`/checkout.html?payment=cancelled`);
+  }));
+  router.get("/api/storefront/fees", (req, res) => { res.setHeader("Cache-Control", "no-cache"); res.json(publicFees()); });
   const statusLimit = rateLimit({ bucket: "status", windowMs: 60_000, max: 60 });
   // Order confirmation (payment-success.html): protected by the signed token from the return URL.
   router.get("/api/orders/:id/confirmation", statusLimit, ah(async (req, res) => { res.setHeader("Cache-Control", "private, no-store"); res.json(await orderConfirmation(req.params.id, req.query.t)); }));

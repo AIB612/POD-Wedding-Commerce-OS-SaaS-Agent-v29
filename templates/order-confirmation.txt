@@ -3,12 +3,16 @@ Thank you{{#customer_name}}, {{customer_name}}{{/customer_name}}! Order {{order_
 {{#items}}- {{name}} ({{material}}{{#sizes}}, {{sizes}}{{/sizes}}) × {{quantity}}: {{line_total}}
 {{/items}}
 Subtotal: {{subtotal}}
-Shipping: {{shipping}}
-VAT: {{tax}}
+{{#packaging}}Packaging add-ons: {{packaging}}
+{{/packaging}}{{#discount}}Discount ({{promo_code}}): {{discount}}
+{{/discount}}Shipping: {{shipping}}
+{{tax_label}}: {{tax}}
 Total: {{total}}
 
 Ship to: {{address}}
 
-Next steps: proof by e-mail → production after your approval → shipping with tracking.
+{{proof_note}}
+{{#delivery}}Estimated delivery: {{delivery}}
+{{/delivery}}
 View your order: {{order_url}}
 My account: {{account_url}}

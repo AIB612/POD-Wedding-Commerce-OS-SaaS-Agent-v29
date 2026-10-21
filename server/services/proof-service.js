@@ -29,7 +29,7 @@ export async function publicProof(token) {
   const order = await findRecord("orders", proof.order_id);
   return {
     proof: { status: proof.status, proof_url: proof.proof_url || "", material: proof.material || "" },
-    order: { id: proof.order_id, items: (order?.items || []).map(i => ({ name: i.name, quantity: i.quantity, material: i.material || "" })) }
+    order: { id: proof.order_id, proof_choice: order?.proof_choice || "proof", production_blocked: !!order?.production_blocked, items: (order?.items || []).map(i => ({ name: i.name, quantity: i.quantity, material: i.material || "" })) }
   };
 }
 
@@ -43,7 +43,7 @@ export async function approvePublicProof(token) {
   await updateRecord("proofs", proof.id, { status: "Approved", approved_at: now, updated_at: now });
   const order = await findRecord("orders", proof.order_id);
   if (order) {
-    await updateRecord("orders", proof.order_id, { status: "Approved", updated_at: now });
+    await updateRecord("orders", proof.order_id, { status: "Approved", production_blocked: false, proof_approved_at: now, updated_at: now });
     await addRecord("order_events", { id: `evt_${crypto.randomBytes(6).toString("hex")}`, tenant_id: order.tenant_id, order_id: order.id, event_type: "proof_approved", source: "customer", payload: { proof_id: proof.id }, event_time: now });
   }
   if (order?.customer_email) await sendEmail({ tenantId: order.tenant_id, userId: order.user_id || null, to: order.customer_email, type: "proof_approved", related_id: order.id, subject: `Proof approved · ${order.id}`, text: `Your proof for ${order.id} is approved. We will continue with the next production step.`, html: `<p>Your proof for <b>${order.id}</b> is approved.</p><p>We will continue with the next production step.</p><p><a href="${baseUrl()}/account.html">View order status</a></p>` });

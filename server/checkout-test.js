@@ -91,6 +91,40 @@ try {
   // 7. Checkout page is served.
   assert.equal((await realFetch(base + "/checkout.html")).status, 200); assert.equal((await realFetch(base + "/checkout.js")).status, 200);
   result.checkout_page = "pass";
+
+  // Proof choice at Review: non-studio carts default to "approve"; explicit proof-first blocks production until approval.
+  {
+    const qa = await quoteStorefront({ tenantId: T, cart, country: "CH", postal_code: "4051" });
+    assert.equal(qa.proof_choice, "approve");
+    const qp = await quoteStorefront({ tenantId: T, cart, country: "CH", postal_code: "4051", proof_choice: "proof" });
+    assert.equal(qp.proof_choice, "proof"); assert.ok(qp.delivery.production_days > qa.delivery.production_days);
+    const cop = await (await post("/api/payments/paypal/create", { ...body, proof_choice: "proof" })).json();
+    let op = await findRecord("orders", cop.order_id); assert.equal(op.proof_choice, "proof");
+    await handlePayPalReturn({ orderId: op.id, paypalToken: op.paypal_order_id });
+    op = await findRecord("orders", cop.order_id); assert.equal(op.status, "Needs approval"); assert.equal(op.production_blocked, true);
+    const r1 = await realFetch(base + `/api/saas/orders/${op.id}/status`, { method: "POST", headers: { "Content-Type": "application/json", "x-admin-api-key": "k", "x-action-approved": "true" }, body: JSON.stringify({ status: "Production" }) });
+    assert.equal(r1.status, 409, "admin cannot start production before approval");
+    const html = fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "..", "checkout.html"), "utf8");
+    assert.match(html, /id="proofOptions"/); assert.match(fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "..", "checkout.js"), "utf8"), /Send me a proof first|co\.proofFirst/);
+    result.proof_choice = "pass";
+  }
+  // Delivery estimate per shipping option (business days only), legacy SKUs use the admin default production days.
+  {
+    const q = await quoteStorefront({ tenantId: T, cart, country: "DE", postal_code: "10115" });
+    for (const o of q.shipping_options) { assert.ok(o.delivery.from <= o.delivery.to); assert.equal(o.carrier_days.length, 2); for (const d of [o.delivery.from, o.delivery.to]) assert.ok(![0, 6].includes(new Date(d + "T12:00:00Z").getUTCDay())); }
+    result.delivery_estimate = "pass";
+  }
+  // Error-return path: PayPal cancel → /checkout.html?payment=cancelled (draft cancelled, cart is client-side and untouched);
+  // unsupported destination → shipping_zone_not_found (400, clear message key in i18n).
+  {
+    const c = await (await post("/api/payments/paypal/create", body)).json();
+    const rr = await realFetch(base + `/api/payments/paypal/cancel?order=${c.order_id}&t=${c.order_token}`, { redirect: "manual" });
+    assert.equal(rr.headers.get("location"), "/checkout.html?payment=cancelled");
+    assert.equal((await findRecord("orders", c.order_id)).payment_status, "cancelled");
+    const i18n = fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "..", "i18n.js"), "utf8");
+    for (const k of ["co.cancelled", "co.failed", "co.err.unsupported_country", "co.err.network", "co.priceUpdated", "co.reopenStudio"]) assert.ok(i18n.includes(`'${k}'`), k);
+    result.error_return_path = "pass";
+  }
 } finally { globalThis.fetch = realFetch; server.close(); }
 console.log(JSON.stringify(result, null, 2));
 process.exit(0);

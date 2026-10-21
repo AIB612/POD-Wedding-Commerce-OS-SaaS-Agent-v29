@@ -87,6 +87,12 @@ a{color:inherit}
  .co-step{padding:16px;border-radius:16px}
 }
 @media(max-width:520px){.co-grid{grid-template-columns:1fr}.co-progress li{font-size:11px}.co-btn{width:100%}}
+[hidden]{display:none!important}
+.co-promo{margin:16px 0 6px}.co-promo label{display:block;font-weight:600;margin-bottom:6px}.co-promo-row{display:flex;gap:8px}.co-promo-row input{flex:1;min-height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit;text-transform:uppercase;background:#fff}
+.co-btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}.co-promo-on{font-size:13px;color:#2f6b3f;margin-top:6px}.co-disc span:last-child{color:#2f6b3f}
+.co-opt .co-eta{display:block;color:#2f6b3f;font-weight:600;font-size:12.5px}.co-warn{display:block;margin-top:4px;padding:6px 8px;border-radius:8px;background:#fbeeea;color:var(--err);font-size:12px}.co-warn a{font-weight:700}
+.co-note{display:block;margin-top:4px;padding:6px 8px;border-radius:8px;background:#fff7e0;color:#7a5a00;font-size:12px}.co-msg .co-retry{margin-left:8px;font-weight:700;text-decoration:underline;background:none;border:0;color:inherit;cursor:pointer;font:inherit}
+@media(max-width:900px){.co-aside{position:sticky;top:0;z-index:20}.co-sum.open{max-height:70vh;overflow:auto}}
 </style>
 </head>
 <body>
@@ -107,12 +113,14 @@ a{color:inherit}
       <div class="co-lines" id="sumLines"></div>
       <div class="co-rows">
         <div><span data-i18n="cart.subtotal">Subtotal</span><strong id="sumSubtotal">—</strong></div>
+        <div id="sumPackRow" hidden><span data-i18n="co.packaging">Packaging add-ons</span><span id="sumPack">—</span></div>
+        <div id="sumDiscRow" class="co-disc" hidden><span id="sumDiscLabel">Discount</span><span id="sumDisc">—</span></div>
         <div><span data-i18n="cart.shipping">Shipping</span><span id="sumShipping" data-i18n="cart.shippingLater">Calculated at checkout</span></div>
         <div><span id="sumTaxLabel" data-i18n="co.taxNone">VAT</span><span id="sumTax">—</span></div>
         <div class="total"><span data-i18n="cart.total">Total</span><strong id="sumTotal">—</strong></div>
       </div>
       <div class="co-fine" id="sumFine"></div>
-      <ul class="co-trust"><li data-i18n="cart.trust.secure">Secure, encrypted payment</li><li data-i18n="cart.trust.proof">Digital proof by e-mail within 2 h of payment</li><li data-i18n="cart.trust.delivery">Delivered in about 14 days after approval</li></ul>
+      <ul class="co-trust"><li data-i18n="cart.trust.secure">Secure, encrypted payment</li><li data-i18n="cart.trust.proof">Digital proof by e-mail within 2 h of payment</li><li id="sumArrives">—</li></ul>
     </section>
   </aside>
 
@@ -138,12 +146,12 @@ a{color:inherit}
         <div class="co-h3" data-i18n="co.address">Shipping address</div>
         <div class="co-grid">
           <div class="co-field co-full"><label for="country" data-i18n="co.country">Country</label><select id="country" name="country" autocomplete="country" required></select><span class="co-err"></span></div>
-          <div class="co-field co-full"><label for="name" data-i18n="co.name">Full name</label><input id="name" name="name" autocomplete="name" required><span class="co-err"></span></div>
+          <div class="co-field co-full"><label for="name" data-i18n="co.name">Full name</label><input id="name" name="name" type="text" autocomplete="name" autocapitalize="words" required><span class="co-err"></span></div>
           <div class="co-field co-full"><label for="address1" data-i18n="co.line1">Street and house number</label><input id="address1" name="address1" autocomplete="address-line1" required><span class="co-err"></span></div>
           <div class="co-field co-full"><label for="address2" data-i18n="co.line2">Address line 2 (optional)</label><input id="address2" name="address2" autocomplete="address-line2"></div>
-          <div class="co-field"><label for="postal" data-i18n="co.postal">Postcode</label><input id="postal" name="postal" autocomplete="postal-code" inputmode="numeric" required><span class="co-err"></span></div>
-          <div class="co-field"><label for="city" data-i18n="co.city">City</label><input id="city" name="city" autocomplete="address-level2" required><span class="co-err"></span></div>
-          <div class="co-field co-full"><label for="phone" data-i18n="co.phone">Phone (optional, needed for express)</label><input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel"></div>
+          <div class="co-field"><label for="postal" data-i18n="co.postal">Postcode</label><input id="postal" name="postal" type="text" autocomplete="postal-code" inputmode="numeric" autocapitalize="characters" spellcheck="false" maxlength="12" required><span class="co-err"></span></div>
+          <div class="co-field"><label for="city" data-i18n="co.city">City</label><input id="city" name="city" type="text" autocomplete="address-level2" autocapitalize="words" required><span class="co-err"></span></div>
+          <div class="co-field co-full"><label for="phone" data-i18n="co.phone">Phone (optional, needed for express)</label><input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+41 79 123 45 67"></div>
         </div>
         <button class="co-btn" type="submit" data-i18n="co.continueShipping">Continue to shipping</button>
       </form>
@@ -175,6 +183,14 @@ a{color:inherit}
         <dl class="co-review" id="review"></dl>
         <div class="co-h3" data-i18n="co.items">Items</div>
         <div class="co-lines co-review-lines" id="reviewLines"></div>
+        <div class="co-h3" data-i18n="co.proofTitle">Proof</div>
+        <div class="co-options" id="proofOptions" role="radiogroup" data-i18n-attr="aria-label:co.proofTitle"></div>
+        <form class="co-promo" id="promoForm" novalidate>
+          <label for="promo" data-i18n="co.promoLabel">Discount code</label>
+          <div class="co-promo-row"><input id="promo" name="promo" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32"><button class="co-btn ghost" type="submit" id="promoApply" data-i18n="co.promoApply">Apply</button></div>
+          <div class="co-promo-on" id="promoOn" hidden><span id="promoOnText"></span> <button type="button" class="co-change" style="display:inline" id="promoRemove" data-i18n="co.promoRemove">Remove</button></div>
+          <div class="co-msg" id="msgPromo" role="alert"></div>
+        </form>
         <div class="co-rows" id="reviewTotals"></div>
         <label class="co-terms"><input type="checkbox" id="terms"><span data-i18n="co.terms4">I accept the terms of sale and the privacy policy. I understand that personalised products are made to my specifications and are therefore excluded from the right of withdrawal.</span></label>
         <div class="co-terms-links" style="font-size:12px;margin:4px 0 0 30px"><a href="/terms" target="_blank" rel="noopener" data-i18n="co.termsLink">Terms of sale</a> · <a href="/privacy" target="_blank" rel="noopener" data-i18n="co.privacyLink">Privacy policy</a></div>

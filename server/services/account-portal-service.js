@@ -28,7 +28,7 @@ export function customerStatus(o) {
   if (/deliver/.test(s)) return "delivered";
   if (/ship|transit|fulfil/.test(s)) return "shipped";
   if (/production|approved|printing/.test(s)) return "in_production";
-  if (/proof/.test(s)) return "proof";
+  if (/proof|needs approval/.test(s)) return "proof";
   if (p === "paid" || /paid/.test(s)) return "paid";
   return "awaiting_payment";
 }
@@ -37,7 +37,8 @@ const RANK = { awaiting_payment: 0, paid: 1, proof: 2, in_production: 3, shipped
 
 function lineOut(l) {
   return { product_id: l.product_id || "", sku: l.sku || "", name: l.name || l.sku || "Item", quantity: Number(l.quantity) || 1, material: l.material || "",
-    material_id: l.material_id || "", unit_price: round2(l.unit_price), line_total: round2(l.line_total ?? l.unit_price * l.quantity), customization: l.customization || "", thumb: thumbFor(l.product_id) };
+    material_id: l.material_id || "", unit_price: round2(l.unit_price), line_total: round2(l.line_total ?? l.unit_price * l.quantity), customization: l.customization || "", thumb: thumbFor(l.product_id),
+    mockup: l.thumb_url || "", studio_project_id: l.studio_project_id || "", reopen_url: l.studio_project_id ? `/studio.html?project=${encodeURIComponent(l.studio_project_id)}` : "", sizes: l.sizes || {}, packaging: l.packaging || null };
 }
 function total(o) { return round2(o.grand_total ?? o.revenue ?? 0); }
 function summary(o) {
@@ -76,7 +77,8 @@ export async function orderDetail(user, id) {
     shipping_method: typeof o.shipping_method === "object" ? clean(o.shipping_method?.label || o.shipping_method?.id) : clean(o.shipping_method),
     payment: { provider: o.payment_provider || "", status: o.payment_status || "pending" }, tracking: o.tracking_number ? { number: o.tracking_number, url: o.tracking_url || "" } : null,
     shipping_address: { name: a.name || "", address1: a.address1 || "", address2: a.address2 || "", postal_code: a.postal_code || "", city: a.city || "", country: a.country || "", phone: a.phone || "" },
-    proof: proof ? { status: proof.status, approval_url: proof.proof_url && proof.token ? `/proof.html?token=${proof.token}` : "" } : null, timeline } };
+    proof: proof ? { status: proof.status, choice: o.proof_choice || "proof", production_blocked: !!o.production_blocked, approval_url: proof.token ? `/proof.html?token=${proof.token}` : "", ready: !!proof.proof_url } : null,
+    proof_choice: o.proof_choice || "proof", delivery_estimate: o.delivery_estimate || null, packaging: round2(o.packaging_amount || 0), discount: round2(o.discount_amount || 0), promo_code: o.promo?.code || "", prices_include_vat: !!o.prices_include_vat, timeline } };
 }
 
 // ---- addresses ----

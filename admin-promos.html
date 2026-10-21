@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="robots" content="noindex"/>
+<title>Promo codes · Admin</title>
+<style>
+:root{--ink:#1f1d1a;--muted:#77736d;--line:#e7e4de;--soft:#f6f5f2;--accent:#9a6d57;--err:#a8402f;--ok:#2f6b3f}
+*{box-sizing:border-box}body{margin:0;background:var(--soft);color:var(--ink);font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header a{color:var(--muted);font-size:13px}h1{font-size:18px;margin:0}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 24px 60px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.bar input[type=search]{min-width:240px;flex:1;max-width:380px}
+input,select,button{font:inherit}input,select{border:1px solid #d6d2cb;border-radius:9px;padding:8px 10px;background:#fff;min-height:38px}
+.seg{display:inline-flex;border:1px solid #d6d2cb;border-radius:9px;overflow:hidden;background:#fff}.seg button{border:0;background:none;padding:8px 14px;cursor:pointer;color:var(--muted);font-weight:600}.seg button.on{background:var(--ink);color:#fff}
+.btn{border:0;border-radius:9px;background:var(--ink);color:#fff;padding:0 16px;min-height:38px;font-weight:600;cursor:pointer}.btn:disabled{opacity:.4;cursor:default}.btn.ghost{background:#fff;color:var(--ink);border:1px solid #d6d2cb}
+.meta{font-size:12.5px;color:var(--muted)}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:860px}th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{position:sticky;top:0;background:#fbfaf8;font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap}
+td.p b{display:block;font-size:13px}td.p span{font-size:11.5px;color:var(--muted)}
+td input{width:86px;min-height:32px;padding:5px 8px;text-align:right}td input.chg{border-color:var(--accent);background:#fbf3ee}td input.bad{border-color:var(--err);background:#fbeeea}
+.seed{font-size:11px;color:var(--muted);display:block;text-align:right}
+.msg{margin-left:auto;font-size:13px}.msg.ok{color:var(--ok)}.msg.err{color:var(--err)}
+.login{max-width:420px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px}.login input{width:100%;margin:10px 0}
+@media(max-width:700px){.wrap{padding:14px}header{padding:10px 14px}}
+</style>
+<style>form.card{padding:16px 18px;margin-bottom:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px 14px;align-items:end}form.card label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}form.card h2{grid-column:1/-1;margin:0;font-size:15px;color:var(--ink)}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700;background:#e8f2ea;color:var(--ok)}.pill.off{background:#f1eeea;color:var(--muted)}.pill.exp{background:#fbeeea;color:var(--err)}table{min-width:760px}</style>
+</head>
+<body>
+<header><h1>Promo codes <span class="meta">· one code per order, applied after volume tiers</span></h1><nav><a href="/admin-prices.html">Price list</a> · <a href="/admin-fees.html">Fees &amp; tax</a> · <a href="/admin.html">← Admin</a></nav></header>
+<div class="wrap" id="app">
+  <form class="card" id="f" novalidate>
+    <h2 id="fTitle">New promo code</h2>
+    <label>Code<input id="code" required maxlength="32" autocapitalize="characters" placeholder="WEDDING10"></label>
+    <label>Type<select id="type"><option value="percent">Percent off</option><option value="fixed">Fixed amount</option></select></label>
+    <label id="lValue">Percent (%)<input id="value" inputmode="decimal" placeholder="10"></label>
+    <label id="lChf">Amount CHF<input id="chf" inputmode="decimal"></label>
+    <label id="lEur">Amount EUR<input id="eur" inputmode="decimal"></label>
+    <label>Min. order CHF<input id="minChf" inputmode="decimal" placeholder="0"></label>
+    <label>Min. order EUR<input id="minEur" inputmode="decimal" placeholder="0"></label>
+    <label>Expires<input id="exp" type="date"></label>
+    <label>Usage limit<input id="limit" inputmode="numeric" placeholder="unlimited"></label>
+    <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="active" checked> Active</label>
+    <div style="display:flex;gap:8px"><button class="btn" id="saveBtn">Create</button><button class="btn ghost" type="button" id="cancelEdit" hidden>Cancel</button></div>
+    <span class="msg" id="msg" aria-live="polite" style="grid-column:1/-1;margin:0"></span>
+  </form>
+  <div class="card"><table><thead><tr><th>Code</th><th>Discount</th><th>Min. order</th><th>Expires</th><th>Used</th><th>Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+  <p class="meta">Usage counts only paid (captured) orders. Codes are validated on the server for every quote and again when the payment is created.</p>
+</div>
+<script>
+(function(){
+const KEY_STORE="wedding-commerce-admin-key",$=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const key=()=>{try{return sessionStorage.getItem(KEY_STORE)||""}catch{return ""}};
+async function api(url,opt={}){const r=await fetch(url,{...opt,headers:{"Content-Type":"application/json","x-admin-api-key":key(),"x-action-approved":"true",...(opt.headers||{})}});if(r.status===401){askKey();throw new Error("auth")}const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.message||d.error||"failed");return d}
+function askKey(){$("app").innerHTML=`<form class="login" id="lf"><b>Admin API key</b><p class="meta">Same key as the admin dashboard (ADMIN_API_KEY).</p><input type="password" id="k" autocomplete="current-password" required><button class="btn">Unlock</button></form>`;$("lf").onsubmit=e=>{e.preventDefault();try{sessionStorage.setItem(KEY_STORE,$("k").value)}catch{}location.reload()}}
+let list=[],editing=null;
+const typeUi=()=>{const p=$("type").value==="percent";$("lValue").hidden=!p;$("lChf").hidden=p;$("lEur").hidden=p};
+const disc=p=>p.type==="percent"?`${p.value}%`:[p.amounts?.CHF?`CHF ${p.amounts.CHF.toFixed(2)}`:"",p.amounts?.EUR?`EUR ${p.amounts.EUR.toFixed(2)}`:""].filter(Boolean).join(" / ");
+function render(){
+  $("rows").innerHTML=list.map(p=>{const exp=p.expires_at&&Date.parse(p.expires_at)<Date.now(),full=p.usage_limit!=null&&p.used_count>=p.usage_limit;
+    return `<tr><td><b>${esc(p.code)}</b></td><td>${esc(disc(p))}</td><td class="meta">${[p.min_order?.CHF?`CHF ${p.min_order.CHF}`:"",p.min_order?.EUR?`EUR ${p.min_order.EUR}`:""].filter(Boolean).join(" / ")||"—"}</td><td>${p.expires_at?esc(p.expires_at.slice(0,10)):"—"}</td><td>${p.used_count||0}${p.usage_limit!=null?` / ${p.usage_limit}`:""}</td>
+    <td><span class="pill ${!p.active?"off":exp||full?"exp":""}">${!p.active?"Inactive":exp?"Expired":full?"Used up":"Active"}</span></td>
+    <td style="white-space:nowrap"><button class="btn ghost" data-edit="${esc(p.id)}">Edit</button> <button class="btn ghost" data-tog="${esc(p.id)}">${p.active?"Deactivate":"Activate"}</button> <button class="btn ghost" data-del="${esc(p.id)}">Delete</button></td></tr>`}).join("")||`<tr><td colspan="7" class="meta">No promo codes yet.</td></tr>`;
+}
+async function load(){list=(await api("/api/saas/promos")).promos;render()}
+function fill(p){editing=p?.id||null;$("fTitle").textContent=p?`Edit ${p.code}`:"New promo code";$("saveBtn").textContent=p?"Save":"Create";$("cancelEdit").hidden=!p;
+  $("code").value=p?.code||"";$("type").value=p?.type||"percent";$("value").value=p?.type==="percent"?p.value:"";$("chf").value=p?.amounts?.CHF||"";$("eur").value=p?.amounts?.EUR||"";$("minChf").value=p?.min_order?.CHF||"";$("minEur").value=p?.min_order?.EUR||"";$("exp").value=p?.expires_at?.slice(0,10)||"";$("limit").value=p?.usage_limit??"";$("active").checked=p?p.active!==false:true;typeUi()}
+$("type").onchange=typeUi;$("cancelEdit").onclick=()=>fill(null);
+$("f").onsubmit=async e=>{e.preventDefault();const b={code:$("code").value,type:$("type").value,value:Number($("value").value||0),amounts:{CHF:Number($("chf").value||0),EUR:Number($("eur").value||0)},min_order:{CHF:Number($("minChf").value||0),EUR:Number($("minEur").value||0)},expires_at:$("exp").value?$("exp").value+"T23:59:59Z":null,usage_limit:$("limit").value===""?null:Number($("limit").value),active:$("active").checked};
+  try{await api(editing?`/api/saas/promos/${editing}`:"/api/saas/promos",{method:editing?"PUT":"POST",body:JSON.stringify(b)});$("msg").className="msg ok";$("msg").textContent=editing?"Saved.":"Created.";fill(null);await load()}catch(err){$("msg").className="msg err";$("msg").textContent=err.message}};
+$("rows").onclick=async e=>{const b=e.target.closest("button");if(!b)return;const p=list.find(x=>x.id===(b.dataset.edit||b.dataset.tog||b.dataset.del));if(!p)return;
+  if(b.dataset.edit)return fill(p);
+  try{if(b.dataset.tog)await api(`/api/saas/promos/${p.id}`,{method:"PUT",body:JSON.stringify({active:!p.active})});else if(confirm(`Delete ${p.code}?`))await api(`/api/saas/promos/${p.id}`,{method:"DELETE"});await load()}catch(err){$("msg").className="msg err";$("msg").textContent=err.message}};
+typeUi();load().catch(e=>{if(e.message!=="auth"){$("msg").className="msg err";$("msg").textContent=e.message}});
+})();
+</script>
+</body></html>

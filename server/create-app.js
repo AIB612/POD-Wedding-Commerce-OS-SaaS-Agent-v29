@@ -14,11 +14,13 @@ import { adminRouter } from "./routes/admin.js";
 import carrierRates from "./routes/carrier-rates.js";
 import { studioRouter } from "./routes/studio.js";
 import { initPriceList } from "./services/price-list-service.js";
+import { initFees } from "./services/fees-service.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 export async function createApp({ root = projectRoot, generatedDir = path.join(projectRoot, "generated") } = {}) {
   await fs.mkdir(generatedDir, { recursive: true });
+  await initFees(); // admin fees & tax (seeded from the previous zone values, packaging 0)
   await initPriceList(); // admin price list (seeded from the retail formula on first start)
   const app = express();
   app.disable("x-powered-by");

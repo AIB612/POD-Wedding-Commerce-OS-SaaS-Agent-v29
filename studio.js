@@ -632,7 +632,20 @@
     renderRoleBar();
     $("#app").innerHTML = vPage(); S.animate = false;
     if (S.design && $("#designThumb")) $("#designThumb").src = S.design.canvas.toDataURL("image/png");
-    drawAll(); drawPackaging(); applyStatic();
+    drawAll(); drawPackaging(); applyStatic(); renderStickyBar();
+  }
+  // Mobile (≤720px): sticky bottom bar with the live price and "Add to cart" (same action and gating as the review button).
+  function renderStickyBar() {
+    let bar = document.getElementById("stickyBuy");
+    if (!bar) { bar = document.createElement("div"); bar.id = "stickyBuy"; bar.className = "sticky-buy"; bar.setAttribute("role", "region"); document.body.appendChild(bar);
+      bar.addEventListener("click", e => { if (e.target.closest("#stickyAdd")) { if (S.tab !== "review") { S.tab = "review"; rerender(); } addToCart(); } }); }
+    const items = finalItems();
+    if (!buyDirect() || !items.length) { bar.hidden = true; document.body.classList.remove("has-sticky-buy"); return; }
+    let total = 0; try { total = totalOf(quoteFinal()); } catch { total = 0; }
+    const why = blockReasons();
+    bar.hidden = false; document.body.classList.add("has-sticky-buy");
+    bar.setAttribute("aria-label", t("addToCart"));
+    bar.innerHTML = `<div class="sb-price"><span>${esc(window.WeddingI18n?.k ? window.WeddingI18n.k("studio.sticky.total") : "Total")} · ${items.reduce((a, i) => a + effQty(i), 0)}×</span><b>${money(total)}</b><small>${esc(window.WeddingI18n?.k ? window.WeddingI18n.k("cart.vatExcl") : "")}</small></div><button class="btn dark" id="stickyAdd" type="button" ${why.length ? 'aria-disabled="true"' : ""}>🛒 ${t("addToCart")}</button>`;
   }
   function applyStatic() {
     document.documentElement.lang = lang === "zh" ? "zh-CN" : lang;
@@ -729,7 +742,7 @@
   async function saveProject({ silent = false } = {}) {
     const s = snapshot();
     if (SERVER) {
-      try { await window.PODAuth?.require?.(); } catch { return null; }
+      try { await window.PODAuth?.require?.({ guest: true }); } catch { return null; }
       const r = await fetch("/api/studio/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...s, design_data_url: designDataUrl() }) });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) { toast(d.message || d.error || t("failed")); return null; }

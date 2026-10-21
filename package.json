@@ -26,7 +26,8 @@
     "test:checkout": "node server/checkout-test.js",
     "test:auth": "node server/auth-test.js",
     "test:account": "node server/account-test.js",
-    "test:studio-buy": "node server/studio-buy-test.js"
+    "test:studio-buy": "node server/studio-buy-test.js",
+    "test:promo": "node server/promo-test.js"
   },
   "engines": {
     "node": ">=20"

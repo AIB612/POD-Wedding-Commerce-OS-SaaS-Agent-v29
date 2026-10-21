@@ -5,7 +5,7 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import "../../studio-pricing.js";
-import { addRecord, findRecord, findWhere, updateRecord, removeWhere, getState } from "../saas-store.js";
+import { addRecord, findRecord, findWhere, updateRecord, removeWhere, getState, listForTenant } from "../saas-store.js";
 import { encryptBuffer, decryptBuffer } from "../utils/blob-crypto.js";
 import { HttpError } from "../http/middleware.js";
 import { createProofForOrder } from "./proof-service.js";
@@ -37,8 +37,8 @@ const mockupFile = (dir, id, pid) => path.join(dir, `${id}.mockup.${pid}.enc`);
 export async function hasMockup(id, pid) { if (!privateRoot || !isProjectId(id) || !isPid(pid)) return false; try { await fsp.access(mockupFile(privateRoot, id, pid)); return true; } catch { return false; } }
 
 /** Small per-product mockup thumbnail (rendered client-side) stored server-side, encrypted like the design. */
-export async function saveMockup({ id, pid, dataUrl, generatedDir, tenantId, userId }) {
-  const p = await ownedProject(id, { tenantId, userId });
+export async function saveMockup({ id, pid, dataUrl, generatedDir, tenantId, userId, guestId }) {
+  const p = await ownedProject(id, { tenantId, userId, guestId });
   if (!isPid(pid) || !(p.items || []).some(i => i.product_id === pid)) throw new HttpError(400, "unknown_product", "Product is not part of this project");
   const m = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
   if (!m) throw new HttpError(400, "invalid_mockup", "Mockup must be a PNG, JPEG or WebP data URL");
@@ -55,15 +55,21 @@ export async function readMockup({ id, pid, generatedDir }) {
   let raw; try { raw = decryptBuffer(await fsp.readFile(mockupFile(privateDir(generatedDir), id, pid))); } catch { throw new HttpError(404, "not_found", "Not found"); }
   const nl = raw.indexOf(10); return { mime: raw.subarray(0, nl).toString(), data: raw.subarray(nl + 1) };
 }
-async function ownedProject(id, { tenantId, userId }) {
+/** Owner rule: account projects need that account; guest projects need the same guest token (hashed); legacy unowned rows stay open. */
+export function ownsProject(p, { userId = null, guestId = null } = {}) {
+  if (p.user_id) return p.user_id === userId;
+  if (p.guest_id) return !!guestId && p.guest_id === guestId;
+  return true;
+}
+async function ownedProject(id, { tenantId, userId, guestId }) {
   if (!isProjectId(id)) throw new HttpError(404, "project_not_found", "Project not found");
   const p = await findRecord("studio_projects", id);
   if (!p || expired(p) || (tenantId && p.tenant_id !== tenantId)) throw new HttpError(404, "project_not_found", "Project not found");
-  if (p.user_id && p.user_id !== userId) throw new HttpError(403, "project_forbidden", "This project belongs to another account");
+  if (!ownsProject(p, { userId, guestId })) throw new HttpError(403, "project_forbidden", "This project belongs to another account");
   return p;
 }
 /** Owner check used by the mockup GET route. */
-export async function projectAccess(id, { tenantId, userId }) { return ownedProject(id, { tenantId, userId }); }
+export async function projectAccess(id, { tenantId, userId, guestId }) { return ownedProject(id, { tenantId, userId, guestId }); }
 
 function cleanInput(body = {}) {
   const sc = catalog.scenarios.find(s => s.id === body.scenario_id);
@@ -118,14 +124,14 @@ async function saveDesign(dataUrl, dir, id) {
   return `/api/studio/projects/${id}/design`;
 }
 
-export async function saveProject({ tenantId, userId = null, body, generatedDir }) {
+export async function saveProject({ tenantId, userId = null, guestId = null, body, generatedDir }) {
   const input = cleanInput(body);
   const id = `sp_${crypto.randomBytes(10).toString("hex")}`;
   const design_url = await saveDesign(body.design_data_url, privateDir(generatedDir), id);
   const quote = StudioPricing.quote(studioCatalog(), { ...input, list: input.buyer_type === "merchant" ? false : undefined });
   const delivery = deliveryFor(input);
   const now = new Date().toISOString();
-  return addRecord("studio_projects", { id, tenant_id: tenantId, user_id: userId, ...input, design_url, quote, delivery, status: "draft", created_at: now, updated_at: now,
+  return addRecord("studio_projects", { id, tenant_id: tenantId, user_id: userId, guest_id: userId ? null : guestId, ...input, design_url, quote, delivery, status: "draft", created_at: now, updated_at: now,
     expires_at: new Date(Date.now() + retention().draftDays * DAY).toISOString() });
 }
 
@@ -135,22 +141,22 @@ function deliveryFor(p) {
     per_person: Object.fromEntries(p.items.map(i => [i.product_id, i.per_person || 1])) });
 }
 
-export async function getProject(id, { tenantId, userId } = {}) {
+export async function getProject(id, { tenantId, userId, guestId } = {}) {
   if (!isProjectId(id)) throw new HttpError(404, "project_not_found", "Project not found");
   const p = await findRecord("studio_projects", id);
   if (!p || expired(p)) throw new HttpError(404, "project_not_found", "Project not found");
   if (tenantId && p.tenant_id !== tenantId) throw new HttpError(404, "project_not_found", "Project not found");
-  if (userId && p.user_id && p.user_id !== userId) throw new HttpError(403, "project_forbidden", "This project belongs to another account");
-  const { tenant_id, contact, order_id, ...pub } = p;
+  if (!ownsProject(p, { userId, guestId })) throw new HttpError(403, "project_forbidden", "This project belongs to another account");
+  const { tenant_id, contact, order_id, guest_id, ...pub } = p;
   return { ...pub, fulfillment: { ...pub.fulfillment, recipients: (pub.fulfillment?.recipients || []).map(({ country, size }) => ({ country, size })) } };
 }
 
 /** Turn a saved project into an order / quote / sample request and start the proof lifecycle. */
-export async function requestQuote({ id, contact, user = null, tenantId = null }) {
+export async function requestQuote({ id, contact, user = null, guestId = null, tenantId = null }) {
   if (!isProjectId(id)) throw new HttpError(404, "project_not_found", "Project not found");
   const p = await findRecord("studio_projects", id);
   if (!p || (tenantId && p.tenant_id !== tenantId)) throw new HttpError(404, "project_not_found", "Project not found");
-  if (user?.id && p.user_id && p.user_id !== user.id) throw new HttpError(403, "project_forbidden", "This project belongs to another account");
+  if (!ownsProject(p, { userId: user?.id || null, guestId })) throw new HttpError(403, "project_forbidden", "This project belongs to another account");
   if (!p.design_url) throw new HttpError(409, "design_required", "A print-ready design is required before requesting an order");
   if (p.order_id) {
     const existing = await findRecord("orders", p.order_id);
@@ -204,11 +210,11 @@ export async function requestQuote({ id, contact, user = null, tenantId = null }
 }
 
 /** Decrypted design for a project (served with no-store). */
-export async function projectDesign({ id, generatedDir, tenantId = null, userId = null }) {
+export async function projectDesign({ id, generatedDir, tenantId = null, userId = null, guestId = null }) {
   if (!isProjectId(id)) throw new HttpError(404, "not_found", "Not found");
   const p = await findRecord("studio_projects", id);
   if (!p || expired(p) || (tenantId && p.tenant_id !== tenantId)) throw new HttpError(404, "not_found", "Not found");
-  if (userId && p.user_id && p.user_id !== userId) throw new HttpError(403, "project_forbidden", "This project belongs to another account");
+  if (!ownsProject(p, { userId, guestId })) throw new HttpError(403, "project_forbidden", "This project belongs to another account");
   for (const ext of Object.keys(MIME)) {
     const f = path.join(privateDir(generatedDir), `${id}.${ext}.enc`);
     try { return { mime: MIME[ext], data: decryptBuffer(await fsp.readFile(f)) }; } catch (e) { if (e.code !== "ENOENT") throw e; }
@@ -227,4 +233,12 @@ export async function purgeExpired({ generatedDir, now = Date.now() } = {}) {
   await fsp.rm(path.join(generatedDir, "studio"), { recursive: true, force: true }).catch(() => {});
   if (gone.length) console.log(`[studio] retention: deleted ${gone.length} expired project(s)`);
   return gone.length;
+}
+
+/** Sign-in after designing as a guest: the guest's projects move to the account (idempotent). */
+export async function claimGuestProjects({ tenantId, userId, guestId }) {
+  if (!userId || !guestId) return 0;
+  const rows = (await listForTenant("studio_projects", tenantId)).filter(p => !p.user_id && p.guest_id === guestId);
+  for (const p of rows) await updateRecord("studio_projects", p.id, { user_id: userId, guest_id: null, claimed_at: new Date().toISOString() });
+  return rows.length;
 }

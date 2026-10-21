@@ -27,9 +27,24 @@ export async function userContext(req,res,next){
     req.sessionToken=token||null;
     req.user=token?await userFromToken(token):null;
     if(req.user && req.user.tenant_id !== req.tenantId) req.user=null;
+    // Guest studio/cart session: random HttpOnly cookie; only its SHA-256 is stored on projects.
+    const g=cookieValue(req,GUEST_COOKIE);
+    req.guestToken=/^[a-f0-9]{48}$/.test(g)?g:null;
+    req.guestId=req.guestToken?guestHash(req.guestToken):null;
+    if(req.user&&req.guestId){const {claimGuestProjects}=await import("./services/studio-service.js");await claimGuestProjects({tenantId:req.tenantId,userId:req.user.id,guestId:req.guestId});}
     next();
   }catch(e){next(e);}
 }
+export const GUEST_COOKIE="pod_guest";
+export function guestHash(t){return crypto.createHash("sha256").update("guest:"+t).digest("hex").slice(0,40)}
+/** Signed-in user, or a guest session (issued on first write). Keeps project ownership checks meaningful for guests. */
+export function requireOwner({issue=false}={}){return (req,res,next)=>{
+  if(req.user||req.guestId)return next();
+  if(!issue)return res.status(401).json({error:"login_required",message:"Please sign in or continue as a guest."});
+  const t=crypto.randomBytes(24).toString("hex");
+  res.cookie(GUEST_COOKIE,t,{httpOnly:true,sameSite:"lax",secure:isProd(),path:"/",maxAge:30*864e5});
+  req.guestToken=t;req.guestId=guestHash(t);next();
+}}
 export function requireUser(req,res,next){
   if(req.user)return next();
   res.status(401).json({error:"login_required",message:"Please sign in to continue."});

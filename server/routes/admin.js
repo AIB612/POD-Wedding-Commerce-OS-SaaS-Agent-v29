@@ -43,6 +43,8 @@ function prunePreviews() { const now = Date.now(); for (const [k, v] of importPr
 const badRequest = (res, e) => res.status(400).json({ error: e.message });
 
 import { priceRows, updatePrices } from "../services/price-list-service.js";
+import { getFees, updateFees, seedFees } from "../services/fees-service.js";
+import { listPromos, createPromo, updatePromo, deletePromo } from "../services/promo-service.js";
 import { sendShippedEmail } from "../services/checkout-service.js";
 
 export function adminRouter({ root } = {}) {
@@ -81,8 +83,11 @@ export function adminRouter({ root } = {}) {
   r.get("/api/saas/order-events", A, ah(async (req, res) => res.json(await listForTenant("order_events", req.tenantId))));
   r.post("/api/saas/users/:id/status", AP, ah(async (req,res)=>{const status=["active","disabled"].includes(req.body?.status)?req.body.status:null;if(!status)return res.status(400).json({error:"invalid_status"});const row=await updateRecord("customer_accounts",req.params.id,{status,updated_at:new Date().toISOString()});row?res.json({id:row.id,status:row.status}):res.sendStatus(404);}));
   r.post("/api/saas/orders/:id/status", AP, ah(async (req,res)=>{
-    const allowed=["Quote requested","Order requested","Sample requested","Proof ready","Changes requested","Approved","Production","Shipped","Delivered","Cancelled"];
+    const allowed=["Needs approval","Quote requested","Order requested","Sample requested","Proof ready","Changes requested","Approved","Production","Shipped","Delivered","Cancelled"];
     const status=String(req.body?.status||"").slice(0,80);if(!allowed.includes(status))return res.status(400).json({error:"invalid_status",allowed});
+    const cur=await findRecord("orders",req.params.id);if(!cur||cur.tenant_id!==req.tenantId)return res.sendStatus(404);
+    // Proof-first orders: production / shipping stay blocked until the customer approves the proof (proof.html).
+    if(cur.production_blocked&&/production|printing|shipped|delivered/i.test(status))return res.status(409).json({error:"proof_approval_required",message:"Customer chose 'Send me a proof first' — production is blocked until the proof is approved."});
     const row=await updateRecord("orders",req.params.id,{status,updated_at:new Date().toISOString()});if(!row)return res.sendStatus(404);
     const evt=await addRecord("order_events",{id:`evt_${crypto.randomBytes(6).toString("hex")}`,tenant_id:req.tenantId,order_id:row.id,event_type:"status_changed",source:"admin",payload:{status,note:String(req.body?.note||"").slice(0,500)},event_time:new Date().toISOString()});
     let email_status="not_applicable";
@@ -98,6 +103,14 @@ export function adminRouter({ root } = {}) {
   }));
   // Price list (single source of truth for sell prices of every Studio / homepage product).
   r.get("/api/saas/prices", A, (req, res) => res.json(priceRows()));
+  // Fees & tax (VAT per zone/country, incl./excl. switch, shipping per zone+method in CHF/EUR, carrier days, packaging add-ons).
+  r.get("/api/saas/fees", A, (req, res) => res.json({ ...getFees(), seed: seedFees() }));
+  r.put("/api/saas/fees", AP, ah(async (req, res) => res.json(await updateFees(req.body || {}, { by: req.get("x-admin-user") || "admin" }))));
+  // Promo codes
+  r.get("/api/saas/promos", A, ah(async (req, res) => res.json({ promos: await listPromos(req.tenantId) })));
+  r.post("/api/saas/promos", AP, ah(async (req, res) => res.json(await createPromo(req.tenantId, req.body || {}))));
+  r.put("/api/saas/promos/:id", AP, ah(async (req, res) => res.json(await updatePromo(req.tenantId, req.params.id, req.body || {}))));
+  r.delete("/api/saas/promos/:id", AP, ah(async (req, res) => res.json(await deletePromo(req.tenantId, req.params.id))));
   r.put("/api/saas/prices", AP, ah(async (req, res) => res.json(await updatePrices(req.body?.changes, { by: req.get("x-admin-user") || "admin" }))));
   r.get("/api/saas/shipments", A, ah(async (req, res) => res.json(await listForTenant("shipments", req.tenantId))));
   r.get("/api/saas/logistics/providers", A, (req, res) => res.json(logisticsProviderStatus()));

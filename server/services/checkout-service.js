@@ -13,7 +13,9 @@ import { ensureCustomer } from "./account-service.js";
 import { sendEmail, renderTemplate } from "./email-service.js";
 import { hmacHex, timingSafeHexEqual } from "../utils/crypto.js";
 import { baseUrl as publicBaseUrl } from "../config.js";
-import { isProjectId, projectExpired, retention, mockupUrl, hasMockup } from "./studio-service.js";
+import { isProjectId, projectExpired, retention, mockupUrl, hasMockup, ownsProject } from "./studio-service.js";
+import { getFees, vatRate, shippingAmount, carrierDays, packagingPrice, pricesIncludeVat, addBusinessDays } from "./fees-service.js";
+import { evaluatePromo, redeemPromo } from "./promo-service.js";
 
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
 const clean = (v, max = 200) => String(v ?? "").trim().slice(0, max);
@@ -75,33 +77,100 @@ export function storefrontCurrency(requested, country) {
   return currencyForCountry(country);
 }
 
-/** Full storefront quote: merchandise + shipping + tax for the destination, in the charge currency. */
-export async function quoteStorefront({ tenantId, cart, currency, country, postal_code, shipping_method }) {
+/** Production lead days for one line: Studio products use the facility for the market (catalog facilities[].days); legacy SKUs the admin default. */
+function productionDays(line, cur) {
+  const cat = studioCatalog(), prod = line.product_id && cat.products.find(p => p.id === line.product_id);
+  if (!prod) return Number(getFees().default_production_days ?? 3);
+  const region = cur === "CHF" ? "CH" : "EU", facs = (prod.facilities || []).map(id => cat.facilities.find(f => f.id === id)).filter(Boolean);
+  const f = facs.find(x => x.region === region) || facs.sort((a, b) => a.days - b.days)[0];
+  return Number(f?.days ?? getFees().default_production_days ?? 3);
+}
+export const PROOF_CHOICES = ["proof", "approve"];
+export function defaultProofChoice(cart) { return (Array.isArray(cart) ? cart : []).some(r => r && r.project_id) ? "proof" : "approve"; }
+
+/** Packaging add-ons chosen in the Studio project (admin price per unit, 0 = free) + expired-project warnings for the cart. */
+async function packagingAndWarnings(cart, items, cur) {
+  const warnings = [];
+  let total = 0;
+  for (let i = 0; i < items.length; i++) {
+    const raw = cart[i] || {}, item = items[i];
+    if (raw.project_id == null || raw.project_id === "") continue;
+    const pid = String(raw.project_id), p = isProjectId(pid) ? await findRecord("studio_projects", pid) : null;
+    if (!p || projectExpired(p)) { warnings.push({ index: i, code: "project_expired", project_id: pid.slice(0, 40) }); continue; }
+    const prod = studioCatalog().products.find(x => x.id === item.product_id) || {};
+    const ids = (p.packaging_mode === "none" ? [] : (p.packaging || [])).filter(id => (prod.packaging || []).includes(id));
+    const unit = round2(ids.reduce((a, id) => a + packagingPrice(id, cur), 0));
+    if (unit > 0) { item.packaging = { ids, unit_price: unit, amount: round2(unit * item.quantity) }; total = round2(total + item.packaging.amount); }
+  }
+  return { total, warnings };
+}
+
+/** Full storefront quote: merchandise (+ packaging) − promo + shipping + VAT, in the charge currency. All fees from the admin "Fees & tax" settings. */
+export async function quoteStorefront({ tenantId, cart, currency, country, postal_code, shipping_method, promo_code, proof_choice }) {
   const cc = String(country || "").toUpperCase().slice(0, 2);
   const cur = storefrontCurrency(currency, cc);
-  const rate = rateFor(cur); // shipping zones + free-shipping thresholds are kept in the base currency (CNY)
+  const rate = rateFor(cur); // legacy shipping zones + free-shipping thresholds are kept in the base currency (CNY)
   const merch = quoteMerch(cart, cur);
   const items = merch.lines.reduce((a, l) => a + l.quantity, 0);
+  const weight = Math.max(0.2, items * 0.12);
   let ship;
   try {
     ship = await quoteShipping({
       tenantId, country: cc, postal_code: String(postal_code || "").slice(0, 16),
-      subtotal: round2(merch.total / rate), weight_kg: Math.max(0.2, items * 0.12), item_count: items, currency: "CNY",
+      subtotal: round2(merch.total / rate), weight_kg: weight, item_count: items, currency: "CNY",
       shipping_method: shipping_method === "express" ? "express" : "standard"
     });
   } catch (e) {
     if (e.message === "shipping_zone_not_found") throw new HttpError(400, "shipping_zone_not_found", "Shipping is not available for this destination");
     throw e;
   }
-  const options = ship.shipping_options.map(o => ({ ...o, amount: round2(o.amount * rate) }));
+  const lines = merch.lines.map(l => ({ ...l }));
+  const pack = await packagingAndWarnings(cart, lines, cur);
+  const choice = PROOF_CHOICES.includes(proof_choice) ? proof_choice : defaultProofChoice(cart);
+  const prodDays = lines.reduce((a, l) => Math.max(a, productionDays(l, cur)), 0) + (choice === "proof" ? Number(studioCatalog().proof_buffer_days || 0) : 0);
+  const today = new Date();
+  const zoneId = ship.zone?.id;
+  const options = ship.shipping_options.map(o => {
+    const managed = ship.rate_engine === "regional_rules" ? shippingAmount(zoneId, o.id, cur, { weight_kg: ship.weight_kg, subtotal: merch.total }) : null;
+    const amount = managed ? managed.amount : round2(o.amount * rate);
+    const days = carrierDays(zoneId, o.id);
+    return { ...o, amount, ...(managed ? { free_applied: managed.free } : {}), carrier_days: days,
+      delivery: { production_days: prodDays, from: addBusinessDays(today, prodDays + days[0]), to: addBusinessDays(today, prodDays + days[1]) } };
+  });
   const selected = options.find(o => o.id === ship.selected_shipping) || options[0];
-  const tax = round2((merch.total + selected.amount) * Number(ship.tax.rate || 0));
+  let discount = null;
+  if (promo_code) discount = await evaluatePromo(tenantId, promo_code, { subtotal: merch.total, currency: cur });
+  const disc = discount ? discount.amount : 0;
+  const vat = ship.tax_engine === "avalara" ? Number(ship.tax.rate || 0) : vatRate(cc, zoneId, ship.tax.rate);
+  const incl = pricesIncludeVat();
+  const taxable = round2(merch.total + pack.total - disc + selected.amount);
+  const tax = incl ? round2(taxable * vat / (1 + vat)) : round2(taxable * vat);
   return {
     ...ship, currency: cur, base_currency: "CNY", fx_rate: rate,
     shipping_options: options, shipping_amount: selected.amount,
-    tax: { ...ship.tax, amount: tax }, items: merch.lines, subtotal: merch.total, item_count: items,
-    grand_total: round2(merch.total + selected.amount + tax)
+    tax: { ...ship.tax, rate: vat, amount: tax, included: incl }, prices_include_vat: incl,
+    items: lines, subtotal: merch.total, packaging_amount: pack.total, discount: discount ? { code: discount.code, id: discount.id, type: discount.type, value: discount.value, amount: disc } : null,
+    item_count: items, line_warnings: pack.warnings, proof_choice: choice, delivery: selected.delivery,
+    grand_total: incl ? taxable : round2(taxable + tax)
   };
+}
+
+/** PayPal amounts: item_total = Σ items (merch + packaging line); value = item_total + shipping + tax_total − discount.
+ *  With prices incl. VAT the tax is already inside the item amounts, so tax_total is 0. */
+export function paypalBreakdown(q) {
+  return { item_total: round2(q.subtotal + (q.packaging_amount || 0)), shipping: q.shipping_amount, tax_total: q.prices_include_vat ? 0 : q.tax.amount, discount: q.discount?.amount || 0 };
+}
+export function paypalItems(q) {
+  const items = q.items.map(l => ({ name: l.name, sku: l.sku, quantity: l.quantity, unit_amount: l.unit_price, description: l.material }));
+  if (q.packaging_amount > 0) items.push({ name: "Packaging add-ons", sku: "PACKAGING", quantity: 1, unit_amount: q.packaging_amount });
+  return items;
+}
+
+/** Customer cancelled at PayPal: the unpaid draft is cancelled and they go back to the Review step (cart is untouched in the browser). */
+export async function handlePayPalCancel({ orderId, token }) {
+  const o = orderId && verifyOrderToken(orderId, token) ? await findRecord("orders", String(orderId)) : null;
+  if (o && o.payment_status !== "paid") await updateRecord("orders", o.id, { status: "Cancelled", payment_status: "cancelled", cancelled_reason: "paypal_cancel", updated_at: new Date().toISOString() });
+  return { ok: !!o };
 }
 
 const paypalCreds = tenantId => getConnectorCredentials(tenantId, "paypal");
@@ -119,12 +188,14 @@ function shippingAddress(body = {}) {
 }
 
 /** Validates the customer and re-quotes on the server (nothing is stored yet). Shared by PayPal and TWINT. */
-async function prepareCheckout({ tenantId, user, body, provider }) {
+async function prepareCheckout({ tenantId, user, guestId = null, body, provider }) {
   const email = clean(body.customer?.email, 320);
   if (!EMAIL.test(email)) throw new HttpError(400, "invalid_email", "Please enter a valid e-mail address");
   const address = shippingAddress(body);
-  const quote = await quoteStorefront({ tenantId, cart: body.cart, currency: body.currency, country: address.country, postal_code: address.postal_code, shipping_method: body.shipping_method });
-  quote.items = await attachDesigns({ tenantId, user, cart: body.cart, items: quote.items });
+  const quote = await quoteStorefront({ tenantId, cart: body.cart, currency: body.currency, country: address.country, postal_code: address.postal_code, shipping_method: body.shipping_method, promo_code: body.promo_code, proof_choice: body.proof_choice });
+  quote.items = await attachDesigns({ tenantId, user, guestId, cart: body.cart, items: quote.items });
+  // Price changed since the customer reviewed it (e.g. admin edit or expired promo) → ask them to review again.
+  if (body.expected_total != null && Number(body.expected_total) !== quote.grand_total) throw new HttpError(409, "price_changed", "Prices were updated — please review your order again");
   return { email, address, quote };
 }
 
@@ -133,7 +204,7 @@ async function prepareCheckout({ tenantId, user, body, provider }) {
  * signed-in customer (projects are always saved by a signed-in user) and contain the product. The design
  * reference, placement and size breakdown are copied onto the order item so production has everything.
  */
-export async function attachDesigns({ tenantId, user, cart, items }) {
+export async function attachDesigns({ tenantId, user, guestId = null, cart, items }) {
   const out = [];
   for (let i = 0; i < items.length; i++) {
     const raw = cart[i] || {}, item = { ...items[i] };
@@ -142,7 +213,7 @@ export async function attachDesigns({ tenantId, user, cart, items }) {
       if (!isProjectId(pid)) throw new HttpError(400, "invalid_project", "Invalid design project");
       const p = await findRecord("studio_projects", pid);
       if (!p || projectExpired(p) || (tenantId && p.tenant_id !== tenantId)) throw new HttpError(400, "project_not_found", "The design project for this cart line no longer exists — please reopen it in the Studio");
-      if (!user || (p.user_id && p.user_id !== user.id)) throw new HttpError(403, "project_forbidden", "This design project belongs to another account — please sign in with the account that created it");
+      if (!ownsProject(p, { userId: user?.id || null, guestId }) || (!user && !p.guest_id)) throw new HttpError(403, "project_forbidden", "This design project belongs to another account — please sign in with the account that created it");
       if (!p.design_url) throw new HttpError(409, "design_required", "A design is required for this product");
       const pi = (p.items || []).find(x => x.product_id === item.product_id);
       if (!pi) throw new HttpError(400, "project_product_mismatch", "This product is not part of the design project");
@@ -173,10 +244,11 @@ export async function orderConfirmation(id, token) {
     id: o.id, status: o.status, payment_status: o.payment_status, currency: o.currency, created_at: o.created_at, paid_at: o.paid_at || null,
     email: o.customer_email, shipping_address: o.shipping_address, shipping_method: o.shipping_method,
     items: (o.items || []).map(l => ({ name: l.name, product_id: l.product_id || "", material: l.material, quantity: l.quantity, unit_price: l.unit_price, line_total: l.line_total, sizes: l.sizes || {}, has_design: !!l.design_url, thumb_url: withTok(l.thumb_url), image: productImage(l.product_id) })),
-    totals: { subtotal: o.subtotal, shipping: o.shipping_charged, tax: o.tax, tax_rate: o.tax_rate ?? null, grand_total: o.grand_total },
+    totals: { subtotal: o.subtotal, packaging: o.packaging_amount || 0, discount: o.discount_amount || 0, promo_code: o.promo?.code || "", shipping: o.shipping_charged, tax: o.tax, tax_rate: o.tax_rate ?? null, prices_include_vat: !!o.prices_include_vat, grand_total: o.grand_total },
+    proof_choice: o.proof_choice || "proof", production_blocked: !!o.production_blocked, delivery_estimate: o.delivery_estimate || null,
     timeline: [
       { id: "paid", done: o.payment_status === "paid" },
-      { id: "proof", done: ["AwaitingApproval", "Approved", "Production", "Shipped", "Delivered"].includes(o.status) },
+      { id: "proof", choice: o.proof_choice || "proof", waiting: !!o.production_blocked && o.payment_status === "paid", done: (o.proof_choice === "approve" && o.payment_status === "paid") || ["AwaitingApproval", "Approved", "Production", "Shipped", "Delivered"].includes(o.status) },
       { id: "production", done: ["Production", "Shipped", "Delivered"].includes(o.status) },
       { id: "shipping", done: ["Shipped", "Delivered"].includes(o.status) }
     ],
@@ -192,7 +264,11 @@ export async function sendOrderConfirmation(order) {
   const base = publicBaseUrl(), url = `${base}/payment-success.html?order=${encodeURIComponent(order.id)}&t=${orderToken(order.id)}`;
   const a = order.shipping_address || {};
   const rows = (order.items || []).map(l => ({ name: l.name, material: l.material || "", quantity: l.quantity, line_total: money(l.line_total, order.currency), image: productImage(l.product_id) ? base + productImage(l.product_id) : "", sizes: Object.entries(l.sizes || {}).map(([k, v]) => `${k}×${v}`).join(", ") }));
-  const vars = { order_id: order.id, customer_name: order.customer_name || "", items: rows, subtotal: money(order.subtotal, order.currency), shipping: money(order.shipping_charged, order.currency), tax: money(order.tax, order.currency), total: money(order.grand_total, order.currency),
+  const est = order.delivery_estimate, fmtD = d => new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+  const vars = { order_id: order.id, customer_name: order.customer_name || "", items: rows, subtotal: money(order.subtotal, order.currency),
+    packaging: order.packaging_amount > 0 ? money(order.packaging_amount, order.currency) : "", discount: order.discount_amount > 0 ? `− ${money(order.discount_amount, order.currency)}` : "", promo_code: order.promo?.code || "",
+    tax_label: order.prices_include_vat ? "incl. VAT" : "VAT", delivery: est ? `${fmtD(est.from)} – ${fmtD(est.to)}` : "",
+    proof_note: (order.proof_choice || "proof") === "proof" ? "We will e-mail you a proof. Production starts once you approve it." : "You approved the mockup at checkout — production starts right away.", shipping: money(order.shipping_charged, order.currency), tax: money(order.tax, order.currency), total: money(order.grand_total, order.currency),
     address: [a.name, a.address1, a.address2, [a.postal_code, a.city].filter(Boolean).join(" "), a.country].filter(Boolean).join(", "), order_url: url, account_url: `${base}/account.html`, shop_url: `${base}/` };
   const r = await renderTemplate("order-confirmation", vars);
   return sendEmail({ tenantId: order.tenant_id, userId: order.user_id || null, to: order.customer_email, type: "order_confirmation", related_id: order.id, subject: `Order confirmed · ${order.id}`, text: r.text, html: r.html });
@@ -223,9 +299,11 @@ async function saveDraftOrder({ tenantId, user, email, address, quote, provider,
     customer_email: email, customer_name: clean(name || address.name), customer_phone: address.phone,
     shipping_address: address,
     items: quote.items, currency: quote.currency,
-    subtotal: quote.subtotal, shipping_method: quote.selected_shipping, shipping_charged: quote.shipping_amount,
+    subtotal: quote.subtotal, packaging_amount: quote.packaging_amount || 0, discount_amount: quote.discount?.amount || 0, promo: quote.discount ? { id: quote.discount.id, code: quote.discount.code, type: quote.discount.type, value: quote.discount.value } : null,
+    proof_choice: quote.proof_choice, delivery_estimate: quote.delivery || null, prices_include_vat: !!quote.prices_include_vat,
+    shipping_method: quote.selected_shipping, shipping_charged: quote.shipping_amount,
     tax: quote.tax.amount, tax_rate: Number(quote.tax.rate || 0), tax_engine: quote.tax_engine, rate_engine: quote.rate_engine, grand_total: quote.grand_total,
-    revenue: round2(quote.subtotal + quote.shipping_amount), // tax is collected for the authorities, not revenue
+    revenue: round2(quote.grand_total - quote.tax.amount), // tax is collected for the authorities, not revenue
     cogs: 0, shipping_cost: 0, payment_fee: round2(quote.grand_total * feeRate), affiliate_commission: 0, ad_attributed_cost: 0,
     created_at: now, updated_at: now
   });
@@ -241,8 +319,8 @@ export async function paymentMethods(tenantId) {
   };
 }
 
-export async function createStorefrontCheckout({ tenantId, user = null, body = {}, baseUrl }) {
-  const { email, address, quote } = await prepareCheckout({ tenantId, user, body });
+export async function createStorefrontCheckout({ tenantId, user = null, guestId = null, body = {}, baseUrl }) {
+  const { email, address, quote } = await prepareCheckout({ tenantId, user, guestId, body });
   const creds = await paypalCreds(tenantId);
   if (!paypalConfigured(creds)) throw new HttpError(503, "paypal_not_configured", "PayPal is not configured: add PayPal credentials in Admin → API / Protocols or set PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET in .env");
   const order = await saveDraftOrder({ tenantId, user, email, address, quote, provider: "paypal", name: body.customer?.name });
@@ -251,11 +329,11 @@ export async function createStorefrontCheckout({ tenantId, user = null, body = {
     const pp = await createPayPalOrder({
       amount: quote.grand_total, currency: quote.currency, referenceId: id, creds,
       description: `Wedding order ${id}`,
-      breakdown: { item_total: quote.subtotal, shipping: quote.shipping_amount, tax_total: quote.tax.amount },
-      items: quote.items.map(l => ({ name: l.name, sku: l.sku, quantity: l.quantity, unit_amount: l.unit_price, description: l.material })),
+      breakdown: paypalBreakdown(quote),
+      items: paypalItems(quote),
       shipping: address.address1 ? address : null,
       returnUrl: `${baseUrl}/api/payments/paypal/return?order=${encodeURIComponent(id)}`,
-      cancelUrl: `${baseUrl}/payment-success.html?order=${encodeURIComponent(id)}&t=${orderToken(id)}&status=CANCELLED`
+      cancelUrl: `${baseUrl}/api/payments/paypal/cancel?order=${encodeURIComponent(id)}&t=${orderToken(id)}`
     });
     const url = approvalUrl(pp);
     if (!url) throw new Error("paypal_missing_approval_url");
@@ -269,8 +347,8 @@ export async function createStorefrontCheckout({ tenantId, user = null, body = {
 }
 
 /** TWINT (direct merchant integration with TWINT AG). Fails closed until the connector is configured AND implemented. */
-export async function createTwintCheckout({ tenantId, user = null, body = {}, baseUrl }) {
-  const { email, address, quote } = await prepareCheckout({ tenantId, user, body });
+export async function createTwintCheckout({ tenantId, user = null, guestId = null, body = {}, baseUrl }) {
+  const { email, address, quote } = await prepareCheckout({ tenantId, user, guestId, body });
   if (!twintConfigured()) throw new HttpError(503, "twint_not_configured", "TWINT is not configured: set TWINT_STORE_UUID, TWINT_CASH_REGISTER_ID, TWINT_CERT_PATH and TWINT_CERT_PASSWORD (see .env.example)");
   if (quote.currency !== "CHF") throw new HttpError(400, "twint_chf_only", "TWINT is only available for payments in CHF (Switzerland / Liechtenstein)");
   const order = await saveDraftOrder({ tenantId, user, email, address, quote, provider: "twint", name: body.customer?.name });
@@ -299,8 +377,13 @@ export async function twintOrderStatus(orderId) {
 async function markPaid(order, { captureId, source }) {
   if (order.payment_status === "paid") return order;
   const now = new Date().toISOString();
-  const updated = await updateRecord("orders", order.id, { status: "Paid", payment_status: "paid", paypal_capture_id: captureId || order.paypal_capture_id || "", paid_at: now, updated_at: now, paid_via: source });
-  await createProofForOrder(updated);
+  // Proof-first orders wait for the customer's approval in proof.html; "approve mockup" orders go straight to production.
+  const proofFirst = (order.proof_choice || "proof") === "proof";
+  const updated = await updateRecord("orders", order.id, { status: proofFirst ? "Needs approval" : "Production", production_blocked: proofFirst, production_at: proofFirst ? null : now,
+    payment_status: "paid", paypal_capture_id: captureId || order.paypal_capture_id || "", paid_at: now, updated_at: now, paid_via: source });
+  const proof = await createProofForOrder(updated);
+  if (!proofFirst && proof && proof.status === "Pending") await updateRecord("proofs", proof.id, { status: "Approved", approved_at: now, auto_approved: true, note: "Customer approved the mockup at checkout" });
+  try { await redeemPromo(updated); } catch (e) { console.error("[checkout] promo redeem failed:", e.message); }
   await markProjectsOrdered(updated);
   try { await sendOrderConfirmation(updated); } catch (e) { console.error("[checkout] confirmation e-mail failed:", e.message); }
   return updated;

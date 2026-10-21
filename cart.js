@@ -5,10 +5,10 @@
  * PODCart.init({onEdit(line), onChange(items)}) wires the page; PODCart.upsert(line) adds/replaces a line. */
 (function(){
 const CART_KEY="pod-cart-v1",CO_KEY="pod-checkout-v1";
-const DRAWER="<div class=\"cart-scrim\" id=\"cartScrim\"></div>\n<aside class=\"cart-panel\" id=\"cartPanel\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"cartTitle\" aria-hidden=\"true\">\n  <div class=\"cart-head\"><h3 id=\"cartTitle\"><span data-i18n=\"cart.title\">Your cart</span><small id=\"cartItemsLabel\"></small></h3><button class=\"cart-close\" id=\"cartClose\" type=\"button\" data-i18n-attr=\"aria-label:cart.close\" aria-label=\"Close cart\">\u00d7</button></div>\n  <div class=\"cart-list\" id=\"cartList\"></div>\n  <div class=\"cart-foot\" id=\"cartFoot\">\n    <div class=\"cart-row\"><span data-i18n=\"cart.subtotal\">Subtotal</span><strong id=\"cartSubtotal\">\u2014</strong></div>\n    <div class=\"cart-row\"><span data-i18n=\"cart.shipping\">Shipping</span><span data-i18n=\"cart.shippingLater\">Calculated at checkout</span></div>\n    <div class=\"cart-row\" id=\"cartVatRow\"><span id=\"cartVatLabel\">VAT</span><span id=\"cartVat\">\u2014</span></div>\n    <div class=\"cart-row total\"><span data-i18n=\"cart.total\">Total</span><strong id=\"cartTotal\">\u2014</strong></div>\n    <div class=\"cart-vat\" data-i18n=\"cart.vatIncl\">Incl. VAT where applicable</div>\n    <div class=\"cart-status\" id=\"cartStatus\" aria-live=\"polite\"></div>\n    <button class=\"cart-checkout\" id=\"checkoutBtn\" type=\"button\" data-i18n=\"cart.checkout\">Checkout</button>\n    <div class=\"pay-marks\"><span data-i18n=\"cart.weAccept\">We accept</span><span class=\"pay-mark\">TWINT</span><span class=\"pay-mark\">PayPal</span></div>\n    <ul class=\"cart-trust\"><li data-i18n=\"cart.trust.secure\">Secure, encrypted payment</li><li data-i18n=\"cart.trust.proof\">Digital proof by e-mail within 2 h of payment</li><li data-i18n=\"cart.trust.delivery\">Delivered in about 14 days after approval</li></ul>\n  </div>\n</aside>";
+const DRAWER="<div class=\"cart-scrim\" id=\"cartScrim\"></div>\n<aside class=\"cart-panel\" id=\"cartPanel\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"cartTitle\" aria-hidden=\"true\">\n  <div class=\"cart-head\"><h3 id=\"cartTitle\"><span data-i18n=\"cart.title\">Your cart</span><small id=\"cartItemsLabel\"></small></h3><button class=\"cart-close\" id=\"cartClose\" type=\"button\" data-i18n-attr=\"aria-label:cart.close\" aria-label=\"Close cart\">\u00d7</button></div>\n  <div class=\"cart-list\" id=\"cartList\"></div>\n  <div class=\"cart-foot\" id=\"cartFoot\">\n    <div class=\"cart-row\"><span data-i18n=\"cart.subtotal\">Subtotal</span><strong id=\"cartSubtotal\">\u2014</strong></div>\n    <div class=\"cart-row\"><span data-i18n=\"cart.shipping\">Shipping</span><span data-i18n=\"cart.shippingLater\">Calculated at checkout</span></div>\n    <div class=\"cart-row\" id=\"cartVatRow\"><span id=\"cartVatLabel\">VAT</span><span id=\"cartVat\">\u2014</span></div>\n    <div class=\"cart-row total\"><span data-i18n=\"cart.total\">Total</span><strong id=\"cartTotal\">\u2014</strong></div>\n    <div class=\"cart-vat\" data-i18n=\"cart.vatIncl\">Incl. VAT where applicable</div>\n    <div class=\"cart-status\" id=\"cartStatus\" aria-live=\"polite\"></div>\n    <button class=\"cart-checkout\" id=\"checkoutBtn\" type=\"button\" data-i18n=\"cart.checkout\">Checkout</button>\n    <div class=\"pay-marks\"><span data-i18n=\"cart.weAccept\">We accept</span><span class=\"pay-mark\">TWINT</span><span class=\"pay-mark\">PayPal</span></div>\n    <ul class=\"cart-trust\"><li data-i18n=\"cart.trust.secure\">Secure, encrypted payment</li><li data-i18n=\"cart.trust.proof\">Digital proof by e-mail within 2 h of payment</li><li id=\"cartArrives\"></li></ul>\n  </div>\n</aside>";
 const HOME_LOCALE={zh:"zh-CN",en:"en-GB",de:"de-DE"};
 const $=id=>document.getElementById(id);
-let cart=loadCart(),cartQuote=null,opts={},seq=0,timer=null;
+let cart=loadCart(),cartQuote=null,opts={},seq=0,timer=null,notices={};
 function K(key,vars){return window.WeddingI18n?.k?window.WeddingI18n.k(key,vars):key}
 function T(zh){return window.WeddingI18n?.t?.(zh)??zh}
 function lang(){return window.WeddingI18n?.lang?.()||"en"}
@@ -40,20 +40,27 @@ function render(bump){
   list.innerHTML=cart.map((i,idx)=>{const ql=q?.items?.[idx];return `
     <div class="cart-item" data-id="${esc(i.id)}">
       <div class="cart-thumb">${i.thumb?`<img src="${esc(i.thumb)}" srcset="${esc(i.thumb)} 1x, ${esc(i.thumb2||i.thumb)} 2x" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${esc(i.thumbOrig)}'" width="72" height="72" alt="" loading="lazy" decoding="async">`:""}</div>
-      <div class="cart-info"><b>${esc(i.name)}</b><div class="cart-variant">${cartVariant(i)}</div>
+      <div class="cart-info"><b>${esc(i.name)}</b><div class="cart-variant">${cartVariant(i)}</div>${lineNotes(i,idx)}
         <div class="cart-controls">
           ${i.sizes&&sizesText(i.sizes)?`<span class="cart-variant">${esc(K("cart.qty"))}: ${i.qty}</span>`:`<div class="cart-qty" role="group" aria-label="${esc(K("cart.qty"))}"><button type="button" data-act="dec" aria-label="${esc(K("cart.decrease"))}" ${i.qty<=1?"disabled":""}>−</button><input type="number" inputmode="numeric" min="1" max="10000" value="${i.qty}" data-act="set" aria-label="${esc(K("cart.qty"))}"><button type="button" data-act="inc" aria-label="${esc(K("cart.increase"))}">+</button></div>`}
           <button type="button" class="cart-link" data-act="edit">${esc(K("cart.edit"))}</button><button type="button" class="cart-link" data-act="remove">${esc(K("cart.remove"))}</button>
         </div></div>
       <div class="cart-price"><strong>${ql?fmtMoney(ql.line_total,cur):"—"}</strong>${ql&&ql.quantity>1?`<span>${esc(K("cart.each",{p:fmtMoney(ql.unit_price,cur)}))}</span>`:""}</div>
     </div>`}).join("");
-  $("cartSubtotal").textContent=q?fmtMoney(q.subtotal,cur):"—";
+  $("cartSubtotal").textContent=q?fmtMoney(q.subtotal+(q.packaging_amount||0),cur):"—";
+  // Delivery window from the server quote (production lead days + carrier days, Mon–Fri) instead of a fixed "~14 days".
+  const arr=$("cartArrives"),std=q?.shipping_options?.find(o=>o.id==="standard");if(arr)arr.textContent=std?.delivery&&window.PODDates?K("cart.arrives",{range:window.PODDates.range(std.delivery.from,std.delivery.to)}):K("cart.trust.delivery");
   // VAT exactly as the server computes it for the destination (on goods; shipping VAT is added at checkout).
-  ensureVatRow();const rate=q?Number(q.tax?.rate||0):0,vat=q?Math.round(q.subtotal*rate*100)/100:0;
+  ensureVatRow();const rate=q?Number(q.tax?.rate||0):0,goods=q?q.subtotal+(q.packaging_amount||0):0,incl=!!q?.prices_include_vat,vat=q?Math.round((incl?goods*rate/(1+rate):goods*rate)*100)/100:0;
   $("cartVatLabel").textContent=q?K("cart.vat",{rate:Math.round(rate*1000)/10,c:cartCountry()}):K("co.taxNone");
   $("cartVat").textContent=q?fmtMoney(vat,cur):"—";
-  $("cartTotal").textContent=q?fmtMoney(q.subtotal+vat,cur):"—";
+  $("cartTotal").textContent=q?fmtMoney(incl?goods:goods+vat,cur):"—";
 }
+function lineNotes(i,idx){const q=cartQuote,w=(q?.line_warnings||[]).find(x=>x.index===idx),out=[];
+  if(w&&w.code==="project_expired")out.push(`<div class="cart-warn" role="alert">${esc(K("co.projectExpired"))} <a href="studio.html?project=${encodeURIComponent(i.projectId||"")}">${esc(K("co.reopenStudio"))}</a></div>`);
+  const n=notices[i.id];if(n)out.push(`<div class="cart-note">${esc(K("co.priceUpdated",{old:fmtMoney(n.old,q?.currency),now:fmtMoney(n.now,q?.currency)}))}</div>`);return out.join("")}
+// "Price updated": the cart line remembers the last unit price it was shown with.
+function trackPrices(q){let dirty=false;cart.forEach((i,idx)=>{const ql=q?.items?.[idx];if(!ql)return;if(i.seenPrice&&i.seenCurrency===q.currency&&Number(i.seenPrice)!==Number(ql.unit_price))notices[i.id]={old:i.seenPrice,now:ql.unit_price};if(i.seenPrice!==ql.unit_price||i.seenCurrency!==q.currency){i.seenPrice=ql.unit_price;i.seenCurrency=q.currency;dirty=true}});if(dirty)saveCart()}
 function ensureVatRow(){if($("cartVatRow"))return;const t=document.querySelector("#cartFoot .cart-row.total");if(!t)return;const d=document.createElement("div");d.className="cart-row";d.id="cartVatRow";d.innerHTML='<span id="cartVatLabel">VAT</span><span id="cartVat">—</span>';t.parentNode.insertBefore(d,t)}
 function cartPayload(){return cart.map(i=>({product_id:i.productId||undefined,sku:i.sku,name:i.name,quantity:i.qty,material:i.material,material_id:i.materialId,customization:i.customization,project_id:i.projectId||undefined,sizes:i.sizes||undefined}))}
 function refreshQuote(){clearTimeout(timer);timer=setTimeout(fetchQuote,200)}
@@ -63,8 +70,8 @@ async function fetchQuote(){
   try{
     const r=await fetch("/api/storefront/shipping/quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cart:cartPayload(),country:cartCountry(),shipping_method:"standard"})});
     const d=await r.json();if(!r.ok)throw new Error(d.error||"quote_failed");
-    if(s!==seq)return;cartQuote=d;st.textContent="";
-  }catch(e){if(s!==seq)return;cartQuote=null;st.textContent=K("cart.priceError")}
+    if(s!==seq)return;cartQuote=d;trackPrices(d);st.textContent="";
+  }catch(e){if(s!==seq)return;cartQuote=null;st.innerHTML=esc(e instanceof TypeError?K("co.err.network"):K("cart.priceError"))+` <button type="button" class="cart-link" id="cartRetry">${esc(K("co.retry"))}</button>`;const b=$("cartRetry");if(b)b.onclick=fetchQuote}
   render();
 }
 function commit(bump){saveCart();changed();render(bump);refreshQuote()}
