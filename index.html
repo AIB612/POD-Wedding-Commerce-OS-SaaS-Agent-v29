@@ -666,7 +666,6 @@ button{color:inherit}
             <div class="scene-current" id="sceneCurrent"><b id="sceneTitle">Wedding &amp; personalised gifts</b><span>▾</span></div>
             <div class="scene-menu" id="sceneMenu"></div>
           </div>
-          <div class="meta-pill" id="hotspotCount">4 Hotspots</div>
         </div>
 
         <div id="hotspots"></div>
@@ -1126,7 +1125,7 @@ function switchScene(key=sceneKey){
   document.getElementById("catalogAudience").textContent=(s.recommended?"★ "+homeT("Recommended for you")+" · ":"")+s.note;
   document.getElementById("sceneNoteTitle").textContent=s.name;
   document.getElementById("sceneNoteText").textContent=s.note;
-  document.getElementById("hotspotCount").textContent=s.groups.length+" "+homeT("Kits");
+
   document.getElementById("studioStartBtn").href=studioHref();
   renderSceneMenu();renderHotspots();renderCatalog();popover.classList.remove("open");
 }
