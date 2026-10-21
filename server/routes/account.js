@@ -5,6 +5,7 @@ import { requireUser } from "../auth.js";
 import { listRsvps, rsvpCsv } from "../services/rsvp-service.js";
 import { providerStatus, startLogin, finishLogin, STATE_COOKIE } from "../services/oauth-login-service.js";
 import { baseUrl } from "../config.js";
+import * as portal from "../services/account-portal-service.js";
 
 // Session cookie: HttpOnly, SameSite=Lax (survives the OAuth redirect back), Secure in production or on an https base URL.
 const secureCookie=()=>process.env.NODE_ENV==="production"||baseUrl().startsWith("https://");
@@ -47,5 +48,19 @@ export function accountRouter(){
  // Built-in RSVP responses for the couple's own published wedding sites
  r.get("/api/account/invitations/:id/rsvps",requireUser,ah(async(req,res)=>res.json(await listRsvps(req.tenantId,req.user.id,req.params.id))));
  r.get("/api/account/invitations/:id/rsvps.csv",requireUser,ah(async(req,res)=>{const x=await listRsvps(req.tenantId,req.user.id,req.params.id);res.setHeader("Content-Type","text/csv; charset=utf-8");res.setHeader("Content-Disposition",`attachment; filename="rsvp-${x.invitation.id}.csv"`);res.setHeader("Cache-Control","no-store");res.send(rsvpCsv(x));}));
+
+ // My account portal (all scoped to req.user; mutations are same-origin only).
+ const ns=(req,res,next)=>{res.setHeader("Cache-Control","no-store");next();};
+ r.get("/api/account/overview",requireUser,ns,ah(async(req,res)=>res.json(await portal.overview(req.user))));
+ r.get("/api/account/orders",requireUser,ns,ah(async(req,res)=>res.json(await portal.listOrders(req.user,{q:String(req.query.q||""),status:String(req.query.status||"")}))));
+ r.get("/api/account/orders/:id",requireUser,ns,ah(async(req,res)=>res.json(await portal.orderDetail(req.user,req.params.id))));
+ r.get("/api/account/designs",requireUser,ns,ah(async(req,res)=>res.json(await portal.designs(req.user))));
+ r.get("/api/account/me",requireUser,ns,ah(async(req,res)=>res.json(await portal.profile(req.user))));
+ r.patch("/api/account/me",requireUser,sameOrigin,ah(async(req,res)=>res.json(await portal.updateProfileName(req.user,req.body?.name))));
+ r.get("/api/account/addresses",requireUser,ns,ah(async(req,res)=>res.json(await portal.listAddresses(req.user))));
+ r.post("/api/account/addresses",requireUser,sameOrigin,ah(async(req,res)=>res.status(201).json(await portal.createAddress(req.user,req.body||{}))));
+ r.put("/api/account/addresses/:id",requireUser,sameOrigin,ah(async(req,res)=>res.json(await portal.updateAddress(req.user,req.params.id,req.body||{}))));
+ r.post("/api/account/addresses/:id/default",requireUser,sameOrigin,ah(async(req,res)=>res.json(await portal.setDefaultAddress(req.user,req.params.id))));
+ r.delete("/api/account/addresses/:id",requireUser,sameOrigin,ah(async(req,res)=>res.json(await portal.deleteAddress(req.user,req.params.id))));
  return r;
 }
