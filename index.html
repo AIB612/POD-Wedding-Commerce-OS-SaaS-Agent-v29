@@ -990,9 +990,13 @@ function retailFrom(x){
   return Number(x.base_cost_eur||0)/(1-HOME_MARGIN);
 }
 function thumbFor(src){const m=/assets\/mockups\/([^/]+)\.jpg$/.exec(src||"");return m?{src:`assets/mockups/thumb/${m[1]}.webp`,src2:`assets/mockups/thumb/${m[1]}@2x.webp`}:(src?{src,src2:src}:null)}
+// Real sample photos (designed products) shown instead of blank/shade mockups where one exists for that product type.
+const SAMPLE_PHOTOS={invitation:"invitation-monogram",mug:"mug-cafe",magic_mug:"mug-cafe",tote:"tote-leaves",tee:"tee-brand",hoodie:"hoodie-wave",tumbler:"tumbler-team"};
+function sampleFor(id){const n=SAMPLE_PHOTOS[id];return n?{src:`assets/showcase/thumb/${n}-160.webp`,src2:`assets/showcase/thumb/${n}-320.webp`,full:`assets/showcase/thumb/${n}.webp`}:null}
 function homeProduct(id){
   const x=studioProductsById[id]||{id,name:{en:id},base_cost_eur:0};
-  const tb=thumbFor(x.mockup_photo?.src);
+  const sp=sampleFor(x.id);
+  const tb=sp||thumbFor(x.mockup_photo?.src);
   return {
     id:x.id,
     name:pick(x.name,x.id),
@@ -1003,7 +1007,7 @@ function homeProduct(id){
     lead:"Studio",
     custom:"POD Design Studio",
     studio:true,
-    image:x.mockup_photo?.src||"",
+    image:sp?.full||x.mockup_photo?.src||"",
     thumb:tb?.src||"",
     thumb2:tb?.src2||"",
     colors:x.colors||[],

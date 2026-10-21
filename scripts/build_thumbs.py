@@ -4,6 +4,7 @@
 - assets/mockups/thumb/<id>.webp   ~160px product thumbnails (320px @2x as <id>@2x.webp)
 - assets/scenes/<name>-800.webp / -1200.webp   responsive hero scene variants
 - assets/showcase/thumb/<name>.webp   480px product-wall / showcase images
+- assets/showcase/thumb/<name>-160/-320.webp   catalog thumbnails for products with real sample photos
 Run: python3 scripts/build_thumbs.py
 """
 import re
@@ -32,7 +33,11 @@ def main():
         for w in (800, 1200):
             save(im, f.with_name(f"{f.stem}-{w}.webp"), w, 74)
     for f in sorted((ROOT / "assets/showcase").glob("*.jpg")):
-        save(Image.open(f), ROOT / "assets/showcase/thumb" / f"{f.stem}.webp", 480, 76)
+        im = Image.open(f)
+        save(im, ROOT / "assets/showcase/thumb" / f"{f.stem}.webp", 480, 76)
+        # small catalog thumbnails: real sample photos replacing blank mockups
+        save(im, ROOT / "assets/showcase/thumb" / f"{f.stem}-160.webp", 160)
+        save(im, ROOT / "assets/showcase/thumb" / f"{f.stem}-320.webp", 320, 72)
 
 if __name__ == "__main__":
     main()
