@@ -38,6 +38,11 @@ def main():
         # small catalog thumbnails: real sample photos replacing blank mockups
         save(im, ROOT / "assets/showcase/thumb" / f"{f.stem}-160.webp", 160)
         save(im, ROOT / "assets/showcase/thumb" / f"{f.stem}-320.webp", 320, 72)
+    # generated photo-style samples (product wall + upload-your-design section)
+    for f in sorted((ROOT / "assets/samples").glob("*.jpg")):
+        im = Image.open(f)
+        for w, q in ((480, 76), (320, 72), (160, 78)):
+            save(im, ROOT / "assets/samples/thumb" / f"{f.stem}-{w}.webp", w, q)
 
 if __name__ == "__main__":
     main()
