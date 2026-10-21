@@ -7,7 +7,8 @@ import { flushStore } from "./saas-store.js";
 validateConfig();
 const app = await createApp();
 const port = Number(process.env.PORT || 3000);
-const server = app.listen(port, () => console.log(`Wedding Commerce OS running on ${baseUrl()}`));
+const host = process.env.HOST || "0.0.0.0";
+const server = app.listen(port, host, () => console.log(`Wedding Commerce OS running on ${baseUrl()}`));
 startSchedulers();
 
 // Graceful shutdown: stop accepting connections, flush pending store writes, then exit.

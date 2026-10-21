@@ -20,4 +20,5 @@ box.onclick=async ev=>{const f=ev.target.closest('[data-f]'),cp=ev.target.closes
  const pb=ev.target.closest('[data-pub]');if(pb){const off=pb.dataset.act==='unpublish';if(off&&!confirm('下线后宾客打开链接会看到“此邀请已下线”，也无法再回复。已收到的回复会保留，之后可以重新上线。确定下线吗？'))return;pb.disabled=true;const r=await fetch(`/api/invitations/${encodeURIComponent(pb.dataset.pub)}/${pb.dataset.act}`,{method:'POST'});if(r.ok)load();else{pb.disabled=false;alert('操作失败，请稍后再试')}return}
  if(cp){const u=cp.dataset.copyLink;try{await navigator.clipboard.writeText(u);cp.textContent='已复制 ✓'}catch{prompt('复制邀请链接',u)}setTimeout(()=>cp.textContent='复制邀请链接',1800)}}}
 load();document.getElementById('refresh').onclick=()=>location.reload();document.getElementById('logout').onclick=()=>PODAuth.logout();
-</script></body></html>
+</script><div id="site-footer"></div><script src="/footer.js" defer></script>
+</body></html>

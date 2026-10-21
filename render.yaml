@@ -1,0 +1,66 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: pod-wedding-studio
+    runtime: node
+    plan: starter
+    region: frankfurt
+    branch: main
+    buildCommand: npm ci
+    startCommand: node server/app.js
+    healthCheckPath: /api/health
+    domains:
+      - wed.swisspro.site
+    # Render injects PORT; the server listens on process.env.PORT on 0.0.0.0.
+    # Persist runtime state on a disk (free/ephemeral instances lose it on every deploy).
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      - key: PUBLIC_BASE_URL
+        value: https://wed.swisspro.site
+      - key: TRUST_PROXY
+        value: "true"
+      - key: STORE_PERSIST_PATH
+        value: /var/data/runtime-state.json
+      - key: CORS_ORIGINS
+        value: https://wed.swisspro.site
+      # --- Hard-required in production (server refuses to start without them) ---
+      - key: ADMIN_API_KEY
+        sync: false
+      - key: APP_ENCRYPTION_KEY   # >= 32 random chars
+        sync: false
+      # --- Required for sign-in (otherwise buttons show "not configured") ---
+      - key: SESSION_SECRET       # >= 32 random chars
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SHOPIFY_SHOP_DOMAIN
+        sync: false
+      - key: SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID
+        sync: false
+      - key: SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_SECRET
+        sync: false
+      # --- Shopify app OAuth (admin store connection) ---
+      - key: SHOPIFY_CLIENT_ID
+        sync: false
+      - key: SHOPIFY_CLIENT_SECRET
+        sync: false
+      - key: SHOPIFY_REDIRECT_URI
+        value: https://wed.swisspro.site/api/shopify/oauth/callback
+      # --- Payments ---
+      - key: PAYPAL_ENV
+        value: live
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
