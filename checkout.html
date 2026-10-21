@@ -70,6 +70,7 @@ a{color:inherit}
 .co-fine{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.5}
 .co-trust{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:5px;font-size:12px;color:var(--muted)}.co-trust li:before{content:"✓ ";color:var(--accent);font-weight:700}
 .co-sumtoggle{display:none}
+.co-review-lines{margin:4px 0 12px}.co-review-lines .co-line{border-bottom:1px solid var(--line);padding-bottom:10px}.co-design{display:inline-block;margin-top:3px;font-size:11px;font-weight:600;color:#2f6b3f}
 .co-empty{text-align:center;padding:60px 20px}
 .co-fast{display:grid;gap:4px;border:1px solid var(--line);border-radius:14px;background:var(--soft);padding:14px 16px;margin:6px 0 16px}.co-fast b{font-size:14px}.co-fast>span{font-size:12.5px;color:var(--muted)}.co-fast-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px}.co-fast-btns .pa-opt{min-height:46px;font-size:13.5px}.co-fast .co-fast-or{text-align:center;margin-top:4px}.co-signed{font-size:13px;background:#eef5ef;border-radius:12px;padding:10px 12px;margin:6px 0 14px}@media(max-width:520px){.co-fast-btns{grid-template-columns:1fr}}
 .lang-switch{display:inline-flex}
@@ -120,7 +121,8 @@ a{color:inherit}
     <ol class="co-progress" id="coProgress" aria-label="Checkout progress">
       <li data-step="1" data-i18n="co.step1">Contact &amp; address</li>
       <li data-step="2" data-i18n="co.step2">Shipping</li>
-      <li data-step="3" data-i18n="co.step3">Payment &amp; review</li>
+      <li data-step="3" data-i18n="co.step3">Payment</li>
+      <li data-step="4" data-i18n="co.step4">Review &amp; confirm</li>
     </ol>
 
     <section class="co-step" id="step1" data-step="1">
@@ -158,15 +160,26 @@ a{color:inherit}
     </section>
 
     <section class="co-step locked" id="step3" data-step="3">
-      <h2><span data-i18n="co.step3">Payment &amp; review</span></h2>
+      <h2><span data-i18n="co.step3">Payment</span><button class="co-change" type="button" data-goto="3" data-i18n="co.edit">Change</button></h2>
+      <div class="co-done" id="done3"></div>
       <div class="co-body">
         <div class="co-options" id="payOptions" role="radiogroup" data-i18n-attr="aria-label:co.payment"></div>
-        <div class="co-h3" data-i18n="co.review">Review your order</div>
-        <dl class="co-review" id="review"></dl>
-        <label class="co-terms"><input type="checkbox" id="terms"><span data-i18n="co.terms">I accept the terms of sale and privacy policy and understand personalised items cannot be returned.</span></label>
-        <div class="co-terms-links" style="font-size:12px;margin:4px 0 0 30px"><a href="/terms" target="_blank" rel="noopener">Terms of sale</a> · <a href="/privacy" target="_blank" rel="noopener">Privacy policy</a></div>
         <div class="co-msg" id="msg3" role="alert"></div>
-        <button class="co-btn wide" type="button" id="payBtn">Pay</button>
+        <button class="co-btn" type="button" id="toStep4" data-i18n="co.continueReview">Continue to review</button>
+      </div>
+    </section>
+
+    <section class="co-step locked" id="step4" data-step="4">
+      <h2><span data-i18n="co.step4">Review &amp; confirm</span></h2>
+      <div class="co-body">
+        <dl class="co-review" id="review"></dl>
+        <div class="co-h3" data-i18n="co.items">Items</div>
+        <div class="co-lines co-review-lines" id="reviewLines"></div>
+        <div class="co-rows" id="reviewTotals"></div>
+        <label class="co-terms"><input type="checkbox" id="terms"><span data-i18n="co.terms4">I accept the terms of sale and the privacy policy. I understand that personalised products are made to my specifications and are therefore excluded from the right of withdrawal.</span></label>
+        <div class="co-terms-links" style="font-size:12px;margin:4px 0 0 30px"><a href="/terms" target="_blank" rel="noopener" data-i18n="co.termsLink">Terms of sale</a> · <a href="/privacy" target="_blank" rel="noopener" data-i18n="co.privacyLink">Privacy policy</a></div>
+        <div class="co-msg" id="msg4" role="alert"></div>
+        <button class="co-btn wide" type="button" id="payBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="payLabel">Pay securely</span></button>
         <div class="co-twint" id="twintBox" hidden></div>
       </div>
     </section>

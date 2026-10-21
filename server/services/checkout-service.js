@@ -10,7 +10,10 @@ import { quoteShipping } from "./shipping-service.js";
 import { getConnectorCredentials } from "./connector-config-service.js";
 import { HttpError } from "../http/middleware.js";
 import { ensureCustomer } from "./account-service.js";
-import { sendEmail } from "./email-service.js";
+import { sendEmail, renderTemplate } from "./email-service.js";
+import { hmacHex, timingSafeHexEqual } from "../utils/crypto.js";
+import { baseUrl as publicBaseUrl } from "../config.js";
+import { isProjectId, projectExpired, retention, mockupUrl, hasMockup } from "./studio-service.js";
 
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
 const clean = (v, max = 200) => String(v ?? "").trim().slice(0, max);
@@ -32,7 +35,9 @@ function quoteStudioLines(raws, cur) {
     const mat = (prod.materials || []).find(m => m.id === r.material_id);
     return { product_id: prod.id, qty, ...(mat ? { material_id: mat.id } : {}) };
   });
+  // Sell prices come from the admin price list attached to studioCatalog() (StudioPricing.listPrice).
   const q = StudioPricing.quote(cat, { market, margin: STOREFRONT_MARGIN, items });
+  if (q.lines.length !== items.length) throw new HttpError(400, "product_unavailable", `Product not available for this market: ${q.warnings.join(", ")}`);
   // CNY (internal) requests: convert the EUR market price back to the base currency.
   const back = cur === "CNY" ? 1 / rateFor("EUR") : 1;
   return q.lines.map((l, i) => {
@@ -50,7 +55,10 @@ function quoteStudioLines(raws, cur) {
 function quoteMerch(cart, cur) {
   if (!Array.isArray(cart) || cart.length === 0) throw new HttpError(400, "empty_cart", "Cart is empty");
   if (cart.length > 50) throw new HttpError(400, "cart_too_large", "At most 50 cart lines");
+  if (cart.some(r => !r || typeof r !== "object" || Array.isArray(r))) throw new HttpError(400, "invalid_cart_line", "Invalid cart line");
   const ids = new Set((studioCatalog().products || []).map(p => p.id));
+  const unknown = cart.find(r => r.product_id && !ids.has(r.product_id));
+  if (unknown) throw new HttpError(400, "unknown_product", `Unknown product: ${String(unknown.product_id).slice(0, 60)}`);
   const isStudio = r => r && r.product_id && ids.has(r.product_id);
   const studio = quoteStudioLines(cart.filter(isStudio), cur);
   const legacyRaw = cart.filter(r => !isStudio(r));
@@ -116,7 +124,93 @@ async function prepareCheckout({ tenantId, user, body, provider }) {
   if (!EMAIL.test(email)) throw new HttpError(400, "invalid_email", "Please enter a valid e-mail address");
   const address = shippingAddress(body);
   const quote = await quoteStorefront({ tenantId, cart: body.cart, currency: body.currency, country: address.country, postal_code: address.postal_code, shipping_method: body.shipping_method });
+  quote.items = await attachDesigns({ tenantId, user, cart: body.cart, items: quote.items });
   return { email, address, quote };
+}
+
+/**
+ * Studio cart lines carry project_id: the project must exist in this tenant, not be expired, belong to the
+ * signed-in customer (projects are always saved by a signed-in user) and contain the product. The design
+ * reference, placement and size breakdown are copied onto the order item so production has everything.
+ */
+export async function attachDesigns({ tenantId, user, cart, items }) {
+  const out = [];
+  for (let i = 0; i < items.length; i++) {
+    const raw = cart[i] || {}, item = { ...items[i] };
+    if (raw.project_id != null && raw.project_id !== "") {
+      const pid = String(raw.project_id);
+      if (!isProjectId(pid)) throw new HttpError(400, "invalid_project", "Invalid design project");
+      const p = await findRecord("studio_projects", pid);
+      if (!p || projectExpired(p) || (tenantId && p.tenant_id !== tenantId)) throw new HttpError(400, "project_not_found", "The design project for this cart line no longer exists — please reopen it in the Studio");
+      if (!user || (p.user_id && p.user_id !== user.id)) throw new HttpError(403, "project_forbidden", "This design project belongs to another account — please sign in with the account that created it");
+      if (!p.design_url) throw new HttpError(409, "design_required", "A design is required for this product");
+      const pi = (p.items || []).find(x => x.product_id === item.product_id);
+      if (!pi) throw new HttpError(400, "project_product_mismatch", "This product is not part of the design project");
+      const prod = studioCatalog().products.find(x => x.id === item.product_id) || {};
+      const sizes = prod.sizes ? Object.fromEntries(prod.sizes.map(z => [z, Math.max(0, Math.round(Number(raw.sizes?.[z] ?? 0)) || 0)]).filter(([, n]) => n > 0)) : {};
+      const sizeSum = Object.values(sizes).reduce((a, b) => a + b, 0);
+      if (sizeSum && sizeSum !== item.quantity) throw new HttpError(400, "size_mismatch", `Size breakdown (${sizeSum}) does not match quantity (${item.quantity}) for ${item.name}`);
+      Object.assign(item, { studio_project_id: p.id, design_url: p.design_url, placement: pi.placement || null, sizes: sizeSum ? sizes : (pi.sizes || {}),
+        thumb_url: (await hasMockup(p.id, item.product_id)) ? mockupUrl(p.id, item.product_id) : "" });
+    }
+    out.push(item);
+  }
+  return out;
+}
+
+/** Signed, non-expiring per-order token for the confirmation page / return URLs (HMAC over the order id). */
+function tokenSecret() { return `order-token:${process.env.APP_ENCRYPTION_KEY || process.env.ADMIN_API_KEY || "development-only-key-change-me"}`; }
+export function orderToken(orderId) { return hmacHex(tokenSecret(), String(orderId)).slice(0, 40); }
+export function verifyOrderToken(orderId, token) { return /^[a-f0-9]{40}$/.test(String(token || "")) && timingSafeHexEqual(orderToken(orderId), String(token)); }
+
+/** Confirmation page data (token-protected; no internal fields). */
+export async function orderConfirmation(id, token) {
+  if (!verifyOrderToken(id, token)) throw new HttpError(403, "invalid_token", "This confirmation link is invalid");
+  const o = await findRecord("orders", String(id));
+  if (!o) throw new HttpError(404, "order_not_found", "Order not found");
+  const t = orderToken(o.id), withTok = u => (u ? `${u}${u.includes("?") ? "&" : "?"}ot=${t}` : "");
+  return {
+    id: o.id, status: o.status, payment_status: o.payment_status, currency: o.currency, created_at: o.created_at, paid_at: o.paid_at || null,
+    email: o.customer_email, shipping_address: o.shipping_address, shipping_method: o.shipping_method,
+    items: (o.items || []).map(l => ({ name: l.name, product_id: l.product_id || "", material: l.material, quantity: l.quantity, unit_price: l.unit_price, line_total: l.line_total, sizes: l.sizes || {}, has_design: !!l.design_url, thumb_url: withTok(l.thumb_url), image: productImage(l.product_id) })),
+    totals: { subtotal: o.subtotal, shipping: o.shipping_charged, tax: o.tax, tax_rate: o.tax_rate ?? null, grand_total: o.grand_total },
+    timeline: [
+      { id: "paid", done: o.payment_status === "paid" },
+      { id: "proof", done: ["AwaitingApproval", "Approved", "Production", "Shipped", "Delivered"].includes(o.status) },
+      { id: "production", done: ["Production", "Shipped", "Delivered"].includes(o.status) },
+      { id: "shipping", done: ["Shipped", "Delivered"].includes(o.status) }
+    ],
+    account_url: `/account.html#orders/${encodeURIComponent(o.id)}`
+  };
+}
+function productImage(pid) { const p = pid && studioCatalog().products.find(x => x.id === pid); return p?.mockup_photo?.src ? `/${p.mockup_photo.src}` : ""; }
+
+const money = (n, cur) => `${cur} ${Number(n || 0).toFixed(2)}`;
+/** Order confirmation e-mail (itemised, absolute URLs). */
+export async function sendOrderConfirmation(order) {
+  if (!order?.customer_email) return null;
+  const base = publicBaseUrl(), url = `${base}/payment-success.html?order=${encodeURIComponent(order.id)}&t=${orderToken(order.id)}`;
+  const a = order.shipping_address || {};
+  const rows = (order.items || []).map(l => ({ name: l.name, material: l.material || "", quantity: l.quantity, line_total: money(l.line_total, order.currency), image: productImage(l.product_id) ? base + productImage(l.product_id) : "", sizes: Object.entries(l.sizes || {}).map(([k, v]) => `${k}×${v}`).join(", ") }));
+  const vars = { order_id: order.id, customer_name: order.customer_name || "", items: rows, subtotal: money(order.subtotal, order.currency), shipping: money(order.shipping_charged, order.currency), tax: money(order.tax, order.currency), total: money(order.grand_total, order.currency),
+    address: [a.name, a.address1, a.address2, [a.postal_code, a.city].filter(Boolean).join(" "), a.country].filter(Boolean).join(", "), order_url: url, account_url: `${base}/account.html`, shop_url: `${base}/` };
+  const r = await renderTemplate("order-confirmation", vars);
+  return sendEmail({ tenantId: order.tenant_id, userId: order.user_id || null, to: order.customer_email, type: "order_confirmation", related_id: order.id, subject: `Order confirmed · ${order.id}`, text: r.text, html: r.html });
+}
+
+/** Hook for fulfilment / admin: "your order has shipped" with tracking (call when status → Shipped). */
+export async function sendShippedEmail(order, { carrier = "", tracking_number = "", tracking_url = "" } = {}) {
+  if (!order?.customer_email) return null;
+  const base = publicBaseUrl();
+  const r = await renderTemplate("order-shipped", { order_id: order.id, customer_name: order.customer_name || "", carrier, tracking_number, tracking_url, order_url: `${base}/payment-success.html?order=${encodeURIComponent(order.id)}&t=${orderToken(order.id)}`, account_url: `${base}/account.html` });
+  return sendEmail({ tenantId: order.tenant_id, userId: order.user_id || null, to: order.customer_email, type: "order_shipped", related_id: order.id, subject: `Your order has shipped · ${order.id}`, text: r.text, html: r.html });
+}
+
+/** Paid orders: every Studio design used is marked ordered and kept for 90 days (production + reprints). */
+async function markProjectsOrdered(order) {
+  const ids = [...new Set((order.items || []).map(l => l.studio_project_id).filter(Boolean))];
+  const until = new Date(Date.now() + retention().quoteDays * 864e5).toISOString();
+  for (const id of ids) await updateRecord("studio_projects", id, { status: "ordered", order_id: order.id, expires_at: until, updated_at: new Date().toISOString() });
 }
 
 async function saveDraftOrder({ tenantId, user, email, address, quote, provider, name }) {
@@ -130,7 +224,7 @@ async function saveDraftOrder({ tenantId, user, email, address, quote, provider,
     shipping_address: address,
     items: quote.items, currency: quote.currency,
     subtotal: quote.subtotal, shipping_method: quote.selected_shipping, shipping_charged: quote.shipping_amount,
-    tax: quote.tax.amount, tax_engine: quote.tax_engine, rate_engine: quote.rate_engine, grand_total: quote.grand_total,
+    tax: quote.tax.amount, tax_rate: Number(quote.tax.rate || 0), tax_engine: quote.tax_engine, rate_engine: quote.rate_engine, grand_total: quote.grand_total,
     revenue: round2(quote.subtotal + quote.shipping_amount), // tax is collected for the authorities, not revenue
     cogs: 0, shipping_cost: 0, payment_fee: round2(quote.grand_total * feeRate), affiliate_commission: 0, ad_attributed_cost: 0,
     created_at: now, updated_at: now
@@ -161,12 +255,12 @@ export async function createStorefrontCheckout({ tenantId, user = null, body = {
       items: quote.items.map(l => ({ name: l.name, sku: l.sku, quantity: l.quantity, unit_amount: l.unit_price, description: l.material })),
       shipping: address.address1 ? address : null,
       returnUrl: `${baseUrl}/api/payments/paypal/return?order=${encodeURIComponent(id)}`,
-      cancelUrl: `${baseUrl}/payment-success.html?order=${encodeURIComponent(id)}&status=CANCELLED`
+      cancelUrl: `${baseUrl}/payment-success.html?order=${encodeURIComponent(id)}&t=${orderToken(id)}&status=CANCELLED`
     });
     const url = approvalUrl(pp);
     if (!url) throw new Error("paypal_missing_approval_url");
     await updateRecord("orders", id, { paypal_order_id: pp.id, updated_at: new Date().toISOString() });
-    return { order_id: order.id, total: quote.grand_total, currency: quote.currency, approval_url: url, quote };
+    return { order_id: order.id, order_token: orderToken(order.id), total: quote.grand_total, currency: quote.currency, approval_url: url, quote };
   } catch (e) {
     console.error("[checkout] PayPal order creation failed:", e.message);
     await updateRecord("orders", id, { status: "Cancelled", payment_status: "failed", updated_at: new Date().toISOString() });
@@ -183,7 +277,7 @@ export async function createTwintCheckout({ tenantId, user = null, body = {}, ba
   try {
     const tw = await startTwintOrder({ amount: quote.grand_total, currency: quote.currency, merchantReference: order.id });
     await updateRecord("orders", order.id, { twint_order_uuid: tw.orderUuid, updated_at: new Date().toISOString() });
-    return { order_id: order.id, total: quote.grand_total, currency: quote.currency, twint: { token: tw.token, qr_code: tw.qrCode, app_url: tw.twintUrl }, status_url: `${baseUrl}/api/payments/twint/status?order=${encodeURIComponent(order.id)}` };
+    return { order_id: order.id, order_token: orderToken(order.id), total: quote.grand_total, currency: quote.currency, twint: { token: tw.token, qr_code: tw.qrCode, app_url: tw.twintUrl }, status_url: `${baseUrl}/api/payments/twint/status?order=${encodeURIComponent(order.id)}` };
   } catch (e) {
     console.error("[checkout] TWINT order start failed:", e.message);
     await updateRecord("orders", order.id, { status: "Cancelled", payment_status: "failed", updated_at: new Date().toISOString() });
@@ -207,7 +301,8 @@ async function markPaid(order, { captureId, source }) {
   const now = new Date().toISOString();
   const updated = await updateRecord("orders", order.id, { status: "Paid", payment_status: "paid", paypal_capture_id: captureId || order.paypal_capture_id || "", paid_at: now, updated_at: now, paid_via: source });
   await createProofForOrder(updated);
-  if (updated.customer_email) await sendEmail({ tenantId: updated.tenant_id, userId: updated.user_id || null, to: updated.customer_email, type: "payment_received", related_id: updated.id, subject: `Payment received · ${updated.id}`, text: `Payment received for ${updated.id}. We will prepare your proof next.`, html: `<p>Payment received for <b>${updated.id}</b>.</p><p>We will prepare your proof next.</p><p><a href="/account.html">View order status</a></p>` });
+  await markProjectsOrdered(updated);
+  try { await sendOrderConfirmation(updated); } catch (e) { console.error("[checkout] confirmation e-mail failed:", e.message); }
   return updated;
 }
 

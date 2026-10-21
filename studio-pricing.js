@@ -40,9 +40,13 @@
       const pkgCost = data.packaging.filter(o => packaging.has(o.id) && p.packaging.includes(o.id)).reduce((a, o) => a + o.cost_eur, 0);
       const mats = p.materials || [], mat = mats.find(m => m.id === it.material_id) || mats[0] || null;   // selected material (default: first)
       const costEur = (p.base_cost_eur + (mat ? mat.delta_eur : 0)) * tierFactor(data, qty) + (fac.cross_border ? fac.cross_cost_eur : 0) + pkgCost; // delivery is priced by fulfillment()
-      const unit_cost = r2(costEur * fx), price = charm(unit_cost / (1 - margin)), ceiling = r2(p.price_ceiling_eur * fx);
+      const unit_cost = r2(costEur * fx), ceiling = r2(p.price_ceiling_eur * fx);
+      // Admin-managed price list (single source of truth for sell prices) wins over the margin formula.
+      const listed = input.list === false ? null : listPrice(data.price_list, p.id, mat ? mat.id : null, market.currency, qty);
+      const pkgPrice = pkgCost ? r2(pkgCost * fx / (1 - margin)) : 0;
+      const price = listed != null ? r2(listed + pkgPrice) : charm(unit_cost / (1 - margin));
       lines.push({ product_id: p.id, qty, material_id: mat ? mat.id : null, facility: fac.facility.id, facility_city: fac.facility.city, facility_country: fac.facility.country,
-        cross_border: fac.cross_border, days: fac.days, unit_cost, price, unit_profit: r2(price - unit_cost), ceiling, reachable: price <= ceiling,
+        cross_border: fac.cross_border, days: fac.days, unit_cost, price, price_source: listed != null ? "list" : "formula", unit_profit: r2(price - unit_cost), ceiling, reachable: price <= ceiling,
         line_revenue: r2(price * qty), line_cost: r2(unit_cost * qty), line_profit: r2((price - unit_cost) * qty) });
     }
     const sum = k => r2(lines.reduce((a, l) => a + l[k], 0));
@@ -50,6 +54,17 @@
     return { market: market.id, currency: market.currency, margin, lines, warnings,
       totals: { units: lines.reduce((a, l) => a + l.qty, 0), revenue, cost, profit: r2(revenue - cost), margin: revenue ? Math.round((revenue - cost) / revenue * 10000) / 10000 : 0,
         max_days: lines.reduce((a, l) => Math.max(a, l.days), 0), unreachable: lines.filter(l => !l.reachable).map(l => l.product_id) } };
+  }
+
+  /** Sell price from the admin price list: list.products[pid][material|"_"][currency] = prices per list.tiers (ascending min_qty). */
+  function listPrice(list, pid, materialId, currency, qty) {
+    if (!list || !list.products) return null;
+    const byMat = list.products[pid]; if (!byMat) return null;
+    const row = (byMat[materialId || "_"] || byMat._ || null), arr = row && row[currency];
+    if (!Array.isArray(arr) || !arr.length) return null;
+    const tiers = list.tiers || [1]; let idx = 0;
+    tiers.forEach((t, i) => { if (qty >= t && arr[i] != null) idx = i; });
+    const v = Number(arr[idx]); return v > 0 ? r2(v) : null;
   }
 
   /** Effective print resolution of an image placed in a print area (mm). */
@@ -123,5 +138,5 @@
     return d.toISOString().slice(0, 10);
   }
 
-  g.StudioPricing = { quote, fulfillment, deliveryDate, regionOf, facilityFor, effectiveDpi, charm, r2 };
+  g.StudioPricing = { quote, listPrice, fulfillment, deliveryDate, regionOf, facilityFor, effectiveDpi, charm, r2 };
 })(typeof globalThis !== "undefined" ? globalThis : window);

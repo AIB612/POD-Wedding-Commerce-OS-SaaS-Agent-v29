@@ -15,17 +15,55 @@ import { createTask } from "./task-service.js";
 import { baseUrl } from "../config.js";
 
 const catalog = JSON.parse(fs.readFileSync(new URL("../data/studio-catalog.json", import.meta.url), "utf8"));
-export const studioCatalog = () => catalog;
+import { withPrices } from "./price-list-service.js";
+// Catalog + live admin price list (sell prices); every server-side quote reads prices from here.
+export const studioCatalog = () => withPrices(catalog);
 const MAX_DESIGN_BYTES = 8 * 1024 * 1024;
 const MAGIC = { png: [0x89, 0x50, 0x4e, 0x47], jpg: [0xff, 0xd8, 0xff], webp: [0x52, 0x49, 0x46, 0x46] };
 const PLACEMENT_MODES = new Set(["contain", "cover", "tile"]);
-const isProjectId = id => /^sp_[a-f0-9]{20}$/.test(String(id || ""));
+export const isProjectId = id => /^sp_[a-f0-9]{20}$/.test(String(id || ""));
 // Privacy: designs are stored encrypted outside the public folder and every project expires.
 const DAY = 864e5;
 export const retention = () => ({ draftDays: Number(process.env.STUDIO_RETENTION_DAYS || 30), quoteDays: Number(process.env.STUDIO_QUOTE_RETENTION_DAYS || 90) });
 const privateDir = generatedDir => path.join(generatedDir, ".private-studio");   // dot-folder: never served by express.static
 const MIME = { png: "image/png", jpg: "image/jpeg", webp: "image/webp" };
 const expired = p => p.expires_at && Date.parse(p.expires_at) < Date.now();
+export const projectExpired = expired;
+let privateRoot = null; // set by the router (generatedDir) so checkout can look up stored mockups
+export const setStudioDir = generatedDir => { privateRoot = privateDir(generatedDir); };
+const isPid = pid => catalog.products.some(p => p.id === pid);
+export const mockupUrl = (id, pid) => `/api/studio/projects/${id}/mockup/${encodeURIComponent(pid)}`;
+const mockupFile = (dir, id, pid) => path.join(dir, `${id}.mockup.${pid}.enc`);
+export async function hasMockup(id, pid) { if (!privateRoot || !isProjectId(id) || !isPid(pid)) return false; try { await fsp.access(mockupFile(privateRoot, id, pid)); return true; } catch { return false; } }
+
+/** Small per-product mockup thumbnail (rendered client-side) stored server-side, encrypted like the design. */
+export async function saveMockup({ id, pid, dataUrl, generatedDir, tenantId, userId }) {
+  const p = await ownedProject(id, { tenantId, userId });
+  if (!isPid(pid) || !(p.items || []).some(i => i.product_id === pid)) throw new HttpError(400, "unknown_product", "Product is not part of this project");
+  const m = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
+  if (!m) throw new HttpError(400, "invalid_mockup", "Mockup must be a PNG, JPEG or WebP data URL");
+  const buf = Buffer.from(m[2], "base64");
+  if (buf.length > 400 * 1024) throw new HttpError(413, "mockup_too_large", "Mockup thumbnail must be 400 KB or smaller");
+  const ext = m[1] === "jpeg" ? "jpg" : m[1];
+  if (!MAGIC[ext].every((b, i) => buf[i] === b)) throw new HttpError(400, "invalid_mockup", "File content does not match its image type");
+  const dir = privateDir(generatedDir); await fsp.mkdir(dir, { recursive: true });
+  await fsp.writeFile(mockupFile(dir, id, pid), encryptBuffer(Buffer.concat([Buffer.from(MIME[ext] + "\n"), buf])));
+  return { url: mockupUrl(id, pid) };
+}
+export async function readMockup({ id, pid, generatedDir }) {
+  if (!isProjectId(id) || !isPid(pid)) throw new HttpError(404, "not_found", "Not found");
+  let raw; try { raw = decryptBuffer(await fsp.readFile(mockupFile(privateDir(generatedDir), id, pid))); } catch { throw new HttpError(404, "not_found", "Not found"); }
+  const nl = raw.indexOf(10); return { mime: raw.subarray(0, nl).toString(), data: raw.subarray(nl + 1) };
+}
+async function ownedProject(id, { tenantId, userId }) {
+  if (!isProjectId(id)) throw new HttpError(404, "project_not_found", "Project not found");
+  const p = await findRecord("studio_projects", id);
+  if (!p || expired(p) || (tenantId && p.tenant_id !== tenantId)) throw new HttpError(404, "project_not_found", "Project not found");
+  if (p.user_id && p.user_id !== userId) throw new HttpError(403, "project_forbidden", "This project belongs to another account");
+  return p;
+}
+/** Owner check used by the mockup GET route. */
+export async function projectAccess(id, { tenantId, userId }) { return ownedProject(id, { tenantId, userId }); }
 
 function cleanInput(body = {}) {
   const sc = catalog.scenarios.find(s => s.id === body.scenario_id);
@@ -84,7 +122,7 @@ export async function saveProject({ tenantId, userId = null, body, generatedDir 
   const input = cleanInput(body);
   const id = `sp_${crypto.randomBytes(10).toString("hex")}`;
   const design_url = await saveDesign(body.design_data_url, privateDir(generatedDir), id);
-  const quote = StudioPricing.quote(catalog, input);
+  const quote = StudioPricing.quote(studioCatalog(), { ...input, list: input.buyer_type === "merchant" ? false : undefined });
   const delivery = deliveryFor(input);
   const now = new Date().toISOString();
   return addRecord("studio_projects", { id, tenant_id: tenantId, user_id: userId, ...input, design_url, quote, delivery, status: "draft", created_at: now, updated_at: now,
@@ -121,7 +159,7 @@ export async function requestQuote({ id, contact, user = null, tenantId = null }
   }
   const email = String(contact?.email || "").trim().slice(0, 320);
   if (!/^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/.test(email)) throw new HttpError(400, "invalid_email", "请填写有效的邮箱地址");
-  const q = StudioPricing.quote(catalog, p); // recompute at request time
+  const q = StudioPricing.quote(studioCatalog(), { ...p, list: p.buyer_type === "merchant" ? false : undefined }); // recompute at request time
   // Merchants pay the base price for samples; the margin check only filters their catalogue (retail ceiling).
   const included = p.buyer_type === "merchant" && p.auto_exclude !== false ? q.lines.filter(l => l.reachable) : q.lines;
   const delivery = deliveryFor({ ...p, items: p.items.filter(i => included.some(l => l.product_id === i.product_id)) });
@@ -181,7 +219,10 @@ export async function projectDesign({ id, generatedDir, tenantId = null, userId 
 /** Automatic deletion: removes expired projects and their encrypted design files. */
 export async function purgeExpired({ generatedDir, now = Date.now() } = {}) {
   const gone = await removeWhere("studio_projects", p => p.expires_at && Date.parse(p.expires_at) < now);
-  for (const p of gone) for (const ext of Object.keys(MIME)) await fsp.rm(path.join(privateDir(generatedDir), `${p.id}.${ext}.enc`), { force: true });
+  for (const p of gone) {
+    for (const ext of Object.keys(MIME)) await fsp.rm(path.join(privateDir(generatedDir), `${p.id}.${ext}.enc`), { force: true });
+    for (const it of p.items || []) await fsp.rm(mockupFile(privateDir(generatedDir), p.id, it.product_id), { force: true });
+  }
   // legacy plain files from older versions
   await fsp.rm(path.join(generatedDir, "studio"), { recursive: true, force: true }).catch(() => {});
   if (gone.length) console.log(`[studio] retention: deleted ${gone.length} expired project(s)`);

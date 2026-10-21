@@ -182,7 +182,7 @@ button{color:inherit}
 .qty-box label{font-size:8.5px;color:var(--muted);display:block}.qty-box input{width:100%;border:0;outline:none;font-weight:700;margin-top:3px}
 .tier{border:1px solid var(--line);border-radius:11px;padding:8px;background:#fff}
 .tier b{font-size:9.5px;display:block}.tier span{font-size:8.5px;color:var(--muted);display:block;margin-top:3px}
-.tier-list{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px}
+.tier-list{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:5px;margin-top:8px}
 .tier-pill{font-size:8px;text-align:center;border:1px solid var(--line);padding:5px 2px;border-radius:8px;background:#fff}
 .tier-pill.active{background:#2b2825;color:#fff;border-color:#2b2825}
 .total{display:flex;justify-content:space-between;align-items:center;margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
@@ -683,6 +683,7 @@ button{color:inherit}
             <div class="tier-pill" data-tier="1">10–29<br>-5%</div>
             <div class="tier-pill" data-tier="2">30–49<br>-10%</div>
             <div class="tier-pill" data-tier="3">50+<br>-15%</div>
+            <div class="tier-pill" data-tier="4" style="display:none">100+</div>
           </div>
 
           <div class="total"><span>商品小计</span><strong id="totalPrice">€0.00</strong></div>
@@ -883,6 +884,7 @@ button{color:inherit}
 </aside>
 
 <script src="studio-data.js"></script>
+<script src="/price-list.js"></script>
 <script src="studio-pricing.js"></script>
 <script src="i18n.js"></script>
 <script src="cart.js"></script>
@@ -1197,7 +1199,21 @@ function setMode(mode){
   document.getElementById("uploadField").style.display=mode==="upload"?"grid":"none";
   document.getElementById("laterField").style.display=mode==="later"?"block":"none";
 }
+/** Studio products: unit price from the admin price list (same StudioPricing.quote the server charges with), EU market, default material. */
+function studioPriceInfo(qty){
+  const p=current();
+  try{
+    const tiers=(studioCatalog.price_list?.tiers)||[...(studioCatalog.qty_tiers||[])].map(t=>t.min_qty).sort((a,b)=>a-b);
+    const unitAt=q=>StudioPricing.quote(studioCatalog,{market:"EU",margin:HOME_MARGIN,items:[{product_id:p.id,qty:q}]}).lines[0]?.price;
+    const unit=unitAt(qty);if(unit==null)return null;
+    let tier=0;tiers.forEach((t,i)=>{if(qty>=t)tier=i});
+    const next=tiers[tier+1],lo=tiers[tier],base=unitAt(1),off=base?Math.round((1-unit/base)*100):0;
+    const label=(next?`${lo}–${next-1}`:`${lo}+`)+(off>0?` · −${off}%`:"");
+    return {unit,total:Math.round(unit*qty*100)/100,tier,label,tiers,unitAt};
+  }catch(e){return null}
+}
 function priceInfo(qty){
+  if(current().studio){const s=studioPriceInfo(qty);if(s)return s}
   const material=currentMaterial();
   const base=Math.max(0,current().price + (material ? material.delta : 0));
   let discount=0,tier=0,label="1–9 件 · 标准价";
@@ -1212,6 +1228,8 @@ function updatePrice(){
   document.getElementById("unitPrice").textContent=fmtEur(info.unit);
   document.getElementById("totalPrice").textContent=fmtEur(info.total);
   document.getElementById("tierText").textContent=info.label;
+  document.querySelectorAll(".tier-pill").forEach(x=>{if(x.dataset.orig==null)x.dataset.orig=x.innerHTML;if(!info.tiers){x.innerHTML=x.dataset.orig;x.style.display=x.dataset.tier==="4"?"none":""}});
+  if(info.tiers){const pills=[...document.querySelectorAll(".tier-pill")],b=info.unitAt(1);pills.forEach((x,i)=>{const lo=info.tiers[i],nx=info.tiers[i+1];if(lo==null){x.style.display="none";return}x.style.display="";const u=info.unitAt(lo),off=b?Math.round((1-u/b)*100):0;x.innerHTML=`${nx?`${lo}–${nx-1}`:`${lo}+`}<br>${off>0?`−${off}%`:fmtEur(u)}`})}
   document.querySelectorAll(".tier-pill").forEach(x=>x.classList.toggle("active",+x.dataset.tier===info.tier));
 }
 function addCart(){

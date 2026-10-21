@@ -1,0 +1,6 @@
+Your order {{order_id}} has shipped.
+{{#carrier}}Carrier: {{carrier}}
+{{/carrier}}{{#tracking_number}}Tracking number: {{tracking_number}}
+{{/tracking_number}}{{#tracking_url}}Track: {{tracking_url}}
+{{/tracking_url}}
+Order details: {{order_url}}

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="robots" content="noindex"/>
+<title>Price list · Admin</title>
+<style>
+:root{--ink:#1f1d1a;--muted:#77736d;--line:#e7e4de;--soft:#f6f5f2;--accent:#9a6d57;--err:#a8402f;--ok:#2f6b3f}
+*{box-sizing:border-box}body{margin:0;background:var(--soft);color:var(--ink);font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header a{color:var(--muted);font-size:13px}h1{font-size:18px;margin:0}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 24px 60px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.bar input[type=search]{min-width:240px;flex:1;max-width:380px}
+input,select,button{font:inherit}input,select{border:1px solid #d6d2cb;border-radius:9px;padding:8px 10px;background:#fff;min-height:38px}
+.seg{display:inline-flex;border:1px solid #d6d2cb;border-radius:9px;overflow:hidden;background:#fff}.seg button{border:0;background:none;padding:8px 14px;cursor:pointer;color:var(--muted);font-weight:600}.seg button.on{background:var(--ink);color:#fff}
+.btn{border:0;border-radius:9px;background:var(--ink);color:#fff;padding:0 16px;min-height:38px;font-weight:600;cursor:pointer}.btn:disabled{opacity:.4;cursor:default}.btn.ghost{background:#fff;color:var(--ink);border:1px solid #d6d2cb}
+.meta{font-size:12.5px;color:var(--muted)}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:860px}th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{position:sticky;top:0;background:#fbfaf8;font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap}
+td.p b{display:block;font-size:13px}td.p span{font-size:11.5px;color:var(--muted)}
+td input{width:86px;min-height:32px;padding:5px 8px;text-align:right}td input.chg{border-color:var(--accent);background:#fbf3ee}td input.bad{border-color:var(--err);background:#fbeeea}
+.seed{font-size:11px;color:var(--muted);display:block;text-align:right}
+.msg{margin-left:auto;font-size:13px}.msg.ok{color:var(--ok)}.msg.err{color:var(--err)}
+.login{max-width:420px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px}.login input{width:100%;margin:10px 0}
+@media(max-width:700px){.wrap{padding:14px}header{padding:10px 14px}}
+</style>
+</head>
+<body>
+<header><h1>Price list <span class="meta">· sell prices for every product</span></h1><a href="/admin.html">← Admin</a></header>
+<div class="wrap" id="app">
+  <div class="bar">
+    <input type="search" id="q" placeholder="Search product or material…" aria-label="Search">
+    <select id="cat" aria-label="Category"><option value="">All categories</option></select>
+    <div class="seg" role="group" aria-label="Currency"><button data-cur="CHF" class="on">CHF</button><button data-cur="EUR">EUR</button></div>
+    <button class="btn" id="save" disabled>Save changes</button><button class="btn ghost" id="discard" disabled>Discard</button>
+    <span class="msg" id="msg" aria-live="polite"></span>
+  </div>
+  <p class="meta" id="info"></p>
+  <div class="card"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+  <p class="meta">Prices are per unit at each quantity tier (minimum quantity shown in the column header), charged as shown to customers in the shop, Studio, cart and checkout. The grey value under each field is the original seeded price (base cost + 40% margin).</p>
+</div>
+<script>
+(function(){
+const KEY_STORE="wedding-commerce-admin-key",$=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const key=()=>{try{return sessionStorage.getItem(KEY_STORE)||""}catch{return ""}};
+let data=null,cur="CHF",edits={};// edits["pid|mid|CUR"]=[...]
+async function api(url,opt={}){const r=await fetch(url,{...opt,headers:{"Content-Type":"application/json","x-admin-api-key":key(),"x-action-approved":"true",...(opt.headers||{})}});if(r.status===401){askKey();throw new Error("auth")}const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.message||d.error||"failed");return d}
+function askKey(){$("app").innerHTML=`<form class="login" id="lf"><b>Admin API key</b><p class="meta">Same key as the admin dashboard (ADMIN_API_KEY).</p><input type="password" id="k" autocomplete="current-password" required><button class="btn">Unlock</button></form>`;$("lf").onsubmit=e=>{e.preventDefault();try{sessionStorage.setItem(KEY_STORE,$("k").value)}catch{}location.reload()}}
+const k=(r)=>`${r.product_id}|${r.material_id}|${cur}`;
+function render(){
+  const term=$("q").value.trim().toLowerCase(),cat=$("cat").value;
+  $("thead").innerHTML=`<tr><th>Product</th><th>Material</th>${data.tiers.map((t,i)=>`<th style="text-align:right">${data.tiers[i+1]?`${t}–${data.tiers[i+1]-1}`:`${t}+`} pcs</th>`).join("")}</tr>`;
+  const rows=data.rows.filter(r=>(!cat||r.category===cat)&&(!term||(r.product+" "+r.material+" "+r.product_id).toLowerCase().includes(term)));
+  $("tbody").innerHTML=rows.map(r=>{const cur_=edits[k(r)]||r.prices[cur]||[],seed=r.seed?.[cur]||[];
+    return `<tr><td class="p"><b>${esc(r.product)}</b><span>${esc(r.product_id)}</span></td><td>${esc(r.material)}</td>${data.tiers.map((t,i)=>`<td><input inputmode="decimal" data-k="${esc(k(r))}" data-i="${i}" value="${cur_[i]==null||cur_[i]===""?"":(edits[k(r)]?cur_[i]:Number(cur_[i]).toFixed(2))}" class="${edits[k(r)]&&Number(edits[k(r)][i])!==Number(r.prices[cur][i])?"chg":""}" aria-label="${esc(r.product)} ${esc(r.material)} ${t}+ ${cur}"><span class="seed">${seed[i]!=null?seed[i].toFixed(2):""}</span></td>`).join("")}</tr>`}).join("");
+  const n=Object.keys(edits).length;$("save").disabled=!n;$("discard").disabled=!n;
+  $("info").textContent=`${data.rows.length} product/material rows · ${data.currencies.join(" / ")} · version ${data.version}${data.updated_at?` · last edited ${new Date(data.updated_at).toLocaleString()} by ${data.updated_by}`:" · seeded, not edited yet"}${n?` · ${n} unsaved row(s)`:""}`;
+}
+async function load(){data=await api("/api/saas/prices");const cats=[...new Set(data.rows.map(r=>r.category))].sort();$("cat").innerHTML=`<option value="">All categories</option>`+cats.map(c=>`<option>${esc(c)}</option>`).join("");render()}
+document.addEventListener("input",e=>{const el=e.target;if(!el.dataset.k)return;const [pid,mid,c]=el.dataset.k.split("|"),r=data.rows.find(x=>x.product_id===pid&&x.material_id===mid);const arr=(edits[el.dataset.k]||[...r.prices[c]]);arr[+el.dataset.i]=el.value;const v=Number(el.value);el.classList.toggle("bad",!(v>0));el.classList.toggle("chg",v!==Number(r.prices[c][+el.dataset.i]));if(arr.every((x,i)=>Number(x)===Number(r.prices[c][i])))delete edits[el.dataset.k];else edits[el.dataset.k]=arr;const n=Object.keys(edits).length;$("save").disabled=!n;$("discard").disabled=!n});
+$("q").oninput=render;$("cat").onchange=render;
+document.querySelectorAll("[data-cur]").forEach(b=>b.onclick=()=>{cur=b.dataset.cur;document.querySelectorAll("[data-cur]").forEach(x=>x.classList.toggle("on",x===b));render()});
+$("discard").onclick=()=>{edits={};render()};
+$("save").onclick=async()=>{const changes=Object.entries(edits).map(([kk,prices])=>{const [product_id,material_id,currency]=kk.split("|");return {product_id,material_id,currency,prices:prices.map(Number)}});
+  if(changes.some(c=>c.prices.some(v=>!(v>0)))){$("msg").className="msg err";$("msg").textContent="Every price must be a positive amount.";return}
+  $("save").disabled=true;try{const r=await api("/api/saas/prices",{method:"PUT",body:JSON.stringify({changes})});edits={};$("msg").className="msg ok";$("msg").textContent=`Saved ${r.changed} row(s) · version ${r.version}. Live in shop, Studio, cart and checkout.`;await load()}catch(e){$("msg").className="msg err";$("msg").textContent=e.message}};
+load().catch(e=>{if(e.message!=="auth"){$("msg").className="msg err";$("msg").textContent=e.message}});
+})();
+</script>
+</body></html>

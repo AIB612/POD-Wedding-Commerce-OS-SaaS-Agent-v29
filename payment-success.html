@@ -1,25 +1,94 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Payment Status</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(145deg,#e9dfd5,#f8f4ef);font-family:Inter,system-ui;color:#292521}.card{width:min(560px,92vw);background:#fffdf9;border:1px solid rgba(50,40,34,.12);border-radius:26px;padding:34px;box-shadow:0 28px 80px rgba(45,34,28,.16)}.mark{width:56px;height:56px;border-radius:50%;background:#292622;color:#fff;display:grid;place-items:center;font-size:24px}.card h1{font:34px Georgia,serif;font-weight:500;margin:20px 0 8px}.card p{color:#746a63;font-size:13px;line-height:1.7}.status{margin:18px 0;padding:12px;border-radius:14px;background:#f5eee8;font-size:11px;line-height:1.6}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions a{padding:10px 13px;border-radius:999px;border:1px solid rgba(50,40,34,.12);text-decoration:none;color:#292521;font-size:11px}.actions a.primary{background:#292622;color:#fff}.flow{margin-top:20px;border-top:1px solid rgba(50,40,34,.12);padding-top:16px;font-size:10px;color:#746a63;line-height:1.65}
-.lang-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;background:#f2f1ee;border:1px solid #e7e4de;border-radius:8px}
-.lang-switch button{height:28px;min-width:34px;padding:0 9px;border:0;background:transparent;border-radius:6px;color:#77736d;font-size:11px;font-weight:600;cursor:pointer}
-.lang-switch button.active{background:#fff;color:#171717;box-shadow:0 1px 3px rgba(30,26,20,.08)}
-.page-lang{position:fixed;top:18px;right:18px;z-index:10}</style></head>
-<body><div class="page-lang"><div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div></div><div class="card"><div class="mark" id="mark">✓</div><h1 id="title">Payment received</h1><p id="desc">我们正在同步支付状态。</p><div class="status" id="statusBox"></div><div class="actions"><a class="primary" href="/">返回婚礼选品</a><a href="#" id="refresh">刷新订单状态</a></div><div class="flow"><b>后续流程</b><br/>支付确认后进入 Proofing。最终效果图和材质会在支付后 2 小时内确认并发送到您的邮箱；确认后进入生产与配送，预计 14 天内送达。</div></div>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="robots" content="noindex"/>
+<title>Order confirmation · POD Wedding Studio</title>
+<style>
+:root{--paper:#fffdf9;--ink:#28231f;--muted:#7c746c;--line:rgba(45,36,30,.12);--accent:#9a6d57;--soft:#f6f1eb;--ok:#2f6b3f}
+[hidden]{display:none!important}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#f3ece5,#fbf8f4 40%);color:var(--ink);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+a{color:inherit}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px;border-bottom:1px solid var(--line);background:rgba(255,253,249,.9)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}.logo{width:34px;height:34px;border-radius:11px;background:#292622;color:#fff;display:grid;place-items:center;font-weight:700}.brand b{font-size:13px;letter-spacing:.04em}
+.lang-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;background:#f2f1ee;border:1px solid #e7e4de;border-radius:8px}.lang-switch button{height:28px;min-width:34px;padding:0 9px;border:0;background:transparent;border-radius:6px;color:#77736d;font-size:11px;font-weight:600;cursor:pointer}.lang-switch button.active{background:#fff;color:#171717;box-shadow:0 1px 3px rgba(30,26,20,.08)}
+.wrap{max-width:1040px;margin:0 auto;padding:30px 24px 60px}
+.hero{display:flex;gap:16px;align-items:flex-start;margin-bottom:22px}.mark{flex:none;width:52px;height:52px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;font-size:24px}.mark.pending{background:#b38a3c}.mark.cancelled{background:#a8402f}
+.hero h1{font:30px Georgia,serif;font-weight:500;margin:2px 0 4px}.hero p{margin:0;color:var(--muted)}.ono{display:inline-block;margin-top:8px;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin-bottom:16px}.card h2{font:19px Georgia,serif;font-weight:500;margin:0 0 12px}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:0}.tl li{display:grid;grid-template-columns:30px 1fr;gap:12px;position:relative;padding-bottom:16px}.tl li:last-child{padding-bottom:0}
+.tl li:before{content:"";position:absolute;left:14px;top:28px;bottom:0;width:2px;background:#e2d9cf}.tl li:last-child:before{display:none}
+.tl i{width:28px;height:28px;border-radius:50%;border:2px solid #cfc5bb;background:#fff;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;color:var(--muted)}.tl li.done i{background:var(--ok);border-color:var(--ok);color:#fff}.tl li.now i{border-color:var(--ink);color:var(--ink)}
+.tl b{display:block;font-size:14px}.tl span{font-size:12.5px;color:var(--muted)}
+.line{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.line:first-child{border-top:0}
+.th{position:relative;width:64px;height:64px;border-radius:12px;background:#f2ece5;overflow:hidden}.th img{width:100%;height:100%;object-fit:cover}.th em{position:absolute;top:-1px;right:-1px;min-width:20px;height:20px;border-radius:999px;background:#6f6258;color:#fff;font:700 11px/20px Inter,system-ui;text-align:center;font-style:normal;padding:0 5px}
+.line b{display:block;font-size:13.5px}.line span{display:block;font-size:12px;color:var(--muted)}.line .d{color:var(--ok);font-weight:600}.line strong{white-space:nowrap}
+.rows{display:grid;gap:6px;font-size:13.5px}.rows div{display:flex;justify-content:space-between}.rows span:last-child{color:var(--muted)}.rows .total{font-size:15px;font-weight:600;border-top:1px solid var(--line);padding-top:10px;margin-top:4px}.rows .total strong{font:22px Georgia,serif}
+.addr{font-size:13.5px;line-height:1.6}
+.actions{display:grid;gap:10px}.btn{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;text-decoration:none;font-weight:600;border:1px solid var(--line);background:#fff}.btn.primary{background:#292622;color:#fff;border-color:#292622}
+.note{font-size:12.5px;color:var(--muted);background:var(--soft);border-radius:12px;padding:10px 12px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.wrap{padding:20px 16px 40px}.hero h1{font-size:25px}.top{padding:10px 14px}}
+</style>
+</head>
+<body>
+<header class="top"><a class="brand" href="/"><div class="logo">P</div><b>POD WEDDING STUDIO</b></a><div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div></header>
+<main class="wrap">
+  <section class="hero"><div class="mark" id="mark">…</div><div><h1 id="title">Processing your order</h1><p id="lead"></p><span class="ono" id="ono" hidden></span></div></section>
+  <div class="grid">
+    <div>
+      <section class="card" id="nextCard"><h2 data-i18n="ps.next">What happens next</h2><ol class="tl" id="timeline"></ol></section>
+      <section class="card" id="itemsCard" hidden><h2 data-i18n="co.items">Items</h2><div id="lines"></div></section>
+      <div class="note" id="noToken" hidden></div>
+    </div>
+    <aside>
+      <section class="card" id="totalsCard" hidden><h2 data-i18n="co.summary">Order summary</h2><div class="rows" id="totals"></div></section>
+      <section class="card" id="addrCard" hidden><h2 data-i18n="ps.shipTo">Shipping address</h2><div class="addr" id="addr"></div></section>
+      <div class="actions"><a class="btn primary" id="accountLink" href="/account.html#orders" data-i18n="ps.viewOrder">View order in my account</a><a class="btn" href="/" data-i18n="ps.continue">Continue shopping</a><a class="btn" id="retry" href="/checkout.html" hidden data-i18n="ps.retry">Back to checkout</a></div>
+    </aside>
+  </div>
+</main>
 <script src="i18n.js"></script>
 <script>
-const q=new URLSearchParams(location.search),id=q.get("order"),initial=q.get("status")||"";
+(function(){
+const q=new URLSearchParams(location.search),id=q.get("order"),tok=q.get("t"),initial=q.get("status")||"";
+const I=()=>window.WeddingI18n||{k:x=>x,lang:()=>"en"},K=(k,v)=>I().k(k,v),$=x=>document.getElementById(x);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=(n,c)=>new Intl.NumberFormat(I().lang()==="de"?(c==="EUR"?"de-DE":"de-CH"):(I().lang()==="zh"?"zh-CN":"en-GB"),{style:"currency",currency:c||"CHF"}).format(Number(n)||0);
+const GOOD=["Paid","Proofing","AwaitingApproval","Approved","Production","Shipped","Delivered","COMPLETED"];
+let data=null,status=initial;
+function paint(){
+  const good=GOOD.includes(status)||data?.payment_status==="paid",cancelled=/^cancel/i.test(status||"");
+  if(good){try{localStorage.removeItem("pod-cart-v1")}catch(e){}}
+  const kind=good?"paid":cancelled?"cancelled":"pending";
+  $("mark").className="mark"+(kind==="paid"?"":" "+kind);$("mark").textContent=good?"✓":cancelled?"×":"…";
+  $("title").textContent=K("ps.title."+kind);
+  $("lead").textContent=kind==="paid"?K("ps.lead.paid",{e:data?.email||"…"}):K("ps.lead."+kind);
+  $("retry").hidden=!cancelled;
+  if(id){$("ono").hidden=false;$("ono").textContent=`${K("ps.order")}: ${id}`}
+  const tl=data?.timeline||[{id:"paid",done:good},{id:"proof"},{id:"production"},{id:"shipping"}];
+  const nowIdx=tl.findIndex(s=>!s.done);
+  $("timeline").innerHTML=tl.map((s,i)=>`<li class="${s.done?"done":i===nowIdx?"now":""}"><i>${s.done?"✓":i+1}</i><div><b>${esc(K("ps.step."+s.id))}</b><span>${esc(K("ps.step."+s.id+".d"))}</span></div></li>`).join("");
+  $("noToken").hidden=!!data||!id;$("noToken").textContent=K("ps.noToken");
+  if(!data)return;
+  const c=data.currency;
+  $("itemsCard").hidden=false;
+  $("lines").innerHTML=data.items.map(l=>{const sz=Object.entries(l.sizes||{}).map(([k,v])=>`${k}×${v}`).join(", "),img=l.thumb_url||l.image;
+    return `<div class="line"><div class="th">${img?`<img src="${esc(img)}" alt="" width="64" height="64" onerror="this.onerror=null;this.src='${esc(l.image||"")}'">`:""}<em>${l.quantity}</em></div><div><b>${esc(l.name)}</b><span>${esc([l.material,sz].filter(Boolean).join(" · "))}</span>${l.has_design?`<span class="d">✓ ${esc(K("co.designAttached"))}</span>`:""}</div><strong>${money(l.line_total,c)}</strong></div>`}).join("");
+  const t=data.totals,rate=t.tax_rate?Math.round(t.tax_rate*1000)/10:0;
+  $("totalsCard").hidden=false;
+  $("totals").innerHTML=`<div><span>${esc(K("cart.subtotal"))}</span><strong>${money(t.subtotal,c)}</strong></div><div><span>${esc(K("cart.shipping"))}</span><span>${Number(t.shipping)===0?esc(K("co.free")):money(t.shipping,c)}</span></div><div><span>${esc(rate?K("co.tax",{rate}):K("co.taxNone"))}</span><span>${money(t.tax,c)}</span></div><div class="total"><span>${esc(K("cart.total"))}</span><strong>${money(t.grand_total,c)}</strong></div>`;
+  const a=data.shipping_address||{};
+  $("addrCard").hidden=false;$("addr").innerHTML=[a.name,a.address1,a.address2,[a.postal_code,a.city].filter(Boolean).join(" "),a.country].filter(Boolean).map(esc).join("<br>");
+  $("accountLink").href=data.account_url||"/account.html#orders";
+}
 async function load(){
-  if(!id){render(initial||"UNKNOWN");return}
-  try{const r=await fetch("/api/orders/"+encodeURIComponent(id)+"/status");const d=await r.json();if(!r.ok)throw new Error();render(d.status,d)}catch{render(initial||"UNKNOWN")}
+  if(id&&tok){try{const r=await fetch(`/api/orders/${encodeURIComponent(id)}/confirmation?t=${encodeURIComponent(tok)}`);if(r.ok){data=await r.json();status=data.status;}}catch(e){}}
+  if(!data&&id){try{const r=await fetch("/api/orders/"+encodeURIComponent(id)+"/status");const d=await r.json();if(r.ok)status=d.status}catch(e){}}
+  paint();
+  if(data&&data.payment_status!=="paid"&&!/^cancel/i.test(status||"")&&(load.n=(load.n||0)+1)<10)setTimeout(load,3000);
 }
-function render(s,d={}){
- const I=window.WeddingI18n||{t:x=>x,lang:()=>"zh"},good=["Paid","Proofing","AwaitingApproval","Approved","Production","Shipped","Delivered","COMPLETED"].includes(s),cancelled=["CANCELLED","Cancelled"].includes(s);
- if(good){try{localStorage.removeItem("pod-cart-v1")}catch(e){}}
- document.getElementById("mark").textContent=good?"✓":cancelled?"×":"…";
- document.getElementById("title").textContent=I.t(good?"支付已确认":cancelled?"支付已取消":"订单处理中");
- document.getElementById("desc").textContent=I.t(good?"订单已进入定制与效果确认流程。":cancelled?"本次支付没有完成，购物车内容仍可重新提交。":"支付平台和订单系统可能需要几秒钟完成同步。");
- const l=I.lang(),L=l==="de"?["Bestellung","Aktueller Status","Zahlungsstatus"]:l==="en"?["Order","Current status","Payment status"]:["订单","当前状态","支付状态"];
- document.getElementById("statusBox").innerHTML=`${L[0]}：${id||"—"}<br>${L[1]}：${s||"—"}${d.financial_status?`<br>${L[2]}：${d.financial_status}`:""}`;
-}
-document.getElementById("refresh").onclick=e=>{e.preventDefault();load()};load();
-</script></body></html>
+window.addEventListener("wedding-language-change",paint);
+paint();load();
+})();
+</script>
+</body></html>

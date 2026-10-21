@@ -5,7 +5,7 @@
  * PODCart.init({onEdit(line), onChange(items)}) wires the page; PODCart.upsert(line) adds/replaces a line. */
 (function(){
 const CART_KEY="pod-cart-v1",CO_KEY="pod-checkout-v1";
-const DRAWER="<div class=\"cart-scrim\" id=\"cartScrim\"></div>\n<aside class=\"cart-panel\" id=\"cartPanel\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"cartTitle\" aria-hidden=\"true\">\n  <div class=\"cart-head\"><h3 id=\"cartTitle\"><span data-i18n=\"cart.title\">Your cart</span><small id=\"cartItemsLabel\"></small></h3><button class=\"cart-close\" id=\"cartClose\" type=\"button\" data-i18n-attr=\"aria-label:cart.close\" aria-label=\"Close cart\">\u00d7</button></div>\n  <div class=\"cart-list\" id=\"cartList\"></div>\n  <div class=\"cart-foot\" id=\"cartFoot\">\n    <div class=\"cart-row\"><span data-i18n=\"cart.subtotal\">Subtotal</span><strong id=\"cartSubtotal\">\u2014</strong></div>\n    <div class=\"cart-row\"><span data-i18n=\"cart.shipping\">Shipping</span><span data-i18n=\"cart.shippingLater\">Calculated at checkout</span></div>\n    <div class=\"cart-row total\"><span data-i18n=\"cart.total\">Total</span><strong id=\"cartTotal\">\u2014</strong></div>\n    <div class=\"cart-vat\" data-i18n=\"cart.vatIncl\">Incl. VAT where applicable</div>\n    <div class=\"cart-status\" id=\"cartStatus\" aria-live=\"polite\"></div>\n    <button class=\"cart-checkout\" id=\"checkoutBtn\" type=\"button\" data-i18n=\"cart.checkout\">Checkout</button>\n    <div class=\"pay-marks\"><span data-i18n=\"cart.weAccept\">We accept</span><span class=\"pay-mark\">TWINT</span><span class=\"pay-mark\">PayPal</span></div>\n    <ul class=\"cart-trust\"><li data-i18n=\"cart.trust.secure\">Secure, encrypted payment</li><li data-i18n=\"cart.trust.proof\">Digital proof by e-mail within 2 h of payment</li><li data-i18n=\"cart.trust.delivery\">Delivered in about 14 days after approval</li></ul>\n  </div>\n</aside>";
+const DRAWER="<div class=\"cart-scrim\" id=\"cartScrim\"></div>\n<aside class=\"cart-panel\" id=\"cartPanel\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"cartTitle\" aria-hidden=\"true\">\n  <div class=\"cart-head\"><h3 id=\"cartTitle\"><span data-i18n=\"cart.title\">Your cart</span><small id=\"cartItemsLabel\"></small></h3><button class=\"cart-close\" id=\"cartClose\" type=\"button\" data-i18n-attr=\"aria-label:cart.close\" aria-label=\"Close cart\">\u00d7</button></div>\n  <div class=\"cart-list\" id=\"cartList\"></div>\n  <div class=\"cart-foot\" id=\"cartFoot\">\n    <div class=\"cart-row\"><span data-i18n=\"cart.subtotal\">Subtotal</span><strong id=\"cartSubtotal\">\u2014</strong></div>\n    <div class=\"cart-row\"><span data-i18n=\"cart.shipping\">Shipping</span><span data-i18n=\"cart.shippingLater\">Calculated at checkout</span></div>\n    <div class=\"cart-row\" id=\"cartVatRow\"><span id=\"cartVatLabel\">VAT</span><span id=\"cartVat\">\u2014</span></div>\n    <div class=\"cart-row total\"><span data-i18n=\"cart.total\">Total</span><strong id=\"cartTotal\">\u2014</strong></div>\n    <div class=\"cart-vat\" data-i18n=\"cart.vatIncl\">Incl. VAT where applicable</div>\n    <div class=\"cart-status\" id=\"cartStatus\" aria-live=\"polite\"></div>\n    <button class=\"cart-checkout\" id=\"checkoutBtn\" type=\"button\" data-i18n=\"cart.checkout\">Checkout</button>\n    <div class=\"pay-marks\"><span data-i18n=\"cart.weAccept\">We accept</span><span class=\"pay-mark\">TWINT</span><span class=\"pay-mark\">PayPal</span></div>\n    <ul class=\"cart-trust\"><li data-i18n=\"cart.trust.secure\">Secure, encrypted payment</li><li data-i18n=\"cart.trust.proof\">Digital proof by e-mail within 2 h of payment</li><li data-i18n=\"cart.trust.delivery\">Delivered in about 14 days after approval</li></ul>\n  </div>\n</aside>";
 const HOME_LOCALE={zh:"zh-CN",en:"en-GB",de:"de-DE"};
 const $=id=>document.getElementById(id);
 let cart=loadCart(),cartQuote=null,opts={},seq=0,timer=null;
@@ -18,7 +18,9 @@ function saveCart(){try{localStorage.setItem(CART_KEY,JSON.stringify(cart))}catc
 function changed(){try{opts.onChange?.(cart)}catch(e){}}
 function cartCountry(){try{return JSON.parse(localStorage.getItem(CO_KEY)||"{}").country||"CH"}catch(e){return "CH"}}
 function fmtMoney(n,cur){const l=lang();return new Intl.NumberFormat(l==="de"?(cur==="EUR"?"de-DE":"de-CH"):(HOME_LOCALE[l]||"en-GB"),{style:"currency",currency:cur||"CHF"}).format(Number(n)||0)}
+function sizesText(z){return Object.entries(z||{}).filter(([,n])=>n>0).map(([k,n])=>`${k}×${n}`).join(", ")}
 function cartVariant(i){
+  if(i.projectId){const p=[i.material?K("cart.material",{m:T(i.material)}):"",sizesText(i.sizes)].filter(Boolean).map(esc).join(" · ");return (p?p+"<br>":"")+"✓ "+esc(K("cart.studioDesign"))}
   const parts=[T(i.scene)];
   if(i.material)parts.push(K("cart.material",{m:T(i.material)}));
   const v=i.mode==="upload"?K("cart.files",{t:(i.files||[]).join(", ")}):i.mode==="later"?K("cart.later"):(i.text?K("cart.text",{t:i.text}):K("cart.noText"));
@@ -40,15 +42,20 @@ function render(bump){
       <div class="cart-thumb">${i.thumb?`<img src="${esc(i.thumb)}" srcset="${esc(i.thumb)} 1x, ${esc(i.thumb2||i.thumb)} 2x" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${esc(i.thumbOrig)}'" width="72" height="72" alt="" loading="lazy" decoding="async">`:""}</div>
       <div class="cart-info"><b>${esc(i.name)}</b><div class="cart-variant">${cartVariant(i)}</div>
         <div class="cart-controls">
-          <div class="cart-qty" role="group" aria-label="${esc(K("cart.qty"))}"><button type="button" data-act="dec" aria-label="${esc(K("cart.decrease"))}" ${i.qty<=1?"disabled":""}>−</button><input type="number" inputmode="numeric" min="1" max="10000" value="${i.qty}" data-act="set" aria-label="${esc(K("cart.qty"))}"><button type="button" data-act="inc" aria-label="${esc(K("cart.increase"))}">+</button></div>
+          ${i.sizes&&sizesText(i.sizes)?`<span class="cart-variant">${esc(K("cart.qty"))}: ${i.qty}</span>`:`<div class="cart-qty" role="group" aria-label="${esc(K("cart.qty"))}"><button type="button" data-act="dec" aria-label="${esc(K("cart.decrease"))}" ${i.qty<=1?"disabled":""}>−</button><input type="number" inputmode="numeric" min="1" max="10000" value="${i.qty}" data-act="set" aria-label="${esc(K("cart.qty"))}"><button type="button" data-act="inc" aria-label="${esc(K("cart.increase"))}">+</button></div>`}
           <button type="button" class="cart-link" data-act="edit">${esc(K("cart.edit"))}</button><button type="button" class="cart-link" data-act="remove">${esc(K("cart.remove"))}</button>
         </div></div>
       <div class="cart-price"><strong>${ql?fmtMoney(ql.line_total,cur):"—"}</strong>${ql&&ql.quantity>1?`<span>${esc(K("cart.each",{p:fmtMoney(ql.unit_price,cur)}))}</span>`:""}</div>
     </div>`}).join("");
   $("cartSubtotal").textContent=q?fmtMoney(q.subtotal,cur):"—";
-  $("cartTotal").textContent=q?fmtMoney(q.subtotal,cur):"—";
+  // VAT exactly as the server computes it for the destination (on goods; shipping VAT is added at checkout).
+  ensureVatRow();const rate=q?Number(q.tax?.rate||0):0,vat=q?Math.round(q.subtotal*rate*100)/100:0;
+  $("cartVatLabel").textContent=q?K("cart.vat",{rate:Math.round(rate*1000)/10,c:cartCountry()}):K("co.taxNone");
+  $("cartVat").textContent=q?fmtMoney(vat,cur):"—";
+  $("cartTotal").textContent=q?fmtMoney(q.subtotal+vat,cur):"—";
 }
-function cartPayload(){return cart.map(i=>({product_id:i.productId||undefined,sku:i.sku,name:i.name,quantity:i.qty,material:i.material,material_id:i.materialId,customization:i.customization}))}
+function ensureVatRow(){if($("cartVatRow"))return;const t=document.querySelector("#cartFoot .cart-row.total");if(!t)return;const d=document.createElement("div");d.className="cart-row";d.id="cartVatRow";d.innerHTML='<span id="cartVatLabel">VAT</span><span id="cartVat">—</span>';t.parentNode.insertBefore(d,t)}
+function cartPayload(){return cart.map(i=>({product_id:i.productId||undefined,sku:i.sku,name:i.name,quantity:i.qty,material:i.material,material_id:i.materialId,customization:i.customization,project_id:i.projectId||undefined,sizes:i.sizes||undefined}))}
 function refreshQuote(){clearTimeout(timer);timer=setTimeout(fetchQuote,200)}
 async function fetchQuote(){
   if(!cart.length){cartQuote=null;render();return}
@@ -61,7 +68,7 @@ async function fetchQuote(){
   render();
 }
 function commit(bump){saveCart();changed();render(bump);refreshQuote()}
-function setQty(id,qty){const i=cart.find(x=>x.id===id);if(!i)return;i.qty=Math.max(1,Math.min(10000,parseInt(qty)||1));commit(true)}
+function setQty(id,qty){const i=cart.find(x=>x.id===id);if(!i)return;if(i.sizes&&sizesText(i.sizes))return;i.qty=Math.max(1,Math.min(10000,parseInt(qty)||1));commit(true)}
 function upsert(line){const at=cart.findIndex(x=>x.id===line.id);if(at>=0)cart[at]=line;else cart.push(line);commit(true)}
 function remove(id){cart=cart.filter(x=>x.id!==id);commit(true)}
 function open(){const p=$("cartPanel");p.classList.add("open");p.setAttribute("aria-hidden","false");$("cartScrim").classList.add("open");document.body.classList.add("cart-open");refreshQuote();setTimeout(()=>$("cartClose").focus(),50)}
@@ -77,7 +84,7 @@ function init(o){
     if(b.dataset.act==="inc")setQty(id,i.qty+1);
     else if(b.dataset.act==="dec")setQty(id,i.qty-1);
     else if(b.dataset.act==="remove")remove(id);
-    else if(b.dataset.act==="edit"){if(opts.onEdit){close();opts.onEdit(i)}}
+    else if(b.dataset.act==="edit"){if(i.projectId){location.href="studio.html?project="+encodeURIComponent(i.projectId);return}if(opts.onEdit){close();opts.onEdit(i)}}
   });
   $("cartList").addEventListener("change",e=>{const row=e.target.closest(".cart-item");if(row&&e.target.dataset.act==="set")setQty(row.dataset.id,e.target.value)});
   $("cartBtn").onclick=open;$("cartClose").onclick=close;$("cartScrim").onclick=close;

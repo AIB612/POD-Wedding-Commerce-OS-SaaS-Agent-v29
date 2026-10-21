@@ -25,3 +25,23 @@ export async function sendEmail({tenantId="tenant_demo",userId=null,to,subject,h
   return {...outcome,notification_id:row.id};
 }
 function cryptoRandom(){return Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-6);}
+
+// ---- Templates (/templates/<name>.html + <name>.txt). Tiny mustache subset: {{x}} (escaped), {{#list}}…{{/list}}
+// (loop over arrays / show block when truthy), {{^x}}…{{/x}} (show when falsy). Missing files → plain fallback.
+import fsTpl from "node:fs/promises";
+const TPL_DIR = new URL("../../templates/", import.meta.url);
+function renderMini(tpl, vars, esc) {
+  const block = /\{\{([#^])(\w+)\}\}([\s\S]*?)\{\{\/\2\}\}/g;
+  let out = tpl.replace(block, (_, kind, key, inner) => {
+    const v = vars[key];
+    if (kind === "^") return (!v || (Array.isArray(v) && !v.length)) ? renderMini(inner, vars, esc) : "";
+    if (Array.isArray(v)) return v.map(item => renderMini(inner, { ...vars, ...item }, esc)).join("");
+    return v ? renderMini(inner, vars, esc) : "";
+  });
+  return out.replace(/\{\{(\w+)\}\}/g, (_, k) => esc(vars[k] ?? ""));
+}
+export async function renderTemplate(name, vars = {}) {
+  const read = ext => fsTpl.readFile(new URL(`${name}.${ext}`, TPL_DIR), "utf8").catch(() => null);
+  const [html, text] = await Promise.all([read("html"), read("txt")]);
+  return { html: html ? renderMini(html, vars, htmlEscape) : `<p>${htmlEscape(vars.order_id || "")}</p>`, text: text ? renderMini(text, vars, v => String(v)) : String(vars.order_id || "") };
+}

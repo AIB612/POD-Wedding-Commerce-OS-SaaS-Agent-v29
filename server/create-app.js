@@ -13,11 +13,13 @@ import { publicRouter } from "./routes/public.js";
 import { adminRouter } from "./routes/admin.js";
 import carrierRates from "./routes/carrier-rates.js";
 import { studioRouter } from "./routes/studio.js";
+import { initPriceList } from "./services/price-list-service.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 export async function createApp({ root = projectRoot, generatedDir = path.join(projectRoot, "generated") } = {}) {
   await fs.mkdir(generatedDir, { recursive: true });
+  await initPriceList(); // admin price list (seeded from the retail formula on first start)
   const app = express();
   app.disable("x-powered-by");
   if (process.env.TRUST_PROXY) app.set("trust proxy", process.env.TRUST_PROXY === "true" ? true : process.env.TRUST_PROXY);

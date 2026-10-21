@@ -120,6 +120,11 @@
     ql_individual: ["我们会确认细节，并把效果确认链接发到你的邮箱。确认后才开始生产。", "We confirm the details and e-mail you a proof link. Production starts after your approval.", "Wir bestätigen die Details und senden einen Freigabelink."],
     name: ["姓名", "Name", "Name"], email: ["邮箱", "E-mail", "E-Mail"], company: ["公司 / 品牌", "Company / brand", "Firma / Marke"], vat: ["增值税号（可选）", "VAT ID (optional)", "USt-IdNr. (optional)"], noteLabel: ["备注", "Notes", "Anmerkungen"],
     cancel: ["取消", "Cancel", "Abbrechen"], send: ["提交", "Submit", "Absenden"],
+    s_subtotal: ["商品小计（不含运费）", "Subtotal (excl. shipping)", "Zwischensumme (ohne Versand)"], shipAtCheckout: ["结账时计算", "Calculated at checkout", "An der Kasse berechnet"],
+    vatNote: ["价格来自统一价目表；运费与增值税按配送国家在结账时计算。", "Prices from our standard price list; shipping and VAT are calculated for your delivery country at checkout.", "Preise laut Standardpreisliste; Versand und MwSt. werden an der Kasse für Ihr Lieferland berechnet."],
+    addToCart: ["加入购物车", "Add to cart", "In den Warenkorb"], addingCart: ["正在保存设计…", "Saving your design…", "Design wird gespeichert…"], addedCart: ["已加入购物车：{n} 件商品", "Added to cart: {n} product(s)", "In den Warenkorb gelegt: {n} Produkt(e)"],
+    buyLead: ["直接下单：设计会保存到你的账户，付款后我们会发送数字校样。", "Buy directly: your design is saved to your account and we send a digital proof after payment.", "Direkt kaufen: Ihr Design wird im Konto gespeichert, nach der Zahlung erhalten Sie einen digitalen Korrekturabzug."],
+    blockedBy: ["还不能加入购物车：{r}", "Can't add to cart yet: {r}", "Noch nicht möglich: {r}"], bulkQuote: ["企业批量询价", "Company / bulk quote", "Firmen-/Mengenangebot"],
     s_profitSet: ["每卖出一套的利润", "Profit per set sold", "Gewinn pro verkauftem Set"], s_total: ["总价（含运费）", "Total incl. delivery", "Gesamt inkl. Versand"],
     products_: ["商品", "Products", "Produkte"], delivery_: ["运费", "Delivery", "Versand"], units: ["件数", "Units", "Stück"], perPersonCost: ["每人成本", "Cost per person", "Kosten pro Person"],
     avgDays: ["送达市场", "Delivery to market", "Lieferung"], marginR: ["实际利润率", "Actual margin", "Ist-Marge"], scenario: ["场景", "Scenario", "Szenario"], kit: ["套装", "Kit", "Set"], custom: ["自选", "Custom", "Individuell"],
@@ -155,9 +160,15 @@
   const active = () => S.items.filter(i => i.include);
   /** Quantity actually produced: merchant = 1 sample each (on demand afterwards); multi = recipients × per person. */
   const effQty = i => S.buyer === "merchant" ? 1 : S.ship.mode === "multi" ? Math.max(1, S.ship.recipients.filter(r => P.regionOf(D, r.country)).length) * (i.per_person || 1) : i.qty;
-  const quoteAll = () => P.quote(D, { market: S.market, margin: S.margin, packaging: S.packaging, items: active().map(i => ({ product_id: i.product_id, qty: effQty(i), material_id: i.material_id })) });
+  /** Consumers (individual / company) buy at the admin price list (sell price); merchants see base cost + their own margin. */
+  const consumer = () => S.buyer !== "merchant";
+  const qopts = () => consumer() ? {} : { packaging: S.packaging, list: false };
+  const unitOf = l => consumer() ? l.price : l.unit_cost, lineOf = l => consumer() ? l.line_revenue : l.line_cost, totalOf = q => consumer() ? q.totals.revenue : q.totals.cost;
+  /** Direct purchase (Add to cart) for consumers; multi-recipient company orders and merchant samples keep the request flow. */
+  const buyDirect = () => consumer() && S.ship.mode !== "multi";
+  const quoteAll = () => P.quote(D, { market: S.market, margin: S.margin, ...qopts(), items: active().map(i => ({ product_id: i.product_id, qty: effQty(i), material_id: i.material_id })) });
   const finalItems = () => { if (S.buyer !== "merchant" || !S.autoExclude) return active(); const bad = new Set(quoteAll().totals.unreachable); return active().filter(i => !bad.has(i.product_id)); };
-  const quoteFinal = () => P.quote(D, { market: S.market, margin: S.margin, packaging: S.packaging, items: finalItems().map(i => ({ product_id: i.product_id, qty: effQty(i), material_id: i.material_id })) });
+  const quoteFinal = () => P.quote(D, { market: S.market, margin: S.margin, ...qopts(), items: finalItems().map(i => ({ product_id: i.product_id, qty: effQty(i), material_id: i.material_id })) });
   const delivery = () => {
     const items = finalItems().map(i => ({ product_id: i.product_id, qty: effQty(i) }));
     const mode = S.buyer === "merchant" ? "dropship" : S.ship.mode;
@@ -287,11 +298,11 @@
   const thumb = (pid, extra = "") => `<canvas data-p="${pid}" data-size="200" data-nod="1" data-clean="1" ${extra}></canvas>`;   // browsing: clean product shots
   function kitPrice(sc, k) {
     const items = k.items.map(pid => ({ product_id: pid, qty: S.buyer === "merchant" ? 1 : k.default_qty }));
-    const q = P.quote(D, { market: S.market, margin: S.margin, packaging: S.packaging, items });
+    const q = P.quote(D, { market: S.market, margin: S.margin, ...qopts(), items });
     if (S.buyer === "merchant") { const profit = q.lines.reduce((a, l) => a + l.unit_profit, 0), retail = q.lines.reduce((a, l) => a + l.price, 0);
       return `<span class="chip ok">${t("profitPerSet")} ${money(profit)}</span><span class="chip gray">${t("retailSet")} ${money(retail)}</span>`; }
-    const perSet = q.lines.reduce((a, l) => a + l.unit_cost, 0);
-    return `<span class="chip">${money(perSet)} ${t("perSet")}</span><span class="chip gray">${t("qty")} ${k.default_qty} · ${money(q.totals.cost)}</span>`;
+    const perSet = q.lines.reduce((a, l) => a + unitOf(l), 0);
+    return `<span class="chip">${money(perSet)} ${t("perSet")}</span><span class="chip gray">${t("qty")} ${k.default_qty} · ${money(totalOf(q))}</span>`;
   }
   const NAV = [["scenes", "▦"], ["all", "◫"], ["work", "✎"]];
   /** Centre · scenario kits: every scenario as a card; clicking one shows its kits in the right column. */
@@ -311,7 +322,7 @@
     const items = D.products.filter(p => (S.cat === "all" || p.category === S.cat) && (!q || [p.name.zh, p.name.en, p.name.de, p.technique, ...(p.eco_tags || [])].join(" ").toLowerCase().includes(q)));
     return `<div class="cats" style="margin-bottom:12px">${cats.map(c => `<button data-cat="${c}" class="${S.cat === c ? "active" : ""}">${c === "all" ? t("all") : t("cat_" + c)}</button>`).join("")}</div>
       <div class="pgrid">${items.map(p => { const l = P.quote(D, { market: S.market, items: [{ product_id: p.id, qty: 1 }] }).lines[0], eco=(p.eco_tags||[])[0];
-        return `<div class="ptile" data-detail="${p.id}">${thumb(p.id)}<b>${esc(nm(p.name))}</b><small>${t("from")} ${money(l.unit_cost)} · ${esc(p.technique)}${eco ? ` · ♻ ${esc(eco)}` : ""}</small>
+        return `<div class="ptile" data-detail="${p.id}">${thumb(p.id)}<b>${esc(nm(p.name))}</b><small>${t("from")} ${money(unitOf(l))} · ${esc(p.technique)}${eco ? ` · ♻ ${esc(eco)}` : ""}</small>
         <button class="add ${inSel(p.id) ? "in" : ""}" data-toggle="${p.id}" aria-label="${t(inSel(p.id) ? "remove" : "add")}">${inSel(p.id) ? "✓" : "+"}</button></div>`; }).join("") || `<div class="empty">—</div>`}</div>`;
   }
   /** Right column · kits of the clicked scenario (compact: name, count, price, product list, details, big add button). */
@@ -322,7 +333,7 @@
       return `<article class="kit3 ${S.kit === k.id ? "current" : ""}"><h3>${esc(nm(k.name))}</h3><div class="note">${k.items.length} ${t("products")}</div>
         <div class="row" style="gap:6px;margin:8px 0 10px">${kitPrice(sc, k)}</div>
         <ul class="kit3-list">${lines.map(l => { const p = prod(l.product_id); return `<li data-detail="${p.id}"><canvas data-p="${p.id}" data-size="80" data-nod="1" data-clean="1"></canvas><span>${esc(nm(p.name))}${p.note ? ` <span title="${esc(p.note)}">⚠</span>` : ""}</span>${inSel(p.id) ? `<i class="tick">✓</i>` : ""}
-          ${open ? `<small>${esc(p.technique)} · ${p.print_area_mm[0]}×${p.print_area_mm[1]} mm · ${esc(l.facility_city)} ${l.days} ${t("days")} · ${money(S.buyer === "merchant" ? l.price : l.unit_cost)}</small>` : ""}</li>`; }).join("")}</ul>
+          ${open ? `<small>${esc(p.technique)} · ${p.print_area_mm[0]}×${p.print_area_mm[1]} mm · ${esc(l.facility_city)} ${l.days} ${t("days")} · ${money(S.buyer === "merchant" ? l.price : unitOf(l))}</small>` : ""}</li>`; }).join("")}</ul>
         <div class="spread" style="margin-top:10px"><button class="btn sm ghost" data-openkit="${k.id}">${open ? t("hide") + " ▴" : t("details") + " ▾"}</button></div>
         <button class="btn big ${inAll ? "added" : "dark"}" data-merge="${sc.id}:${k.id}" ${inAll ? "disabled" : ""}>${inAll ? "✓ " + t("kitAdded") : t("addToSel")}</button></article>`; }).join("");
     return `<div class="panel kits-panel" id="kitsPanel"><div class="eyebrow">${t("nav_scenes")}</div><h2 style="margin:4px 0 2px">${esc(nm(sc.name))}</h2><p class="note" style="margin:0 0 12px">${esc(nm(sc.audience))}</p>${kits}${vFlowAction()}</div>`;
@@ -358,6 +369,8 @@
     if (S.tab === "packaging") { const ok = tabDone("packaging"); return `<div class="flow-footer"><div class="flow-meta">${ok ? t("flowReady") : t("flowNeedPackaging")}</div><button class="btn dark flow-cta" data-tab="review" ${ok ? "" : "disabled"}>${t("nextReview")}</button></div>`; }
     const ok = reviewReady();
     if (S.submittedRef) { const em=S.submission?.email_status; return `<div class="flow-footer final"><div class="flow-complete">✓ ${t("flowSubmitted", { ref: esc(S.submittedRef) })}<div class="flow-meta" style="margin-top:5px">${em==="sent"?"Confirmation email sent":em==="not_configured"?"Email queued — provider not configured":"Order request saved"}</div></div><a class="btn dark flow-cta" href="account.html">View order status →</a></div>`; }
+    if (buyDirect()) { const why = blockReasons();
+      return `<div class="flow-footer final"><div class="flow-meta" id="buyMeta">${why.length ? esc(t("blockedBy", { r: why.join(" · ") })) : t("buyLead")}</div><button class="btn dark flow-cta" id="addCartBtn" ${why.length ? "aria-disabled=\"true\" data-blocked=\"1\"" : ""}>🛒 ${t("addToCart")}</button>${S.buyer === "company" && SERVER ? `<button class="btn flow-secondary ghost" id="quoteBtn">${t("bulkQuote")}</button>` : ""}${SERVER ? "" : `<div class="flow-meta">${t("needServer")}</div>`}</div>`; }
     return `<div class="flow-footer final"><div class="flow-meta">${ok ? t(`ql_${S.buyer}`) : t("flowReviewBlocked")}</div><button class="btn dark flow-cta" id="quoteBtn" ${ok ? "" : "disabled"}>${t(`cta_${S.buyer}`)}</button>${SERVER ? "" : `<button class="btn flow-secondary" id="exportBtn">${t("exportJson")}</button><div class="flow-meta">${t("needServer")}</div>`}</div>`;
   }
   function vStudio() {
@@ -406,12 +419,13 @@
         <label class="row note" style="margin-top:8px"><input type="checkbox" id="autoExclude" ${S.autoExclude ? "checked" : ""}> ${t("autoExclude")}</label></div>
         <div class="table-wrap"><table><thead><tr><th>${t("products_")}</th><th class="num">${t("basePrice")}</th><th class="num">${t("retail")}</th><th class="num">${t("ceiling")}</th><th class="num">${t("profitSale")}</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><p class="note">${t("fxNote")}</p>`;
     }
-    const nextTier = (pid, qty) => { const tr = [...D.qty_tiers].sort((a, b) => a.min_qty - b.min_qty).find(x => x.min_qty > qty); if (!tr) return ""; const u = P.quote(D, { market: S.market, packaging: S.packaging, items: [{ product_id: pid, qty: tr.min_qty }] }).lines[0].unit_cost; return t("nextTier", { n: tr.min_qty - qty, p: money(u) }); };
+    const nextTier = (pid, qty) => { const tr = [...D.qty_tiers].sort((a, b) => a.min_qty - b.min_qty).find(x => x.min_qty > qty); if (!tr) return ""; const ln = finalItems().find(i => i.product_id === pid); const u = unitOf(P.quote(D, { market: S.market, ...qopts(), items: [{ product_id: pid, qty: tr.min_qty, material_id: ln?.material_id }] }).lines[0]); return t("nextTier", { n: tr.min_qty - qty, p: money(u) }); };
     const rows = q.lines.map(l => `<tr><td><b data-detail="${l.product_id}" style="cursor:pointer">${esc(nm(prod(l.product_id).name))}</b><div class="note">${(() => { const m = matsOf(l.product_id).find(x => x.id === l.material_id); return m ? esc(nm(m.name)) + " · " : ""; })()}${esc(l.facility_city)} · ${l.days} ${t("days")} ${t("leadTime")}</div></td>
-      <td class="num">${l.qty}</td><td class="num">${money(l.unit_cost)}</td><td class="note">${esc(nextTier(l.product_id, l.qty))}</td><td class="num"><b>${money(l.line_cost)}</b></td></tr>`).join("");
+      <td class="num">${l.qty}</td><td class="num">${money(unitOf(l))}</td><td class="note">${esc(nextTier(l.product_id, l.qty))}</td><td class="num"><b>${money(lineOf(l))}</b></td></tr>`).join("");
     const d = delivery();
     return `<div class="table-wrap"><table><thead><tr><th>${t("products_")}</th><th class="num">${t("qty")}</th><th class="num">${t("unitPrice")}</th><th>${t("tiers")}</th><th class="num">${t("lineTotal")}</th></tr></thead><tbody>${rows}
-      <tr><td colspan="4">${t("delivery_")}</td><td class="num">${money(d.total_cost)}</td></tr><tr><td colspan="4"><b>${t("s_total")}</b></td><td class="num"><b>${money(q.totals.cost + d.total_cost)}</b></td></tr></tbody></table></div><p class="note">${t("fxNote")}</p>`;
+      ${buyDirect() ? `<tr><td colspan="4">${t("delivery_")}</td><td class="num note">${t("shipAtCheckout")}</td></tr><tr><td colspan="4"><b>${t("s_subtotal")}</b></td><td class="num"><b>${money(totalOf(q))}</b></td></tr>`
+        : `<tr><td colspan="4">${t("delivery_")}</td><td class="num">${money(d.total_cost)}</td></tr><tr><td colspan="4"><b>${t("s_total")}</b></td><td class="num"><b>${money(totalOf(q) + d.total_cost)}</b></td></tr>`}</tbody></table></div><p class="note">${buyDirect() ? t("vatNote") : t("fxNote")}</p>`;
   }
   function deadlineCheck(d) {
     const earliest = P.deliveryDate(D, d.lead_days), dl = S.ship.deadline;
@@ -533,7 +547,7 @@
     }).join("");
     const packagingReview = `<div class="box"><div class="spread"><h3 style="margin:0">${t("packTitle")}</h3><button class="btn sm ghost" data-reviewfix="packaging">${t("t_packaging")} →</button></div>${S.packagingMode === "none" ? `<div class="pkg-ref none" style="margin-top:10px"><div><b>✓ ${t("packNone")}</b><small>${t("packNoneLead")}</small></div></div>` : `<div class="note" style="margin:6px 0 10px">${t("packSelected", { n: S.packaging.length })}</div>${packagingReferenceBlock(true)}`}</div>`;
     return `${alert}<div class="grid2"><div class="box review-checks"><h3>${t("checks")}</h3>${tasks}</div>
-      <div>${packagingReview}<div class="box"><h3>${t(`cta_${S.buyer}`)}</h3><p class="note">${t(`ql_${S.buyer}`)}</p>
+      <div>${packagingReview}<div class="box"><h3>${buyDirect() ? t("addToCart") : t(`cta_${S.buyer}`)}</h3><p class="note">${buyDirect() ? t("buyLead") : t(`ql_${S.buyer}`)}</p>
         ${S.buyer === "merchant" ? `<label class="field" style="margin-top:10px">${t("publishTo")}<select class="input" id="publishSel"><option value="">${t("later")}</option>${S.stores.map(c => `<option value="${esc(c.id)}" ${S.publishStore === c.id ? "selected" : ""}>${c.platform === "shopify" ? "Shopify" : "WooCommerce"} · ${esc(c.store)} — ${t("st_" + c.status)}</option>`).join("")}</select></label><button class="btn sm" data-bind="1">＋ ${t("bindStore")}</button>` : ""}
         ${SERVER ? "" : `<p class="note" style="margin-top:8px">${t("needServer")}</p>`}</div></div></div>
       <div class="mgrid" style="margin-bottom:14px">${q.lines.map(l => `<div class="mtile" style="cursor:default"><canvas data-p="${l.product_id}" data-size="260"></canvas><div class="spread"><span>${esc(nm(prod(l.product_id).name))}</span><span class="note">${S.buyer === "merchant" ? money(l.price) : `${l.qty}×`}</span></div></div>`).join("")}</div>
@@ -550,8 +564,8 @@
         <div class="kv"><span>${t("products_")}</span><b>${q.lines.length}</b></div><div class="kv"><span>${t("sample")}</span><b>${money(q.totals.cost + d.sample.cost)}</b></div>
         <div class="kv"><span>${t("avgDays")}</span><b>≈ ${avg} ${t("days")}</b></div></div>`;
     }
-    const total = q.totals.cost + d.total_cost, people = S.ship.mode === "multi" ? d.recipients : 0, dc = deadlineCheck(d);
-    return `<div class="eyebrow">${t("s_total")}</div><div class="hero-num">${money(total)}</div><div class="note">${t("products_")} ${money(q.totals.cost)} · ${t("delivery_")} ${money(d.total_cost)}</div>
+    const direct = buyDirect(), total = totalOf(q) + (direct ? 0 : d.total_cost), people = S.ship.mode === "multi" ? d.recipients : 0, dc = deadlineCheck(d);
+    return `<div class="eyebrow">${t(direct ? "s_subtotal" : "s_total")}</div><div class="hero-num">${money(total)}</div><div class="note">${t("products_")} ${money(totalOf(q))} · ${t("delivery_")} ${direct ? t("shipAtCheckout") : money(d.total_cost)}</div>
       <div style="margin-top:10px">${head}<div class="kv"><span>${t("units")}</span><b>${q.totals.units}</b></div>${people ? `<div class="kv"><span>${t("perPersonCost")}</span><b>${money(total / people)}</b></div>` : ""}
       <div class="kv"><span>${t("shipments")}</span><b>${d.parcels}</b></div><div class="kv"><span>${t("earliest")}</span><b>${dc.earliest}</b></div>
       ${S.ship.deadline ? `<div class="check ${dc.ok ? "ok" : "bad"}"><i>${dc.ok ? "✓" : "!"}</i>${dc.ok ? t("onTime") : t("late")}</div>` : ""}</div>`;
@@ -561,7 +575,7 @@
   function openDrawer(title, body, foot = "") { $("#drawerTitle").textContent = title; $("#drawerBody").innerHTML = body; $("#drawerFoot").innerHTML = foot; $("#drawer").classList.add("open"); $("#drawerMask").classList.add("open"); $("#drawer").setAttribute("aria-hidden", "false"); drawAll(); }
   function closeDrawer() { $("#drawer").classList.remove("open"); $("#drawerMask").classList.remove("open"); $("#drawer").setAttribute("aria-hidden", "true"); }
   function productDetail(pid) {
-    const p = prod(pid), tiers = [...D.qty_tiers].sort((a, b) => a.min_qty - b.min_qty).map(tr => ({ q: tr.min_qty, u: P.quote(D, { market: S.market, items: [{ product_id: pid, qty: tr.min_qty }] }).lines[0].unit_cost }));
+    const p = prod(pid), tiers = [...D.qty_tiers].sort((a, b) => a.min_qty - b.min_qty).map(tr => ({ q: tr.min_qty, u: unitOf(P.quote(D, { market: S.market, ...qopts(), items: [{ product_id: pid, qty: tr.min_qty }] }).lines[0]) }));
     const facs = ["CH", "EU", "US"].map(r => { const f = P.facilityFor(D, p, D.markets.find(m => m.region === r)); return `<div class="kv"><span>${esc(nm(D.markets.find(m => m.region === r).name))}</span><b>${f ? `${esc(f.facility.city)} · ${f.days} ${t("days")}${f.cross_border ? " · " + t("cross") : ""}` : "—"}</b></div>`; }).join("");
     const body = `<div class="pdetail"><canvas data-p="${pid}" data-size="500" data-area="1"></canvas><div>
       <div class="row"><span class="chip">${esc(p.technique)}</span><span class="chip gray">${t("cat_" + p.category)}</span>${(p.eco_tags||[]).map(x=>`<span class="chip gray">♻ ${esc(x)}</span>`).join("")}</div>
@@ -579,7 +593,7 @@
     const q = P.quote(D, { market: S.market, margin: S.margin, items: k.items.map(pid => ({ product_id: pid, qty: S.buyer === "merchant" ? 1 : k.default_qty })) });
     const body = `<p class="lead">${esc(nm(sc.audience))}</p>${q.lines.map(l => { const p = prod(l.product_id); return `<div class="sel-item" style="grid-template-columns:64px 1fr auto"><canvas data-p="${p.id}" data-size="140" style="width:64px;height:64px" data-detail="${p.id}"></canvas>
       <div><b data-detail="${p.id}">${esc(nm(p.name))}</b><div class="note">${esc(p.technique)} · ${p.print_area_mm[0]}×${p.print_area_mm[1]} mm · ${esc(l.facility_city)} ${l.days} ${t("days")}${p.note ? " · ⚠" : ""}</div></div>
-      <b class="note" style="font-size:13px;color:var(--ink)">${money(S.buyer === "merchant" ? l.price : l.unit_cost)}</b></div>`; }).join("")}`;
+      <b class="note" style="font-size:13px;color:var(--ink)">${money(S.buyer === "merchant" ? l.price : unitOf(l))}</b></div>`; }).join("")}`;
     const inAll = k.items.every(inSel);
     openDrawer(nm(k.name), body, `<button class="btn ${inAll ? "" : "dark"}" data-merge="${scId}:${kitId}" data-close="1" ${inAll ? "disabled" : ""}>${inAll ? "✓ " + t("kitAdded") : t("addToSel")}</button>`);
   }
@@ -677,7 +691,42 @@
     if (url) { const img = new Image(); img.onload = () => { setDesignFromImage(img, s.design_meta?.name || "design", s.design_meta?.source === "text" ? "text" : "upload"); if (s.design_meta?.width) { S.design.width = s.design_meta.width; S.design.height = s.design_meta.height; } render(); }; img.src = url; }
     else if (s.design_meta?.source === "text") S.design = { canvas: textDesignCanvas(), width: 1600, height: 1600, name: "text", source: "text", transparent: true };
   }
-  async function saveProject() {
+  /** Blocking print-ready checks (design missing, DPI too low, sizes, …) as short labels; warnings don't block. */
+  function blockReasons() { return checks().filter(c => !c.ok && !c.warn).map(c => c.help || c.label); }
+  /** Small mockup thumbnail for the cart (rendered client-side, stored server-side). */
+  function renderThumb(pid, size = 240) {
+    return new Promise(res => {
+      const cv = document.createElement("canvas"), i = S.items.find(x => x.product_id === pid) || newItem(pid);
+      let done = false; const fin = () => { if (done) return; done = true; let u = ""; try { u = cv.toDataURL("image/webp", 0.82); if (!u.startsWith("data:image/webp")) u = cv.toDataURL("image/jpeg", 0.82); } catch { u = ""; } res(u); };
+      M.render(cv, prod(pid), effPl(i), S.design, { size, onPhotoLoad: () => { M.render(cv, prod(pid), effPl(i), S.design, { size }); fin(); } });
+      setTimeout(fin, 1500);
+    });
+  }
+  async function addToCart() {
+    const why = blockReasons();
+    if (why.length) { toast(t("blockedBy", { r: why[0] })); const m = $("#buyMeta"); if (m) m.textContent = t("blockedBy", { r: why.join(" · ") }); return; }
+    if (!SERVER) { toast(t("needServer")); return; }
+    const btn = $("#addCartBtn"); if (btn) { btn.disabled = true; btn.textContent = t("addingCart"); }
+    try {
+      const prev = S.projectId;
+      const saved = await saveProject({ silent: true }); if (!saved || !saved.id) return;
+      const q = quoteFinal(), lines = [];
+      for (const l of q.lines) {
+        const p = prod(l.product_id), it = finalItems().find(i => i.product_id === l.product_id) || {}, mat = matsOf(l.product_id).find(m => m.id === l.material_id);
+        let thumb = "";
+        const data = await renderThumb(l.product_id);
+        if (data) { const r = await fetch(`/api/studio/projects/${saved.id}/mockup/${encodeURIComponent(l.product_id)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data_url: data }) }); if (r.ok) thumb = (await r.json()).url; }
+        const sizes = p.sizes && p.sizes.length > 1 ? Object.fromEntries(Object.entries(it.sizes || {}).filter(([, n]) => n > 0)) : {};
+        lines.push({ id: `sp-${saved.id}-${l.product_id}`, productId: l.product_id, sku: l.product_id.toUpperCase(), name: nm(p.name) || p.id, qty: l.qty, material: mat ? (mat.name.en || nm(mat.name)) : "", materialId: l.material_id || "",
+          sizes, projectId: saved.id, thumb, thumb2: thumb, thumbOrig: p.mockup_photo?.src || "", mode: "studio", customization: `Studio project ${saved.id}` });
+      }
+      // Re-adding an edited project replaces its previous lines.
+      for (const old of (window.PODCart?.items || []).filter(x => x.projectId && (x.projectId === prev || x.projectId === saved.id))) window.PODCart.remove(old.id);
+      for (const line of lines) window.PODCart.upsert(line);
+      toast(t("addedCart", { n: lines.length })); window.PODCart.open();
+    } finally { const b = $("#addCartBtn"); if (b) { b.disabled = false; b.textContent = "🛒 " + t("addToCart"); } }
+  }
+  async function saveProject({ silent = false } = {}) {
     const s = snapshot();
     if (SERVER) {
       try { await window.PODAuth?.require?.(); } catch { return null; }
@@ -685,7 +734,7 @@
       const d = await r.json().catch(() => ({}));
       if (!r.ok) { toast(d.message || d.error || t("failed")); return null; }
       S.projectId = d.id; history.replaceState(null, "", `?project=${d.id}`);
-      try { await navigator.clipboard.writeText(location.href); toast(`${t("saved")} · ${t("linkCopied")}`); } catch { toast(t("saved")); }
+      if (!silent) { try { await navigator.clipboard.writeText(location.href); toast(`${t("saved")} · ${t("linkCopied")}`); } catch { toast(t("saved")); } }
       return d;
     }
     const list = store.get(LOCAL_KEY) || [], id = S.projectId || `local_${Date.now().toString(36)}`;
@@ -773,6 +822,7 @@
     if (el.id === "dlAll") { for (const l of quoteFinal().lines) await downloadMock(l.product_id); return; }
     if (el.id === "saveBtn") return saveProject();
     if (el.id === "exportBtn") return exportPlan();
+    if (el.id === "addCartBtn") return addToCart();
     if (el.id === "quoteBtn") {
       if (!SERVER) { toast(t("needServer")); return; }
       try { await window.PODAuth?.require?.(); } catch { return; }

@@ -25,7 +25,8 @@
     "build:wedding-themes": "node src/wedding-themes/build.mjs",
     "test:checkout": "node server/checkout-test.js",
     "test:auth": "node server/auth-test.js",
-    "test:account": "node server/account-test.js"
+    "test:account": "node server/account-test.js",
+    "test:studio-buy": "node server/studio-buy-test.js"
   },
   "engines": {
     "node": ">=20"

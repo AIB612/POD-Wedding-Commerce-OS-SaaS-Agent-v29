@@ -1,0 +1,14 @@
+Thank you{{#customer_name}}, {{customer_name}}{{/customer_name}}! Order {{order_id}} is confirmed and paid.
+
+{{#items}}- {{name}} ({{material}}{{#sizes}}, {{sizes}}{{/sizes}}) × {{quantity}}: {{line_total}}
+{{/items}}
+Subtotal: {{subtotal}}
+Shipping: {{shipping}}
+VAT: {{tax}}
+Total: {{total}}
+
+Ship to: {{address}}
+
+Next steps: proof by e-mail → production after your approval → shipping with tracking.
+View your order: {{order_url}}
+My account: {{account_url}}

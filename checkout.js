@@ -1,4 +1,4 @@
-/* 3-step guest checkout: (1) contact & address → (2) shipping method → (3) payment (TWINT / PayPal) + review.
+/* 4-step guest checkout: (1) contact & address → (2) shipping method → (3) payment method (TWINT / PayPal) → (4) review & confirm.
  * Every amount comes from the server quote (/api/storefront/shipping/quote); the server re-quotes again on payment create. */
 (function () {
   const CART_KEY = "pod-cart-v1", CO_KEY = "pod-checkout-v1";
@@ -16,14 +16,18 @@
   try { saved = JSON.parse(localStorage.getItem(CO_KEY) || "{}"); } catch (e) {}
   const state = { step: 1, quote: null, method: saved.method === "express" ? "express" : "standard", pay: null, methods: null, busy: false };
 
-  const payload = () => cart.map(i => ({ product_id: i.productId || undefined, sku: i.sku, name: i.name, quantity: i.qty, material: i.material, material_id: i.materialId, customization: i.customization }));
+  const payload = () => cart.map(i => ({ product_id: i.productId || undefined, sku: i.sku, name: i.name, quantity: i.qty, material: i.material, material_id: i.materialId, customization: i.customization, project_id: i.projectId || undefined, sizes: i.sizes || undefined }));
   const val = id => $(id).value.trim();
   const addr = () => ({ name: val("name"), address1: val("address1"), address2: val("address2"), postal_code: val("postal"), city: val("city"), country: $("country").value, phone: val("phone") });
 
   function variant(i) {
+    if (i.projectId) return [I().t(i.material || ""), sizesText(i.sizes), K("cart.studioDesign")].filter(Boolean).join(" · ");
     const v = i.mode === "upload" ? K("cart.files", { t: (i.files || []).join(", ") }) : i.mode === "later" ? K("cart.later") : (i.text ? K("cart.text", { t: i.text }) : K("cart.noText"));
     return [I().t(i.material || ""), v].filter(Boolean).join(" · ");
   }
+
+  function sizesText(z) { return Object.entries(z || {}).filter(([, n]) => n > 0).map(([k, n]) => `${k}×${n}`).join(", "); }
+  const thumbHtml = i => i.thumb ? `<img src="${esc(i.thumb)}" onerror="this.onerror=null;this.src='${esc(i.thumbOrig || "")}'" alt="" width="56" height="56">` : "";
 
   function fillCountries() {
     let dn = null;
@@ -37,7 +41,7 @@
     const q = state.quote, cur = q?.currency;
     $("sumLines").innerHTML = cart.map((i, idx) => {
       const ql = q?.items?.[idx];
-      return `<div class="co-line"><div class="co-th">${i.thumb ? `<img src="${esc(i.thumb)}" onerror="this.onerror=null;this.src='${esc(i.thumbOrig || "")}'" alt="" width="56" height="56">` : ""}<i>${i.qty}</i></div>
+      return `<div class="co-line"><div class="co-th">${thumbHtml(i)}<i>${i.qty}</i></div>
         <div><b>${esc(i.name)}</b><span>${esc(variant(i))}</span></div><strong>${ql ? money(ql.line_total, cur) : "—"}</strong></div>`;
     }).join("");
     $("sumSubtotal").textContent = q ? money(q.subtotal, cur) : "—";
@@ -54,7 +58,7 @@
     if (cur === "EUR") fine.push(K("co.duties"));
     fine.push(K("co.serverNote"));
     $("sumFine").textContent = fine.join(" ");
-    $("payBtn").textContent = q && state.step === 3 ? K("co.pay", { amount: money(q.grand_total, cur) }) : K("co.pay", { amount: "" }).trim();
+    $("payLabel").textContent = q && state.step === 4 ? K("co.paySecure", { amount: money(q.grand_total, cur) }) : K("co.paySecure", { amount: "" }).trim();
   }
 
   async function fetchQuote(method) {
@@ -69,7 +73,7 @@
 
   function setStep(n) {
     state.step = n;
-    [1, 2, 3].forEach(i => {
+    [1, 2, 3, 4].forEach(i => {
       const s = $("step" + i);
       s.classList.toggle("collapsed", i < n);
       s.classList.toggle("locked", i > n);
@@ -80,6 +84,8 @@
     $("done1").innerHTML = esc(val("email")) + "<br>" + esc([a.name, a.address1, a.address2, `${a.postal_code} ${a.city}`, $("country").selectedOptions[0]?.textContent].filter(Boolean).join(", "));
     const opt = state.quote?.shipping_options?.find(o => o.id === state.method);
     $("done2").textContent = opt ? `${K(state.method === "express" ? "co.express" : "co.standard")} · ${K("co.days", { d: opt.eta_days })} · ${opt.amount === 0 ? K("co.free") : money(opt.amount, state.quote.currency)}` : "";
+    $("done3").textContent = state.step > 3 && state.pay ? K(state.pay === "twint" ? "co.twint" : "co.paypal") : "";
+    if (n === 4) renderReview();
     renderSummary();
     $("step" + n).scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -159,35 +165,44 @@
         <div><b>${esc(K("co.paypal"))}</b><span>${esc(m.paypal?.configured === false ? K("co.paypalDesc") : K("co.paypalDesc"))}</span></div><span class="co-badge" aria-hidden="true">PayPal</span></label>`;
   }
   $("payOptions").addEventListener("change", e => { if (e.target.name === "pay") state.pay = e.target.value; });
+  $("toStep4").onclick = () => { msg("msg3", ""); if (!state.pay) { msg("msg3", K("co.choosePayment")); return; } setStep(4); };
   function renderReview() {
-    const a = addr(), q = state.quote, opt = q?.shipping_options?.find(o => o.id === state.method);
+    const a = addr(), q = state.quote, cur = q?.currency, opt = q?.shipping_options?.find(o => o.id === state.method);
     $("review").innerHTML = `
       <div><dt>${esc(K("co.contact"))}</dt><dd>${esc(val("email"))}</dd></div>
-      <div><dt>${esc(K("co.shipTo"))}</dt><dd>${esc([a.name, a.address1, a.address2, `${a.postal_code} ${a.city}`, a.country].filter(Boolean).join(", "))}</dd></div>
+      <div><dt>${esc(K("co.shipTo"))}</dt><dd>${esc([a.name, a.address1, a.address2, `${a.postal_code} ${a.city}`, $("country").selectedOptions[0]?.textContent || a.country].filter(Boolean).join(", "))}</dd></div>
       <div><dt>${esc(K("co.method"))}</dt><dd>${esc(opt ? `${K(state.method === "express" ? "co.express" : "co.standard")} · ${K("co.days", { d: opt.eta_days })}` : "—")}</dd></div>
-      <div><dt>${esc(K("cart.total"))}</dt><dd><b>${q ? money(q.grand_total, q.currency) : "—"}</b></dd></div>`;
+      <div><dt>${esc(K("co.payment"))}</dt><dd>${esc(state.pay ? K(state.pay === "twint" ? "co.twint" : "co.paypal") : "—")}</dd></div>`;
+    $("reviewLines").innerHTML = cart.map((i, idx) => { const ql = q?.items?.[idx];
+      return `<div class="co-line"><div class="co-th">${thumbHtml(i)}<i>${i.qty}</i></div><div><b>${esc(i.name)}</b><span>${esc(variant(i))}</span>${i.projectId ? `<span class="co-design">✓ ${esc(K("co.designAttached"))}</span>` : ""}</div>
+        <strong>${ql ? money(ql.line_total, cur) : "—"}${ql && ql.quantity > 1 ? `<span>${esc(K("cart.each", { p: money(ql.unit_price, cur) }))}</span>` : ""}</strong></div>`; }).join("");
+    const rate = q ? Math.round(Number(q.tax?.rate || 0) * 1000) / 10 : 0;
+    $("reviewTotals").innerHTML = q ? `<div><span>${esc(K("cart.subtotal"))}</span><strong>${money(q.subtotal, cur)}</strong></div>
+      <div><span>${esc(K("cart.shipping"))}</span><span>${q.shipping_amount === 0 ? esc(K("co.free")) : money(q.shipping_amount, cur)}</span></div>
+      <div><span>${esc(rate ? K("co.tax", { rate }) : K("co.taxNone"))}</span><span>${money(q.tax.amount, cur)}</span></div>
+      <div class="total"><span>${esc(K("cart.total"))}</span><strong>${money(q.grand_total, cur)}</strong></div>` : "";
   }
 
   $("payBtn").onclick = async () => {
-    msg("msg3", "");
-    if (!$("terms").checked) { msg("msg3", K("co.acceptTerms")); $("terms").focus(); return; }
+    msg("msg4", "");
+    if (!$("terms").checked) { msg("msg4", K("co.acceptTerms")); $("terms").focus(); return; }
     if (state.busy) return;
     const a = addr();
     const body = { cart: payload(), customer: { name: a.name, email: val("email"), phone: a.phone }, shipping: a, shipping_method: state.method, currency: state.quote?.currency };
     const url = state.pay === "twint" ? "/api/payments/twint/create" : "/api/payments/paypal/create";
-    state.busy = true; const btn = $("payBtn"), label = btn.textContent; btn.disabled = true; btn.textContent = K("co.paying");
+    state.busy = true; const btn = $("payBtn"), lab = $("payLabel"), label = lab.textContent; btn.disabled = true; lab.textContent = K("co.paying");
     try {
       const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) {
-        if (state.pay === "twint" && /twint_not_(configured|implemented)/.test(d.error || "")) { state.methods.twint = { configured: false }; state.pay = "paypal"; renderPayments(); }
+        if (state.pay === "twint" && /twint_not_(configured|implemented)/.test(d.error || "")) { state.methods.twint = { configured: false }; state.pay = "paypal"; renderPayments(); renderReview(); }
         throw Object.assign(new Error(d.error), { code: d.error });
       }
       if (d.approval_url) { location.href = d.approval_url; return; }
       if (state.pay === "twint" && d.twint) { showTwint(d); return; }
       throw Object.assign(new Error("generic"), { code: "generic" });
-    } catch (e) { msg("msg3", errText(e.code)); }
-    finally { state.busy = false; btn.disabled = false; btn.textContent = label; }
+    } catch (e) { msg("msg4", errText(e.code)); }
+    finally { state.busy = false; btn.disabled = false; lab.textContent = label; }
   };
 
   // TWINT: only reached once the server connector is implemented. Shows the code/QR and polls; never assumes success.
@@ -199,8 +214,8 @@
       tries++;
       try {
         const s = await (await fetch(d.status_url)).json();
-        if (s.status === "COMPLETED") { location.href = `/payment-success.html?order=${encodeURIComponent(d.order_id)}`; return; }
-        if (s.status === "FAILED" || s.status === "CANCELLED") { msg("msg3", errText("generic")); return; }
+        if (s.status === "COMPLETED") { location.href = `/payment-success.html?order=${encodeURIComponent(d.order_id)}${d.order_token ? `&t=${d.order_token}` : ""}`; return; }
+        if (s.status === "FAILED" || s.status === "CANCELLED") { msg("msg4", errText("generic")); return; }
       } catch (e) {}
       if (tries < 120) setTimeout(poll, 2500);
     };
@@ -238,7 +253,7 @@
     try { state.quote = await fetchQuote(); } catch (e) {}
     if (state.step >= 2) { setStep(2); await loadShipping(); } else renderSummary();
   });
-  window.addEventListener("wedding-language-change", () => { fillCountries(); if (state.quote && state.step >= 2) renderShipping(); if (state.step === 3) { renderPayments(); renderReview(); } setStep(state.step); });
+  window.addEventListener("wedding-language-change", () => { fillCountries(); if (state.quote && state.step >= 2) renderShipping(); if (state.step >= 3) { renderPayments(); renderReview(); } setStep(state.step); });
 
   if (!cart.length) {
     $("coWrap").innerHTML = `<div class="co-empty" style="grid-column:1/-1"><h2 style="font:24px Georgia,serif;font-weight:500">${esc(K("co.emptyCart"))}</h2><a class="co-btn" style="display:inline-flex;align-items:center;text-decoration:none" href="/">${esc(K("cart.empty.cta"))}</a></div>`;

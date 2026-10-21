@@ -1,16 +1,19 @@
 // Public POD Studio API. Saving / quote requests are rate-limited; prices are computed server-side.
 import express from "express";
 import { ah, rateLimit } from "../http/middleware.js";
-import { studioCatalog, saveProject, getProject, requestQuote, projectDesign, purgeExpired } from "../services/studio-service.js";
+import { studioCatalog, saveProject, getProject, requestQuote, projectDesign, purgeExpired, saveMockup, readMockup, projectAccess, setStudioDir } from "../services/studio-service.js";
+import { verifyOrderToken } from "../services/checkout-service.js";
+import { findWhere } from "../saas-store.js";
 import { requestConnection, getConnection, wooCallback } from "../services/studio-connections.js";
 import { isAdminRequest, requireUser } from "../auth.js";
 import { baseUrl } from "../config.js";
 
 export function studioRouter({ generatedDir }) {
   const r = express.Router();
+  setStudioDir(generatedDir);
   const writeLimit = rateLimit({ bucket: "studio-write", windowMs: 60 * 60_000, max: Number(process.env.STUDIO_SAVES_PER_HOUR || 30) });
-  r.get("/api/studio/catalog", (req, res) => { res.setHeader("Cache-Control", "public, max-age=300"); res.json(studioCatalog()); });
-  r.post("/api/studio/quote", rateLimit({ bucket: "studio-quote", windowMs: 60_000, max: 120 }), (req, res) => res.json(StudioPricing.quote(studioCatalog(), req.body || {})));
+  r.get("/api/studio/catalog", (req, res) => { res.setHeader("Cache-Control", "no-cache"); res.json(studioCatalog()); });
+  r.post("/api/studio/quote", rateLimit({ bucket: "studio-quote", windowMs: 60_000, max: 120 }), (req, res) => res.json(StudioPricing.quote(studioCatalog(), { ...(req.body || {}), list: req.body?.buyer_type === "merchant" ? false : undefined })));
   r.post("/api/studio/projects", writeLimit, requireUser, express.json({ limit: "12mb" }), ah(async (req, res) => {
     const p = await saveProject({ tenantId: req.tenantId, userId: req.user.id, body: req.body || {}, generatedDir });
     res.json({ id: p.id, link: `/studio.html?project=${p.id}`, quote: p.quote, design_url: p.design_url });
@@ -19,6 +22,19 @@ export function studioRouter({ generatedDir }) {
   r.get("/api/studio/projects/:id/design", requireUser, ah(async (req, res) => {
     const d = await projectDesign({ id: req.params.id, generatedDir, tenantId: req.tenantId, userId: req.user.id });
     res.setHeader("Content-Type", d.mime); res.setHeader("Cache-Control", "private, no-store"); res.send(d.data);
+  }));
+  // Mockup thumbnails (one per product, rendered in the browser) live server-side next to the design.
+  r.put("/api/studio/projects/:id/mockup/:pid", writeLimit, requireUser, express.json({ limit: "700kb" }), ah(async (req, res) => {
+    res.json(await saveMockup({ id: req.params.id, pid: req.params.pid, dataUrl: req.body?.data_url, generatedDir, tenantId: req.tenantId, userId: req.user.id }));
+  }));
+  // Owner session, or a signed order token (?ot=) for an order that uses this project (confirmation page).
+  r.get("/api/studio/projects/:id/mockup/:pid", ah(async (req, res) => {
+    const id = req.params.id, ot = String(req.query.ot || "");
+    let ok = false;
+    if (ot) ok = !!(await findWhere("orders", o => (o.items || []).some(l => l.studio_project_id === id) && verifyOrderToken(o.id, ot)));
+    if (!ok) { if (!req.user) return res.status(401).json({ error: "auth_required" }); await projectAccess(id, { tenantId: req.tenantId, userId: req.user.id }); }
+    const m = await readMockup({ id, pid: req.params.pid, generatedDir });
+    res.setHeader("Content-Type", m.mime); res.setHeader("Cache-Control", "private, max-age=300"); res.send(m.data);
   }));
   r.post("/api/studio/projects/:id/request-quote", writeLimit, requireUser, ah(async (req, res) => res.json(await requestQuote({ id: req.params.id, contact: req.body?.contact, user: req.user, tenantId: req.tenantId }))));
   // Store connections (merchant). Official OAuth / wc-auth only when STUDIO_PUBLIC_CONNECT=true or for admins.

@@ -42,6 +42,9 @@ const PREVIEW_TTL_MS = 10 * 60_000, MAX_PREVIEWS = 50;
 function prunePreviews() { const now = Date.now(); for (const [k, v] of importPreviews) if (v.expires < now) importPreviews.delete(k); while (importPreviews.size > MAX_PREVIEWS) importPreviews.delete(importPreviews.keys().next().value); }
 const badRequest = (res, e) => res.status(400).json({ error: e.message });
 
+import { priceRows, updatePrices } from "../services/price-list-service.js";
+import { sendShippedEmail } from "../services/checkout-service.js";
+
 export function adminRouter({ root } = {}) {
   const r = express.Router();
   const A = requireAdmin, AP = [requireAdmin, requireApproval];
@@ -83,7 +86,8 @@ export function adminRouter({ root } = {}) {
     const row=await updateRecord("orders",req.params.id,{status,updated_at:new Date().toISOString()});if(!row)return res.sendStatus(404);
     const evt=await addRecord("order_events",{id:`evt_${crypto.randomBytes(6).toString("hex")}`,tenant_id:req.tenantId,order_id:row.id,event_type:"status_changed",source:"admin",payload:{status,note:String(req.body?.note||"").slice(0,500)},event_time:new Date().toISOString()});
     let email_status="not_applicable";
-    if(row.customer_email){const mail=await sendEmail({tenantId:req.tenantId,userId:row.user_id||null,to:row.customer_email,type:"order_status",related_id:row.id,subject:`Order update · ${row.id}`,text:`Your order status is now: ${status}. Follow it at ${baseUrl()}/account.html`,html:`<p>Order <b>${row.id}</b></p><p>Status: <b>${String(status).replace(/[<>&]/g,"")}</b></p><p><a href="${baseUrl()}/account.html">View your account</a></p>`});email_status=mail.status;}
+    if(row.customer_email&&status==="Shipped"){const b=req.body||{},clip=v=>String(v||"").slice(0,300);const trk={carrier:clip(b.carrier||row.carrier),tracking_number:clip(b.tracking_number||row.tracking_number),tracking_url:/^https:\/\//.test(String(b.tracking_url||""))?clip(b.tracking_url):""};if(trk.tracking_number)await updateRecord("orders",row.id,trk);const mail=await sendShippedEmail(row,trk);email_status=mail?.status||"not_applicable";}
+    else if(row.customer_email){const mail=await sendEmail({tenantId:req.tenantId,userId:row.user_id||null,to:row.customer_email,type:"order_status",related_id:row.id,subject:`Order update · ${row.id}`,text:`Your order status is now: ${status}. Follow it at ${baseUrl()}/account.html`,html:`<p>Order <b>${row.id}</b></p><p>Status: <b>${String(status).replace(/[<>&]/g,"")}</b></p><p><a href="${baseUrl()}/account.html">View your account</a></p>`});email_status=mail.status;}
     res.json({id:row.id,status:row.status,email_status,event_id:evt.id});
   }));
   r.post("/api/saas/orders/:id/resend-email", AP, ah(async (req,res)=>{
@@ -92,6 +96,9 @@ export function adminRouter({ root } = {}) {
     const mail=await sendEmail({tenantId:req.tenantId,userId:row.user_id||null,to:row.customer_email,type:"order_status_resend",related_id:row.id,subject:`Order update · ${row.id}`,text:`Current status: ${row.status}. Follow it at ${baseUrl()}/account.html`,html:`<p>Order <b>${row.id}</b></p><p>Current status: <b>${String(row.status||"").replace(/[<>&]/g,"")}</b></p><p><a href="${baseUrl()}/account.html">View your account</a></p>`});
     res.json({ok:true,email_status:mail.status,notification_id:mail.notification_id});
   }));
+  // Price list (single source of truth for sell prices of every Studio / homepage product).
+  r.get("/api/saas/prices", A, (req, res) => res.json(priceRows()));
+  r.put("/api/saas/prices", AP, ah(async (req, res) => res.json(await updatePrices(req.body?.changes, { by: req.get("x-admin-user") || "admin" }))));
   r.get("/api/saas/shipments", A, ah(async (req, res) => res.json(await listForTenant("shipments", req.tenantId))));
   r.get("/api/saas/logistics/providers", A, (req, res) => res.json(logisticsProviderStatus()));
   r.get("/api/saas/logistics/overview", A, ah(async (req, res) => res.json(await logisticsOverview(req.tenantId))));

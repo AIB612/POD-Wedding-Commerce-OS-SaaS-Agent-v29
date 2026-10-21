@@ -12,7 +12,8 @@ import { catalogOverview } from "../services/catalog-service.js";
 import { addRecord, findRecord, listForTenant, updateRecord } from "../saas-store.js";
 import { HttpError } from "../http/middleware.js";
 import { protocolRegistry, ucpProfile, a2aAgentCard, acpFeed } from "../protocols/commerce-protocols.js";
-import { createStorefrontCheckout, createTwintCheckout, twintOrderStatus, paymentMethods, handlePayPalReturn, publicOrderStatus, quoteStorefront } from "../services/checkout-service.js";
+import { createStorefrontCheckout, createTwintCheckout, twintOrderStatus, paymentMethods, handlePayPalReturn, publicOrderStatus, quoteStorefront, orderConfirmation, orderToken } from "../services/checkout-service.js";
+import { publicPriceList } from "../services/price-list-service.js";
 import { publicProof, approvePublicProof, requestPublicProofChanges } from "../services/proof-service.js";
 import { createPayPalOrder, capturePayPalOrder } from "../connectors/paypal.js";
 import { submitRsvp } from "../services/rsvp-service.js";
@@ -22,7 +23,7 @@ const VERSION = JSON.parse(fs.readFileSync(new URL("../../package.json", import.
 
 export function publicRouter({ root, generatedDir }) {
   const router = express.Router();
-  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html" };
+  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/admin-prices.html": "admin-prices.html", "/admin/prices": "admin-prices.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
   for (const [route, file] of Object.entries(pages)) router.get(route, (_, res) => res.sendFile(path.join(root, file), noStore));
 
@@ -90,9 +91,14 @@ export function publicRouter({ root, generatedDir }) {
   }));
   router.get("/api/payments/paypal/return", payLimit, ah(async (req, res) => {
     const { orderId, status } = await handlePayPalReturn({ orderId: req.query.order, paypalToken: req.query.token });
-    res.redirect(`/payment-success.html?order=${encodeURIComponent(orderId || "")}&status=${encodeURIComponent(status)}`);
+    res.redirect(`/payment-success.html?order=${encodeURIComponent(orderId || "")}${orderId ? `&t=${orderToken(orderId)}` : ""}&status=${encodeURIComponent(status)}`);
   }));
   const statusLimit = rateLimit({ bucket: "status", windowMs: 60_000, max: 60 });
+  // Order confirmation (payment-success.html): protected by the signed token from the return URL.
+  router.get("/api/orders/:id/confirmation", statusLimit, ah(async (req, res) => { res.setHeader("Cache-Control", "private, no-store"); res.json(await orderConfirmation(req.params.id, req.query.t)); }));
+  // Live sell prices (admin price list) for browsers: JSON, and as a script that attaches to window.STUDIO_DATA.
+  router.get("/api/prices", (req, res) => { res.setHeader("Cache-Control", "no-cache"); res.json(publicPriceList()); });
+  router.get("/price-list.js", (req, res) => { res.setHeader("Cache-Control", "no-cache"); res.type("application/javascript").send(`(function(){var l=${JSON.stringify(publicPriceList())};window.POD_PRICE_LIST=l;if(window.STUDIO_DATA)window.STUDIO_DATA.price_list=l;})();`); });
   router.get("/api/orders/:id/status", statusLimit, ah(async (req, res) => res.json(await publicOrderStatus(req.params.id))));
 
   // Legacy low-level PayPal endpoints (kept for compatibility).
