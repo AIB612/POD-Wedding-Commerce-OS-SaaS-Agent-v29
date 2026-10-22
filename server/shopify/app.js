@@ -7,6 +7,7 @@ import fs from "node:fs";
 import * as repo from "./repo.js";
 import { addRecord, updateRecord, getState } from "../saas-store.js";
 import { getPriceList } from "../services/price-list-service.js";
+import { getFees } from "../services/fees-service.js";
 
 const TIMEOUT_MS = 15_000;
 export const DEFAULT_SCOPES = "write_products,read_orders,write_orders,write_fulfillments,read_fulfillments,write_merchant_managed_fulfillment_orders";
@@ -68,10 +69,20 @@ export async function completeInstall(query = {}) {
   const data = await r.json();
   if (!data.access_token) throw Object.assign(new Error("token_missing"), { status: 502 });
   await repo.saveShop({ shop, tenantId: st.tenant_id, accessToken: data.access_token, scopes: data.scope || "", refreshToken: data.refresh_token, expiresIn: data.expires_in, refreshExpiresIn: data.refresh_token_expires_in });
+  await refreshShopCurrency(shop).catch(e => console.error("[shopify] currency lookup failed:", e.message));
   const webhooks = await registerWebhooksSafe(shop);
   return { shop, tenant_id: st.tenant_id, scopes: data.scope || "", webhooks };
 }
 
+/** Like graphql() but returns {data, errors} instead of throwing on GraphQL-level errors. */
+export async function graphqlRaw(shop, query, variables = {}) {
+  const token = await accessToken(shop);
+  if (!token) throw Object.assign(new Error("shop_not_connected"), { status: 409 });
+  const r = await fetch(`https://${shop}/admin/api/${config().apiVersion}/graphql.json`, { method: "POST", headers: { "Content-Type": "application/json", "X-Shopify-Access-Token": token }, body: JSON.stringify({ query, variables }), signal: AbortSignal.timeout(TIMEOUT_MS) });
+  if (!r.ok) return { data: null, errors: [{ message: `HTTP ${r.status}: ${(await r.text().catch(() => "")).slice(0, 300)}` }] };
+  const d = await r.json();
+  return { data: d.data || null, errors: d.errors || null };
+}
 export async function graphql(shop, query, variables = {}) {
   const token = await accessToken(shop);
   if (!token) throw Object.assign(new Error("shop_not_connected"), { status: 409 });
@@ -85,21 +96,53 @@ const userErrors = (p, what) => { if (p?.userErrors?.length) throw new Error(`${
 
 const WEBHOOK_CREATE = `mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
   webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) { webhookSubscription { id topic } userErrors { field message } } }`;
-/** GDPR compliance topics cannot be subscribed via the API; they are declared in shopify.app.toml. */
+const WEBHOOK_LIST = `query { webhookSubscriptions(first: 50) { nodes { id topic uri } } }`;
+const PCD_RE = /protected customer data|not approved to (access|subscribe)|access denied|ACCESS_DENIED/i;
+/** Human hint for a webhook / order access error. */
+export function explainShopifyError(msg = "") {
+  if (PCD_RE.test(msg)) return "Protected customer data access is required for orders. In the Dev Dashboard open the app > API access requests (Protected customer data access), request access to customer data (select the reasons, at least Level 1; add name/email/address fields for Level 2), then reinstall or retry.";
+  if (/scope|write_orders|read_orders/i.test(msg)) return "Missing order scope: make sure read_orders/write_orders is granted, then reinstall the app.";
+  return "";
+}
+/** Registers each topic independently (one failure does not hide the others) and records the outcome per topic.
+ *  GDPR compliance topics cannot be subscribed via the API; they and the app-specific subscriptions live in shopify.app.toml. */
 export async function registerWebhooks(shop) {
   const out = [];
-  for (const topic of Object.values(WEBHOOK_TOPICS)) {
-    const d = await graphql(shop, WEBHOOK_CREATE, { topic, webhookSubscription: { uri: webhookUri(), format: "JSON" } });
-    const p = d?.webhookSubscriptionCreate;
-    const dup = p?.userErrors?.some(e => /already been taken|already exists/i.test(e.message));
-    out.push({ topic, id: p?.webhookSubscription?.id || null, ok: !!p?.webhookSubscription?.id || dup, errors: dup ? [] : (p?.userErrors || []).map(e => e.message) });
+  for (const [name, topic] of Object.entries(WEBHOOK_TOPICS)) {
+    let entry;
+    try {
+      const { data, errors } = await graphqlRaw(shop, WEBHOOK_CREATE, { topic, webhookSubscription: { uri: webhookUri(), format: "JSON" } });
+      const p = data?.webhookSubscriptionCreate;
+      const ue = (p?.userErrors || []).map(e => e.message), ge = (errors || []).map(e => e.message || JSON.stringify(e));
+      const dup = ue.some(m => /already been taken|already exists/i.test(m));
+      const errs = dup ? [] : [...ge, ...ue];
+      entry = { topic: name, gql_topic: topic, id: p?.webhookSubscription?.id || null, ok: !!p?.webhookSubscription?.id || dup, errors: errs };
+    } catch (e) { entry = { topic: name, gql_topic: topic, id: null, ok: false, errors: [e.message] }; }
+    if (!entry.ok) entry.hint = explainShopifyError(entry.errors.join(" "));
+    out.push(entry);
   }
   return out;
 }
+/** Real state: what Shopify reports via webhookSubscriptions (API-created subscriptions only;
+ *  app-specific subscriptions from shopify.app.toml are not listed by this query). */
+export async function webhookStatus(shop) {
+  const { data, errors } = await graphqlRaw(shop, WEBHOOK_LIST);
+  const nodes = data?.webhookSubscriptions?.nodes || [];
+  const want = webhookUri();
+  return {
+    checked_at: new Date().toISOString(), uri: want, errors: (errors || []).map(e => e.message),
+    topics: Object.entries(WEBHOOK_TOPICS).map(([name, t]) => { const n = nodes.find(x => x.topic === t && x.uri === want) || nodes.find(x => x.topic === t); return { topic: name, active: !!n, id: n?.id || null, uri: n?.uri || null, uri_matches: n ? n.uri === want : null }; }),
+    other: nodes.filter(n => !Object.values(WEBHOOK_TOPICS).includes(n.topic)).map(n => ({ topic: n.topic, uri: n.uri }))
+  };
+}
 
-async function registerWebhooksSafe(shop) {
-  try { const w = await registerWebhooks(shop); if (w.every(x => x.ok)) await repo.markWebhooksRegistered(shop); return w; }
-  catch (e) { console.error("[shopify] webhook registration failed:", e.message); return [{ error: e.message }]; }
+export async function registerWebhooksSafe(shop) {
+  let w;
+  try { w = await registerWebhooks(shop); } catch (e) { w = [{ topic: "*", ok: false, errors: [e.message], hint: explainShopifyError(e.message) }]; }
+  const ok = w.every(x => x.ok);
+  if (ok) await repo.markWebhooksRegistered(shop); else { await repo.clearWebhooksRegistered(shop); console.error("[shopify] webhook registration:", JSON.stringify(w)); }
+  await repo.setWebhookReport(shop, { at: new Date().toISOString(), ok, results: w });
+  return w;
 }
 
 // ---------------- Embedded app (Shopify-managed install) ----------------
@@ -155,6 +198,7 @@ export async function ensureOfflineToken(shop, idToken, { force = false } = {}) 
     await repo.saveShop({ shop, tenantId: row?.tenant_id || process.env.DEFAULT_TENANT_ID || "tenant_demo", accessToken: d.access_token, scopes: d.scope || "", refreshToken: d.refresh_token, expiresIn: d.expires_in, refreshExpiresIn: d.refresh_token_expires_in, keepInstalledAt: true });
     exchanged = true;
   }
+  if (exchanged || !row?.currency_code) await refreshShopCurrency(shop).catch(e => console.error("[shopify] currency lookup failed:", e.message));
   const after = await repo.getShop(shop);
   const webhooks = after.webhooks_registered_at ? null : await registerWebhooksSafe(shop);
   return { shop, exchanged, webhooks, expires_at: after.token_expires_at ? new Date(Number(after.token_expires_at)).toISOString() : null };
@@ -200,7 +244,9 @@ export async function embeddedState(shop) {
   return {
     shop, connected: !!(shopRow?.access_token_enc && !shopRow.uninstalled_at), scopes: shopRow?.scopes || "", installed_at: shopRow?.installed_at || null,
     webhooks_registered: !!shopRow?.webhooks_registered_at, token_expires_at: shopRow?.token_expires_at ? new Date(Number(shopRow.token_expires_at)).toISOString() : null,
-    api_version: config().apiVersion, products: catalogProducts(), links, orders
+    api_version: config().apiVersion, products: catalogProducts(), links, orders,
+    currency: shopRow?.currency_code || null, fx: shopRow?.currency_code ? fxFor(shopRow.currency_code) : null,
+    webhook_report: repo.parseWebhookReport(shopRow), webhook_uri: webhookUri()
   };
 }
 
@@ -283,6 +329,24 @@ export async function onShopRedact(shop) {
   return `shop_redacted:${n}`;
 }
 
+// ---------------- Shop currency + FX ----------------
+/** Rates = units of currency per 1 CHF. Admin fees settings (fees.fx_rates) win over env SHOPIFY_FX_RATES. */
+export function fxRates() {
+  let env = {};
+  try { env = JSON.parse(process.env.SHOPIFY_FX_RATES || "{}") || {}; } catch { console.warn("[shopify] SHOPIFY_FX_RATES is not valid JSON"); }
+  const admin = getFees()?.fx_rates || {};
+  const out = { CHF: 1 };
+  for (const [k, v] of Object.entries({ ...env, ...admin })) if (/^[A-Z]{3}$/.test(k) && Number(v) > 0) out[k] = Number(v);
+  return out;
+}
+export function fxFor(currency) { const r = fxRates()[String(currency || "").toUpperCase()]; return r ? { currency: String(currency).toUpperCase(), rate: r } : null; }
+export async function refreshShopCurrency(shop) {
+  const d = await graphql(shop, `query { shop { currencyCode } }`);
+  const c = d?.shop?.currencyCode || null;
+  if (c) await repo.setShopCurrency(shop, c);
+  return c;
+}
+
 // ---------------- Product push (productSet) ----------------
 let catalogCache = null;
 export function catalog() { return catalogCache || (catalogCache = JSON.parse(fs.readFileSync(new URL("../data/studio-catalog.json", import.meta.url), "utf8"))); }
@@ -291,10 +355,10 @@ const en = v => (typeof v === "object" && v ? v.en || Object.values(v)[0] : v) |
 const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 /** Pure: build the ProductSetInput for a local catalog product. CHF price = admin price list, lowest qty tier. */
-export function buildProductSetInput(product, { priceList = getPriceList(), appUrl = config().appUrl, existing = null } = {}) {
+export function buildProductSetInput(product, { priceList = getPriceList(), appUrl = config().appUrl, existing = null, fx = { currency: "CHF", rate: 1 } } = {}) {
   const prices = priceList.products?.[product.id] || {};
   const mats = product.materials?.length ? product.materials : [null];
-  const chf = mid => { const v = prices[mid || "_"]?.CHF?.[0]; return v == null ? null : Number(v).toFixed(2); };
+  const chf = mid => { const v = prices[mid || "_"]?.CHF?.[0]; return v == null ? null : (Math.round(Number(v) * fx.rate * 100) / 100).toFixed(2); };
   const optName = product.materials?.length ? "Material" : "Title";
   const variants = mats.map(m => ({ name: m ? en(m.name) : "Default Title", mid: m?.id || "_" })).filter(v => chf(v.mid === "_" ? null : v.mid) != null)
     .map(v => ({ optionValues: [{ optionName: optName, name: v.name }], price: chf(v.mid === "_" ? null : v.mid), sku: `${product.id}${v.mid === "_" ? "" : `-${v.mid}`}`, inventoryPolicy: "CONTINUE", taxable: true }));
@@ -325,12 +389,48 @@ export async function pushProduct(shop, localProductId) {
   const s = normalizeShop(shop); if (!s) throw Object.assign(new Error("invalid_shop_domain"), { status: 400 });
   const product = catalog().products.find(p => p.id === localProductId);
   if (!product) throw Object.assign(new Error("product_not_found"), { status: 404 });
+  const currency = (await refreshShopCurrency(s).catch(() => null)) || (await repo.getShop(s))?.currency_code || "CHF";
+  const fx = fxFor(currency);
+  if (!fx) throw Object.assign(new Error(`no_fx_rate:${currency}: shop currency is ${currency} but no CHF->${currency} rate is configured. Add it to SHOPIFY_FX_RATES (e.g. {"${currency}":9.6}) or fees.fx_rates.`), { status: 422 });
   const existing = await repo.getProductLink(s, product.id);
-  const d = await graphql(s, PRODUCT_SET, buildProductSetVariables(product, { existing }));
+  const d = await graphql(s, PRODUCT_SET, buildProductSetVariables(product, { existing, fx }));
   const p = userErrors(d?.productSet, "product_set");
   const variantIds = Object.fromEntries((p.product?.variants?.nodes || []).map(v => [v.sku, v.id]));
   await repo.saveProductLink({ shop: s, localProductId: product.id, shopifyProductId: p.product.id, variantIds });
-  return { shop: s, local_product_id: product.id, shopify_product_id: p.product.id, handle: p.product.handle, variants: Object.keys(variantIds).length, updated: !!existing };
+  return { shop: s, local_product_id: product.id, shopify_product_id: p.product.id, handle: p.product.handle, variants: Object.keys(variantIds).length, updated: !!existing, currency: fx.currency, fx_rate: fx.rate };
+}
+
+// ---------------- Order sync (works without webhooks) ----------------
+const ORDER_FIELDS_BASE = `id legacyResourceId name createdAt displayFinancialStatus currencyCode
+  totalPriceSet { shopMoney { amount } } subtotalPriceSet { shopMoney { amount } } totalTaxSet { shopMoney { amount } }
+  lineItems(first: 50) { nodes { id title sku quantity variant { legacyResourceId } originalUnitPriceSet { shopMoney { amount } } } }`;
+const ORDER_FIELDS_PII = `email customer { legacyResourceId } shippingAddress { firstName lastName address1 address2 city zip countryCodeV2 phone }`;
+const ordersQuery = pii => `query recentOrders($first: Int!) { orders(first: $first, sortKey: CREATED_AT, reverse: true) { nodes { ${ORDER_FIELDS_BASE} ${pii ? ORDER_FIELDS_PII : ""} } } }`;
+const gidNumStr = g => String(g ?? "").split("/").pop();
+/** Pure: GraphQL Order node -> the REST-shaped payload onOrderCreate() (orders/create webhook) consumes. */
+export function graphqlOrderToPayload(n) {
+  const sa = n.shippingAddress || {};
+  return {
+    id: Number(n.legacyResourceId) || gidNumStr(n.id), admin_graphql_api_id: n.id, name: n.name, email: n.email || "",
+    financial_status: String(n.displayFinancialStatus || "").toLowerCase(), currency: n.currencyCode,
+    total_price: n.totalPriceSet?.shopMoney?.amount, subtotal_price: n.subtotalPriceSet?.shopMoney?.amount, total_tax: n.totalTaxSet?.shopMoney?.amount,
+    customer: n.customer?.legacyResourceId ? { id: n.customer.legacyResourceId } : null,
+    shipping_address: n.shippingAddress ? { first_name: sa.firstName, last_name: sa.lastName, address1: sa.address1, address2: sa.address2, city: sa.city, zip: sa.zip, country_code: sa.countryCodeV2, phone: sa.phone } : {},
+    line_items: (n.lineItems?.nodes || []).map(li => ({ id: gidNumStr(li.id), title: li.title, sku: li.sku, quantity: li.quantity, price: li.originalUnitPriceSet?.shopMoney?.amount, variant_id: li.variant?.legacyResourceId || "" }))
+  };
+}
+/** Pull the last N orders and import them idempotently (same path as orders/create; order_links dedupe). */
+export async function syncRecentOrders(shop, { first = 20 } = {}) {
+  let pii = true, res = await graphqlRaw(shop, ordersQuery(true), { first });
+  if (res.errors?.length && !res.data?.orders) { pii = false; res = await graphqlRaw(shop, ordersQuery(false), { first }); }
+  if (res.errors?.length && !res.data?.orders) {
+    const msg = res.errors.map(e => e.message).join("; ");
+    throw Object.assign(new Error(`orders_query_failed:${msg}`), { status: 502, hint: explainShopifyError(msg) });
+  }
+  const nodes = res.data.orders.nodes || [];
+  const results = [];
+  for (const n of nodes) results.push({ name: n.name, result: await onOrderCreate(shop, graphqlOrderToPayload(n)) });
+  return { shop, fetched: nodes.length, imported: results.filter(r => r.result.startsWith("order:")).length, already_linked: results.filter(r => r.result === "already_linked").length, customer_data: pii, warnings: (res.errors || []).map(e => e.message), results };
 }
 
 // ---------------- Fulfillment ----------------

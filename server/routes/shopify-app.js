@@ -57,6 +57,22 @@ router.post("/api/shopify/embedded/products/:id/push", requireSessionToken, ah(a
   catch (e) { res.status(e.status || 502).json({ error: e.message }); }
 }));
 
+router.post("/api/shopify/embedded/webhooks/retry", requireSessionToken, ah(async (req, res) => {
+  try { const results = await shopify.registerWebhooksSafe(req.shopifyShop); res.json({ ok: results.every(r => r.ok), results, status: await shopify.webhookStatus(req.shopifyShop) }); }
+  catch (e) { res.status(e.status || 502).json({ error: e.message }); }
+}));
+router.get("/api/shopify/embedded/webhooks/status", requireSessionToken, ah(async (req, res) => {
+  try { res.json(await shopify.webhookStatus(req.shopifyShop)); } catch (e) { res.status(e.status || 502).json({ error: e.message }); }
+}));
+router.post("/api/shopify/embedded/orders/sync", requireSessionToken, ah(async (req, res) => {
+  try { res.json(await shopify.syncRecentOrders(req.shopifyShop, { first: 20 })); }
+  catch (e) { res.status(e.status || 502).json({ error: e.message, hint: e.hint || "" }); }
+}));
+router.post("/api/shopify/app/shops/:shop/orders/sync", requireAdmin, requireApproval, ah(async (req, res) => {
+  const shop = shopify.normalizeShop(req.params.shop); if (!shop) return res.status(400).json({ error: "invalid_shop_domain" });
+  try { res.json(await shopify.syncRecentOrders(shop, { first: 20 })); } catch (e) { res.status(e.status || 502).json({ error: e.message, hint: e.hint || "" }); }
+}));
+
 router.get("/api/shopify/app/install", ah(async (req, res) => {
   if (!shopify.normalizeShop(req.query.shop)) return res.status(400).type("text/plain").send("invalid_shop_domain");
   if (!shopify.verifyQueryHmac(req.query)) return res.status(401).type("text/plain").send("invalid_hmac");

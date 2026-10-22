@@ -19,5 +19,12 @@ export const MIGRATIONS = [
       `ALTER TABLE shopify_shops ADD COLUMN refresh_expires_at BIGINT`,
       `ALTER TABLE shopify_shops ADD COLUMN webhooks_registered_at VARCHAR(40)`
     ]
+  },
+  {
+    id: "003_shopify_currency_webhook_report",
+    sql: [
+      `ALTER TABLE shopify_shops ADD COLUMN currency_code VARCHAR(8)`,
+      `ALTER TABLE shopify_shops ADD COLUMN webhook_report TEXT`
+    ]
   }
 ];

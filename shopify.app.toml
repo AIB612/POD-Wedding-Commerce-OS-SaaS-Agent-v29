@@ -26,7 +26,9 @@ redirect_urls = [ "https://YOUR_DOMAIN/api/shopify/app/callback" ]
 [webhooks]
 api_version = "2025-10"
 
-  # orders/create and app/uninstalled are also registered per shop via webhookSubscriptionCreate after install.
+  # Preferred path: app-specific subscriptions (apply to every shop, deployed with `shopify app deploy`).
+  # The server also tries webhookSubscriptionCreate per shop as a fallback (shop-specific subscriptions).
+  # orders/* topics require approved Protected customer data access (Dev Dashboard > app > API access requests).
   [[webhooks.subscriptions]]
   topics = [ "orders/create", "app/uninstalled" ]
   uri = "https://YOUR_DOMAIN/api/shopify/app/webhooks"

@@ -17,6 +17,7 @@
 .btn{appearance:none;border:0;border-radius:8px;padding:6px 12px;font:inherit;font-weight:550;cursor:pointer;background:var(--accent);color:#fff;box-shadow:inset 0 -1px 0 #000}.btn:disabled{opacity:.5;cursor:default}.btn.sec{background:#fff;color:var(--text);box-shadow:0 0 0 1px var(--border),inset 0 -1px 0 #ccc}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px}.kv b{display:block;font-size:12px;color:var(--muted);font-weight:500}
 .banner{border-radius:10px;padding:10px 14px;margin-bottom:16px;display:none}.banner.show{display:block}.banner.err{background:var(--errbg);color:var(--err)}.banner.ok{background:var(--okbg);color:var(--ok)}
+.hint{background:var(--warnbg);color:var(--warn);border-radius:8px;padding:8px 10px;margin-top:6px}.err-t{color:var(--err)}
 .scroll{max-height:440px;overflow:auto}
 code{font-size:12px;background:#f6f6f6;border-radius:4px;padding:1px 4px;word-break:break-all}
 </style>
@@ -26,8 +27,9 @@ code{font-size:12px;background:#f6f6f6;border-radius:4px;padding:1px 4px;word-br
   <div class="title"><h1>POD Wedding Studio</h1><span class="badge" id="conn">Connecting…</span></div>
   <div class="banner" id="banner"></div>
   <div class="card"><div class="card-h"><h2>Connection</h2><button class="btn sec" id="refresh">Refresh</button></div><div class="card-b grid" id="status"><span class="muted">Loading…</span></div></div>
-  <div class="card"><div class="card-h"><h2>Catalog products</h2><span class="muted">Pushed as drafts with CHF prices from the POD price list</span></div><div class="card-b scroll"><table><thead><tr><th>Product</th><th>Category</th><th>Materials</th><th>Shopify</th><th></th></tr></thead><tbody id="products"></tbody></table></div></div>
-  <div class="card"><div class="card-h"><h2>Recent orders from Shopify</h2><span class="muted">Created by the orders/create webhook</span></div><div class="card-b"><table><thead><tr><th>Shopify order</th><th>Local order</th><th>Items</th><th>Total</th><th>Status</th><th>Created</th></tr></thead><tbody id="orders"></tbody></table></div></div>
+  <div class="card"><div class="card-h"><h2>Webhooks</h2><span><button class="btn sec" id="whcheck">Check status</button> <button class="btn" id="whretry">Retry webhook registration</button></span></div><div class="card-b" id="webhooks"><span class="muted">Loading…</span></div></div>
+  <div class="card"><div class="card-h"><h2>Catalog products</h2><span class="muted" id="pricenote">Pushed as drafts with prices from the POD price list</span></div><div class="card-b scroll"><table><thead><tr><th>Product</th><th>Category</th><th>Materials</th><th>Shopify</th><th></th></tr></thead><tbody id="products"></tbody></table></div></div>
+  <div class="card"><div class="card-h"><h2>Recent orders from Shopify</h2><span><span class="muted">From the orders/create webhook or a manual sync</span> <button class="btn sec" id="sync">Sync recent orders</button></span></div><div class="card-b"><table><thead><tr><th>Shopify order</th><th>Local order</th><th>Items</th><th>Total</th><th>Status</th><th>Created</th></tr></thead><tbody id="orders"></tbody></table></div></div>
 </div>
 <script>
 (function(){
@@ -42,21 +44,38 @@ async function token(){
 }
 async function api(path,opt={}){
   const r=await fetch(path,{...opt,headers:{"Content-Type":"application/json",Authorization:"Bearer "+await token(),...(opt.headers||{})}});
-  const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||("HTTP "+r.status));return d;
+  const d=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(d.error||("HTTP "+r.status)),{hint:d.hint||""});return d;
 }
 let st=null;
 function render(){
   $("conn").className="badge "+(st.connected?"ok":"err");$("conn").textContent=st.connected?"Connected":"Not connected";
-  $("status").innerHTML=[["Shop",esc(st.shop)],["Admin API",esc(st.api_version)],["Installed",when(st.installed_at)],["Webhooks",st.webhooks_registered?'<span class="badge ok">Registered</span>':'<span class="badge warn">Pending</span>'],["Token",st.token_expires_at?"Expires "+when(st.token_expires_at):"Offline (non-expiring)"],["Scopes",`<code>${esc(st.scopes||"—")}</code>`]].map(([k,v])=>`<div class="kv"><b>${k}</b>${v}</div>`).join("");
+  $("status").innerHTML=[["Shop",esc(st.shop)],["Admin API",esc(st.api_version)],["Installed",when(st.installed_at)],["Webhooks",st.webhooks_registered?'<span class="badge ok">Registered</span>':'<span class="badge warn">Pending</span>'],["Store currency",st.currency?esc(st.currency)+(st.currency==="CHF"?"":st.fx?` · 1 CHF = ${st.fx.rate} ${esc(st.currency)}`:' · <span class="badge err">No FX rate</span>'):"—"],["Token",st.token_expires_at?"Expires "+when(st.token_expires_at):"Offline (non-expiring)"],["Scopes",`<code>${esc(st.scopes||"—")}</code>`]].map(([k,v])=>`<div class="kv"><b>${k}</b>${v}</div>`).join("");
+  const cur=st.currency||"CHF";
+  $("pricenote").textContent=cur==="CHF"?"Pushed as drafts with CHF prices from the POD price list":st.fx?`Pushed as drafts in ${cur}: CHF price list × ${st.fx.rate}`:`Store currency ${cur} has no CHF→${cur} rate: set SHOPIFY_FX_RATES before pushing`;
+  renderWebhooks(st.webhook_report,null);
   const link=id=>st.links.find(l=>l.local_product_id===id);
   $("products").innerHTML=st.products.map(p=>{const l=link(p.id);return `<tr><td><b>${esc(p.name)}</b><div class="muted">${esc(p.id)}</div></td><td>${esc(p.category)}</td><td>${p.materials||1}</td><td>${l?`<span class="badge ok">Linked</span> <span class="muted">${when(l.pushed_at)}</span>`:'<span class="badge">Not pushed</span>'}</td><td style="text-align:right"><button class="btn${l?" sec":""}" data-push="${esc(p.id)}" ${st.connected?"":"disabled"}>${l?"Update on Shopify":"Push to Shopify"}</button></td></tr>`}).join("");
   $("orders").innerHTML=st.orders.map(o=>`<tr><td><b>${esc(o.name||"—")}</b></td><td class="muted">${esc(o.id)}</td><td>${o.items}</td><td>${esc(o.currency)} ${Number(o.total||0).toFixed(2)}</td><td><span class="badge">${esc(o.status)}</span></td><td>${when(o.created_at)}</td></tr>`).join("")||`<tr><td colspan="6" class="muted">No orders received yet.</td></tr>`;
 }
+function renderWebhooks(report,live){
+  const rows=[];
+  if(live){rows.push(`<p class="muted">Live from Shopify (webhookSubscriptions) · ${when(live.checked_at)} · endpoint <code>${esc(live.uri)}</code></p>`);
+    rows.push(`<table><thead><tr><th>Topic</th><th>Status</th><th>Endpoint</th></tr></thead><tbody>${live.topics.map(t=>`<tr><td><b>${esc(t.topic)}</b></td><td>${t.active?(t.uri_matches?'<span class="badge ok">Active</span>':'<span class="badge warn">Other URL</span>'):'<span class="badge err">Not subscribed</span>'}</td><td class="muted">${esc(t.uri||"—")}</td></tr>`).join("")}</tbody></table>`);
+    if(live.errors.length)rows.push(`<p class="err-t">${live.errors.map(esc).join("<br>")}</p>`);
+    rows.push('<p class="muted">Subscriptions declared in shopify.app.toml (app-specific) are not listed here but still deliver.</p>');}
+  if(report){rows.push(`<p class="muted">Last API registration attempt ${when(report.at)}: ${report.ok?'<span class="badge ok">OK</span>':'<span class="badge err">Failed</span>'}</p>`);
+    rows.push(report.results.filter(r=>!r.ok).map(r=>`<div><b>${esc(r.topic)}</b>: <span class="err-t">${(r.errors||[]).map(esc).join("; ")||"unknown error"}</span>${r.hint?`<div class="hint">${esc(r.hint)}</div>`:""}</div>`).join(""));}
+  else if(!live)rows.push('<span class="muted">No registration attempt recorded yet.</span>');
+  $("webhooks").innerHTML=rows.join("");
+}
 async function load(){st=await api("/api/shopify/embedded/state");render()}
 async function start(){
-  try{const s=await api("/api/shopify/embedded/session",{method:"POST",body:"{}"});if(s.exchanged)banner(true,"Connected: offline access token stored"+(s.webhooks?" and webhooks registered.":"."));await load()}
+  try{const s=await api("/api/shopify/embedded/session",{method:"POST",body:"{}"});const wf=(s.webhooks||[]).filter(w=>!w.ok);if(s.exchanged||wf.length)banner(!wf.length,(s.exchanged?"Connected: offline access token stored. ":"")+(s.webhooks?(wf.length?`Webhook registration failed for ${wf.map(w=>w.topic).join(", ")}: see Webhooks below.`:"Webhooks registered."):""));await load()}
   catch(e){$("conn").className="badge err";$("conn").textContent="Error";banner(false,e.message)}
 }
+$("whretry").onclick=async()=>{const b=$("whretry");b.disabled=true;try{const r=await api("/api/shopify/embedded/webhooks/retry",{method:"POST",body:"{}"});banner(r.ok,r.ok?"Webhooks registered.":"Webhook registration failed: see details below.");await load();renderWebhooks(st.webhook_report,r.status)}catch(e){banner(false,e.message)}finally{b.disabled=false}};
+$("whcheck").onclick=async()=>{try{renderWebhooks(st?.webhook_report,await api("/api/shopify/embedded/webhooks/status"))}catch(e){banner(false,e.message)}};
+$("sync").onclick=async()=>{const b=$("sync");b.disabled=true;b.textContent="Syncing…";try{const r=await api("/api/shopify/embedded/orders/sync",{method:"POST",body:"{}"});banner(true,`Fetched ${r.fetched} order(s): ${r.imported} imported, ${r.already_linked} already linked${r.customer_data?"":" (without customer data: protected customer data access not granted)"}.`);await load()}catch(e){banner(false,e.message+(e.hint?" — "+e.hint:""))}finally{b.disabled=false;b.textContent="Sync recent orders"}};
 $("refresh").onclick=()=>load().catch(e=>banner(false,e.message));
 $("products").onclick=async e=>{const b=e.target.closest("[data-push]");if(!b)return;b.disabled=true;const t=b.textContent;b.textContent="Pushing…";
   try{const r=await api(`/api/shopify/embedded/products/${encodeURIComponent(b.dataset.push)}/push`,{method:"POST",body:"{}"});banner(true,`${r.updated?"Updated":"Created"} ${r.shopify_product_id} (${r.variants} variants)`);window.shopify?.toast?.show?.(r.updated?"Product updated":"Product created");await load()}

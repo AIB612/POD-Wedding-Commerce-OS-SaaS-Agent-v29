@@ -38,7 +38,7 @@ export const decryptField = v => (v ? decrypt(v) : null);
 export async function getShop(shop) { const db = await getDb(); return (await select(db, "shopify_shops", { shop }))[0] || null; }
 export async function listShops() {
   const db = await getDb();
-  return (await select(db, "shopify_shops", {}, { order: ["installed_at", "DESC"] })).map(({ access_token_enc, refresh_token_enc, ...r }) => ({ ...r, has_token: !!access_token_enc, status: r.uninstalled_at || !access_token_enc ? "uninstalled" : "connected" }));
+  return (await select(db, "shopify_shops", {}, { order: ["installed_at", "DESC"] })).map(({ access_token_enc, refresh_token_enc, webhook_report, ...r }) => ({ ...r, has_token: !!access_token_enc, status: r.uninstalled_at || !access_token_enc ? "uninstalled" : "connected" }));
 }
 export async function shopToken(shop) {
   const row = await getShop(shop);
@@ -75,3 +75,9 @@ export async function logWebhook({ id, topic, shop, status = "received", note = 
 }
 export async function setWebhookStatus(id, status, note = "") { const db = await getDb(); return update(db, "webhook_log", { id }, { status, note: String(note).slice(0, 1000) }); }
 export async function recentWebhooks(limit = 50) { const db = await getDb(); return select(db, "webhook_log", {}, { order: ["received_at", "DESC"], limit }); }
+
+export async function setShopCurrency(shop, currency) { const db = await getDb(); return update(db, "shopify_shops", { shop }, { currency_code: currency || null }); }
+/** Per-topic webhook registration outcome (JSON) + the time it was last checked. */
+export async function setWebhookReport(shop, report) { const db = await getDb(); return update(db, "shopify_shops", { shop }, { webhook_report: JSON.stringify(report) }); }
+export const parseWebhookReport = row => { try { return row?.webhook_report ? JSON.parse(row.webhook_report) : null; } catch { return null; } };
+export async function clearWebhooksRegistered(shop) { const db = await getDb(); return update(db, "shopify_shops", { shop }, { webhooks_registered_at: null }); }

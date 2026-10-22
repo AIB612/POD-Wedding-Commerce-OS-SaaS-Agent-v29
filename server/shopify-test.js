@@ -25,6 +25,7 @@ const whSig = buf => crypto.createHmac("sha256", "test_secret").update(buf).dige
 
 // Mock Shopify HTTP: records calls, answers token exchange + GraphQL by operation name.
 const calls = [];
+const mock = { currency: "CHF", pcdDenied: false, subs: [], ordersPiiDenied: false };
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, opt = {}) => {
   url = String(url);
@@ -35,6 +36,17 @@ globalThis.fetch = async (url, opt = {}) => {
   if (url.endsWith("/admin/oauth/access_token") && body.grant_type === "refresh_token") return ok({ access_token: "shpat_exp_2", scope: "write_products", expires_in: 3600, refresh_token: "shprt_2", refresh_token_expires_in: 7776000 });
   if (url.endsWith("/admin/oauth/access_token")) return body.code === "good" ? ok({ access_token: "shpat_offline_123", scope: shopify.DEFAULT_SCOPES }) : new Response("bad", { status: 400 });
   const q = body.query;
+  if (q.includes("shop { currencyCode }")) return ok({ data: { shop: { currencyCode: mock.currency } } });
+  if (q.includes("webhookSubscriptions(first")) return ok({ data: { webhookSubscriptions: { nodes: mock.subs } } });
+  if (q.includes("recentOrders")) {
+    if (mock.ordersPiiDenied && q.includes("shippingAddress")) return ok({ data: null, errors: [{ message: "This app is not approved to access the Order object. See https://shopify.dev/docs/apps/launch/protected-customer-data for more details." }] });
+    return ok({ data: { orders: { nodes: [
+      { id: "gid://shopify/Order/18999047029033", legacyResourceId: "18999047029033", name: "#1011", createdAt: "2026-10-22T07:40:00Z", displayFinancialStatus: "PAID", currencyCode: "HKD", totalPriceSet: { shopMoney: { amount: "143.04" } }, subtotalPriceSet: { shopMoney: { amount: "143.04" } }, totalTaxSet: { shopMoney: { amount: "0.0" } },
+        lineItems: { nodes: [{ id: "gid://shopify/LineItem/1", title: "Organic cotton tee", sku: "tee-organic_180", quantity: 1, variant: { legacyResourceId: "2000" }, originalUnitPriceSet: { shopMoney: { amount: "143.04" } } }] },
+        ...(q.includes("shippingAddress") ? { email: "buyer@example.com", customer: { legacyResourceId: "42" }, shippingAddress: { firstName: "Lee", lastName: "W", address1: "1 Queen's Rd", city: "Hong Kong", zip: "", countryCodeV2: "HK", phone: "" } } : {}) }
+    ] } } });
+  }
+  if (q.includes("webhookSubscriptionCreate") && mock.pcdDenied && body.variables.topic === "ORDERS_CREATE") return ok({ data: { webhookSubscriptionCreate: { webhookSubscription: null, userErrors: [{ field: ["topic"], message: "You do not have permission to create or update webhooks with orders/create topic. This topic contains protected customer data." }] } } });
   if (q.includes("webhookSubscriptionCreate")) return ok({ data: { webhookSubscriptionCreate: { webhookSubscription: { id: `gid://shopify/WebhookSubscription/${body.variables.topic}`, topic: body.variables.topic }, userErrors: [] } } });
   if (q.includes("productSet")) { const inp = body.variables.input; return ok({ data: { productSet: { product: { id: body.variables.identifier?.id || "gid://shopify/Product/1001", handle: "tee", variants: { nodes: inp.variants.map((v, i) => ({ id: v.id || `gid://shopify/ProductVariant/${2000 + i}`, sku: v.sku })) } }, userErrors: [] } } }); }
   if (q.includes("fulfillmentOrders")) return ok({ data: { order: { id: body.variables.id, fulfillmentOrders: { nodes: [{ id: "gid://shopify/FulfillmentOrder/1", status: "OPEN", supportedActions: [{ action: "CREATE_FULFILLMENT" }] }, { id: "gid://shopify/FulfillmentOrder/2", status: "CLOSED", supportedActions: [] }] } } } });
@@ -269,6 +281,81 @@ await test("HTTP: embedded page headers, storefront unchanged, session-token API
     const pj = await r.json(); assert.equal(r.status, 200, JSON.stringify(pj)); assert.equal(pj.shop, SHOP);
     r = await fetch(`${base}/api/shopify/embedded/state`, { headers: auth }); const st = await r.json();
     assert.equal(st.connected, true); assert.equal(st.links[0].local_product_id, "tee"); assert.ok(st.products.length > 0); assert.ok(!JSON.stringify(st).includes("_enc"));
+  } finally { srv.close(); }
+});
+
+await test("webhook registration: per-topic userErrors stored, PCD hint, status query, retry", async () => {
+  await setDb(await openDb({ driver: "memory" }));
+  await repo.saveShop({ shop: SHOP, tenantId: "tenant_demo", accessToken: "shpat_w", scopes: "write_orders" });
+  mock.pcdDenied = true;
+  const w = await shopify.registerWebhooksSafe(SHOP);
+  const oc = w.find(x => x.topic === "orders/create"), au = w.find(x => x.topic === "app/uninstalled");
+  assert.equal(oc.ok, false); assert.match(oc.errors[0], /protected customer data/); assert.match(oc.hint, /Protected customer data access/);
+  assert.equal(au.ok, true, "other topic still registered");
+  let row = await repo.getShop(SHOP);
+  assert.equal(row.webhooks_registered_at, null);
+  const rep = repo.parseWebhookReport(row); assert.equal(rep.ok, false); assert.equal(rep.results.length, 2);
+  const st = await shopify.embeddedState(SHOP); assert.equal(st.webhook_report.ok, false); assert.equal(st.webhooks_registered, false);
+  mock.subs = [{ id: "gid://shopify/WebhookSubscription/1", topic: "APP_UNINSTALLED", uri: "https://app.example.com/api/shopify/app/webhooks" }];
+  const live = await shopify.webhookStatus(SHOP);
+  assert.deepEqual(live.topics.map(t => [t.topic, t.active]), [["orders/create", false], ["app/uninstalled", true]]);
+  mock.pcdDenied = false;
+  const w2 = await shopify.registerWebhooksSafe(SHOP); assert.ok(w2.every(x => x.ok));
+  row = await repo.getShop(SHOP); assert.ok(row.webhooks_registered_at); assert.equal(repo.parseWebhookReport(row).ok, true);
+  assert.match(shopify.explainShopifyError("This app is not approved to access the Order object"), /Protected customer data/);
+});
+await test("order sync: GraphQL orders imported idempotently, falls back without customer data", async () => {
+  const p = shopify.graphqlOrderToPayload({ id: "gid://shopify/Order/5", legacyResourceId: "5", name: "#5", displayFinancialStatus: "PAID", currencyCode: "HKD", totalPriceSet: { shopMoney: { amount: "10" } }, lineItems: { nodes: [{ id: "gid://shopify/LineItem/9", title: "T", quantity: 2, originalUnitPriceSet: { shopMoney: { amount: "5" } } }] } });
+  assert.equal(p.id, 5); assert.equal(p.financial_status, "paid"); assert.equal(p.line_items[0].id, "9"); assert.equal(p.line_items[0].quantity, 2);
+  mock.ordersPiiDenied = true;
+  const a = await shopify.syncRecentOrders(SHOP);
+  assert.equal(a.fetched, 1); assert.equal(a.imported, 1); assert.equal(a.customer_data, false);
+  mock.ordersPiiDenied = false;
+  const b = await shopify.syncRecentOrders(SHOP);
+  assert.equal(b.imported, 0); assert.equal(b.already_linked, 1);
+  const o = (await getState()).orders.filter(x => x.external_order_id === "18999047029033");
+  assert.equal(o.length, 1); assert.equal(o[0].source, "shopify"); assert.equal(o[0].currency, "HKD"); assert.equal(o[0].external_order_name, "#1011");
+  // webhook for the same order afterwards is a no-op
+  const raw = Buffer.from(JSON.stringify({ id: 18999047029033, name: "#1011" }));
+  await shopify.handleWebhook({ rawBody: raw, headers: { "x-shopify-hmac-sha256": whSig(raw), "x-shopify-topic": "orders/create", "x-shopify-shop-domain": SHOP, "x-shopify-webhook-id": "late-1" } });
+  assert.equal((await getState()).orders.filter(x => x.external_order_id === "18999047029033").length, 1);
+});
+await test("currency: stored from shop, FX conversion, refuse push without rate", async () => {
+  const product = shopify.catalog().products.find(p => p.id === "tee");
+  const priceList = { products: { tee: { organic_180: { CHF: [14.9] } } } };
+  const v = shopify.buildProductSetInput(product, { priceList, appUrl: "", fx: { currency: "HKD", rate: 9.6 } });
+  assert.equal(v.variants[0].price, "143.04");
+  process.env.SHOPIFY_FX_RATES = '{"HKD":9.6,"bad":1,"EUR":"x"}';
+  assert.deepEqual(shopify.fxRates(), { CHF: 1, HKD: 9.6 });
+  mock.currency = "HKD";
+  const r = await shopify.pushProduct(SHOP, "tee");
+  assert.equal(r.currency, "HKD"); assert.equal(r.fx_rate, 9.6);
+  assert.equal((await repo.getShop(SHOP)).currency_code, "HKD");
+  const sent = calls.filter(c => c.body?.query?.includes("productSet")).at(-1).body.variables.input.variants[0].price;
+  const chf = (await import("./services/price-list-service.js")).getPriceList().products.tee.organic_180.CHF[0];
+  assert.equal(sent, (Math.round(chf * 9.6 * 100) / 100).toFixed(2));
+  const st = await shopify.embeddedState(SHOP); assert.equal(st.currency, "HKD"); assert.deepEqual(st.fx, { currency: "HKD", rate: 9.6 });
+  delete process.env.SHOPIFY_FX_RATES;
+  await assert.rejects(shopify.pushProduct(SHOP, "tee"), /no_fx_rate:HKD/);
+  const { updateFees, getFees } = await import("./services/fees-service.js");
+  await updateFees({ fx_rates: { HKD: 9.5 } });
+  assert.equal(getFees().fx_rates.HKD, 9.5);
+  assert.equal((await shopify.pushProduct(SHOP, "tee")).fx_rate, 9.5);
+  await assert.rejects(updateFees({ fx_rates: { hk: 1 } }), /Invalid currency/);
+  await updateFees({ fx_rates: {} }); mock.currency = "CHF";
+});
+await test("HTTP: embedded webhook retry/status + order sync routes need session token", async () => {
+  const app = await createApp();
+  const srv = app.listen(0); const base = `http://127.0.0.1:${srv.address().port}`;
+  try {
+    for (const [m, u] of [["POST", "/api/shopify/embedded/webhooks/retry"], ["GET", "/api/shopify/embedded/webhooks/status"], ["POST", "/api/shopify/embedded/orders/sync"]]) assert.equal((await fetch(base + u, { method: m })).status, 401);
+    const auth = { Authorization: `Bearer ${shopify.signSessionToken({ shop: SHOP })}`, "Content-Type": "application/json" };
+    mock.pcdDenied = true;
+    let r = await fetch(`${base}/api/shopify/embedded/webhooks/retry`, { method: "POST", headers: auth, body: "{}" }); let j = await r.json();
+    assert.equal(j.ok, false); assert.ok(j.results.find(x => x.topic === "orders/create").hint); assert.ok(j.status.topics);
+    mock.pcdDenied = false;
+    r = await fetch(`${base}/api/shopify/embedded/orders/sync`, { method: "POST", headers: auth, body: "{}" }); j = await r.json();
+    assert.equal(r.status, 200); assert.equal(j.fetched, 1);
   } finally { srv.close(); }
 });
 
