@@ -10,5 +10,14 @@ export const MIGRATIONS = [
       `CREATE TABLE IF NOT EXISTS order_links (shop VARCHAR(255) NOT NULL, shopify_order_id VARCHAR(255) NOT NULL, local_order_id VARCHAR(128), status VARCHAR(64), fulfillment_id VARCHAR(255), created_at VARCHAR(40), updated_at VARCHAR(40), PRIMARY KEY (shop, shopify_order_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
       `CREATE TABLE IF NOT EXISTS webhook_log (id VARCHAR(255) PRIMARY KEY, topic VARCHAR(128), shop VARCHAR(255), received_at VARCHAR(40), status VARCHAR(64), note TEXT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
     ]
+  },
+  {
+    id: "002_shopify_expiring_tokens",
+    sql: [
+      `ALTER TABLE shopify_shops ADD COLUMN refresh_token_enc TEXT`,
+      `ALTER TABLE shopify_shops ADD COLUMN token_expires_at BIGINT`,
+      `ALTER TABLE shopify_shops ADD COLUMN refresh_expires_at BIGINT`,
+      `ALTER TABLE shopify_shops ADD COLUMN webhooks_registered_at VARCHAR(40)`
+    ]
   }
 ];

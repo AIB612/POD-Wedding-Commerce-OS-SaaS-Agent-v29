@@ -22,21 +22,30 @@ export async function pruneOAuthStates() {
   await db.run("DELETE FROM oauth_states WHERE expires_at < ?", [Date.now()]);
 }
 
-export async function saveShop({ shop, tenantId, accessToken, scopes }) {
-  const db = await getDb(), t = now();
-  await db.upsert("shopify_shops", { shop, tenant_id: tenantId || null, access_token_enc: encrypt(accessToken), scopes: scopes || "", installed_at: t, uninstalled_at: null, updated_at: t }, ["shop"]);
+/** expiresIn / refreshExpiresIn in seconds (expiring offline tokens); omitted for non-expiring tokens. */
+export async function saveShop({ shop, tenantId, accessToken, scopes, refreshToken = null, expiresIn = null, refreshExpiresIn = null, keepInstalledAt = false }) {
+  const db = await getDb(), t = now(), prev = keepInstalledAt ? await getShop(shop) : null;
+  await db.upsert("shopify_shops", {
+    shop, tenant_id: tenantId || prev?.tenant_id || null, access_token_enc: encrypt(accessToken), scopes: scopes || "",
+    refresh_token_enc: refreshToken ? encrypt(refreshToken) : null,
+    token_expires_at: expiresIn ? Date.now() + Number(expiresIn) * 1000 : null,
+    refresh_expires_at: refreshExpiresIn ? Date.now() + Number(refreshExpiresIn) * 1000 : null,
+    installed_at: prev?.installed_at && !prev.uninstalled_at ? prev.installed_at : t, uninstalled_at: null, updated_at: t
+  }, ["shop"]);
 }
+export async function markWebhooksRegistered(shop) { const db = await getDb(); return update(db, "shopify_shops", { shop }, { webhooks_registered_at: now() }); }
+export const decryptField = v => (v ? decrypt(v) : null);
 export async function getShop(shop) { const db = await getDb(); return (await select(db, "shopify_shops", { shop }))[0] || null; }
 export async function listShops() {
   const db = await getDb();
-  return (await select(db, "shopify_shops", {}, { order: ["installed_at", "DESC"] })).map(({ access_token_enc, ...r }) => ({ ...r, has_token: !!access_token_enc, status: r.uninstalled_at || !access_token_enc ? "uninstalled" : "connected" }));
+  return (await select(db, "shopify_shops", {}, { order: ["installed_at", "DESC"] })).map(({ access_token_enc, refresh_token_enc, ...r }) => ({ ...r, has_token: !!access_token_enc, status: r.uninstalled_at || !access_token_enc ? "uninstalled" : "connected" }));
 }
 export async function shopToken(shop) {
   const row = await getShop(shop);
   if (!row?.access_token_enc || row.uninstalled_at) return null;
   return decrypt(row.access_token_enc);
 }
-export async function markUninstalled(shop) { const db = await getDb(); return update(db, "shopify_shops", { shop }, { access_token_enc: null, uninstalled_at: now(), updated_at: now() }); }
+export async function markUninstalled(shop) { const db = await getDb(); return update(db, "shopify_shops", { shop }, { access_token_enc: null, refresh_token_enc: null, token_expires_at: null, webhooks_registered_at: null, uninstalled_at: now(), updated_at: now() }); }
 export async function deleteShopData(shop) {
   const db = await getDb();
   for (const t of ["product_links", "order_links", "shopify_shops"]) await remove(db, t, { shop });

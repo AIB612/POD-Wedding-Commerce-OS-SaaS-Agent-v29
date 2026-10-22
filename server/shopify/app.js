@@ -67,14 +67,13 @@ export async function completeInstall(query = {}) {
   if (!r.ok) throw Object.assign(new Error(`token_exchange_failed:${r.status}`), { status: 502 });
   const data = await r.json();
   if (!data.access_token) throw Object.assign(new Error("token_missing"), { status: 502 });
-  await repo.saveShop({ shop, tenantId: st.tenant_id, accessToken: data.access_token, scopes: data.scope || "" });
-  let webhooks = [];
-  try { webhooks = await registerWebhooks(shop); } catch (e) { console.error("[shopify] webhook registration failed:", e.message); webhooks = [{ error: e.message }]; }
+  await repo.saveShop({ shop, tenantId: st.tenant_id, accessToken: data.access_token, scopes: data.scope || "", refreshToken: data.refresh_token, expiresIn: data.expires_in, refreshExpiresIn: data.refresh_token_expires_in });
+  const webhooks = await registerWebhooksSafe(shop);
   return { shop, tenant_id: st.tenant_id, scopes: data.scope || "", webhooks };
 }
 
 export async function graphql(shop, query, variables = {}) {
-  const token = await repo.shopToken(shop);
+  const token = await accessToken(shop);
   if (!token) throw Object.assign(new Error("shop_not_connected"), { status: 409 });
   const r = await fetch(`https://${shop}/admin/api/${config().apiVersion}/graphql.json`, { method: "POST", headers: { "Content-Type": "application/json", "X-Shopify-Access-Token": token }, body: JSON.stringify({ query, variables }), signal: AbortSignal.timeout(TIMEOUT_MS) });
   if (!r.ok) throw new Error(`shopify_graphql_${r.status}`);
@@ -96,6 +95,113 @@ export async function registerWebhooks(shop) {
     out.push({ topic, id: p?.webhookSubscription?.id || null, ok: !!p?.webhookSubscription?.id || dup, errors: dup ? [] : (p?.userErrors || []).map(e => e.message) });
   }
   return out;
+}
+
+async function registerWebhooksSafe(shop) {
+  try { const w = await registerWebhooks(shop); if (w.every(x => x.ok)) await repo.markWebhooksRegistered(shop); return w; }
+  catch (e) { console.error("[shopify] webhook registration failed:", e.message); return [{ error: e.message }]; }
+}
+
+// ---------------- Embedded app (Shopify-managed install) ----------------
+const b64url = b => Buffer.from(b).toString("base64url");
+/** Verify an App Bridge session token (JWT HS256 signed with the app secret). Returns {shop, payload} or throws. */
+export function verifySessionToken(token, { secret = config().apiSecret, apiKey = config().apiKey, now = Date.now(), leewaySec = 10 } = {}) {
+  const fail = m => { throw Object.assign(new Error(`invalid_session_token:${m}`), { status: 401 }); };
+  if (!secret || !apiKey) fail("app_not_configured");
+  const parts = String(token || "").split(".");
+  if (parts.length !== 3) fail("format");
+  let header, payload;
+  try { header = JSON.parse(Buffer.from(parts[0], "base64url")); payload = JSON.parse(Buffer.from(parts[1], "base64url")); } catch { fail("decode"); }
+  if (header.alg !== "HS256") fail("alg");
+  const sig = crypto.createHmac("sha256", secret).update(`${parts[0]}.${parts[1]}`).digest("base64url");
+  if (!safeEq(sig, parts[2])) fail("signature");
+  const t = Math.floor(now / 1000);
+  if (typeof payload.exp !== "number" || payload.exp + leewaySec < t) fail("expired");
+  if (typeof payload.nbf === "number" && payload.nbf - leewaySec > t) fail("not_yet_valid");
+  const aud = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+  if (!aud.includes(apiKey)) fail("aud");
+  const shop = normalizeShop(String(payload.dest || "").replace(/^https:\/\//, ""));
+  if (!shop || !/^https:\/\//.test(String(payload.dest))) fail("dest");
+  const iss = String(payload.iss || "");
+  if (iss && normalizeShop(iss.replace(/^https:\/\//, "").replace(/\/admin\/?$/, "")) !== shop) fail("iss");
+  return { shop, payload };
+}
+/** Test helper / local simulation: sign a session token like App Bridge would receive it. */
+export function signSessionToken({ shop, apiKey = config().apiKey, secret = config().apiSecret, ttlSec = 60, now = Date.now(), sub = "1" }) {
+  const t = Math.floor(now / 1000);
+  const h = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" })), p = b64url(JSON.stringify({ iss: `https://${shop}/admin`, dest: `https://${shop}`, aud: apiKey, sub, exp: t + ttlSec, nbf: t - 1, iat: t - 1, jti: crypto.randomUUID(), sid: crypto.randomBytes(8).toString("hex") }));
+  return `${h}.${p}.${crypto.createHmac("sha256", secret).update(`${h}.${p}`).digest("base64url")}`;
+}
+/** Pure: the token-exchange request (session token -> offline access token). */
+export function buildTokenExchangeRequest(shop, idToken, { expiring = process.env.SHOPIFY_EXPIRING_OFFLINE_TOKENS === "true" } = {}) {
+  const body = { client_id: config().apiKey, client_secret: config().apiSecret, grant_type: "urn:ietf:params:oauth:grant-type:token-exchange", subject_token: idToken, subject_token_type: "urn:ietf:params:oauth:token-type:id_token", requested_token_type: "urn:shopify:params:oauth:token-type:offline-access-token" };
+  if (expiring) body.expiring = "1";
+  return { url: `https://${shop}/admin/oauth/access_token`, init: { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body) } };
+}
+async function postToken(url, init) {
+  const r = await fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
+  if (!r.ok) throw Object.assign(new Error(`token_request_failed:${r.status}`), { status: 502 });
+  const d = await r.json(); if (!d.access_token) throw Object.assign(new Error("token_missing"), { status: 502 }); return d;
+}
+const REFRESH_MARGIN_MS = 5 * 60_000;
+/** Ensures an offline token exists for the shop of a verified session token (idempotent; cheap on repeat loads). */
+export async function ensureOfflineToken(shop, idToken, { force = false } = {}) {
+  const row = await repo.getShop(shop);
+  const valid = row?.access_token_enc && !row.uninstalled_at && (!row.token_expires_at || Number(row.token_expires_at) - REFRESH_MARGIN_MS > Date.now());
+  let exchanged = false;
+  if (force || !valid) {
+    const { url, init } = buildTokenExchangeRequest(shop, idToken);
+    const d = await postToken(url, init);
+    await repo.saveShop({ shop, tenantId: row?.tenant_id || process.env.DEFAULT_TENANT_ID || "tenant_demo", accessToken: d.access_token, scopes: d.scope || "", refreshToken: d.refresh_token, expiresIn: d.expires_in, refreshExpiresIn: d.refresh_token_expires_in, keepInstalledAt: true });
+    exchanged = true;
+  }
+  const after = await repo.getShop(shop);
+  const webhooks = after.webhooks_registered_at ? null : await registerWebhooksSafe(shop);
+  return { shop, exchanged, webhooks, expires_at: after.token_expires_at ? new Date(Number(after.token_expires_at)).toISOString() : null };
+}
+/** Pure: refresh request for expiring offline tokens. */
+export function buildRefreshRequest(shop, refreshToken) {
+  return { url: `https://${shop}/admin/oauth/access_token`, init: { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ client_id: config().apiKey, client_secret: config().apiSecret, grant_type: "refresh_token", refresh_token: refreshToken }) } };
+}
+/** Decrypted access token, refreshed first when it is an expiring token close to expiry. */
+export async function accessToken(shop) {
+  const row = await repo.getShop(shop);
+  if (!row?.access_token_enc || row.uninstalled_at) return null;
+  if (row.token_expires_at && Number(row.token_expires_at) - REFRESH_MARGIN_MS <= Date.now()) {
+    const rt = repo.decryptField(row.refresh_token_enc);
+    if (!rt || (row.refresh_expires_at && Number(row.refresh_expires_at) <= Date.now())) return Number(row.token_expires_at) > Date.now() ? repo.decryptField(row.access_token_enc) : null;
+    const { url, init } = buildRefreshRequest(shop, rt);
+    const d = await postToken(url, init);
+    await repo.saveShop({ shop, tenantId: row.tenant_id, accessToken: d.access_token, scopes: d.scope || row.scopes, refreshToken: d.refresh_token || rt, expiresIn: d.expires_in, refreshExpiresIn: d.refresh_token_expires_in, keepInstalledAt: true });
+    await repo.markWebhooksRegistered(shop).catch(() => {});
+    return d.access_token;
+  }
+  return repo.decryptField(row.access_token_enc);
+}
+/** GET / from the Shopify admin iframe: signed launch, or embedded=1 with a valid shop. */
+export function embeddedLaunchShop(query = {}) {
+  const shop = normalizeShop(query.shop);
+  if (!shop) return null;
+  if (query.hmac && verifyQueryHmac(query)) return shop;
+  if (String(query.embedded) === "1" && !query.hmac) return shop;
+  return null;
+}
+/** Framing headers for a validated shop only. */
+export function setEmbeddedFrameHeaders(res, shop) {
+  const s = normalizeShop(shop); if (!s) throw new Error("invalid_shop_domain");
+  res.removeHeader("X-Frame-Options");
+  res.setHeader("Content-Security-Policy", `frame-ancestors https://${s} https://admin.shopify.com;`);
+}
+export async function embeddedState(shop) {
+  const shopRow = await repo.getShop(shop);
+  const links = (await repo.listProductLinks()).filter(l => l.shop === shop);
+  const orders = ((await getState()).orders || []).filter(o => o.store_id === `shopify:${shop}`).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, 20)
+    .map(o => ({ id: o.id, name: o.external_order_name, status: o.status, total: o.grand_total, currency: o.currency, created_at: o.created_at, items: (o.items || []).reduce((n, i) => n + Number(i.quantity || 0), 0) }));
+  return {
+    shop, connected: !!(shopRow?.access_token_enc && !shopRow.uninstalled_at), scopes: shopRow?.scopes || "", installed_at: shopRow?.installed_at || null,
+    webhooks_registered: !!shopRow?.webhooks_registered_at, token_expires_at: shopRow?.token_expires_at ? new Date(Number(shopRow.token_expires_at)).toISOString() : null,
+    api_version: config().apiVersion, products: catalogProducts(), links, orders
+  };
 }
 
 // ---------------- Webhooks ----------------

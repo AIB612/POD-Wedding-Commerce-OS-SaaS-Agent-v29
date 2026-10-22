@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="shopify-api-key" content="__SHOPIFY_API_KEY__">
+<title>POD Wedding Studio</title>
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+<style>
+:root{--bg:#f1f1f1;--card:#fff;--text:#303030;--muted:#616161;--border:#e3e3e3;--accent:#303030;--ok:#29845a;--okbg:#cdfee1;--warn:#8a6116;--warnbg:#ffeb78;--err:#8e1f0b;--errbg:#fedad9}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px/1.5 -apple-system,BlinkMacSystemFont,"San Francisco","Segoe UI",Roboto,"Helvetica Neue",sans-serif}
+.page{max-width:1000px;margin:0 auto;padding:20px 16px 40px}.title{display:flex;align-items:center;gap:10px;margin:0 0 16px}.title h1{font-size:20px;margin:0;font-weight:650}
+.card{background:var(--card);border-radius:12px;box-shadow:0 1px 0 rgba(26,26,26,.07),0 0 0 1px rgba(26,26,26,.06);margin-bottom:16px}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:14px 16px 0}.card-h h2{font-size:14px;margin:0;font-weight:650}.card-b{padding:12px 16px 16px}
+.badge{display:inline-block;border-radius:8px;padding:1px 8px;font-size:12px;font-weight:550;background:#ebebeb}.badge.ok{background:var(--okbg);color:var(--ok)}.badge.warn{background:var(--warnbg);color:var(--warn)}.badge.err{background:var(--errbg);color:var(--err)}
+.muted{color:var(--muted)}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px 6px;border-top:1px solid var(--border);vertical-align:middle}th{font-weight:550;color:var(--muted);font-size:12px;border-top:0}
+.btn{appearance:none;border:0;border-radius:8px;padding:6px 12px;font:inherit;font-weight:550;cursor:pointer;background:var(--accent);color:#fff;box-shadow:inset 0 -1px 0 #000}.btn:disabled{opacity:.5;cursor:default}.btn.sec{background:#fff;color:var(--text);box-shadow:0 0 0 1px var(--border),inset 0 -1px 0 #ccc}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px}.kv b{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.banner{border-radius:10px;padding:10px 14px;margin-bottom:16px;display:none}.banner.show{display:block}.banner.err{background:var(--errbg);color:var(--err)}.banner.ok{background:var(--okbg);color:var(--ok)}
+.scroll{max-height:440px;overflow:auto}
+code{font-size:12px;background:#f6f6f6;border-radius:4px;padding:1px 4px;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="title"><h1>POD Wedding Studio</h1><span class="badge" id="conn">Connecting…</span></div>
+  <div class="banner" id="banner"></div>
+  <div class="card"><div class="card-h"><h2>Connection</h2><button class="btn sec" id="refresh">Refresh</button></div><div class="card-b grid" id="status"><span class="muted">Loading…</span></div></div>
+  <div class="card"><div class="card-h"><h2>Catalog products</h2><span class="muted">Pushed as drafts with CHF prices from the POD price list</span></div><div class="card-b scroll"><table><thead><tr><th>Product</th><th>Category</th><th>Materials</th><th>Shopify</th><th></th></tr></thead><tbody id="products"></tbody></table></div></div>
+  <div class="card"><div class="card-h"><h2>Recent orders from Shopify</h2><span class="muted">Created by the orders/create webhook</span></div><div class="card-b"><table><thead><tr><th>Shopify order</th><th>Local order</th><th>Items</th><th>Total</th><th>Status</th><th>Created</th></tr></thead><tbody id="orders"></tbody></table></div></div>
+</div>
+<script>
+(function(){
+"use strict";
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const when=v=>{const d=v?new Date(v):null;return d&&!isNaN(d)?esc(d.toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"})):"—"};
+const $=id=>document.getElementById(id);
+const banner=(ok,t)=>{const b=$("banner");b.className="banner show "+(ok?"ok":"err");b.textContent=t};
+async function token(){
+  if(!window.shopify||!shopify.idToken)throw new Error("Open this app from the Shopify admin (App Bridge not available).");
+  return shopify.idToken();
+}
+async function api(path,opt={}){
+  const r=await fetch(path,{...opt,headers:{"Content-Type":"application/json",Authorization:"Bearer "+await token(),...(opt.headers||{})}});
+  const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||("HTTP "+r.status));return d;
+}
+let st=null;
+function render(){
+  $("conn").className="badge "+(st.connected?"ok":"err");$("conn").textContent=st.connected?"Connected":"Not connected";
+  $("status").innerHTML=[["Shop",esc(st.shop)],["Admin API",esc(st.api_version)],["Installed",when(st.installed_at)],["Webhooks",st.webhooks_registered?'<span class="badge ok">Registered</span>':'<span class="badge warn">Pending</span>'],["Token",st.token_expires_at?"Expires "+when(st.token_expires_at):"Offline (non-expiring)"],["Scopes",`<code>${esc(st.scopes||"—")}</code>`]].map(([k,v])=>`<div class="kv"><b>${k}</b>${v}</div>`).join("");
+  const link=id=>st.links.find(l=>l.local_product_id===id);
+  $("products").innerHTML=st.products.map(p=>{const l=link(p.id);return `<tr><td><b>${esc(p.name)}</b><div class="muted">${esc(p.id)}</div></td><td>${esc(p.category)}</td><td>${p.materials||1}</td><td>${l?`<span class="badge ok">Linked</span> <span class="muted">${when(l.pushed_at)}</span>`:'<span class="badge">Not pushed</span>'}</td><td style="text-align:right"><button class="btn${l?" sec":""}" data-push="${esc(p.id)}" ${st.connected?"":"disabled"}>${l?"Update on Shopify":"Push to Shopify"}</button></td></tr>`}).join("");
+  $("orders").innerHTML=st.orders.map(o=>`<tr><td><b>${esc(o.name||"—")}</b></td><td class="muted">${esc(o.id)}</td><td>${o.items}</td><td>${esc(o.currency)} ${Number(o.total||0).toFixed(2)}</td><td><span class="badge">${esc(o.status)}</span></td><td>${when(o.created_at)}</td></tr>`).join("")||`<tr><td colspan="6" class="muted">No orders received yet.</td></tr>`;
+}
+async function load(){st=await api("/api/shopify/embedded/state");render()}
+async function start(){
+  try{const s=await api("/api/shopify/embedded/session",{method:"POST",body:"{}"});if(s.exchanged)banner(true,"Connected: offline access token stored"+(s.webhooks?" and webhooks registered.":"."));await load()}
+  catch(e){$("conn").className="badge err";$("conn").textContent="Error";banner(false,e.message)}
+}
+$("refresh").onclick=()=>load().catch(e=>banner(false,e.message));
+$("products").onclick=async e=>{const b=e.target.closest("[data-push]");if(!b)return;b.disabled=true;const t=b.textContent;b.textContent="Pushing…";
+  try{const r=await api(`/api/shopify/embedded/products/${encodeURIComponent(b.dataset.push)}/push`,{method:"POST",body:"{}"});banner(true,`${r.updated?"Updated":"Created"} ${r.shopify_product_id} (${r.variants} variants)`);window.shopify?.toast?.show?.(r.updated?"Product updated":"Product created");await load()}
+  catch(err){banner(false,err.message);b.disabled=false;b.textContent=t}};
+start();
+})();
+</script>
+</body>
+</html>

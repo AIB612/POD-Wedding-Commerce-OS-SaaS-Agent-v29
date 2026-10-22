@@ -31,6 +31,8 @@ globalThis.fetch = async (url, opt = {}) => {
   if (!/^https:\/\/[^/]+\.myshopify\.com\//.test(url)) return realFetch(url, opt);
   const body = opt.body ? JSON.parse(opt.body) : null; calls.push({ url, body, headers: opt.headers });
   const ok = data => new Response(JSON.stringify(data), { status: 200, headers: { "Content-Type": "application/json" } });
+  if (url.endsWith("/admin/oauth/access_token") && body.grant_type === "urn:ietf:params:oauth:grant-type:token-exchange") return ok(body.expiring === "1" ? { access_token: "shpat_exp_1", scope: "write_products", expires_in: 3600, refresh_token: "shprt_1", refresh_token_expires_in: 7776000 } : { access_token: "shpat_te_1", scope: "write_products,read_orders" });
+  if (url.endsWith("/admin/oauth/access_token") && body.grant_type === "refresh_token") return ok({ access_token: "shpat_exp_2", scope: "write_products", expires_in: 3600, refresh_token: "shprt_2", refresh_token_expires_in: 7776000 });
   if (url.endsWith("/admin/oauth/access_token")) return body.code === "good" ? ok({ access_token: "shpat_offline_123", scope: shopify.DEFAULT_SCOPES }) : new Response("bad", { status: 400 });
   const q = body.query;
   if (q.includes("webhookSubscriptionCreate")) return ok({ data: { webhookSubscriptionCreate: { webhookSubscription: { id: `gid://shopify/WebhookSubscription/${body.variables.topic}`, topic: body.variables.topic }, userErrors: [] } } });
@@ -185,6 +187,88 @@ await test("HTTP: webhook route uses raw body, app/uninstalled deletes token; ad
     r = await fetch(`${base}/api/saas/orders/POD-2026-SHOPIFYHTTP/status`, { method: "POST", headers: { "Content-Type": "application/json", "x-admin-api-key": "change-me", "x-action-approved": "true", "x-tenant-id": "tenant_demo" }, body: JSON.stringify({ status: "Shipped", tracking_number: "TRK1", carrier: "Swiss Post" }) });
     const j = await r.json(); assert.equal(r.status, 200, JSON.stringify(j)); assert.equal(j.shopify_fulfillment?.status, "fulfilled");
     assert.equal(calls.filter(c => c.body?.query?.includes("fulfillmentCreate")).at(-1).body.variables.fulfillment.trackingInfo.number, "TRK1");
+  } finally { srv.close(); }
+});
+
+await test("session token JWT verification (sig, aud, dest, exp, nbf, alg)", () => {
+  const tok = shopify.signSessionToken({ shop: SHOP });
+  assert.equal(shopify.verifySessionToken(tok).shop, SHOP);
+  const bad = (t, re) => assert.throws(() => shopify.verifySessionToken(t), re);
+  bad(shopify.signSessionToken({ shop: SHOP, secret: "other" }), /signature/);
+  bad(shopify.signSessionToken({ shop: SHOP, apiKey: "other_key" }), /aud/);
+  bad(shopify.signSessionToken({ shop: SHOP, now: Date.now() - 3600_000 }), /expired/);
+  bad(shopify.signSessionToken({ shop: SHOP, now: Date.now() + 3600_000, ttlSec: 7200 }), /not_yet_valid/);
+  bad(shopify.signSessionToken({ shop: "evil.com" }), /dest/);
+  const [h, p, sig] = tok.split(".");
+  bad(`${Buffer.from(JSON.stringify({ alg: "none" })).toString("base64url")}.${p}.`, /alg|signature/);
+  const forged = JSON.parse(Buffer.from(p, "base64url")); forged.dest = "https://other.myshopify.com";
+  bad(`${h}.${Buffer.from(JSON.stringify(forged)).toString("base64url")}.${sig}`, /signature/);
+  bad("garbage", /format/);
+});
+await test("token-exchange request building", () => {
+  const { url, init } = shopify.buildTokenExchangeRequest(SHOP, "ID.TOK.EN", { expiring: false });
+  assert.equal(url, `https://${SHOP}/admin/oauth/access_token`);
+  assert.deepEqual(JSON.parse(init.body), { client_id: "test_key", client_secret: "test_secret", grant_type: "urn:ietf:params:oauth:grant-type:token-exchange", subject_token: "ID.TOK.EN", subject_token_type: "urn:ietf:params:oauth:token-type:id_token", requested_token_type: "urn:shopify:params:oauth:token-type:offline-access-token" });
+  assert.equal(JSON.parse(shopify.buildTokenExchangeRequest(SHOP, "x", { expiring: true }).init.body).expiring, "1");
+  assert.deepEqual(JSON.parse(shopify.buildRefreshRequest(SHOP, "rt").init.body), { client_id: "test_key", client_secret: "test_secret", grant_type: "refresh_token", refresh_token: "rt" });
+});
+await test("ensureOfflineToken: exchange once, store encrypted, register webhooks; idempotent; expiring tokens refresh", async () => {
+  await setDb(await openDb({ driver: "memory" }));
+  const n0 = calls.length, idt = shopify.signSessionToken({ shop: SHOP });
+  const a = await shopify.ensureOfflineToken(SHOP, idt);
+  assert.equal(a.exchanged, true); assert.equal(a.webhooks.length, 2);
+  assert.equal(await repo.shopToken(SHOP), "shpat_te_1");
+  const b = await shopify.ensureOfflineToken(SHOP, idt);
+  assert.equal(b.exchanged, false); assert.equal(b.webhooks, null);
+  assert.equal(calls.slice(n0).filter(c => c.url.endsWith("/access_token")).length, 1);
+  assert.equal(calls.slice(n0).filter(c => c.body?.query?.includes("webhookSubscriptionCreate")).length, 2);
+  // expiring offline token
+  process.env.SHOPIFY_EXPIRING_OFFLINE_TOKENS = "true";
+  await shopify.ensureOfflineToken(SHOP, idt, { force: true });
+  delete process.env.SHOPIFY_EXPIRING_OFFLINE_TOKENS;
+  let row = await repo.getShop(SHOP);
+  assert.ok(row.refresh_token_enc && !row.refresh_token_enc.includes("shprt")); assert.ok(Number(row.token_expires_at) > Date.now());
+  assert.equal(await shopify.accessToken(SHOP), "shpat_exp_1");
+  const { getDb, update } = await import("./db/index.js");
+  await update(await getDb(), "shopify_shops", { shop: SHOP }, { token_expires_at: Date.now() + 60_000 }); // near expiry
+  assert.equal(await shopify.accessToken(SHOP), "shpat_exp_2");
+  row = await repo.getShop(SHOP); assert.equal(repo.decryptField(row.refresh_token_enc), "shprt_2");
+});
+await test("embedded launch detection + frame-ancestors header", () => {
+  assert.equal(shopify.embeddedLaunchShop({ embedded: "1", shop: SHOP, host: "x" }), SHOP);
+  assert.equal(shopify.embeddedLaunchShop(sign({ shop: SHOP, host: "x", timestamp: "1" })), SHOP);
+  assert.equal(shopify.embeddedLaunchShop({ embedded: "1", shop: SHOP, hmac: "bad" }), null);
+  assert.equal(shopify.embeddedLaunchShop({ embedded: "1", shop: "evil.com" }), null);
+  assert.equal(shopify.embeddedLaunchShop({}), null);
+  const h = {}; const res = { setHeader: (k, v) => (h[k] = v), removeHeader: k => delete h[k] };
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  shopify.setEmbeddedFrameHeaders(res, SHOP);
+  assert.equal(h["X-Frame-Options"], undefined);
+  assert.equal(h["Content-Security-Policy"], `frame-ancestors https://${SHOP} https://admin.shopify.com;`);
+  assert.throws(() => shopify.setEmbeddedFrameHeaders(res, "evil.com; script-src *"));
+});
+await test("HTTP: embedded page headers, storefront unchanged, session-token API", async () => {
+  await setDb(await openDb({ driver: "memory" }));
+  const app = await createApp();
+  const srv = app.listen(0); const base = `http://127.0.0.1:${srv.address().port}`;
+  try {
+    let r = await fetch(`${base}/?${new URLSearchParams(sign({ embedded: "1", host: "YWRtaW4uc2hvcGlmeS5jb20vc3RvcmUvZHJvcGtpbmdkZXY", shop: SHOP, timestamp: "1", id_token: "x" }))}`);
+    let html = await r.text();
+    assert.equal(r.status, 200); assert.equal(r.headers.get("x-frame-options"), null);
+    assert.equal(r.headers.get("content-security-policy"), `frame-ancestors https://${SHOP} https://admin.shopify.com;`);
+    assert.match(html, /<meta name="shopify-api-key" content="test_key">/); assert.match(html, /cdn\.shopify\.com\/shopifycloud\/app-bridge\.js/);
+    r = await fetch(`${base}/`); html = await r.text();
+    assert.equal(r.headers.get("x-frame-options"), "SAMEORIGIN"); assert.equal(r.headers.get("content-security-policy"), null); assert.doesNotMatch(html, /shopify-api-key/);
+    r = await fetch(`${base}/shopify/embedded?shop=evil.com`); assert.equal(r.status, 400);
+    r = await fetch(`${base}/api/shopify/embedded/state`); assert.equal(r.status, 401);
+    r = await fetch(`${base}/api/shopify/embedded/state`, { headers: { Authorization: `Bearer ${shopify.signSessionToken({ shop: SHOP, secret: "nope" })}` } }); assert.equal(r.status, 401);
+    const auth = { Authorization: `Bearer ${shopify.signSessionToken({ shop: SHOP })}`, "Content-Type": "application/json" };
+    r = await fetch(`${base}/api/shopify/embedded/session`, { method: "POST", headers: auth, body: "{}" }); assert.equal(r.status, 200); assert.equal((await r.json()).exchanged, true);
+    r = await fetch(`${base}/api/shopify/embedded/session`, { method: "POST", headers: auth, body: "{}" }); assert.equal((await r.json()).exchanged, false);
+    r = await fetch(`${base}/api/shopify/embedded/products/tee/push`, { method: "POST", headers: auth, body: JSON.stringify({ shop: "other.myshopify.com" }) });
+    const pj = await r.json(); assert.equal(r.status, 200, JSON.stringify(pj)); assert.equal(pj.shop, SHOP);
+    r = await fetch(`${base}/api/shopify/embedded/state`, { headers: auth }); const st = await r.json();
+    assert.equal(st.connected, true); assert.equal(st.links[0].local_product_id, "tee"); assert.ok(st.products.length > 0); assert.ok(!JSON.stringify(st).includes("_enc"));
   } finally { srv.close(); }
 });
 
