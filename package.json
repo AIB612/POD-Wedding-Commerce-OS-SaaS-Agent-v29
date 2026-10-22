@@ -13,7 +13,7 @@
     "test:flows": "node server/flow-test.js",
     "test:http": "node server/http-flow-test.js",
     "test:hardening": "node server/hardening-test.js",
-    "test:all": "node server/self-test.js && node server/studio-test.js && node server/flow-test.js && node server/hardening-test.js && node server/checkout-test.js && node server/http-flow-test.js && node server/order-lookup-test.js && node server/storefront-pages-test.js",
+    "test:all": "node server/self-test.js && node server/studio-test.js && node server/flow-test.js && node server/hardening-test.js && node server/checkout-test.js && node server/http-flow-test.js && node server/order-lookup-test.js && node server/storefront-pages-test.js && node server/shopify-test.js",
     "build:studio-data": "node server/build-studio-data.js",
     "test:studio": "node server/studio-test.js",
     "mockups:generate": "python3 scripts/generate_mockups.py > /dev/null && node server/build-studio-data.js",
@@ -29,7 +29,8 @@
     "test:studio-buy": "node server/studio-buy-test.js",
     "test:promo": "node server/promo-test.js",
     "test:lookup": "node server/order-lookup-test.js",
-    "test:pages": "node server/storefront-pages-test.js"
+    "test:pages": "node server/storefront-pages-test.js",
+    "test:shopify": "node server/shopify-test.js"
   },
   "engines": {
     "node": ">=20"
@@ -38,6 +39,8 @@
     "compression": "^1.8.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "mysql2": "^3.24.6",
+    "sql.js": "^1.15.1"
   }
 }

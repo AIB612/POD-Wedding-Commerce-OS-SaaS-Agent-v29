@@ -1,4 +1,4 @@
-// In-page admin sections for admin.html: Price list (#prices), Fees & tax (#fees), Promo codes (#promos).
+// In-page admin sections for admin.html: Price list (#prices), Fees & tax (#fees), Promo codes (#promos), Shopify (#shopify).
 // Formerly standalone pages (admin-prices.html, admin-fees.html, admin-promos.html); those URLs now redirect
 // to /admin#<section>. Uses the same admin key as the dashboard (passed in via AdminSections.init).
 (function(){
@@ -123,7 +123,35 @@ function promos(root){
   typeUi();load().catch(e=>say($("msg"),false,e.message));
 }
 
-const mounts={prices,fees,promos},mounted=new Set();
+// ---------- Shopify ----------
+function shopify(root){
+  root.innerHTML=`<div class="query-card adm-bar"><input class="ant-input" data-r="shop" placeholder="your-store.myshopify.com" aria-label="Shop domain" style="max-width:320px"><button class="ant-btn shopify primary" data-r="connect">Connect shop</button><button class="ant-btn" data-r="reload">Refresh</button><span class="adm-meta" data-r="info"></span><span class="adm-msg" data-r="msg" aria-live="polite"></span></div>
+  <div class="card adm-card"><div class="card-title"><strong>Connected shops</strong><span data-r="cfg"></span></div><div class="card-body"><div class="table-wrap"><table class="adm-table"><thead><tr><th>Shop</th><th>Status</th><th>Scopes</th><th>Installed</th><th>Uninstalled</th></tr></thead><tbody data-r="shops"></tbody></table></div></div></div>
+  <div class="card adm-card"><div class="card-title"><strong>Push product</strong><span>Creates or updates the product on Shopify via productSet (CHF prices from the Price list, lowest quantity tier)</span></div><div class="card-body"><div class="adm-bar" style="padding:0"><select class="ant-select" data-r="target" aria-label="Shop" style="max-width:260px"></select><select class="ant-select" data-r="product" aria-label="Product" style="max-width:300px"></select><button class="ant-btn primary" data-r="push">Push to Shopify</button><span class="adm-msg" data-r="pmsg" aria-live="polite"></span></div>
+    <div class="table-wrap" style="margin-top:12px"><table class="adm-table"><thead><tr><th>Shop</th><th>Local product</th><th>Shopify product</th><th>Variants</th><th>Last push</th></tr></thead><tbody data-r="links"></tbody></table></div></div></div>
+  <div class="table-card"><div class="table-toolbar"><strong>Recent webhooks</strong><span class="adm-meta">Deduplicated on X-Shopify-Webhook-Id</span></div><div class="table-wrap"><table class="adm-table"><thead><tr><th>Received</th><th>Topic</th><th>Shop</th><th>Status</th><th>Note</th></tr></thead><tbody data-r="hooks"></tbody></table></div></div>`;
+  const $=n=>root.querySelector(`[data-r="${n}"]`);let st=null;
+  const when=v=>{const d=v?new Date(v):null;return d&&!isNaN(d)?esc(d.toLocaleString(undefined,{dateStyle:"short",timeStyle:"short"})):"—"};
+  function render(){
+    $("info").textContent=`Admin API ${st.api_version}`;
+    $("cfg").innerHTML=st.configured?`<span class="tag green">App configured</span> <span class="adm-meta">${esc(st.app_url)}</span>`:`<span class="tag red">Not configured</span> <span class="adm-meta">Set SHOPIFY_API_KEY, SHOPIFY_API_SECRET and APP_URL</span>`;
+    $("shops").innerHTML=st.shops.map(s=>`<tr><td><b>${esc(s.shop)}</b></td><td><span class="tag ${s.status==="connected"?"green":"red"}">${s.status==="connected"?"Connected":"Uninstalled"}</span></td><td class="adm-meta">${esc(s.scopes)}</td><td>${when(s.installed_at)}</td><td>${when(s.uninstalled_at)}</td></tr>`).join("")||`<tr><td colspan="5" class="adm-meta">No shop connected yet. Enter a *.myshopify.com domain above.</td></tr>`;
+    const live=st.shops.filter(s=>s.status==="connected");
+    $("target").innerHTML=live.map(s=>`<option>${esc(s.shop)}</option>`).join("")||`<option value="">No connected shop</option>`;
+    if(!$("product").options.length)$("product").innerHTML=st.products.map(p=>`<option value="${esc(p.id)}">${esc(p.name)} (${esc(p.id)})</option>`).join("");
+    $("push").disabled=!live.length;
+    $("links").innerHTML=st.product_links.map(l=>`<tr><td>${esc(l.shop)}</td><td>${esc(l.local_product_id)}</td><td class="adm-meta">${esc(l.shopify_product_id)}</td><td>${Object.keys(l.variant_ids||{}).length}</td><td>${when(l.pushed_at)}</td></tr>`).join("")||`<tr><td colspan="5" class="adm-meta">No product pushed yet.</td></tr>`;
+    $("hooks").innerHTML=st.webhooks.map(w=>`<tr><td>${when(w.received_at)}</td><td><b>${esc(w.topic)}</b></td><td>${esc(w.shop)}</td><td><span class="tag ${w.status==="processed"?"green":w.status==="error"?"red":""}">${esc(w.status)}</span></td><td class="adm-meta">${esc(w.note)}</td></tr>`).join("")||`<tr><td colspan="5" class="adm-meta">No webhooks received yet.</td></tr>`;
+  }
+  async function load(){st=await api("/api/shopify/app/status");render()}
+  $("reload").onclick=()=>load().catch(e=>say($("msg"),false,e.message));
+  $("connect").onclick=async()=>{try{const r=await api("/api/shopify/app/connect",{method:"POST",body:JSON.stringify({shop:$("shop").value})});say($("msg"),true,`Redirecting to ${r.shop}…`);location.href=r.url}catch(e){say($("msg"),false,e.message==="shopify_app_not_configured"?"Shopify app not configured (SHOPIFY_API_KEY / SHOPIFY_API_SECRET / APP_URL).":e.message==="invalid_shop_domain"?"Enter a valid *.myshopify.com domain.":e.message)}};
+  $("push").onclick=async()=>{$("push").disabled=true;try{const r=await api(`/api/shopify/app/products/${encodeURIComponent($("product").value)}/push`,{method:"POST",body:JSON.stringify({shop:$("target").value})});say($("pmsg"),true,`${r.updated?"Updated":"Created"} ${r.shopify_product_id} (${r.variants} variants)`);await load()}catch(e){say($("pmsg"),false,e.message)}finally{$("push").disabled=!st?.shops.some(s=>s.status==="connected")}};
+  const q=new URLSearchParams(location.search).get("shop_connected");if(q)say($("msg"),true,`Connected ${q}`);
+  load().catch(e=>say($("msg"),false,e.message));
+}
+
+const mounts={prices,fees,promos,shopify},mounted=new Set();
 window.AdminSections={
   ids:Object.keys(mounts),
   init(o){cfg={...cfg,...o}},

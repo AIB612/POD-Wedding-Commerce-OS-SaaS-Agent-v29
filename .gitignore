@@ -7,3 +7,4 @@ generated/*
 var/
 *.tmp
 scripts/.cache/
+/data/

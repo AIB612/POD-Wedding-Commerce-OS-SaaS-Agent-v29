@@ -1,0 +1,34 @@
+# Shopify app configuration template — "POD Wedding Studio" (Partner org: DropkingAI).
+# Fill client_id after creating the app, replace YOUR_DOMAIN with the public HTTPS host (APP_URL),
+# then `shopify app deploy` (Shopify CLI) to push this config. Never put the API secret here.
+client_id = "REPLACE_WITH_SHOPIFY_API_KEY"
+name = "POD Wedding Studio"
+application_url = "https://YOUR_DOMAIN/api/shopify/app/install"
+embedded = false
+
+[build]
+automatically_update_urls_on_dev = false
+
+[access_scopes]
+# Keep in sync with SHOPIFY_SCOPES
+scopes = "write_products,read_orders,write_orders,write_fulfillments,read_fulfillments,write_merchant_managed_fulfillment_orders"
+use_legacy_install_flow = true  # our server runs the authorization-code grant itself (/api/shopify/app/install)
+
+[auth]
+redirect_urls = [ "https://YOUR_DOMAIN/api/shopify/app/callback" ]
+
+[webhooks]
+api_version = "2025-10"
+
+  # orders/create and app/uninstalled are also registered per shop via webhookSubscriptionCreate after install.
+  [[webhooks.subscriptions]]
+  topics = [ "orders/create", "app/uninstalled" ]
+  uri = "https://YOUR_DOMAIN/api/shopify/app/webhooks"
+
+  # Mandatory GDPR compliance webhooks (can only be declared here, not via the API).
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+  uri = "https://YOUR_DOMAIN/api/shopify/app/webhooks"
+
+[pos]
+embedded = false

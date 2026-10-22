@@ -46,6 +46,7 @@ import { priceRows, updatePrices } from "../services/price-list-service.js";
 import { getFees, updateFees, seedFees } from "../services/fees-service.js";
 import { listPromos, createPromo, updatePromo, deletePromo } from "../services/promo-service.js";
 import { sendShippedEmail } from "../services/checkout-service.js";
+import { fulfillLocalOrder } from "../shopify/app.js";
 
 export function adminRouter({ root } = {}) {
   const r = express.Router();
@@ -93,7 +94,11 @@ export function adminRouter({ root } = {}) {
     let email_status="not_applicable";
     if(row.customer_email&&status==="Shipped"){const b=req.body||{},clip=v=>String(v||"").slice(0,300);const trk={carrier:clip(b.carrier||row.carrier),tracking_number:clip(b.tracking_number||row.tracking_number),tracking_url:/^https:\/\//.test(String(b.tracking_url||""))?clip(b.tracking_url):""};if(trk.tracking_number)await updateRecord("orders",row.id,trk);const mail=await sendShippedEmail(row,trk);email_status=mail?.status||"not_applicable";}
     else if(row.customer_email){const mail=await sendEmail({tenantId:req.tenantId,userId:row.user_id||null,to:row.customer_email,type:"order_status",related_id:row.id,subject:`Order update · ${row.id}`,text:`Your order status is now: ${status}. Follow it at ${baseUrl()}/account.html`,html:`<p>Order <b>${row.id}</b></p><p>Status: <b>${String(status).replace(/[<>&]/g,"")}</b></p><p><a href="${baseUrl()}/account.html">View your account</a></p>`});email_status=mail.status;}
-    res.json({id:row.id,status:row.status,email_status,event_id:evt.id});
+    // Orders that came from a Shopify store: mirror "Shipped" as a Shopify fulfillment (fulfillment orders API).
+    let shopify_fulfillment;
+    if(status==="Shipped"){const b=req.body||{},cur2=await findRecord("orders",row.id);try{shopify_fulfillment=await fulfillLocalOrder(row.id,{tracking_number:b.tracking_number||cur2?.tracking_number,carrier:b.carrier||cur2?.carrier,tracking_url:/^https:\/\//.test(String(b.tracking_url||""))?b.tracking_url:cur2?.tracking_url});}catch(e){shopify_fulfillment={status:"error",error:e.message};}
+      if(shopify_fulfillment?.status==="not_linked")shopify_fulfillment=undefined;}
+    res.json({id:row.id,status:row.status,email_status,event_id:evt.id,...(shopify_fulfillment?{shopify_fulfillment}:{})});
   }));
   r.post("/api/saas/orders/:id/resend-email", AP, ah(async (req,res)=>{
     const row=await findRecord("orders",req.params.id);if(!row||row.tenant_id!==req.tenantId)return res.sendStatus(404);
