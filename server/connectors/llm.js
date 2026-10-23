@@ -12,13 +12,17 @@ export function llmProvider() {
   const provider = (process.env.LLM_PROVIDER || "openai").toLowerCase();
   const ok = {
     openai: process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL,
+    chatgpt: process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL,
     anthropic: process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_MODEL,
-    gemini: process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL
+    gemini: process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL,
+    deepseek: process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_MODEL,
+    grok: process.env.XAI_API_KEY && process.env.XAI_MODEL,
+    xai: process.env.XAI_API_KEY && process.env.XAI_MODEL
   }[provider];
   return ok ? provider : null;
 }
 
-export const DEMO_MESSAGE = "后端已进入演示模式：请在 .env 中配置 OpenAI、Anthropic 或 Gemini 的 API Key 和模型名。";
+export const DEMO_MESSAGE = "后端已进入演示模式：请在 .env 中配置 OpenAI、Anthropic、Gemini、DeepSeek 或 Grok 的 API Key 和模型名。";
 
 export async function callLLM({ system, user }) {
   const provider = llmProvider();
@@ -49,6 +53,33 @@ export async function callLLM({ system, user }) {
       body: JSON.stringify({ system_instruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts: [{ text: user }] }] })
     });
     return { configured: true, text: data.candidates?.[0]?.content?.parts?.map(x => x.text || "").join("") || "已处理。" };
+  }
+
+  if (provider === "deepseek") {
+    const data = await jsonFetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: process.env.DEEPSEEK_MODEL || "deepseek-chat", messages: [{ role: "system", content: system }, { role: "user", content: user }] })
+    });
+    return { configured: true, text: data.choices?.[0]?.message?.content || "已处理。" };
+  }
+
+  if (provider === "grok" || provider === "xai") {
+    const data = await jsonFetch("https://api.x.ai/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.XAI_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: process.env.XAI_MODEL || "grok-4.7", messages: [{ role: "system", content: system }, { role: "user", content: user }] })
+    });
+    return { configured: true, text: data.choices?.[0]?.message?.content || "已处理。" };
+  }
+
+  if (provider === "chatgpt") {
+    const data = await jsonFetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: process.env.OPENAI_MODEL || "gpt-4o", messages: [{ role: "system", content: system }, { role: "user", content: user }] })
+    });
+    return { configured: true, text: data.choices?.[0]?.message?.content || "已处理。" };
   }
 
   return { configured: false, text: DEMO_MESSAGE };
