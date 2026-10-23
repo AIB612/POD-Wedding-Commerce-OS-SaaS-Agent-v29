@@ -1,0 +1,255 @@
+================================================================================
+Wedding Commerce OS — Agent 框架与底层逻辑
+================================================================================
+更新时间：2026-10-23
+
+--------------------------------------------------------------------------------
+一、Agent 架构总览
+--------------------------------------------------------------------------------
+
+Agent 是系统的智能层，分为两个独立通道：
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        /api/agent/chat                          │
+│                              │                                  │
+│                    ┌─────────┴─────────┐                        │
+│                    │   orchestrator    │                        │
+│                    │   (入口路由)       │                        │
+│                    └─────────┬─────────┘                        │
+│                              │                                  │
+│              ┌───────────────┼───────────────┐                  │
+│              │               │               │                  │
+│         isAdmin &&      客户侧通道        后台侧通道             │
+│         isOps(msg)          │               │                  │
+│              │               │               │                  │
+│              ▼               ▼               ▼                  │
+│         runOpsCommand    retrieve()     runOpsCommand           │
+│         (审批门控)        (RAG检索)      (审批门控)              │
+│              │               │               │                  │
+│              │               ▼               │                  │
+│              │          callLLM()            │                  │
+│              │          (多Provider)         │                  │
+│              │               │               │                  │
+│              └───────────────┴───────────────┘                  │
+│                              │                                  │
+│                         { answer, plan, data }                  │
+└─────────────────────────────────────────────────────────────────┘
+
+--------------------------------------------------------------------------------
+二、核心模块
+--------------------------------------------------------------------------------
+
+【1. orchestrator.js — 入口路由】
+位置：server/orchestrator.js
+
+职责：
+- 接收 /api/agent/chat 请求
+- 判断是否为后台运营意图（isOps）
+- 管理员 + 运营意图 → 走后台通道（runOpsCommand）
+- 其他 → 走客户通道（RAG + LLM）
+
+关键逻辑：
+```
+isOps(message) = /(广告|营销|roas|达人|财务|利润|成本|订单|物流|同步|店铺|任务|客户画像|推荐)/i
+```
+
+安全边界：
+- 客户侧永远不返回租户财务、订单、客户数据
+- 后台写操作必须进入审批，不直接执行
+
+【2. rag.js — 检索增强】
+位置：server/rag.js
+
+职责：
+- 从 knowledge.json 加载知识库
+- 词法检索（Latin 分词 + CJK 双字）
+- 按场景过滤（scene 参数）
+- 返回相关文档片段供 LLM 参考
+
+当前实现：
+- 演示级词法检索
+- 生产环境应替换为向量检索（embedding）
+
+【3. agent-ops-service.js — 后台运营】
+位置：server/services/agent-ops-service.js
+
+职责：
+- 解析运营意图（marketing / inbox / creator / finance / customer / operations / catalog / tasks）
+- 读取对应数据（营销指标、对话、达人、财务、客户、订单、目录、任务）
+- 写操作创建审批任务（createTask），不直接执行
+- 返回 { intent, plan, data, guardrails }
+
+意图映射：
+| 关键词 | 意图 | 数据源 |
+|--------|------|--------|
+| 广告/营销/roas | marketing | marketingSummary |
+| 收件箱/对话 | inbox | conversations |
+| 达人/influencer | creator | discoverInfluencers |
+| 财务/利润/成本 | finance | financeSummary |
+| 客户画像 | customer | customerProfiles |
+| 订单/物流 | operations | orders + shipments |
+| 同步/目录 | catalog | createTask(catalog_sync) |
+| 任务 | tasks | tasks |
+
+护栏（guardrails）：
+- writes_require_approval: true
+- external_messages_require_approval: true
+- budget_increases_require_approval: true
+
+【4. llm.js — 多 Provider LLM】
+位置：server/connectors/llm.js
+
+支持：
+- OpenAI（OPENAI_API_KEY + OPENAI_MODEL）
+- Anthropic（ANTHROPIC_API_KEY + ANTHROPIC_MODEL）
+- Gemini（GEMINI_API_KEY + GEMINI_MODEL）
+
+降级：
+- 未配置时返回 DEMO_MESSAGE
+- 调用方可通过 fallback: true 使用内置演示回答
+
+--------------------------------------------------------------------------------
+三、客户侧 Agent 流程
+--------------------------------------------------------------------------------
+
+1. 用户发送消息 → POST /api/agent/chat
+2. orchestrator 判断非运营意图（或非管理员）
+3. retrieve() 从知识库检索相关片段
+4. 构建 system prompt：
+   - 角色：婚礼 POD 定制助手
+   - 场景：当前选中的场景
+   - 购物车：当前购物车内容（截断）
+   - RAG：检索到的知识片段
+5. callLLM() 生成回答
+6. 返回 { answer, tool_summary, fallback? }
+
+客户侧能力：
+- 产品/材质咨询
+- 设计 Brief 建议
+- 邀请网站说明
+- 订单与物流说明（公开信息）
+- 场景推荐
+
+限制：
+- 不透露其他客户数据
+- 不透露订单金额、成本、内部运营数据
+- 真实交易状态必须来自工具/API
+
+--------------------------------------------------------------------------------
+四、后台侧 Agent 流程
+--------------------------------------------------------------------------------
+
+1. 管理员发送消息 → POST /api/agent/chat（isAdmin=true）
+2. isOps(message) 匹配运营关键词
+3. runOpsCommand() 解析意图
+4. 读取对应数据源
+5. 如涉及写操作（创建/投放/联系/同步），创建审批任务
+6. 返回 { intent, plan, data, guardrails }
+
+后台侧能力：
+- 营销分析与优化建议
+- 收件箱汇总与回复草稿
+- 达人发现与外联准备
+- 财务汇总（收入、成本、利润）
+- 客户画像与推荐
+- 订单与物流状态
+- 目录同步（审批门控）
+- 任务列表
+
+审批机制：
+- 所有写操作创建 task 记录
+- task.risk = "high" 时需人工审批
+- 不自动发送外部消息、不自动增加预算、不自动发布
+
+--------------------------------------------------------------------------------
+五、数据流
+--------------------------------------------------------------------------------
+
+客户侧：
+  message → orchestrator → retrieve(knowledge.json) → callLLM → answer
+
+后台侧：
+  message → orchestrator → intent() → data source → createTask? → { intent, plan, data }
+
+知识库：
+  server/data/knowledge.json
+  - 产品说明
+  - 材质说明
+  - 场景描述
+  - 常见问题
+
+--------------------------------------------------------------------------------
+六、优化方向
+--------------------------------------------------------------------------------
+
+【短期】
+1. 向量检索
+   - 替换 rag.js 的词法检索为 embedding 检索
+   - 提升中文与多语言匹配质量
+
+2. 工具调用
+   - 客户侧增加工具：订单查询、物流跟踪、产品推荐
+   - 使用 function calling 而非纯文本
+
+3. 上下文管理
+   - 多轮对话记忆
+   - 场景切换时保留相关上下文
+
+【中期】
+4. 审批流完善
+   - 审批任务 UI
+   - 审批后自动执行
+   - 审计日志
+
+5. 多 Agent 协作
+   - 客户 Agent 与后台 Agent 分离
+   - A2A（Agent-to-Agent）协议支持
+   - /.well-known/agent-card.json 已预留
+
+【长期】
+6. 个性化
+   - 基于客户历史的推荐
+   - 场景偏好学习
+
+7. 可观测
+   - Agent 调用日志
+   - 回答质量评估
+   - 成本追踪
+
+--------------------------------------------------------------------------------
+七、关键文件
+--------------------------------------------------------------------------------
+
+server/orchestrator.js              Agent 入口与路由
+server/rag.js                       检索增强
+server/services/agent-ops-service.js 后台运营逻辑
+server/connectors/llm.js            LLM 调用
+server/data/knowledge.json          知识库
+server/routes/public.js             /api/agent/chat 路由
+server/routes/admin.js              /api/agent/ops 路由
+
+--------------------------------------------------------------------------------
+八、配置
+--------------------------------------------------------------------------------
+
+LLM：
+  LLM_PROVIDER=openai|anthropic|gemini
+  OPENAI_API_KEY / OPENAI_MODEL
+  ANTHROPIC_API_KEY / ANTHROPIC_MODEL
+  GEMINI_API_KEY / GEMINI_MODEL
+  LLM_TIMEOUT_MS=30000
+
+Agent Card：
+  ENABLE_A2A_AGENT_CARD=true|false
+
+--------------------------------------------------------------------------------
+九、安全边界
+--------------------------------------------------------------------------------
+
+1. 客户侧永不返回租户内部数据
+2. 后台写操作必须审批
+3. 外部消息必须审批
+4. 预算增加必须审批
+5. 速率限制：/api/agent/chat 30 次/分钟
+
+================================================================================

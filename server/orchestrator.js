@@ -7,8 +7,14 @@ export const isOps = (message = "") => OPS_PATTERN.test(message);
 
 /**
  * Agent entry for /api/agent/chat.
- * Back-office (ops) intents only run for authenticated admins — storefront visitors must never
- * receive tenant finance, order or customer data. Visitors get the customer-side assistant instead.
+ *
+ * Routing:
+ *   - isAdmin && isOps(message) → runOpsCommand (back-office, approval-gated)
+ *   - otherwise → customer-side (RAG + LLM)
+ *
+ * Security:
+ *   - Customer-side never returns tenant finance, order, or customer data.
+ *   - Back-office writes create approval tasks; they do not execute directly.
  */
 export async function runAgent({ message = "", scene = "cream", cart = [], tenantId = "tenant_demo", isAdmin = false }) {
   if (isAdmin && isOps(message)) {
