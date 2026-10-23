@@ -1,0 +1,199 @@
+================================================================================
+POD Wedding Commerce OS — 架构说明与优化方案
+================================================================================
+更新时间：2026-10-23
+版本：v29 + feature/home-en-images 合并
+
+--------------------------------------------------------------------------------
+一、系统架构概览
+--------------------------------------------------------------------------------
+
+【前端】
+- index.html          首页（场景选品、产品墙、购物车入口）
+- studio.html/js      设计工作室（场景套装、产品定制、加入购物车）
+- checkout.html/js    4 步结账（联系→配送→支付→确认）
+- account.html        客户账户（订单、设计、地址、个人资料）
+- payment-success.html 支付成功页
+- proof.html          效果图确认页
+- header.js           共享头部（市场/货币、语言、购物车、菜单）
+- cart.js / cart.css  购物车抽屉
+- i18n.js             多语言（中/英/德）
+- mobile.css          手机端适配（仅 ≤720px 生效）
+
+【后端】
+- server/app.js           入口
+- server/create-app.js    Express 应用组装
+- server/routes/
+  - public.js         公开 API（结账、支付、订单状态）
+  - studio.js         工作室项目 API
+  - account.js        账户认证与数据
+  - admin.js          后台管理
+  - shopify-app.js    Shopify 嵌入式应用
+  - webhooks.js       Webhook 接收
+- server/services/        业务逻辑层
+- server/connectors/      外部 API 连接器
+- server/db/              数据库适配（SQLite/MySQL/内存）
+
+【数据流】
+用户 → 首页选品 → 工作室设计 → 加入购物车 → 结账 → 支付 → 订单确认 → 效果图 → 生产 → 发货
+
+--------------------------------------------------------------------------------
+二、已对接 API / 外部服务
+--------------------------------------------------------------------------------
+
+【支付】
+- PayPal Orders v2
+  - 创建订单、捕获支付、Webhook
+  - 配置：PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET / PAYPAL_WEBHOOK_ID
+  - 状态：可用（需配置凭证）
+
+- TWINT（瑞士）
+  - SOAP Merchant Service（骨架）
+  - 配置：TWINT_STORE_UUID / TWINT_CASH_REGISTER_ID / 证书
+  - 状态：骨架，未实现实际 SOAP 调用
+
+【电商平台】
+- Shopify
+  - OAuth、产品推送、订单同步、Webhook、嵌入式应用
+  - 配置：SHOPIFY_API_KEY / SHOPIFY_API_SECRET / SHOPIFY_CLIENT_ID
+  - 状态：可用（需配置）
+
+【邮件】
+- SendGrid / Postmark
+  - 订单确认、发货通知、效果图、RSVP
+  - 配置：SENDGRID_API_KEY 或 POSTMARK_API_KEY
+  - 状态：可用
+
+【物流】
+- EasyPost / Shippo / 17Track / AfterShip
+  - 运费试算、物流跟踪
+  - 状态：连接器已就绪
+
+【税务】
+- Avalara
+  - 税费计算
+  - 状态：连接器已就绪
+
+【LLM / Agent】
+- OpenAI / Anthropic / Gemini
+  - 客户侧助手、后台运营分析
+  - 配置：OPENAI_API_KEY / ANTHROPIC_API_KEY / GEMINI_API_KEY
+  - 状态：可用（未配置时降级为演示模式）
+
+【认证】
+- Google OAuth（快捷登录）
+- Shopify OAuth（快捷登录）
+- 邮箱验证码 / 密码（旧流程保留）
+
+--------------------------------------------------------------------------------
+三、优化方案
+--------------------------------------------------------------------------------
+
+【P0 — 必须】
+1. 支付流程完善
+   - PayPal：确保沙盒/生产切换正常，Webhook 验签
+   - TWINT：实现 StartOrder / MonitorOrder SOAP 调用
+   - 支付成功后自动发送确认邮件、创建效果图记录
+
+2. 手机端体验
+   - 已完成基础适配（mobile.css）
+   - 待验证：结账步骤、工作室画布、购物车抽屉在真实设备上的表现
+   - 触控目标、表单字体、安全区已处理
+
+3. 电脑端样式保护
+   - 菜单按钮仅手机端显示（已修复）
+   - 确保后续改动不影响桌面布局
+
+【P1 — 重要】
+4. 购物车与工作室同步
+   - 编辑后重新加入购物车应替换旧行
+   - 显示编辑前后对比（缩略图）
+
+5. 邮件模板统一
+   - 所有通知使用同一风格（深色头部 + 四象限信息）
+   - 覆盖：订单确认、支付成功、效果图就绪、发货、送达、RSVP
+
+6. 账户与订单追踪
+   - 客人可查询订单状态（无需登录）
+   - 登录用户可查看完整订单历史、重新下单
+
+【P2 — 增强】
+7. Agent 能力
+   - 客户侧：产品推荐、设计建议、订单查询
+   - 后台侧：运营分析、审批流（广告、退款、发布）
+   - RAG 检索增强场景推荐
+
+8. 多店铺 / 多租户
+   - Shopify 多店铺同步
+   - 租户隔离与权限
+
+9. 性能与可观测
+   - 图片懒加载、WebP 缩略图
+   - 支付/订单关键路径日志
+   - 健康检查与部署监控
+
+【P3 — 长期】
+10. 法律与合规
+    - 隐私政策、退货政策、Imprint 已有页面
+    - GDPR 数据导出/删除
+    - 支付凭证与发票
+
+11. 国际化
+    - 已支持中/英/德
+    - 可扩展更多语言与货币
+
+--------------------------------------------------------------------------------
+四、关键文件索引
+--------------------------------------------------------------------------------
+
+支付：
+- server/services/checkout-service.js   结账与支付创建
+- server/connectors/paypal.js           PayPal 连接器
+- server/connectors/twint.js            TWINT 连接器（骨架）
+- checkout.js / checkout.html           前端结账流程
+
+工作室：
+- studio.js / studio.html               设计工作室
+- server/routes/studio.js               项目 API
+- server/services/studio-service.js     项目业务
+
+邮件：
+- server/services/email-service.js      邮件发送
+- server/services/proof-service.js      效果图通知
+- server/services/rsvp-service.js       RSVP 通知
+
+Agent：
+- server/orchestrator.js                Agent 入口
+- server/services/agent-ops-service.js  后台运营
+- server/connectors/llm.js              LLM 调用
+- server/rag.js                         检索增强
+
+配置：
+- .env.example                          环境变量模板
+- render.yaml                           Render 部署配置
+- shopify.app.toml                      Shopify 应用配置
+
+--------------------------------------------------------------------------------
+五、部署
+--------------------------------------------------------------------------------
+
+- 生产：https://wed-swisspro.onrender.com/
+- 分支：main（已合并 feature/home-en-images）
+- 自动部署：推送 main 后 Render 自动构建
+
+本地开发：
+  npm install
+  cp .env.example .env   # 填写必要凭证
+  npm start              # http://localhost:3000
+
+--------------------------------------------------------------------------------
+六、下一步建议
+--------------------------------------------------------------------------------
+
+1. 配置 PayPal 沙盒凭证，完成端到端支付测试
+2. 实现 TWINT SOAP 调用（或先用测试环境验证流程）
+3. 在真实手机设备上验证 mobile.css 效果
+4. 统一邮件模板风格并测试送达率
+5. 补充 Agent 客户侧工具（订单查询、产品推荐）
+
+================================================================================
