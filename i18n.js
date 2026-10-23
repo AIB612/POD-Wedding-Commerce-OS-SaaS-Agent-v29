@@ -759,7 +759,7 @@ const K={
 'pay.tl.proofPrep':{en:'Proof in preparation — we e-mail you as soon as it is ready'},
 'acct.od.proofPreparing':{en:'Proof in preparation'},
 'acct.od.proofPreparingSub':{en:'we e-mail you a review link as soon as it is ready.'},
-'hdr.shop':{zh:'商店',en:'Shop',de:'Shop'},'hdr.studio':{zh:'设计工作室',en:'Design studio',de:'Design-Studio'},'hdr.account':{zh:'我的账户',en:'My account',de:'Mein Konto'},'hdr.menu':{zh:'菜单',en:'Menu',de:'Menü'},
+'hdr.tagline':{zh:'场景式选品 · 定制 · 阶梯价 · 购物车',en:'Scene-based selection · customisation · tiered pricing · cart',de:'Szenenbasierte Auswahl · Personalisierung · Staffelpreise · Warenkorb'},'hdr.studioTagline':{zh:'场景 → 设计 → 定价 → 寄送 一站式',en:'Scenario → design → pricing → delivery',de:'Szenario → Design → Preis → Versand'},'hdr.backToShop':{zh:'返回婚礼商城',en:'Back to wedding shop',de:'Zurück zum Hochzeitsshop'},'hdr.shop':{zh:'商店',en:'Shop',de:'Shop'},'hdr.studio':{zh:'设计工作室',en:'Design studio',de:'Design-Studio'},'hdr.account':{zh:'我的账户',en:'My account',de:'Mein Konto'},'hdr.menu':{zh:'菜单',en:'Menu',de:'Menü'},
 'hdr.shipping':{zh:'配送与生产时间',en:'Shipping & production times',de:'Versand & Produktionszeiten'},'hdr.returns':{zh:'退货与瑕疵',en:'Returns & defects',de:'Rückgabe & Mängel'},'hdr.findOrder':{zh:'查询订单',en:'Find my order',de:'Bestellung finden'},'hdr.prefs':{zh:'语言与货币',en:'Language & currency',de:'Sprache & Währung'},
 'vat.excl':{zh:'不含增值税',en:'excl. VAT',de:'exkl. MwSt.'},'vat.incl':{zh:'含增值税',en:'incl. VAT',de:'inkl. MwSt.'},
 'cart.vatExclNote':{zh:'商品价格不含增值税；增值税按配送国家计算，并在下方单独列出。',en:'Prices exclude VAT; VAT is calculated for your delivery country and shown separately.',de:'Preise exkl. MwSt.; die MwSt. wird für Ihr Lieferland berechnet und separat ausgewiesen.'},
