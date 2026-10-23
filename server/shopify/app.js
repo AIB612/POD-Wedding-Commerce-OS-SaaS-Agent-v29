@@ -29,6 +29,12 @@ export function normalizeShop(shop = "") {
   const s = String(shop).trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
   return /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(s) ? s : null;
 }
+export function normalizeShopInput(shop = "") {
+  const s = String(shop).trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  if (/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(s)) return s;
+  if (/^[a-z0-9][a-z0-9-]*$/.test(s)) return `${s}.myshopify.com`;
+  return null;
+}
 
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 

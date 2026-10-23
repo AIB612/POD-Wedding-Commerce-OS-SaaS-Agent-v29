@@ -5,6 +5,7 @@
 import crypto from "node:crypto";
 import { addRecord, findRecord, findWhere, updateRecord } from "../saas-store.js";
 import { buildOAuthStart } from "../connectors/shopify-multistore.js";
+import * as shopify from "../shopify/app.js";
 import { encrypt } from "../utils/crypto.js";
 import { createTask } from "./task-service.js";
 import { HttpError } from "../http/middleware.js";
@@ -16,7 +17,8 @@ export const publicView = c => c && ({ id: c.id, platform: c.platform, store: c.
 function normalise(platform, raw) {
   const v = String(raw || "").trim().toLowerCase().replace(/\/+$/, "");
   if (platform === "shopify") {
-    const shop = v.replace(/^https?:\/\//, "");
+    const rawShop = v.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    const shop = /^[a-z0-9][a-z0-9-]*$/.test(rawShop) ? `${rawShop}.myshopify.com` : rawShop;
     if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) throw new HttpError(400, "invalid_shop_domain", "请输入 your-store.myshopify.com 格式的店铺域名");
     return shop;
   }
@@ -36,6 +38,11 @@ export async function requestConnection({ tenantId, platform, store, baseUrl, al
     const { url } = buildOAuthStart({ shop: clean, tenantId, returnTo: "studio", connectionId: conn.id });
     await updateRecord("studio_connections", conn.id, { status: "pending_authorization" });
     return { connection: publicView({ ...conn, status: "pending_authorization" }), authorize_url: url };
+  }
+  if (allowOAuth && platform === "shopify" && shopify.isConfigured()) {
+    await updateRecord("studio_connections", conn.id, { status: "pending_authorization" });
+    const authorize_url = `/api/shopify/app/login?shop=${encodeURIComponent(clean)}&return_to=${encodeURIComponent(`/studio.html?connected=${conn.id}`)}&conn_id=${encodeURIComponent(conn.id)}`;
+    return { connection: publicView({ ...conn, status: "pending_authorization" }), authorize_url };
   }
   if (allowOAuth && platform === "woocommerce" && /^https:/.test(baseUrl)) {
     const q = new URLSearchParams({ app_name: "Wedding Commerce OS", scope: "read_write", user_id: conn.id,

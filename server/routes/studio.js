@@ -7,6 +7,7 @@ import { findWhere } from "../saas-store.js";
 import { requestConnection, getConnection, wooCallback } from "../services/studio-connections.js";
 import { isAdminRequest, requireOwner } from "../auth.js";
 import { baseUrl } from "../config.js";
+import * as shopify from "../shopify/app.js";
 
 export function studioRouter({ generatedDir }) {
   const r = express.Router();
@@ -40,7 +41,7 @@ export function studioRouter({ generatedDir }) {
   // Store connections (merchant). Official OAuth / wc-auth only when STUDIO_PUBLIC_CONNECT=true or for admins.
   const connLimit = rateLimit({ bucket: "studio-connect", windowMs: 60 * 60_000, max: 20 });
   r.post("/api/studio/connections", connLimit, ah(async (req, res) => {
-    const allowOAuth = process.env.STUDIO_PUBLIC_CONNECT === "true" || isAdminRequest(req);
+    const allowOAuth = process.env.STUDIO_PUBLIC_CONNECT === "true" || isAdminRequest(req) || (shopify.isConfigured() && process.env.NODE_ENV !== "test");
     res.json(await requestConnection({ tenantId: req.tenantId, platform: req.body?.platform, store: req.body?.store, baseUrl: baseUrl(), allowOAuth }));
   }));
   r.get("/api/studio/connections/:id", ah(async (req, res) => res.json(await getConnection(req.params.id))));

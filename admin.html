@@ -826,14 +826,14 @@ async function replyDraft(){
 }
 
 // ---------- Shopify OAuth ----------
-function openShopify(){document.getElementById('shopifyMask').classList.add('open');setTimeout(()=>document.getElementById('shopifyDomain').focus(),50)}
+function openShopify(){const inp=document.getElementById('shopifyDomain');if(inp&&!inp.value){try{inp.value=localStorage.getItem('pod-shopify-shop')||'dropkingdev.myshopify.com'}catch{}}document.getElementById('shopifyMask').classList.add('open');setTimeout(()=>{inp.focus();inp.select?.()},50)}
 function closeShopify(){document.getElementById('shopifyMask').classList.remove('open')}
 async function startShopifyOAuth(){
-  const s=document.getElementById('shopifyDomain').value.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+  let s=document.getElementById('shopifyDomain').value.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  if(/^[a-z0-9][a-z0-9-]*$/.test(s))s+='.myshopify.com';
   if(!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(s))return notice(T('请输入有效的 .myshopify.com 域名'));
-  // A plain redirect cannot carry the admin header: fetch the OAuth URL first, then leave for Shopify.
-  const d=await api(`/api/shopify/oauth/start?shop=${encodeURIComponent(s)}&tenant_id=${tenant}`);
-  if(d&&d.url)location.href=d.url;else notice(T('Shopify OAuth 未配置或店铺域名无效'));
+  try{localStorage.setItem('pod-shopify-shop',s)}catch{}
+  location.href=`/api/shopify/app/login?shop=${encodeURIComponent(s)}&return_to=${encodeURIComponent('/admin#shopify')}`;
 }
 
 

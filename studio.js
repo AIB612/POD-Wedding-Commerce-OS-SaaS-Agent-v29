@@ -629,9 +629,9 @@
   function renderRoleBar() {
     const n = S.stores.length;
     $("#roleBar").innerHTML = `<label class="role"><span>${t("role")}</span><select id="roleSel" aria-label="${t("role")}">${D.buyer_types.map(b => `<option value="${b.id}" ${S.buyer === b.id ? "selected" : ""}>${esc(nm(b.name))}</option>`).join("")}</select></label>
-      ${S.buyer === "merchant" ? `<button class="btn storebtn ${S.stores.some(c => c.status === "connected") ? "bound" : ""}" data-bind="1">🔗 ${n ? t("storesN", { n }) : t("bindStore")}</button>` : ""}`;
+      <button class="btn storebtn ${S.stores.some(c => c.status === "connected") ? "bound" : ""}" data-bind="1">🔗 ${n ? t("storesN", { n }) : t("bindStore")}</button>`;
   }
-  function openStoreModal() { $("#storeErr").textContent = ""; renderStoreModal(); $("#storeModal").classList.add("open"); setTimeout(() => $("#storeInput").focus(), 50); }
+  function openStoreModal() { $("#storeErr").textContent = ""; renderStoreModal(); if (S.platform === "shopify" && !$("#storeInput").value) { try { $("#storeInput").value = localStorage.getItem("pod-shopify-shop") || "dropkingdev.myshopify.com"; } catch {} } $("#storeModal").classList.add("open"); setTimeout(() => { $("#storeInput").focus(); $("#storeInput").select?.(); }, 50); }
   function renderStoreModal() {
     const sh = S.platform === "shopify";
     document.querySelectorAll("#platformSeg button").forEach(b => b.classList.toggle("active", b.dataset.platform === S.platform));
@@ -639,7 +639,8 @@
     $("#storeList").innerHTML = S.stores.map(c => `<div class="st-row"><span><b>${c.platform === "shopify" ? "Shopify" : "WooCommerce"}</b> · ${esc(c.store)}</span><span class="row"><span class="chip ${c.status === "connected" ? "ok" : "warn"}">${t("st_" + c.status)}</span><button class="x" data-unbind="${esc(c.id)}" aria-label="remove">✕</button></span></div>`).join("");
   }
   async function bindStore() {
-    const raw = $("#storeInput").value.trim(), platform = S.platform;
+    let raw = $("#storeInput").value.trim(), platform = S.platform;
+    if (platform === "shopify" && /^[a-z0-9][a-z0-9-]*$/i.test(raw)) raw = `${raw.toLowerCase()}.myshopify.com`;
     const ok = platform === "shopify" ? /^(https?:\/\/)?[a-z0-9][a-z0-9-]*\.myshopify\.com\/?$/i.test(raw) : /^(https:\/\/)?[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i.test(raw);
     if (!ok) { $("#storeErr").textContent = platform === "shopify" ? t("shopHint") : t("wooHint"); return; }
     if (!SERVER) { S.stores.push({ id: `local_${Date.now().toString(36)}`, platform, store: raw.replace(/^https?:\/\//, "").replace(/\/$/, ""), status: "local" }); $("#storeInput").value = ""; renderStoreModal(); rerender(); return; }
@@ -932,6 +933,21 @@
   (async () => {
     // if (SERVER) { try { await window.PODAuth.require(); } catch { location.href = "index.html"; return; } }
     const qs = new URLSearchParams(location.search);
+    const syncShopifyStore = shop => {
+      if (!shop) return;
+      const idx = S.stores.findIndex(x => x.platform === "shopify" && x.store === shop);
+      const entry = { id: idx >= 0 ? S.stores[idx].id : "sc_shopify", platform: "shopify", store: shop, status: "connected" };
+      if (idx >= 0) S.stores[idx] = { ...S.stores[idx], status: "connected" };
+      else S.stores.push(entry);
+      if (!S.publishStore) S.publishStore = entry.id;
+    };
+    if (SERVER) {
+      fetch("/api/shopify/app/public-status").then(r => r.ok ? r.json() : null).then(st => {
+        const shop = st?.shops?.[0]?.shop;
+        if (shop) { syncShopifyStore(shop); renderRoleBar(); }
+      }).catch(() => {});
+    }
+    window.addEventListener("pod-shopify-connected", e => { if (e.detail?.shop) { syncShopifyStore(e.detail.shop); rerender(); } });
     if (SERVER) fetch("/api/storefront/fees").then(r => r.ok ? r.json() : null).then(f => { if (f) { FEES = f; if (S.view === "work") rerender(); } }).catch(() => {});
     try {
       if (qs.get("project") && SERVER) { const r = await fetch(`/api/studio/projects/${encodeURIComponent(qs.get("project"))}`); if (r.ok) { const p = await r.json(); S.projectId = p.id; restore({ ...p, all_items: p.all_items || p.items, view: "work", tab: "review" }, p.design_url); toast(t("loaded")); } }
