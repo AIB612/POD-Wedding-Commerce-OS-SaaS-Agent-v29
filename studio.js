@@ -325,12 +325,16 @@
         <span class="row" style="gap:5px;margin-top:8px">${sc.kits.map(k => `<span class="chip gray">${esc(nm(k.name))}</span>`).join("")}</span></div></button>`;
   }
   function vScenes() {
-    const list = orderedScenarios(), wedding = list.find(x => x.id === WEDDING_SCENARIO), others = list.filter(x => x !== wedding);
-    if (!S.browse || !list.some(x => x.id === S.browse)) S.browse = (wedding || list[0]).id;
-    const open = S.othersOpen || (S.browse !== WEDDING_SCENARIO && others.some(x => x.id === S.browse));
-    return `${wedding ? `<div class="scene-grid wedding-first">${sceneCard(wedding)}</div>` : ""}
-      <div class="other-kits ${open ? "open" : ""}"><button class="btn ghost other-kits-toggle" data-others="1" aria-expanded="${open}" aria-controls="otherKits">${open ? "▾" : "▸"} ${t("otherKits")} <span class="note">(${others.length})</span></button>
-      <div id="otherKits" ${open ? "" : "hidden"}><p class="note" style="margin:6px 0 10px">${t("otherKitsLead")}</p><div class="scene-grid">${others.map(sceneCard).join("")}</div></div></div>`;
+    const list = orderedScenarios();
+    // Show all top-level scenarios (6 main categories)
+    const topLevel = ["gifts", "corporate", "creator", "community", "art", "seasonal"];
+    const main = topLevel.map(id => list.find(x => x.id === id)).filter(Boolean);
+    const others = list.filter(x => !topLevel.includes(x.id));
+    if (!S.browse || !list.some(x => x.id === S.browse)) S.browse = main[0]?.id || list[0]?.id;
+    const open = S.othersOpen;
+    return `<div class="scene-grid">${main.map(sceneCard).join("")}</div>
+      ${others.length ? `<div class="other-kits ${open ? "open" : ""}"><button class="btn ghost other-kits-toggle" data-others="1" aria-expanded="${open}">${open ? "▾" : "▸"} More kits <span class="note">(${others.length})</span></button>
+      <div id="otherKits" ${open ? "" : "hidden"}><div class="scene-grid">${others.map(sceneCard).join("")}</div></div></div>` : ""}`;
   }
   /** Centre · all products. */
   function vAll() {
