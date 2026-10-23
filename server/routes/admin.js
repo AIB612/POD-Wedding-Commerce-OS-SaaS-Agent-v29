@@ -42,6 +42,12 @@ const PREVIEW_TTL_MS = 10 * 60_000, MAX_PREVIEWS = 50;
 function prunePreviews() { const now = Date.now(); for (const [k, v] of importPreviews) if (v.expires < now) importPreviews.delete(k); while (importPreviews.size > MAX_PREVIEWS) importPreviews.delete(importPreviews.keys().next().value); }
 const badRequest = (res, e) => res.status(400).json({ error: e.message });
 
+import { priceRows, updatePrices } from "../services/price-list-service.js";
+import { getFees, updateFees, seedFees } from "../services/fees-service.js";
+import { listPromos, createPromo, updatePromo, deletePromo } from "../services/promo-service.js";
+import { sendShippedEmail } from "../services/checkout-service.js";
+import { fulfillLocalOrder } from "../shopify/app.js";
+
 export function adminRouter({ root } = {}) {
   const r = express.Router();
   const A = requireAdmin, AP = [requireAdmin, requireApproval];
@@ -78,76 +84,39 @@ export function adminRouter({ root } = {}) {
   r.get("/api/saas/order-events", A, ah(async (req, res) => res.json(await listForTenant("order_events", req.tenantId))));
   r.post("/api/saas/users/:id/status", AP, ah(async (req,res)=>{const status=["active","disabled"].includes(req.body?.status)?req.body.status:null;if(!status)return res.status(400).json({error:"invalid_status"});const row=await updateRecord("customer_accounts",req.params.id,{status,updated_at:new Date().toISOString()});row?res.json({id:row.id,status:row.status}):res.sendStatus(404);}));
   r.post("/api/saas/orders/:id/status", AP, ah(async (req,res)=>{
-    const allowed=["Quote requested","Order requested","Sample requested","Proof ready","Changes requested","Approved","Production","Shipped","Delivered","Cancelled"];
+    const allowed=["Needs approval","Quote requested","Order requested","Sample requested","Proof ready","Changes requested","Approved","Production","Shipped","Delivered","Cancelled"];
     const status=String(req.body?.status||"").slice(0,80);if(!allowed.includes(status))return res.status(400).json({error:"invalid_status",allowed});
+    const cur=await findRecord("orders",req.params.id);if(!cur||cur.tenant_id!==req.tenantId)return res.sendStatus(404);
+    // Proof-first orders: production / shipping stay blocked until the customer approves the proof (proof.html).
+    if(cur.production_blocked&&/production|printing|shipped|delivered/i.test(status))return res.status(409).json({error:"proof_approval_required",message:"Customer chose 'Send me a proof first' — production is blocked until the proof is approved."});
     const row=await updateRecord("orders",req.params.id,{status,updated_at:new Date().toISOString()});if(!row)return res.sendStatus(404);
     const evt=await addRecord("order_events",{id:`evt_${crypto.randomBytes(6).toString("hex")}`,tenant_id:req.tenantId,order_id:row.id,event_type:"status_changed",source:"admin",payload:{status,note:String(req.body?.note||"").slice(0,500)},event_time:new Date().toISOString()});
     let email_status="not_applicable";
-    if(row.customer_email){
-      const isShipped=/shipped/i.test(status), isDelivered=/delivered/i.test(status);
-      const label = isShipped ? "Shipped" : isDelivered ? "Delivered" : "Order Update";
-      const title = isShipped ? "Your order is on the way" : isDelivered ? "Your order has arrived" : "Status updated";
-      const body = isShipped
-        ? "Your order has been shipped. You can track it with the details below."
-        : isDelivered
-        ? "Your order has been delivered. We hope you enjoy it."
-        : "Your order status has been updated. Please find the details below.";
-      const subject=`Order update · ${row.id}`;
-      const text=`${title}\n\nOrder: ${row.id}\nStatus: ${status}`;
-      const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#faf8f5;font-family:Georgia,'Times New Roman',serif">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#faf8f5"><tr><td align="center" style="padding:32px 16px">
-<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06)">
-<tr><td style="background:#2f3a45;padding:28px 32px;text-align:center">
-<p style="margin:0;font-size:11px;letter-spacing:3px;color:#c9b99a;text-transform:uppercase">${label}</p>
-<h1 style="margin:8px 0 0;font-size:26px;font-weight:400;color:#ffffff;font-family:Georgia,serif">${title}</h1>
-<p style="margin:6px 0 0;font-size:13px;color:#b8c0c8">Order ${row.id}</p>
-</td></tr>
-<tr><td style="padding:28px 32px">
-<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#2a2a2a">${body}</p>
-<table role="presentation" width="100%" style="font-size:15px;line-height:1.6;color:#2a2a2a">
-<tr><td style="padding:6px 0;color:#888;width:110px">Order</td><td style="padding:6px 0;font-weight:500">${row.id}</td></tr>
-<tr><td style="padding:6px 0;color:#888">Status</td><td style="padding:6px 0;color:#3d6b4f;font-weight:500">${String(status).replace(/[<>&]/g,"")}</td></tr>
-</table>
-</td></tr>
-<tr><td style="padding:16px 32px 24px;border-top:1px solid #eee;text-align:center">
-<p style="margin:0;font-size:12px;color:#999">All details are included in this email.<br>No further action needed.</p>
-</td></tr>
-</table></td></tr></table>
-</body></html>`;
-      const mail=await sendEmail({tenantId:req.tenantId,userId:row.user_id||null,to:row.customer_email,type:"order_status",related_id:row.id,subject,text,html});
-      email_status=mail.status;
-    }
-    res.json({id:row.id,status:row.status,email_status,event_id:evt.id});
+    if(row.customer_email&&status==="Shipped"){const b=req.body||{},clip=v=>String(v||"").slice(0,300);const trk={carrier:clip(b.carrier||row.carrier),tracking_number:clip(b.tracking_number||row.tracking_number),tracking_url:/^https:\/\//.test(String(b.tracking_url||""))?clip(b.tracking_url):""};if(trk.tracking_number)await updateRecord("orders",row.id,trk);const mail=await sendShippedEmail(row,trk);email_status=mail?.status||"not_applicable";}
+    else if(row.customer_email){const mail=await sendEmail({tenantId:req.tenantId,userId:row.user_id||null,to:row.customer_email,type:"order_status",related_id:row.id,subject:`Order update · ${row.id}`,text:`Your order status is now: ${status}. Follow it at ${baseUrl()}/account.html`,html:`<p>Order <b>${row.id}</b></p><p>Status: <b>${String(status).replace(/[<>&]/g,"")}</b></p><p><a href="${baseUrl()}/account.html">View your account</a></p>`});email_status=mail.status;}
+    // Orders that came from a Shopify store: mirror "Shipped" as a Shopify fulfillment (fulfillment orders API).
+    let shopify_fulfillment;
+    if(status==="Shipped"){const b=req.body||{},cur2=await findRecord("orders",row.id);try{shopify_fulfillment=await fulfillLocalOrder(row.id,{tracking_number:b.tracking_number||cur2?.tracking_number,carrier:b.carrier||cur2?.carrier,tracking_url:/^https:\/\//.test(String(b.tracking_url||""))?b.tracking_url:cur2?.tracking_url});}catch(e){shopify_fulfillment={status:"error",error:e.message};}
+      if(shopify_fulfillment?.status==="not_linked")shopify_fulfillment=undefined;}
+    res.json({id:row.id,status:row.status,email_status,event_id:evt.id,...(shopify_fulfillment?{shopify_fulfillment}:{})});
   }));
   r.post("/api/saas/orders/:id/resend-email", AP, ah(async (req,res)=>{
     const row=await findRecord("orders",req.params.id);if(!row||row.tenant_id!==req.tenantId)return res.sendStatus(404);
     if(!row.customer_email)return res.status(409).json({error:"order_has_no_email"});
-    const subject=`Order update · ${row.id}`;
-    const text=`Current status for order ${row.id}: ${row.status}.`;
-    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#faf8f5;font-family:Georgia,'Times New Roman',serif">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#faf8f5"><tr><td align="center" style="padding:32px 16px">
-<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06)">
-<tr><td style="background:#2f3a45;padding:28px 32px;text-align:center">
-<p style="margin:0;font-size:11px;letter-spacing:3px;color:#c9b99a;text-transform:uppercase">Order Update</p>
-<h1 style="margin:8px 0 0;font-size:26px;font-weight:400;color:#ffffff;font-family:Georgia,serif">Status</h1>
-<p style="margin:6px 0 0;font-size:13px;color:#b8c0c8">Order ${row.id}</p>
-</td></tr>
-<tr><td style="padding:28px 32px">
-<table role="presentation" width="100%" style="font-size:15px;line-height:1.6;color:#2a2a2a">
-<tr><td style="padding:6px 0;color:#888;width:110px">Order</td><td style="padding:6px 0;font-weight:500">${row.id}</td></tr>
-<tr><td style="padding:6px 0;color:#888">Status</td><td style="padding:6px 0;color:#3d6b4f;font-weight:500">${String(row.status||"").replace(/[<>&]/g,"")}</td></tr>
-</table>
-</td></tr>
-<tr><td style="padding:16px 32px 24px;border-top:1px solid #eee;text-align:center">
-<p style="margin:0;font-size:12px;color:#999">All details are included in this email.<br>No further action needed.</p>
-</td></tr>
-</table></td></tr></table>
-</body></html>`;
-    const mail=await sendEmail({tenantId:req.tenantId,userId:row.user_id||null,to:row.customer_email,type:"order_status_resend",related_id:row.id,subject,text,html});
+    const mail=await sendEmail({tenantId:req.tenantId,userId:row.user_id||null,to:row.customer_email,type:"order_status_resend",related_id:row.id,subject:`Order update · ${row.id}`,text:`Current status: ${row.status}. Follow it at ${baseUrl()}/account.html`,html:`<p>Order <b>${row.id}</b></p><p>Current status: <b>${String(row.status||"").replace(/[<>&]/g,"")}</b></p><p><a href="${baseUrl()}/account.html">View your account</a></p>`});
     res.json({ok:true,email_status:mail.status,notification_id:mail.notification_id});
   }));
+  // Price list (single source of truth for sell prices of every Studio / homepage product).
+  r.get("/api/saas/prices", A, (req, res) => res.json(priceRows()));
+  // Fees & tax (VAT per zone/country, incl./excl. switch, shipping per zone+method in CHF/EUR, carrier days, packaging add-ons).
+  r.get("/api/saas/fees", A, (req, res) => res.json({ ...getFees(), seed: seedFees() }));
+  r.put("/api/saas/fees", AP, ah(async (req, res) => res.json(await updateFees(req.body || {}, { by: req.get("x-admin-user") || "admin" }))));
+  // Promo codes
+  r.get("/api/saas/promos", A, ah(async (req, res) => res.json({ promos: await listPromos(req.tenantId) })));
+  r.post("/api/saas/promos", AP, ah(async (req, res) => res.json(await createPromo(req.tenantId, req.body || {}))));
+  r.put("/api/saas/promos/:id", AP, ah(async (req, res) => res.json(await updatePromo(req.tenantId, req.params.id, req.body || {}))));
+  r.delete("/api/saas/promos/:id", AP, ah(async (req, res) => res.json(await deletePromo(req.tenantId, req.params.id))));
+  r.put("/api/saas/prices", AP, ah(async (req, res) => res.json(await updatePrices(req.body?.changes, { by: req.get("x-admin-user") || "admin" }))));
   r.get("/api/saas/shipments", A, ah(async (req, res) => res.json(await listForTenant("shipments", req.tenantId))));
   r.get("/api/saas/logistics/providers", A, (req, res) => res.json(logisticsProviderStatus()));
   r.get("/api/saas/logistics/overview", A, ah(async (req, res) => res.json(await logisticsOverview(req.tenantId))));

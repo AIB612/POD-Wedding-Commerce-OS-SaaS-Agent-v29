@@ -46,32 +46,7 @@ export async function approvePublicProof(token) {
     await updateRecord("orders", proof.order_id, { status: "Approved", production_blocked: false, proof_approved_at: now, updated_at: now });
     await addRecord("order_events", { id: `evt_${crypto.randomBytes(6).toString("hex")}`, tenant_id: order.tenant_id, order_id: order.id, event_type: "proof_approved", source: "customer", payload: { proof_id: proof.id }, event_time: now });
   }
-  if (order?.customer_email) {
-    const subject = `Design confirmed · ${order.id}`;
-    const text = `Your design for order ${order.id} has been confirmed.\n\nWe will proceed with the next production step.\n\nOrder: ${order.id}\nStatus: Approved`;
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#faf8f5;font-family:Georgia,'Times New Roman',serif">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#faf8f5"><tr><td align="center" style="padding:32px 16px">
-<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06)">
-<tr><td style="background:#2f3a45;padding:28px 32px;text-align:center">
-<p style="margin:0;font-size:11px;letter-spacing:3px;color:#c9b99a;text-transform:uppercase">Design Confirmed</p>
-<h1 style="margin:8px 0 0;font-size:26px;font-weight:400;color:#ffffff;font-family:Georgia,serif">Your design is approved</h1>
-<p style="margin:6px 0 0;font-size:13px;color:#b8c0c8">Order ${order.id}</p>
-</td></tr>
-<tr><td style="padding:28px 32px">
-<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#2a2a2a">Thank you for confirming your design. We will continue with the next production step and keep you updated.</p>
-<table role="presentation" width="100%" style="font-size:15px;line-height:1.6;color:#2a2a2a">
-<tr><td style="padding:6px 0;color:#888;width:110px">Order</td><td style="padding:6px 0;font-weight:500">${order.id}</td></tr>
-<tr><td style="padding:6px 0;color:#888">Status</td><td style="padding:6px 0;color:#3d6b4f;font-weight:500">Approved</td></tr>
-</table>
-</td></tr>
-<tr><td style="padding:16px 32px 24px;border-top:1px solid #eee;text-align:center">
-<p style="margin:0;font-size:12px;color:#999">All details are included in this email.<br>No further action needed.</p>
-</td></tr>
-</table></td></tr></table>
-</body></html>`;
-    await sendEmail({ tenantId: order.tenant_id, userId: order.user_id || null, to: order.customer_email, type: "proof_approved", related_id: order.id, subject, text, html });
-  }
+  if (order?.customer_email) await sendEmail({ tenantId: order.tenant_id, userId: order.user_id || null, to: order.customer_email, type: "proof_approved", related_id: order.id, subject: `Proof approved · ${order.id}`, text: `Your proof for ${order.id} is approved. We will continue with the next production step.`, html: `<p>Your proof for <b>${order.id}</b> is approved.</p><p>We will continue with the next production step.</p><p><a href="${baseUrl()}/account.html">View order status</a></p>` });
   return { ok: true, status: "Approved" };
 }
 
