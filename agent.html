@@ -3,98 +3,186 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>POD Agent — AI-Powered Print-on-Demand Assistant</title>
-<meta name="description" content="Autonomous AI agent for POD e-commerce. Product listing, order fulfillment, customer service — powered by GPT, Gemini, Claude, Deepseek, and Grok."/>
-<link rel="stylesheet" href="mobile.css">
+<title>POD Agent — Autonomous Commerce Intelligence</title>
+<meta name="description" content="AI agent for Print-on-Demand. Product listing, order fulfillment, customer service. Powered by GPT-4, Gemini, Claude, Deepseek, Grok."/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#28231f;--muted:#7c746c;--paper:#fffdf9;--accent:#9a6d57;--line:rgba(45,36,30,.12)}
-*{box-sizing:border-box}
-body{margin:0;font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--paper)}
-.hero{background:linear-gradient(135deg,#292622,#3d3835);color:#fff;padding:80px 28px 60px;text-align:center}
-.hero h1{margin:0 0 16px;font-size:42px;font-weight:700;letter-spacing:-.02em}
-.hero p{margin:0 auto;max-width:640px;font-size:18px;color:#c9c0b6}
-.hero .badges{display:flex;justify-content:center;gap:12px;margin-top:28px;flex-wrap:wrap}
-.hero .badge{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:8px 16px;border-radius:999px;font-size:13px;font-weight:600}
-.section{max-width:1000px;margin:0 auto;padding:60px 28px}
-.section h2{margin:0 0 12px;font-size:28px}
-.section>p{color:var(--muted);margin:0 0 32px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}
-.card h3{margin:0 0 8px;font-size:18px}
-.card p{margin:0;color:var(--muted);font-size:14px}
-.card .icon{font-size:28px;margin-bottom:12px}
-.providers{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:24px}
-.provider{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 24px;text-align:center;min-width:120px}
-.provider b{display:block;font-size:15px}
-.provider span{font-size:12px;color:var(--muted)}
-.cta{text-align:center;padding:40px 28px 80px}
-.cta a{display:inline-block;background:#28231f;color:#fff;padding:14px 32px;border-radius:999px;text-decoration:none;font-weight:600}
-.cta a:hover{background:#3d3835}
-.code{background:#292622;color:#e9e2d9;padding:20px;border-radius:12px;font:13px/1.5 ui-monospace,monospace;overflow-x:auto;margin-top:20px}
-@media(max-width:720px){.hero{padding:48px 20px 40px}.hero h1{font-size:28px}.section{padding:40px 20px}}
+:root{--bg:#0a0a0a;--surface:#141414;--border:#262626;--text:#fafafa;--muted:#a1a1aa;--accent:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:15px/1.6 Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+
+/* Header */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:rgba(10,10,10,.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
+.nav-logo{width:28px;height:28px;background:#fff;color:#000;border-radius:6px;display:grid;place-items:center;font-weight:700;font-size:14px}
+.nav-links{display:flex;gap:24px;font-size:14px;color:var(--muted)}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{background:#fff;color:#000;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600}
+.nav-cta:hover{background:#e5e5e5}
+
+/* Hero */
+.hero{padding:160px 32px 100px;text-align:center;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(120,119,198,.15),transparent)}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:999px;font-size:12px;color:var(--muted);margin-bottom:24px}
+.hero-badge span{width:6px;height:6px;background:#22c55e;border-radius:50%}
+.hero h1{font-size:64px;font-weight:600;letter-spacing:-.03em;line-height:1.1;margin-bottom:20px}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,#fff,#a1a1aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:18px;color:var(--muted);max-width:560px;margin:0 auto 32px}
+.hero-actions{display:flex;gap:12px;justify-content:center}
+.btn{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:500;border:none;cursor:pointer}
+.btn-primary{background:#fff;color:#000}
+.btn-primary:hover{background:#e5e5e5}
+.btn-secondary{background:transparent;color:#fff;border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--surface)}
+
+/* Logos */
+.logos{padding:40px 32px;border-bottom:1px solid var(--border);text-align:center}
+.logos p{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px}
+.logos-row{display:flex;justify-content:center;gap:48px;flex-wrap:wrap;opacity:.6}
+.logos-row span{font-size:15px;font-weight:600;color:var(--muted)}
+
+/* Features */
+.features{padding:100px 32px;max-width:1100px;margin:0 auto}
+.features h2{font-size:36px;font-weight:600;letter-spacing:-.02em;text-align:center;margin-bottom:16px}
+.features>p{text-align:center;color:var(--muted);margin-bottom:48px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.card{background:var(--bg);padding:32px}
+.card:hover{background:var(--surface)}
+.card-icon{width:40px;height:40px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;margin-bottom:16px;font-size:18px}
+.card h3{font-size:16px;font-weight:600;margin-bottom:8px}
+.card p{font-size:14px;color:var(--muted);line-height:1.5}
+
+/* Code */
+.code-section{padding:80px 32px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.code-section h2{font-size:28px;font-weight:600;text-align:center;margin-bottom:12px}
+.code-section>p{text-align:center;color:var(--muted);margin-bottom:32px}
+.code{max-width:640px;margin:0 auto;background:#0a0a0a;border:1px solid var(--border);border-radius:12px;padding:20px;font:13px/1.6 ui-monospace,monospace;color:#a1a1aa;overflow-x:auto}
+.code .tag{color:#7dd3fc}
+.code .attr{color:#f472b6}
+.code .str{color:#86efac}
+
+/* Steps */
+.steps{padding:100px 32px;max-width:800px;margin:0 auto}
+.steps h2{font-size:32px;font-weight:600;text-align:center;margin-bottom:48px}
+.step{display:flex;gap:24px;margin-bottom:32px}
+.step-num{width:32px;height:32px;background:#fff;color:#000;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:14px;flex-shrink:0}
+.step h3{font-size:16px;font-weight:600;margin-bottom:4px}
+.step p{font-size:14px;color:var(--muted)}
+
+/* CTA */
+.cta{padding:100px 32px;text-align:center;background:radial-gradient(ellipse 60% 40% at 50% 100%,rgba(120,119,198,.1),transparent)}
+.cta h2{font-size:40px;font-weight:600;letter-spacing:-.02em;margin-bottom:16px}
+.cta p{color:var(--muted);margin-bottom:32px}
+.cta .btn{font-size:15px;padding:14px 28px}
+
+/* Footer mini */
+.footer{padding:32px;border-top:1px solid var(--border);text-align:center;font-size:13px;color:var(--muted)}
+.footer a{color:var(--muted)}
+.footer a:hover{color:var(--text)}
+
+@media(max-width:720px){
+  .nav{padding:12px 16px}
+  .nav-links{display:none}
+  .hero{padding:120px 20px 60px}
+  .hero h1{font-size:36px}
+  .grid{grid-template-columns:1fr}
+  .features,.steps,.cta{padding:60px 20px}
+  .code-section{padding:60px 20px}
+}
 </style>
 </head>
 <body>
-<div id="site-header" data-cart></div>
-<script src="/header.js"></script>
+<nav class="nav">
+  <a href="/" class="nav-brand"><span class="nav-logo">P</span>POD Agent</a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#embed">Embed</a>
+    <a href="#how">How it works</a>
+  </div>
+  <a href="/studio.html" class="nav-cta">Open Studio</a>
+</nav>
 
-<div class="hero">
-  <h1>POD Agent</h1>
-  <p>Autonomous AI assistant for Print-on-Demand e-commerce. List products, fulfill orders, and handle customer service — across multiple AI providers.</p>
-  <div class="badges">
-    <span class="badge">Product Listing</span>
-    <span class="badge">Order Fulfillment</span>
-    <span class="badge">Customer Service</span>
-    <span class="badge">Multi-AI</span>
+<section class="hero">
+  <div class="hero-badge"><span></span> Now available</div>
+  <h1>Commerce,<br><em>autonomously.</em></h1>
+  <p>AI agent for Print-on-Demand. List products, fulfill orders, and handle customer service — with approval gates you control.</p>
+  <div class="hero-actions">
+    <a href="/studio.html" class="btn btn-primary">Get started</a>
+    <a href="#embed" class="btn btn-secondary">Embed widget</a>
+  </div>
+</section>
+
+<div class="logos">
+  <p>Powered by</p>
+  <div class="logos-row">
+    <span>OpenAI</span>
+    <span>Gemini</span>
+    <span>Claude</span>
+    <span>Deepseek</span>
+    <span>Grok</span>
   </div>
 </div>
 
-<div class="section">
-  <h2>What it does</h2>
-  <p>Built for POD sellers who need reliable automation without losing control.</p>
+<section class="features" id="features">
+  <h2>Built for POD sellers</h2>
+  <p>Everything you need to run operations. Nothing you don't.</p>
   <div class="grid">
-    <div class="card"><div class="icon">📦</div><h3>Product Listing</h3><p>Push products to Shopify stores with one command. Batch listing with approval gates.</p></div>
-    <div class="card"><div class="icon">🚚</div><h3>Order Fulfillment</h3><p>Mark orders as shipped, add tracking, sync status across channels.</p></div>
-    <div class="card"><div class="icon">💬</div><h3>Customer Service</h3><p>Draft and send replies. Context-aware responses based on order history.</p></div>
-    <div class="card"><div class="icon">🔄</div><h3>Catalog Sync</h3><p>Import supplier feeds, normalize data, calculate landed costs.</p></div>
+    <div class="card">
+      <div class="card-icon">📦</div>
+      <h3>Product Listing</h3>
+      <p>Push products to Shopify in batches. The agent prepares, you approve, listings go live.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🚚</div>
+      <h3>Order Fulfillment</h3>
+      <p>Mark orders shipped, add tracking numbers, sync status across all connected channels.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">💬</div>
+      <h3>Customer Service</h3>
+      <p>Draft context-aware replies based on order history. Review before sending.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔄</div>
+      <h3>Catalog Sync</h3>
+      <p>Import supplier feeds, normalize product data, calculate landed costs automatically.</p>
+    </div>
   </div>
-</div>
+</section>
 
-<div class="section" style="background:#f8f4ef;margin:0 -28px;padding:60px 56px">
-  <h2 style="text-align:center">Powered by leading AI</h2>
-  <p style="text-align:center">Connect your preferred provider. Auto-fallback when one is unavailable.</p>
-  <div class="providers">
-    <div class="provider"><b>ChatGPT</b><span>OpenAI</span></div>
-    <div class="provider"><b>Gemini</b><span>Google</span></div>
-    <div class="provider"><b>Claude</b><span>Anthropic</span></div>
-    <div class="provider"><b>Deepseek</b><span>DeepSeek</span></div>
-    <div class="provider"><b>Grok</b><span>xAI</span></div>
-  </div>
-</div>
-
-<div class="section">
+<section class="code-section" id="embed">
   <h2>Embed anywhere</h2>
-  <p>Add the widget to any website with a single script tag.</p>
-  <div class="code"><script src="https://your-domain/pod-agent/widget.js" 
-        data-tenant="YOUR_TENANT" 
-        data-lang="en"></script></div>
-</div>
+  <p>Add the widget to any website. One line of code.</p>
+  <div class="code"><span class="tag"><script</span> <span class="attr">src</span>=<span class="str">"https://your-domain/pod-agent/widget.js"</span>
+        <span class="attr">data-tenant</span>=<span class="str">"YOUR_TENANT"</span>
+        <span class="attr">data-lang</span>=<span class="str">"en"</span><span class="tag">></script></span></div>
+</section>
 
-<div class="section">
-  <h2>Approval-gated execution</h2>
-  <p>The agent prepares actions. You approve. Nothing ships without your confirmation.</p>
-  <div class="grid">
-    <div class="card"><h3>1. Request</h3><p>Tell the agent what you need: "List these products to my Shopify store."</p></div>
-    <div class="card"><h3>2. Review</h3><p>Agent creates a task with full details. You review before anything happens.</p></div>
-    <div class="card"><h3>3. Execute</h3><p>Approve and the agent executes. Track results in real time.</p></div>
+<section class="steps" id="how">
+  <h2>How it works</h2>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div><h3>Request</h3><p>Tell the agent what you need. "List these 20 products to my Shopify store."</p></div>
   </div>
-</div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div><h3>Review</h3><p>Agent creates a task with full details. Nothing executes without your approval.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div><h3>Execute</h3><p>Approve and the agent handles the rest. Track results in real time.</p></div>
+  </div>
+</section>
 
-<div class="cta">
-  <a href="/studio.html">Start designing</a>
-</div>
+<section class="cta">
+  <h2>Ready to automate?</h2>
+  <p>Start with the design studio. Add the agent when you're ready.</p>
+  <a href="/studio.html" class="btn btn-primary">Open Studio</a>
+</section>
 
-<div id="site-footer"></div>
-<script src="/footer.js" defer></script>
+<footer class="footer">
+  <a href="/">Home</a> · <a href="/studio.html">Studio</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
+</footer>
 </body>
 </html>
