@@ -15,6 +15,7 @@ import { publicRouter } from "./routes/public.js";
 import { adminRouter } from "./routes/admin.js";
 import carrierRates from "./routes/carrier-rates.js";
 import { studioRouter } from "./routes/studio.js";
+import { podAgentRouter } from "./pod-agent/routes.js";
 import { initPriceList } from "./services/price-list-service.js";
 import { initFees } from "./services/fees-service.js";
 
@@ -48,6 +49,8 @@ export async function createApp({ root = projectRoot, generatedDir = path.join(p
   app.use(accountRouter());
   app.use(publicRouter({ root, generatedDir }));
   app.use(studioRouter({ generatedDir }));
+  app.use("/api/pod-agent", podAgentRouter());
+  app.use("/pod-agent", express.static(new URL("./pod-agent", import.meta.url).pathname));
   app.use(carrierRates);
   app.use(adminRouter({ root }));
 

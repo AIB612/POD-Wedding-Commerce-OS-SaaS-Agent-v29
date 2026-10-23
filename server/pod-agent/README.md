@@ -1,48 +1,48 @@
 # POD Agent
 
-Independent module for Print-on-Demand e-commerce operations.
+Independent, embeddable AI agent for Print-on-Demand e-commerce.
 
 ## Features
 
-- **Product Listing**: Push products to connected Shopify stores
-- **Order Fulfillment**: Mark orders as shipped with tracking
-- **Customer Service**: Send replies to customer conversations
-- **Catalog Sync**: Import and normalize supplier feeds
-- **Status Check**: Query orders, products, shipments
+- **Multi-AI**: OpenAI (ChatGPT), Anthropic, Gemini, Deepseek, Grok (xAI)
+- **Product Listing**: Push products to Shopify
+- **Order Fulfillment**: Mark orders shipped with tracking
+- **Customer Service**: Reply to customer conversations
+- **Embeddable Widget**: Add to any website with one script tag
 
-## Integration
+## Embed on Any Website
 
-```js
-import { PODAgent } from "./server/pod-agent/index.js";
+```html
+<script src="https://your-domain/pod-agent/widget.js" 
+        data-tenant="YOUR_TENANT" 
+        data-lang="en"
+        data-position="bottom-right"></script>
+```
 
-const agent = new PODAgent({
-  tenantId: "tenant_demo",
-  connectors: {
-    shopify: { pushProduct, fulfillmentCreate },
-    messaging: { sendMessage },
-    logistics: { createFulfillment }
-  },
-  store: { addRecord, updateRecord, listForTenant, findRecord }
-});
+## API
 
-// Create task (pending approval)
-const task = await agent.handle({ intent: "list_products", payload: { products, shops } });
+```
+GET  /api/pod-agent/providers     → { available: ["openai", "gemini", ...] }
+POST /api/pod-agent/chat          → { message, tenant, lang, provider? }
+POST /api/pod-agent/task          → { intent, payload, tenant, autoApprove? }
+```
 
-// Execute approved task
-const result = await agent.execute(task);
+## Configuration
+
+```env
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+GEMINI_API_KEY=...
+GEMINI_MODEL=gemini-1.5-flash
+DEEPSEEK_API_KEY=...
+DEEPSEEK_MODEL=deepseek-chat
+XAI_API_KEY=...
+XAI_MODEL=grok-2
+ANTHROPIC_API_KEY=...
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
 ```
 
 ## Separation
 
-This module has no hard dependencies on Wedding Commerce OS internals.
-To run standalone, provide your own connectors and store implementations.
-
-## Intents
-
-| Intent | Description |
-|--------|-------------|
-| `list_products` | Push products to Shopify |
-| `fulfill_orders` | Mark orders as shipped |
-| `reply_customer` | Send customer service reply |
-| `sync_catalog` | Import supplier catalog |
-| `check_status` | Query current status |
+This module has no hard dependencies on Wedding Commerce OS.
+To run standalone, mount the router and serve the widget.js file.
