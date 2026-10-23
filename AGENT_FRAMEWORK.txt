@@ -100,9 +100,11 @@ isOps(message) = /(广告|营销|roas|达人|财务|利润|成本|订单|物流|
 位置：server/connectors/llm.js
 
 支持：
-- OpenAI（OPENAI_API_KEY + OPENAI_MODEL）
+- OpenAI / ChatGPT（OPENAI_API_KEY + OPENAI_MODEL）
 - Anthropic（ANTHROPIC_API_KEY + ANTHROPIC_MODEL）
 - Gemini（GEMINI_API_KEY + GEMINI_MODEL）
+- DeepSeek（DEEPSEEK_API_KEY + DEEPSEEK_MODEL）
+- Grok / xAI（XAI_API_KEY + XAI_MODEL）
 
 降级：
 - 未配置时返回 DEMO_MESSAGE
@@ -270,10 +272,12 @@ server/routes/admin.js              /api/agent/ops 路由
 --------------------------------------------------------------------------------
 
 LLM：
-  LLM_PROVIDER=openai|anthropic|gemini
+  LLM_PROVIDER=openai|chatgpt|anthropic|gemini|deepseek|grok|xai
   OPENAI_API_KEY / OPENAI_MODEL
   ANTHROPIC_API_KEY / ANTHROPIC_MODEL
   GEMINI_API_KEY / GEMINI_MODEL
+  DEEPSEEK_API_KEY / DEEPSEEK_MODEL
+  XAI_API_KEY / XAI_MODEL
   LLM_TIMEOUT_MS=30000
 
 Agent Card：
