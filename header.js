@@ -40,7 +40,7 @@
   ".sh-menu a:hover,.sh-menu .sh-mi:hover{background:#f6f1eb}.sh-menu .sh-sep{height:1px;background:rgba(45,36,30,.1);margin:6px 4px}"+
   ".sh-menu .sh-extra>*{width:100%;justify-content:flex-start;min-height:44px}.sh-menu .sh-row{display:flex;gap:8px;padding:6px 8px}.sh-menu .sh-row>*{flex:1}"+
   ".sh-menu h5{margin:6px 12px 2px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#7c746c}"+
-  ".sh-menu[hidden]{display:none!important}.sh-only-m{display:none!important}"+
+  ".sh-menu[hidden]{display:none!important}.sh-only-m{display:none!important}.sh-menu-btn{display:none}"+"@media(max-width:720px){.sh-menu-btn{display:inline-flex!important}}"+
   "@media(max-width:860px){.sh-nav{display:none}}"+
   "@media(max-width:720px){.sh-in{padding:8px 12px;gap:8px;min-height:56px}.sh-name{font-size:14px}.sh-act .sh-market,.sh-act [data-lang-switch],.sh-act .sh-secure{display:none!important}.sh-only-m{display:flex!important}.sh-menu-btn .sh-mt{display:none}}"+
   "@media(max-width:380px){.sh-name{font-size:13px}}";
