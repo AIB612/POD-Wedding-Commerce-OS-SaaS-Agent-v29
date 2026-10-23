@@ -606,7 +606,7 @@ button{color:inherit}
 .vat-tag{font-size:.72em;font-weight:500;color:var(--muted);margin-left:4px;white-space:nowrap}
 </style>
 <link rel="stylesheet" href="cart.css">
-</head>
+<link rel="stylesheet" href="mobile.css"></head>
 <body>
 <div class="app">
   <!-- Shared header (header.js). "Create wedding website" is a secondary action → lives in the header "Menu". -->
@@ -1668,7 +1668,7 @@ ${WBT.css(layout,{env:showEnvelope})}
 @media print{@page{size:${land?"178mm 127mm":"127mm 178mm"};margin:0}}
 </style>
 <script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches&&"IntersectionObserver" in window)document.documentElement.classList.add("mo")<\/script>
-</head>
+<link rel="stylesheet" href="mobile.css"></head>
 <body class="${bodyCls}" style="${vars.join(";")}">
 ${showEnvelope?`<div class="env" id="env" role="button" tabindex="0" aria-label="${e(tt("open_env"))}">${envHtml}</div>`:""}
 <div class="invite-lang" role="group" aria-label="Language"><button type="button" data-invite-lang="zh" lang="zh">中</button><button type="button" data-invite-lang="en" lang="en">EN</button><button type="button" data-invite-lang="de" lang="de">DE</button></div>
