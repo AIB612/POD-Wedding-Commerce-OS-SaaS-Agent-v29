@@ -3,23 +3,10 @@ import { ah, rateLimit } from "../http/middleware.js";
 import { dashboard, login, logoutToken, publicUser, register, requestEmailCode, verifyEmailCode } from "../services/account-service.js";
 import { requireUser } from "../auth.js";
 import { listRsvps, rsvpCsv } from "../services/rsvp-service.js";
-import { providerStatus, startLogin, finishLogin, STATE_COOKIE } from "../services/oauth-login-service.js";
-import { baseUrl } from "../config.js";
-import * as portal from "../services/account-portal-service.js";
 
-// Session cookie: HttpOnly, SameSite=Lax (survives the OAuth redirect back), Secure in production or on an https base URL.
-const secureCookie=()=>process.env.NODE_ENV==="production"||baseUrl().startsWith("https://");
-const cookieOpts=()=>({httpOnly:true,sameSite:"lax",secure:secureCookie(),path:"/",maxAge:30*864e5});
-const stateOpts=()=>({httpOnly:true,sameSite:"lax",secure:secureCookie(),path:"/api/auth",maxAge:10*60e3});
-const clearOpts=o=>{const{maxAge,...x}=o;return x;};
-function readCookie(req,name){for(const part of String(req.headers?.cookie||"").split(";")){const i=part.indexOf("=");if(i>0&&part.slice(0,i).trim()===name)return decodeURIComponent(part.slice(i+1).trim());}return "";}
-/** CSRF guard for state-changing auth calls: a cross-site Origin / Sec-Fetch-Site is rejected. */
-export function sameOrigin(req,res,next){
- const site=req.get("sec-fetch-site");if(site&&!["same-origin","none"].includes(site))return res.status(403).json({error:"csrf_rejected"});
- const origin=req.get("origin");if(origin&&origin!=="null"){const host=req.get("host");let ok=false;try{const o=new URL(origin);ok=o.host===host||o.origin===new URL(baseUrl()).origin;}catch{}if(!ok)return res.status(403).json({error:"csrf_rejected"});}
- next();
-}
+const cookieOpts=()=>({httpOnly:true,sameSite:"lax",secure:process.env.NODE_ENV==="production",path:"/",maxAge:30*864e5});
 const setSession=(res,token)=>res.cookie("pod_session",token,cookieOpts());
+
 export function accountRouter(){
  const r=express.Router(),lim=rateLimit({bucket:"account-auth",windowMs:60_000,max:30});
  r.get("/api/auth/me",(req,res)=>res.json({authenticated:!!req.user,user:publicUser(req.user)}));
@@ -27,40 +14,42 @@ export function accountRouter(){
  r.post("/api/auth/login",lim,ah(async(req,res)=>{const x=await login({tenantId:req.tenantId,...req.body});setSession(res,x.token);res.json({ok:true,user:publicUser(x.user)});}));
  r.post("/api/auth/email-code",lim,ah(async(req,res)=>res.json(await requestEmailCode({tenantId:req.tenantId,...req.body}))));
  r.post("/api/auth/email-code/verify",lim,ah(async(req,res)=>{const x=await verifyEmailCode({tenantId:req.tenantId,...req.body});setSession(res,x.token);res.json({ok:true,user:publicUser(x.user)});}));
- // Quick login (Google / Shop). Missing keys → configured:false, buttons render disabled.
- r.get("/api/auth/providers",(req,res)=>{res.setHeader("Cache-Control","no-store");res.json(providerStatus());});
- for(const p of ["google","shop"]){
-  r.get(`/api/auth/${p}/start`,lim,ah(async(req,res)=>{
-   if(!providerStatus()[p].configured)return req.accepts(["html","json"])==="json"?res.status(503).json({error:"not_configured",provider:p}):res.redirect(`/?login_error=not_configured`);
-   const x=await startLogin(p,{returnTo:req.query.return_to,locale:req.query.locale});
-   res.cookie(STATE_COOKIE,x.cookie,stateOpts());res.setHeader("Cache-Control","no-store");res.redirect(x.url);
-  }));
-  r.get(`/api/auth/${p}/callback`,lim,ah(async(req,res)=>{
-   res.clearCookie(STATE_COOKIE,clearOpts(stateOpts()));res.setHeader("Cache-Control","no-store");
-   try{const x=await finishLogin(p,{tenantId:req.tenantId,query:req.query,cookie:readCookie(req,STATE_COOKIE)});setSession(res,x.token);const sep=x.returnTo.includes("?")?"&":"?";res.redirect(`${x.returnTo}${sep}signed_in=${p}`);}
-   catch(e){const code=/^[a-z_]+$/.test(e.message||"")?e.message:"login_failed";if(!e.status||(e.status>=500&&e.message!=="not_configured"))console.error(`[auth] ${p} callback failed:`,e.message);res.redirect(`/?login_error=${encodeURIComponent(code)}`);}
-  }));
- }
- // Checkout prefill for the signed-in customer (own data only).
- r.get("/api/account/profile",requireUser,(req,res)=>{const u=req.user;res.setHeader("Cache-Control","no-store");res.json({email:u.email,name:u.name||"",shipping_address:u.shipping_address||null});});
- r.post("/api/auth/logout",sameOrigin,ah(async(req,res)=>{await logoutToken(req.sessionToken);res.clearCookie("pod_session",clearOpts(cookieOpts()));res.json({ok:true});}));
+ r.post("/api/auth/logout",ah(async(req,res)=>{await logoutToken(req.sessionToken);res.clearCookie("pod_session",cookieOpts());res.json({ok:true});}));
  r.get("/api/account/dashboard",requireUser,ah(async(req,res)=>res.json(await dashboard(req.tenantId,req.user.id))));
  // Built-in RSVP responses for the couple's own published wedding sites
  r.get("/api/account/invitations/:id/rsvps",requireUser,ah(async(req,res)=>res.json(await listRsvps(req.tenantId,req.user.id,req.params.id))));
  r.get("/api/account/invitations/:id/rsvps.csv",requireUser,ah(async(req,res)=>{const x=await listRsvps(req.tenantId,req.user.id,req.params.id);res.setHeader("Content-Type","text/csv; charset=utf-8");res.setHeader("Content-Disposition",`attachment; filename="rsvp-${x.invitation.id}.csv"`);res.setHeader("Cache-Control","no-store");res.send(rsvpCsv(x));}));
 
- // My account portal (all scoped to req.user; mutations are same-origin only).
- const ns=(req,res,next)=>{res.setHeader("Cache-Control","no-store");next();};
- r.get("/api/account/overview",requireUser,ns,ah(async(req,res)=>res.json(await portal.overview(req.user))));
- r.get("/api/account/orders",requireUser,ns,ah(async(req,res)=>res.json(await portal.listOrders(req.user,{q:String(req.query.q||""),status:String(req.query.status||"")}))));
- r.get("/api/account/orders/:id",requireUser,ns,ah(async(req,res)=>res.json(await portal.orderDetail(req.user,req.params.id))));
- r.get("/api/account/designs",requireUser,ns,ah(async(req,res)=>res.json(await portal.designs(req.user))));
- r.get("/api/account/me",requireUser,ns,ah(async(req,res)=>res.json(await portal.profile(req.user))));
- r.patch("/api/account/me",requireUser,sameOrigin,ah(async(req,res)=>res.json(await portal.updateProfileName(req.user,req.body?.name))));
- r.get("/api/account/addresses",requireUser,ns,ah(async(req,res)=>res.json(await portal.listAddresses(req.user))));
- r.post("/api/account/addresses",requireUser,sameOrigin,ah(async(req,res)=>res.status(201).json(await portal.createAddress(req.user,req.body||{}))));
- r.put("/api/account/addresses/:id",requireUser,sameOrigin,ah(async(req,res)=>res.json(await portal.updateAddress(req.user,req.params.id,req.body||{}))));
- r.post("/api/account/addresses/:id/default",requireUser,sameOrigin,ah(async(req,res)=>res.json(await portal.setDefaultAddress(req.user,req.params.id))));
- r.delete("/api/account/addresses/:id",requireUser,sameOrigin,ah(async(req,res)=>res.json(await portal.deleteAddress(req.user,req.params.id))));
+  // Gmail OAuth: redirect to Google, auto-register on callback
+  r.get("/api/auth/google", (req, res) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) return res.status(501).json({ error: "google_not_configured", message: "Google OAuth not configured. Set GOOGLE_CLIENT_ID." });
+    const returnTo = req.query.return || "/";
+    const redirect = encodeURIComponent(`${req.protocol}://${req.get("host")}/api/auth/google/callback`);
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirect}&response_type=code&scope=openid%20email%20profile&state=${encodeURIComponent(returnTo)}`;
+    res.redirect(url);
+  });
+  r.get("/api/auth/google/callback", ah(async (req, res) => {
+    // Placeholder: exchange code, get email, auto-register, set session
+    const returnTo = req.query.state || "/";
+    res.redirect(returnTo + (returnTo.includes("?") ? "&" : "?") + "auth=google_pending");
+  }));
+
+  // Shopify OAuth: redirect to Shopify authorize
+  r.get("/api/auth/shopify", (req, res) => {
+    const shop = String(req.query.shop || "").trim();
+    if (!shop || !shop.endsWith(".myshopify.com")) return res.status(400).json({ error: "invalid_shop" });
+    const clientId = process.env.SHOPIFY_CLIENT_ID;
+    if (!clientId) return res.status(501).json({ error: "shopify_not_configured", message: "Shopify OAuth not configured. Set SHOPIFY_CLIENT_ID." });
+    const returnTo = req.query.return || "/";
+    const redirect = encodeURIComponent(`${req.protocol}://${req.get("host")}/api/auth/shopify/callback`);
+    const url = `https://${shop}/admin/oauth/authorize?client_id=${clientId}&scope=read_products,write_products&redirect_uri=${redirect}&state=${encodeURIComponent(returnTo)}`;
+    res.redirect(url);
+  });
+  r.get("/api/auth/shopify/callback", ah(async (req, res) => {
+    const returnTo = req.query.state || "/";
+    res.redirect(returnTo + (returnTo.includes("?") ? "&" : "?") + "auth=shopify_pending");
+  }));
+
  return r;
 }

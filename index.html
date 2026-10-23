@@ -1,11 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>POD Wedding Studio — custom wedding stationery, signs &amp; gifts</title>
-<meta name="description" content="Design matching wedding invitations, welcome signs, favours and gifts in one scene-based studio. Printed on demand and shipped across Europe."/>
-<link rel="preload" as="image" href="assets/scenes/gifts-1200.webp" imagesrcset="assets/scenes/gifts-800.webp 800w, assets/scenes/gifts-1200.webp 1200w" imagesizes="(max-width:1000px) 100vw, calc(100vw - 420px)" fetchpriority="high"/>
+<title>POD Wedding Scene Studio</title>
 <style>
 :root{
   --paper:#fffdf9;--ink:#28231f;--muted:#7c746c;--line:rgba(45,36,30,.12);
@@ -182,7 +180,7 @@ button{color:inherit}
 .qty-box label{font-size:8.5px;color:var(--muted);display:block}.qty-box input{width:100%;border:0;outline:none;font-weight:700;margin-top:3px}
 .tier{border:1px solid var(--line);border-radius:11px;padding:8px;background:#fff}
 .tier b{font-size:9.5px;display:block}.tier span{font-size:8.5px;color:var(--muted);display:block;margin-top:3px}
-.tier-list{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:5px;margin-top:8px}
+.tier-list{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px}
 .tier-pill{font-size:8px;text-align:center;border:1px solid var(--line);padding:5px 2px;border-radius:8px;background:#fff}
 .tier-pill.active{background:#2b2825;color:#fff;border-color:#2b2825}
 .total{display:flex;justify-content:space-between;align-items:center;margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
@@ -330,6 +328,49 @@ button{color:inherit}
 }
 
 
+.checkout-row{padding:0 14px 14px;border-top:1px solid var(--line);background:#fffdf9}
+.checkout-btn{width:100%;border:0;border-radius:13px;padding:12px 14px;background:#0070ba;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(0,112,186,.16)}
+.checkout-note{font-size:8px;color:var(--muted);text-align:center;margin-top:6px;line-height:1.4}
+.checkout-modal{position:fixed;inset:0;z-index:110;background:rgba(31,26,23,.58);display:none;place-items:center;padding:16px;backdrop-filter:blur(8px)}
+.checkout-modal.open{display:grid}.checkout-card{width:min(520px,94vw);max-height:90vh;overflow:auto;background:#fffdf9;border-radius:22px;border:1px solid var(--line);box-shadow:0 28px 80px rgba(35,28,24,.25)}
+.checkout-head{padding:15px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.checkout-head h3{font:20px Georgia,serif;margin:0}
+.checkout-body{padding:14px 16px}.checkout-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.checkout-field{display:grid;gap:4px}.checkout-field.full{grid-column:1/-1}.checkout-field label{font-size:8.5px;color:var(--muted)}.checkout-field input,.checkout-field select{border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff;outline:none;font-size:10px}
+.checkout-summary{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:10px;background:#faf7f3;font-size:9.5px;line-height:1.6}.checkout-actions{display:flex;gap:8px;margin-top:12px}.paypal-pay{flex:1;border:0;border-radius:12px;padding:11px;background:#0070ba;color:#fff;font-weight:700;cursor:pointer}
+
+
+.cart-shipping{margin:0 12px 10px;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+.cart-shipping-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.cart-shipping-title b{font-size:10.5px}.cart-shipping-title span{font-size:8.5px;color:var(--muted)}
+.cart-shipping-grid{display:grid;grid-template-columns:90px 1fr 110px auto;gap:6px}.cart-shipping-grid select,.cart-shipping-grid input{min-width:0;border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:9px;background:#fff}
+.cart-shipping-grid button{border:0;background:#2b2825;color:#fff;border-radius:8px;padding:0 10px;font-size:9px}
+.cart-shipping-result{margin-top:8px;font-size:9px;line-height:1.55;color:var(--muted)}.cart-shipping-result strong{color:var(--ink)}
+.checkout-summary .quote-breakdown{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);line-height:1.65}
+
+/* 购物车 */
+.cart-panel{
+  position:fixed;right:18px;top:78px;width:390px;max-height:calc(100vh - 96px);z-index:60;
+  background:#fffdf9;border:1px solid var(--line);border-radius:22px;box-shadow:0 24px 70px rgba(50,38,30,.24);
+  display:none;grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden
+}
+.cart-panel.open{display:grid}
+.cart-head{display:flex;justify-content:space-between;align-items:center;padding:15px 16px;border-bottom:1px solid var(--line)}
+.cart-head h3{margin:0;font:20px Georgia,serif}.cart-list{overflow:auto;padding:10px 12px}
+.cart-empty{padding:40px 15px;text-align:center;color:var(--muted);font-size:11px}
+.cart-item{border:1px solid var(--line);border-radius:13px;padding:10px;margin-bottom:8px;background:#fff}
+.cart-item b{font-size:10.5px;display:block}.cart-item span{font-size:9px;color:var(--muted);display:block;margin-top:3px;line-height:1.4}
+.cart-item strong{display:block;margin-top:6px;font:15px Georgia,serif}
+.cart-foot{padding:12px 14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.cart-foot span{font-size:10px;color:var(--muted)}.cart-foot strong{font:20px Georgia,serif}
+
+.order-flow{
+  margin:10px 12px 0;padding:11px 12px;border:1px solid var(--line);
+  border-radius:14px;background:#faf7f3;display:grid;grid-template-columns:34px 1fr;gap:10px
+}
+.order-flow-icon{
+  width:34px;height:34px;border-radius:50%;background:#292622;color:#fff;
+  display:grid;place-items:center;font-size:16px;font-weight:700
+}
+.order-flow b{display:block;font-size:10.5px;margin-bottom:4px}
+.order-flow p{margin:0;font-size:9.5px;line-height:1.55;color:var(--muted)}
 .toast{position:absolute;left:50%;bottom:22px;z-index:70;transform:translate(-50%,14px);background:#28231f;color:#fff;border-radius:999px;padding:9px 13px;font-size:10px;opacity:0;pointer-events:none;transition:.2s}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
@@ -373,7 +414,7 @@ button{color:inherit}
 
 @media(max-width:1000px){
   body{overflow:auto}.app{height:auto;min-height:100vh}.layout{grid-template-columns:1fr;grid-template-rows:70vh auto}
-  .catalog{min-height:520px}.popover{width:min(360px,88vw)}
+  .catalog{min-height:520px}.popover{width:min(360px,88vw)}.cart-panel{right:10px;width:min(390px,calc(100vw - 20px))}
 }
 
 .wedding-site-btn{
@@ -462,7 +503,7 @@ button{color:inherit}
 .scene.home-photo-scene{
   background-image:
     linear-gradient(180deg,rgba(255,252,248,.08) 0%,rgba(255,252,248,0) 35%,rgba(31,24,20,.08) 100%),
-    url("assets/scenes/cream-800.webp") !important;
+    url("assets/scenes/cream.webp") !important;
   background-size:cover !important;
   background-position:50% 50% !important;
   background-repeat:no-repeat !important;
@@ -499,7 +540,6 @@ button{color:inherit}
 
 /* v18: POD Studio entry (scenario → design one-stop flow) */
 .btn.studio-entry{display:inline-flex;align-items:center;gap:4px;text-decoration:none;color:#fff;background:linear-gradient(135deg,#292622,#4a3a30);border-color:#292622;box-shadow:0 0 0 2px rgba(154,109,87,.35)}
-.topbar-row2{display:contents}
 .btn.studio-entry:hover{box-shadow:0 0 0 3px rgba(154,109,87,.55)}
 @media(max-width:720px){.actions{flex-wrap:wrap;justify-content:flex-end}}
 
@@ -527,7 +567,7 @@ button{color:inherit}
 .focus-section{padding:14px;background:#f2ece6}.focus-shell{border:1px solid var(--line);border-radius:28px;background:#fffdf9;box-shadow:var(--shadow);overflow:hidden}
 .focus-grid{display:grid;grid-template-columns:minmax(320px,.82fr) minmax(0,1.18fr);min-height:620px}.focus-copy{padding:70px 6vw 62px;display:flex;flex-direction:column;justify-content:center}.focus-kicker{font-size:10px;letter-spacing:.18em;color:var(--muted)}.focus-copy h2{font:clamp(36px,4vw,58px) Georgia,serif;font-weight:400;line-height:1.05;margin:12px 0 16px}.focus-copy p{font-size:13px;line-height:1.8;color:var(--muted);max-width:540px;margin:0}.focus-steps{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}.focus-steps span{border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:#fff;font-size:10px;color:#655b54}
 .product-wall{padding:26px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;background:#eee6de}.product-shot{position:relative;border-radius:22px;overflow:hidden;background:#f3ece4;min-height:250px}.product-shot img{width:100%;height:100%;object-fit:cover;display:block}.product-shot figcaption{position:absolute;left:12px;right:12px;bottom:12px;padding:9px 11px;border-radius:12px;background:rgba(255,253,249,.9);backdrop-filter:blur(10px);font-size:10px;display:flex;justify-content:space-between;gap:10px}.product-shot figcaption b{font-size:11px}.product-shot figcaption span{color:var(--muted)}
-.studio-story{background:#ede5dc}.studio-story .focus-grid{grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr)}.studio-visual{padding:34px;display:grid;place-items:center;background:linear-gradient(145deg,#d9cec3,#f2ece5)}.studio-stack{position:relative;width:min(720px,100%);aspect-ratio:1.3}.studio-stack img{position:absolute;width:48%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:20px;box-shadow:0 22px 48px rgba(58,43,34,.18);border:7px solid rgba(255,253,249,.9)}.studio-stack img:nth-child(1){left:3%;top:12%;transform:rotate(-5deg)}.studio-stack img:nth-child(2){right:3%;top:5%;transform:rotate(4deg)}.studio-stack img:nth-child(3){left:28%;bottom:2%;width:44%;transform:rotate(-1deg)}
+.studio-story{background:#ede5dc}.studio-story .focus-grid{grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr)}.studio-visual{padding:34px;display:grid;place-items:center;background:linear-gradient(145deg,#d9cec3,#f2ece5)}.studio-stack{position:relative;width:min(720px,100%);aspect-ratio:1.3}.studio-stack img{position:absolute;width:48%;border-radius:20px;box-shadow:0 22px 48px rgba(58,43,34,.18);border:7px solid rgba(255,253,249,.9)}.studio-stack img:nth-child(1){left:3%;top:12%;transform:rotate(-5deg)}.studio-stack img:nth-child(2){right:3%;top:5%;transform:rotate(4deg)}.studio-stack img:nth-child(3){left:28%;bottom:2%;width:44%;transform:rotate(-1deg)}
 .workflow-list{margin-top:24px;display:grid;gap:9px}.workflow-item{display:grid;grid-template-columns:34px 1fr;gap:11px;align-items:start;padding:11px 0;border-top:1px solid var(--line)}.workflow-item i{font-style:normal;width:28px;height:28px;border-radius:50%;background:#292622;color:#fff;display:grid;place-items:center;font-size:10px}.workflow-item b{display:block;font-size:12px}.workflow-item span{display:block;color:var(--muted);font-size:10px;line-height:1.55;margin-top:3px}.studio-cta{margin-top:22px;align-self:flex-start;padding:12px 18px!important;font-size:13px!important}
 @media(max-width:900px){.focus-grid,.studio-story .focus-grid{grid-template-columns:1fr}.focus-copy{padding:46px 28px}.product-wall{min-height:620px}.studio-visual{min-height:520px}}
 @media(max-width:620px){.product-wall{grid-template-columns:1fr;grid-template-rows:none}.product-shot{min-height:240px}.studio-stack{aspect-ratio:1}.studio-stack img{width:58%}.studio-stack img:nth-child(3){left:22%;width:56%}}
@@ -550,72 +590,25 @@ button{color:inherit}
 .product-modal-actions .secondary{background:#f3ece4;color:#28231f}
 .product-modal-close{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:0;background:#fff;cursor:pointer;font-size:18px}
 @media(max-width:640px){.product-modal-card{grid-template-columns:1fr}}
-
-/* home-en-images: hero <img>, thumbnails, mobile header, AI launcher, touch hotspot labels */
-.scene-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;user-select:none}
-.prod-img.studio{background:#fff;display:grid;place-items:center}
-.prod-img.studio img{width:100%;height:100%;object-fit:contain;display:block}
-.product strong{white-space:nowrap;font-size:11px}
-.product-shot img{object-fit:cover}
-.product-modal-img img{object-fit:contain;background:#fff}
-.material-photo{object-fit:cover}
-.hotspot-label{max-width:min(46%,200px);overflow:hidden;text-overflow:ellipsis}
-.hotspot-label.pos{left:calc(var(--x) + 26px)!important;top:var(--y)!important;bottom:auto!important;transform:translateY(-50%)}
-.hotspot-label.pos.flip{left:auto!important;right:calc(100% - var(--x) + 26px)}
-.catalog-scroll{padding-bottom:84px}
-@media (hover:none),(pointer:coarse){
-  /* Touch: no hover, so labels are always visible, centred under their dot and wrapped instead of overflowing. */
-  .hotspot-label,.hotspot-label.pos,.hotspot-label.pos.flip{opacity:1;pointer-events:none;font-size:10px;line-height:1.25;padding:4px 7px;border-radius:8px;
-    left:var(--x,50%)!important;right:auto;top:calc(var(--y,50%) + 26px)!important;bottom:auto!important;transform:translateX(-50%);white-space:normal;text-align:center;width:max-content;max-width:min(27%,120px)}
-}
-@media(max-width:720px){
-  .app{grid-template-rows:auto auto}
-  .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;grid-template-rows:auto auto;row-gap:6px;column-gap:8px;padding:8px 12px;height:auto;align-items:center}
-  .brand{gap:8px;min-width:0}
-  .logo{width:30px;height:30px;border-radius:10px;font-size:13px}
-  .brand b{font-size:12px;white-space:nowrap;letter-spacing:.03em}
-  .brand span{display:none}
-  .actions{display:contents}
-  .topbar .lang-switch{grid-column:2;grid-row:1}
-  .topbar .lang-select{padding:5px 24px 5px 10px;font-size:11px;background-position:right 8px center}
-  .topbar .pa-acct{grid-column:3;grid-row:1}
-  #cartBtn{grid-column:4;grid-row:1}
-  .topbar .btn{padding:6px 10px;font-size:11px;white-space:nowrap}
-  .topbar-row2{grid-column:1/-1;grid-row:2;display:flex;gap:6px;min-width:0}
-  .topbar-row2 .btn{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
-  .wedding-site-btn{max-width:none}
-  .layout{height:auto;padding:10px}
-  /* AI launcher docks into the compact header's second row instead of floating over prices/content. */
-  .topbar-row2{margin-right:40px}
-  .agent-launcher{width:32px;height:32px;font-size:13px;top:46px;right:12px;bottom:auto;box-shadow:0 4px 12px rgba(38,31,27,.22)}
-  .agent-launcher:after{display:none}
-  .agent-panel{left:10px;right:10px;top:92px;bottom:auto;width:auto;height:min(640px,calc(100vh - 110px))}
-}
-
-/* B5 mobile: hero capped at ~60vh, bigger hotspot tap targets (≥44px), decluttered shared header */
-.app>header.sh{grid-row:1}
-@media(max-width:720px){
-  .layout{grid-template-rows:min(60vh,560px) auto!important}
-  .stage{max-height:60vh;min-height:300px}
-  .hotspot{width:44px;height:44px}
-  .hotspot:before{width:12px;height:12px}
-  .hotspot:after{inset:-6px}
-  .agent-launcher{top:auto!important;bottom:16px!important;right:14px!important;width:44px!important;height:44px!important}
-  .agent-panel{top:70px!important}
-}
-.vat-tag{font-size:.72em;font-weight:500;color:var(--muted);margin-left:4px;white-space:nowrap}
 </style>
-<link rel="stylesheet" href="cart.css">
 </head>
 <body>
 <div class="app">
-  <!-- Shared header (header.js). "Create wedding website" is a secondary action → lives in the header "Menu". -->
-  <div id="site-header" data-cart><button class="btn wedding-site-btn" id="weddingSiteBtn" type="button" data-header-menu>Create wedding website</button></div><script src="/header.js"></script>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">P</div>
+      <div><b>POD WEDDING STUDIO</b><span>场景式选品 · 定制 · 阶梯价 · 购物车</span></div>
+    </div>
+    <div class="actions"><div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div>
+      <button class="btn wedding-site-btn" id="weddingSiteBtn">生成专属婚礼网站</button>
+      <button class="btn" id="resetBtn">重置</button>
+      <button class="btn dark" id="cartBtn">购物车 <span id="cartCount">0</span></button>
+    </div>
+  </header>
 
   <main class="layout">
     <section class="stage" id="stage">
       <div class="scene" id="scene">
-        <img class="scene-img" id="sceneImg" src="assets/scenes/gifts-1200.webp" srcset="assets/scenes/gifts-800.webp 800w, assets/scenes/gifts-1200.webp 1200w" sizes="(max-width:1000px) 100vw, calc(100vw - 420px)" fetchpriority="high" decoding="async" alt="Wedding table scene with personalised gifts" data-i18n-alt="scene"/>
         <div class="wall-line a"></div><div class="wall-line b"></div><div class="wall-line c"></div>
         <div class="floor"></div><div class="arch"></div>
         <div class="names"><strong id="coupleNames">Amelia & Noah</strong><span id="sceneDate">06 · 18 · 2027</span></div>
@@ -629,6 +622,7 @@ button{color:inherit}
             <div class="scene-current" id="sceneCurrent"><b id="sceneTitle">Wedding &amp; personalised gifts</b><span>▾</span></div>
             <div class="scene-menu" id="sceneMenu"></div>
           </div>
+          <div class="meta-pill" id="hotspotCount">4 Hotspots</div>
         </div>
 
         <div id="hotspots"></div>
@@ -645,7 +639,7 @@ button{color:inherit}
           <button class="pop-close" id="popClose">×</button>
         </div>
         <div class="pop-body">
-          <div class="price-row"><span>单价会根据数量自动变化</span><strong id="unitPrice">—</strong></div><div class="vat-tag" data-vat-label style="text-align:right;margin-top:-4px">excl. VAT</div>
+          <div class="price-row"><span>单价会根据数量自动变化</span><strong id="unitPrice">¥0.00</strong></div>
 
           <div class="mode-label">选择材质</div>
           <div class="material-grid" id="materialGrid"></div>
@@ -687,10 +681,9 @@ button{color:inherit}
             <div class="tier-pill" data-tier="1">10–29<br>-5%</div>
             <div class="tier-pill" data-tier="2">30–49<br>-10%</div>
             <div class="tier-pill" data-tier="3">50+<br>-15%</div>
-            <div class="tier-pill" data-tier="4" style="display:none">100+</div>
           </div>
 
-          <div class="total"><span>商品小计</span><strong id="totalPrice">—</strong></div><div class="vat-tag" data-vat-label style="text-align:right">excl. VAT</div>
+          <div class="total"><span>商品小计</span><strong id="totalPrice">¥0.00</strong></div>
           <div class="pop-actions">
             <button class="add" id="addCart">加入购物车</button>
             <button class="secondary" id="detailBtn">完整详情</button>
@@ -837,7 +830,7 @@ button{color:inherit}
   </div>
 </div>
 
-<button class="agent-launcher" id="agentLauncher" aria-label="Open the wedding customisation agent">AI</button>
+<button class="agent-launcher" id="agentLauncher" aria-label="打开婚礼定制 Agent">AI</button>
 <aside class="agent-panel" id="agentPanel">
   <div class="agent-head">
     <div class="agent-identity">
@@ -866,32 +859,61 @@ button{color:inherit}
       <b id="materialLightboxTitle">材质预览</b>
       <button class="pop-close" id="materialLightboxClose">×</button>
     </div>
-    <img class="material-lightbox-image" id="materialLightboxImage" alt="Material close-up" decoding="async"/>
+    <img class="material-lightbox-image" id="materialLightboxImage" alt="材质大图"/>
     <div class="material-lightbox-foot" id="materialLightboxDesc"></div>
   </div>
 </div>
 
-<div class="cart-scrim" id="cartScrim"></div>
-<aside class="cart-panel" id="cartPanel" role="dialog" aria-modal="true" aria-labelledby="cartTitle" aria-hidden="true">
-  <div class="cart-head"><h3 id="cartTitle"><span data-i18n="cart.title">Your cart</span><small id="cartItemsLabel"></small></h3><button class="cart-close" id="cartClose" type="button" data-i18n-attr="aria-label:cart.close" aria-label="Close cart">×</button></div>
+<aside class="cart-panel" id="cartPanel">
+  <div class="cart-head"><h3>购物车</h3><button class="pop-close" id="cartClose">×</button></div>
+  <div>
+    <div class="order-flow">
+      <div class="order-flow-icon">✓</div>
+      <div>
+        <b>订购流程</b>
+        <p>最终效果图和材质会在支付后 2 小时内确认，并发送到您的邮箱。确认后进入生产与配送流程，预计 14 天内送达。</p>
+      </div>
+    </div>
+  </div>
   <div class="cart-list" id="cartList"></div>
-  <div class="cart-foot" id="cartFoot">
-    <div class="cart-row"><span data-i18n="cart.subtotal">Subtotal</span><strong id="cartSubtotal">—</strong></div>
-    <div class="cart-row"><span data-i18n="cart.shipping">Shipping</span><span data-i18n="cart.shippingLater">Calculated at checkout</span></div>
-    <div class="cart-row total"><span data-i18n="cart.total">Total</span><strong id="cartTotal">—</strong></div>
-    <div class="cart-vat" id="cartVatNote">Prices exclude VAT; VAT is calculated for your delivery country and shown separately.</div>
-    <div class="cart-status" id="cartStatus" aria-live="polite"></div>
-    <button class="cart-checkout" id="checkoutBtn" type="button" data-i18n="cart.checkout">Checkout</button>
-    <div class="pay-marks"><span data-i18n="cart.weAccept">We accept</span><span class="pay-mark">TWINT</span><span class="pay-mark">PayPal</span></div>
-    <ul class="cart-trust"><li data-i18n="cart.trust.secure">Secure, encrypted payment</li><li data-i18n="cart.trust.proof">Digital proof by e-mail within 2 h of payment</li><li data-i18n="cart.trust.delivery">Delivered in about 14 days after approval</li></ul>
+  <div class="cart-shipping">
+    <div class="cart-shipping-title"><b>配送 / 税费试算</b><span>按区域实时计算</span></div>
+    <div class="cart-shipping-grid">
+      <select id="cartCountry"><option value="CH">CH</option><option value="DE">DE</option><option value="FR">FR</option><option value="GB">GB</option><option value="US">US</option><option value="CA">CA</option></select>
+      <input id="cartPostal" placeholder="邮编" value="4051"/>
+      <select id="cartShippingMethod"><option value="standard">Standard</option><option value="express">Express</option></select>
+      <button id="cartQuoteBtn">计算</button>
+    </div>
+    <div class="cart-shipping-result" id="cartShippingResult">选择配送区域后查看 Standard / Express 运费与预计税费。</div>
+  </div>
+  <div class="cart-foot"><span id="cartTotalLabel">商品小计</span><strong id="cartTotal">¥0.00</strong></div>
+  <div class="checkout-row">
+    <button class="checkout-btn" id="checkoutBtn">前往结账</button>
+    <div class="checkout-note">支付金额会由服务端根据 SKU、材质和数量重新计算，浏览器价格仅用于展示。</div>
   </div>
 </aside>
 
+<div class="checkout-modal" id="checkoutModal">
+  <div class="checkout-card">
+    <div class="checkout-head"><h3>确认订单与配送信息</h3><button class="pop-close" id="checkoutClose">×</button></div>
+    <div class="checkout-body">
+      <div class="checkout-grid">
+        <div class="checkout-field"><label>姓名</label><input id="coName" autocomplete="name"/></div>
+        <div class="checkout-field"><label>邮箱 *</label><input id="coEmail" type="email" autocomplete="email"/></div>
+        <div class="checkout-field full"><label>地址</label><input id="coAddress" autocomplete="street-address"/></div>
+        <div class="checkout-field"><label>城市</label><input id="coCity" autocomplete="address-level2"/></div>
+        <div class="checkout-field"><label>邮编</label><input id="coPostal" autocomplete="postal-code"/></div>
+        <div class="checkout-field"><label>国家/地区代码</label><input id="coCountry" value="CH" maxlength="2"/></div>
+        <div class="checkout-field"><label>配送方式</label><select id="coShippingMethod"><option value="standard">Standard</option><option value="express">Express</option></select></div><div class="checkout-field"><label>币种</label><select id="coCurrency"><option value="CNY">CNY</option></select></div>
+      </div>
+      <div class="checkout-summary" id="checkoutSummary"></div>
+      <div class="checkout-actions"><button class="paypal-pay" id="paypalPayBtn">前往 PayPal 支付</button><button class="secondary" id="checkoutCancel">返回</button></div>
+    </div>
+  </div>
+</div>
+
 <script src="studio-data.js"></script>
-<script src="/price-list.js"></script>
-<script src="studio-pricing.js"></script>
 <script src="i18n.js"></script>
-<script src="cart.js"></script>
 <script src="wedding-qr.js"></script>
 <script>
 const HOME_SCENARIO_ORDER = ["gifts","seasonal","creator","community","corporate","art"];
@@ -899,98 +921,39 @@ const HOME_RECOMMENDED = new Set(["gifts","seasonal"]);
 const studioCatalog = window.STUDIO_DATA || {scenarios:[],products:[]};
 const studioProductsById = Object.fromEntries((studioCatalog.products||[]).map(x=>[x.id,x]));
 
-// ---- Language-aware storefront data (studio-data.js carries zh/en/de; fall back en → zh → id) ----
-function homeLang(){return window.WeddingI18n?.lang?.()||"en"}
-function pick(obj,fallback=""){if(!obj)return fallback;if(typeof obj==="string")return obj;const l=homeLang();return obj[l]||obj.en||obj.zh||fallback}
-const HOME_LOCALE={zh:"zh-CN",en:"en-GB",de:"de-DE"};
-function homeT(zh){return window.WeddingI18n?.t?.(zh)??zh}
-/** Format a EUR amount for the current language. opts.from adds the "From" / "起" prefix. */
-/** Shared market (header.js PODMarket: CH → CHF, EU → EUR), the same selection studio, cart and checkout use. */
-/** "excl. VAT" (default) / "incl. VAT" from the Fees & tax setting (cart.js loads /api/storefront/fees and refreshes [data-vat-label]). */
-function vatTag(){return window.PODCart?.vatLabel?PODCart.vatLabel():"excl. VAT"}
-window.addEventListener("wedding-language-change",()=>document.querySelectorAll("[data-vat-label]").forEach(e=>e.textContent=vatTag()));
-function homeMarket(){return window.PODMarket?PODMarket.get():"CH"}
-function homeCurrency(){return window.PODMarket?PODMarket.currency():"CHF"}
-/** Format an amount in the shared market currency (name kept for existing callers). opts.from adds the "From" prefix. */
-function fmtEur(n,opts={}){
-  const l=homeLang(),v=new Intl.NumberFormat(HOME_LOCALE[l]||"en-GB",{style:"currency",currency:homeCurrency(),minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0);
-  if(!opts.from)return v;
-  return l==="zh"?`${v} 起`:l==="de"?`ab ${v}`:`From ${v}`;
-}
-function fmtEurDelta(d){return (d>0?"+":"−")+fmtEur(Math.abs(d))}
-/** Retail ("From") price: shared studio pricing, shared market (CHF/EUR), default margin, 1 pc, cheapest material. */
-const HOME_MARGIN=0.4;
-function retailFrom(x){
-  try{
-    if(window.StudioPricing&&studioCatalog.markets){
-      const mats=(x.materials||[]),cheapest=mats.slice().sort((a,b)=>a.delta_eur-b.delta_eur)[0];
-      const q=StudioPricing.quote(studioCatalog,{market:homeMarket(),margin:HOME_MARGIN,items:[{product_id:x.id,qty:1,material_id:cheapest?.id}]});
-      if(q.lines[0])return q.lines[0].price;
-    }
-  }catch(e){}
-  return Number(x.base_cost_eur||0)/(1-HOME_MARGIN);
-}
-// Single source of truth: the Studio's product image (studio-data.js products[].mockup_photo.src, default colour).
-// Thumbs are keyed by that path: <dir>/thumb/<stem>.webp (+@2x), built by scripts/build_thumbs.py; img onerror falls back to the original.
-function studioImageFor(x){return x?.mockup_photo?.src||""}
-function thumbFor(src){const m=/^(.*)\/([^/]+)\.(jpe?g|png|webp)$/i.exec(src||"");return m?{src:`${m[1]}/thumb/${m[2]}.webp`,src2:`${m[1]}/thumb/${m[2]}@2x.webp`,orig:src}:(src?{src,src2:src,orig:src}:null)}
 function homeProduct(id){
   const x=studioProductsById[id]||{id,name:{en:id},base_cost_eur:0};
-  const img=studioImageFor(x),tb=thumbFor(img);
   return {
     id:x.id,
-    name:pick(x.name,x.id),
-    price:retailFrom(x),
+    name:x.name?.en||x.name?.zh||x.id,
+    price:Number(x.base_cost_eur||0),
     type:"studio",
     desc:[x.technique,(x.sizes||[]).slice(0,4).join(" / ")].filter(Boolean).join(" · "),
     moq:"POD",
     lead:"Studio",
     custom:"POD Design Studio",
     studio:true,
-    image:img,
-    thumb:tb?.src||"",
-    thumb2:tb?.src2||"",
-    thumbOrig:tb?.orig||"",
-    colors:x.colors||[],
-    category:x.category||"",
+    thumb:x.mockup_photo?.src||"",
     technique:x.technique||"POD",
     eco:Array.isArray(x.eco_tags)&&x.eco_tags.length>0
   };
 }
-function sceneVariants(src){const m=/^(assets\/scenes\/[^/.]+)\.(jpg|webp)$/.exec(src||"");return m?{src:`${m[1]}-1200.webp`,srcset:`${m[1]}-800.webp 800w, ${m[1]}-1200.webp 1200w`}:{src:src||"",srcset:""}}
-function buildSceneData(){
-  return Object.fromEntries(HOME_SCENARIO_ORDER.map(id=>{
-    const sc=(studioCatalog.scenarios||[]).find(x=>x.id===id);
-    if(!sc) return [id,{name:id,subtitle:"",note:"",groups:[],hotspots:[],image:"",colors:["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"]}];
-    return [id,{
-      id,
-      name:pick(sc.name,id),
-      subtitle:sc.name?.zh||sc.name?.en||id,
-      note:pick(sc.audience,""),
-      recommended:HOME_RECOMMENDED.has(id),
-      image:sc.scene_image?.src||"",
-      hotspots:sc.scene_image?.hotspots||[],
-      colors:["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"],
-      groups:(sc.kits||[]).map(k=>[pick(k.name,k.id),(k.items||[]).map(homeProduct),k.id])
-    }];
-  }));
-}
-let sceneData = buildSceneData();
 
-/** Per-language document metadata (html lang, title, description). */
-const HOME_META={
-  en:{title:"POD Wedding Studio — custom wedding stationery, signs & gifts",desc:"Design matching wedding invitations, welcome signs, favours and gifts in one scene-based studio. Printed on demand and shipped across Europe.",alt:"Wedding table scene with personalised gifts",agent:"Open the wedding customisation agent",lightbox:"Material close-up",placeholder:"e.g. Amelia & Noah / 18 June 2027 / Welcome to our wedding"},
-  zh:{title:"POD Wedding Scene Studio",desc:"在一个场景式工作室中统一设计婚礼邀请卡、迎宾标识、伴手礼与周边，按需生产并配送至欧洲各地。",alt:"婚礼餐桌场景与定制礼品",agent:"打开婚礼定制 Agent",lightbox:"材质大图",placeholder:"例如：Amelia & Noah / 18 June 2027 / Welcome to our wedding"},
-  de:{title:"POD Wedding Studio — individuelle Hochzeitspapeterie, Schilder & Geschenke",desc:"Gestalten Sie passende Hochzeitseinladungen, Willkommensschilder, Gastgeschenke und Präsente in einem szenenbasierten Studio. Print on Demand, Versand in ganz Europa.",alt:"Hochzeitstisch-Szene mit personalisierten Geschenken",agent:"Hochzeits-Agent öffnen",lightbox:"Material-Nahaufnahme",placeholder:"z. B. Amelia & Noah / 18 June 2027 / Welcome to our wedding"}
-};
-function applyHomeMeta(){
-  const l=homeLang(),m=HOME_META[l]||HOME_META.en;
-  document.documentElement.lang=l==="zh"?"zh-CN":l;
-  document.title=m.title;
-  let d=document.querySelector('meta[name="description"]');if(!d){d=document.createElement("meta");d.name="description";document.head.appendChild(d)}d.content=m.desc;
-  const set=(id,attr,v)=>{const el=document.getElementById(id);if(el)el.setAttribute(attr,v)};
-  set("sceneImg","alt",m.alt);set("agentLauncher","aria-label",m.agent);set("materialLightboxImage","alt",m.lightbox);set("customText","placeholder",m.placeholder);
-}
+const sceneData = Object.fromEntries(HOME_SCENARIO_ORDER.map(id=>{
+  const sc=(studioCatalog.scenarios||[]).find(x=>x.id===id);
+  if(!sc) return [id,{name:id,subtitle:"",note:"",groups:[],hotspots:[],image:"",colors:["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"]}];
+  return [id,{
+    id,
+    name:sc.name?.en||sc.name?.zh||id,
+    subtitle:sc.name?.zh||sc.name?.en||id,
+    note:sc.audience?.en||sc.audience?.zh||"",
+    recommended:HOME_RECOMMENDED.has(id),
+    image:sc.scene_image?.src||"",
+    hotspots:sc.scene_image?.hotspots||[],
+    colors:["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"],
+    groups:(sc.kits||[]).map(k=>[k.name?.en||k.name?.zh||k.id,(k.items||[]).map(homeProduct),k.id])
+  }];
+}));
 
 
 const materialPhotos = {
@@ -1033,7 +996,7 @@ const materialsByType = {
 };
 let currentMaterialIndex=0;
 
-let sceneKey=sessionStorage.getItem("pod-home-scenario")||"gifts",currentGroup=0,currentProduct=0,currentMode="text",cart=[],cartEditId=null;
+let sceneKey=sessionStorage.getItem("pod-home-scenario")||"gifts",currentGroup=0,currentProduct=0,currentMode="text",cart=[],cartShippingQuote=null;
 const scene=document.getElementById("scene"),stage=document.getElementById("stage"),popover=document.getElementById("popover");
 
 // ---- v25: storefront and POD Studio share the exact same 6 scenario records. ----
@@ -1041,7 +1004,7 @@ function renderSceneMenu(){
   const menu=document.getElementById("sceneMenu");
   menu.innerHTML=HOME_SCENARIO_ORDER.map(key=>{
     const s=sceneData[key];
-    return `<button class="scene-option ${key===sceneKey?"active":""}" data-scene="${key}"><b>${s.name}</b>${s.recommended?`<span>★ ${homeT("Recommended for you")}</span>`:""}<span>${s.note}</span></button>`;
+    return `<button class="scene-option ${key===sceneKey?"active":""}" data-scene="${key}"><b>${s.name}</b>${s.recommended?`<span>★ Recommended for you</span>`:""}<span>${s.note}</span></button>`;
   }).join("");
   menu.querySelectorAll("[data-scene]").forEach(b=>b.onclick=e=>{e.stopPropagation();switchScene(b.dataset.scene);menu.classList.remove("open")});
 }
@@ -1061,16 +1024,13 @@ function switchScene(key=sceneKey){
   sessionStorage.setItem("pod-home-scenario",sceneKey);
   const s=sceneData[sceneKey];
   scene.classList.remove("home-photo-scene");scene.classList.add("generated-scene","studio-scene");
-  const hero=document.getElementById("sceneImg"),v=sceneVariants(s.image);
-  scene.style.backgroundImage="";
-  if(hero&&v.src&&hero.getAttribute("src")!==v.src){hero.srcset=v.srcset;hero.src=v.src}
-  if(hero)hero.style.display=v.src?"":"none";
+  scene.style.backgroundImage=s.image?`url("${s.image}")`:"";
   document.getElementById("sceneTitle").textContent=s.name;
   document.getElementById("catalogTitle").textContent=s.name;
-  document.getElementById("catalogAudience").textContent=(s.recommended?"★ "+homeT("Recommended for you")+" · ":"")+s.note;
+  document.getElementById("catalogAudience").textContent=(s.recommended?"★ Recommended for you · ":"")+s.note;
   document.getElementById("sceneNoteTitle").textContent=s.name;
   document.getElementById("sceneNoteText").textContent=s.note;
-
+  document.getElementById("hotspotCount").textContent=s.groups.length+" Kits";
   document.getElementById("studioStartBtn").href=studioHref();
   renderSceneMenu();renderHotspots();renderCatalog();popover.classList.remove("open");
 }
@@ -1084,26 +1044,22 @@ function focusKit(gi){
 function renderHotspots(){
   const wrap=document.getElementById("hotspots");
   const s=sceneData[sceneKey];
-  const pos=i=>{
-    if(!(s.hotspots&&s.hotspots[i]))return ["","",""];
-    const [x,y]=s.hotspots[i],flip=x>55;
-    return [` style="left:${x}%;top:${y}%;bottom:auto;transform:translate(-50%,-50%)"`,` style="--x:${x}%;--y:${y}%"`,flip?" pos flip":" pos"];
-  };
+  const pos=i=>s.hotspots&&s.hotspots[i]?[` style="left:${s.hotspots[i][0]}%;top:${s.hotspots[i][1]}%;bottom:auto;transform:translate(-50%,-50%)"`,` style="left:calc(${s.hotspots[i][0]}% + 26px);top:${s.hotspots[i][1]}%;bottom:auto"`]:["",""];
   wrap.innerHTML=s.groups.map((g,i)=>`
-    <button class="hotspot" data-slot="${i}" data-group="${i}" aria-label="${escHtml(g[0])}"${pos(i)[0]}></button>
-    <div class="hotspot-label${pos(i)[2]}"${pos(i)[1]}>${escHtml(g[0])}</div>`).join("");
+    <button class="hotspot" data-slot="${i}" data-group="${i}" aria-label="${g[0]}"${pos(i)[0]}></button>
+    <div class="hotspot-label"${pos(i)[1]}>${g[0]}</div>`).join("");
   wrap.querySelectorAll(".hotspot").forEach(h=>h.onclick=()=>focusKit(+h.dataset.group));
 }
 function renderCatalog(){
   const s=sceneData[sceneKey],cat=document.getElementById("catalog");
   cat.innerHTML=s.groups.map((g,gi)=>`
     <section class="group" data-group="${gi}">
-      <div class="group-title"><b>${escHtml(g[0])}</b><span>${g[1].length} ${homeT("PRODUCTS")}</span></div>
+      <div class="group-title"><b>${g[0]}</b><span>${g[1].length} PRODUCTS</span></div>
       ${g[1].map((p,pi)=>`
         <button class="product" data-g="${gi}" data-p="${pi}" data-product="${p.id}">
-          <div class="prod-img studio">${p.thumb?`<img src="${p.thumb}" srcset="${p.thumb} 1x, ${p.thumb2} 2x" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${p.thumbOrig}'" width="68" height="56" alt="${escHtml(p.name)}" loading="lazy" decoding="async">`:""}</div>
-          <div><b>${escHtml(p.name)}</b><span>${escHtml(p.technique)}${p.eco?" · ♻ "+homeT("Eco"):""}</span></div>
-          <strong>${fmtEur(p.price,{from:true})}<span class="vat-tag" data-vat-label>${escHtml(vatTag())}</span></strong>
+          <div class="prod-img studio"${p.thumb?` style="background-image:url('${p.thumb}')"`:""}></div>
+          <div><b>${p.name}</b><span>${p.technique}${p.eco?" · ♻ Eco":""}</span></div>
+          <strong>€${p.price.toFixed(2)}</strong>
         </button>`).join("")}
     </section>`).join("");
   cat.querySelectorAll(".product").forEach(b=>b.onclick=()=>openProductModal(b.dataset.product));
@@ -1123,9 +1079,9 @@ function renderMaterials(){
   const options=materialOptions();
   grid.innerHTML=options.map((m,i)=>`
     <button class="material-option ${i===0?"active":""}" data-index="${i}">
-      <img class="material-photo" src="${materialPhotos[m.id]}" alt="${escHtml(m.name)}" loading="lazy" decoding="async" data-preview="${i}">
+      <img class="material-photo" src="${materialPhotos[m.id]}" alt="${m.name}" data-preview="${i}">
       <b>${m.name}</b>
-      <span>${m.delta===0?homeT("基础价"):fmtEurDelta(m.delta)}</span>
+      <span>${m.delta===0?"基础价":(m.delta>0?"+¥"+m.delta.toFixed(2):"-¥"+Math.abs(m.delta).toFixed(2))}</span>
     </button>
   `).join("");
 
@@ -1210,21 +1166,7 @@ function setMode(mode){
   document.getElementById("uploadField").style.display=mode==="upload"?"grid":"none";
   document.getElementById("laterField").style.display=mode==="later"?"block":"none";
 }
-/** Studio products: unit price from the admin price list (same StudioPricing.quote the server charges with), shared market, default material. */
-function studioPriceInfo(qty){
-  const p=current();
-  try{
-    const tiers=(studioCatalog.price_list?.tiers)||[...(studioCatalog.qty_tiers||[])].map(t=>t.min_qty).sort((a,b)=>a-b);
-    const unitAt=q=>StudioPricing.quote(studioCatalog,{market:homeMarket(),margin:HOME_MARGIN,items:[{product_id:p.id,qty:q}]}).lines[0]?.price;
-    const unit=unitAt(qty);if(unit==null)return null;
-    let tier=0;tiers.forEach((t,i)=>{if(qty>=t)tier=i});
-    const next=tiers[tier+1],lo=tiers[tier],base=unitAt(1),off=base?Math.round((1-unit/base)*100):0;
-    const label=(next?`${lo}–${next-1}`:`${lo}+`)+(off>0?` · −${off}%`:"");
-    return {unit,total:Math.round(unit*qty*100)/100,tier,label,tiers,unitAt};
-  }catch(e){return null}
-}
 function priceInfo(qty){
-  if(current().studio){const s=studioPriceInfo(qty);if(s)return s}
   const material=currentMaterial();
   const base=Math.max(0,current().price + (material ? material.delta : 0));
   let discount=0,tier=0,label="1–9 件 · 标准价";
@@ -1236,32 +1178,41 @@ function priceInfo(qty){
 }
 function updatePrice(){
   const qty=Math.max(1,parseInt(document.getElementById("qty").value)||1),info=priceInfo(qty);
-  document.getElementById("unitPrice").textContent=fmtEur(info.unit);
-  document.getElementById("totalPrice").textContent=fmtEur(info.total);
+  document.getElementById("unitPrice").textContent="¥"+info.unit.toFixed(2);
+  document.getElementById("totalPrice").textContent="¥"+info.total.toFixed(2);
   document.getElementById("tierText").textContent=info.label;
-  document.querySelectorAll(".tier-pill").forEach(x=>{if(x.dataset.orig==null)x.dataset.orig=x.innerHTML;if(!info.tiers){x.innerHTML=x.dataset.orig;x.style.display=x.dataset.tier==="4"?"none":""}});
-  if(info.tiers){const pills=[...document.querySelectorAll(".tier-pill")],b=info.unitAt(1);pills.forEach((x,i)=>{const lo=info.tiers[i],nx=info.tiers[i+1];if(lo==null){x.style.display="none";return}x.style.display="";const u=info.unitAt(lo),off=b?Math.round((1-u/b)*100):0;x.innerHTML=`${nx?`${lo}–${nx-1}`:`${lo}+`}<br>${off>0?`−${off}%`:fmtEur(u)}`})}
   document.querySelectorAll(".tier-pill").forEach(x=>x.classList.toggle("active",+x.dataset.tier===info.tier));
 }
 function addCart(){
   const qty=Math.max(1,parseInt(document.getElementById("qty").value)||1),prod=current(),info=priceInfo(qty);
   const files=[...document.getElementById("fileInput").files].map(f=>f.name);
-  const text=document.getElementById("customText").value.trim();
-  if(currentMode==="upload"&&files.length===0){showToast(homeT("请先上传设计文件"));return}
-  const customization=currentMode==="text"?(text?"Text: "+text:"Text: (to follow)"):currentMode==="upload"?"Design files: "+files.join(", "):"Design details after checkout";
+  let customization="";
+  if(currentMode==="text") customization=document.getElementById("customText").value.trim()||"未填写文字";
+  if(currentMode==="upload"){
+    if(files.length===0){showToast("请先上传设计文件");return}
+    customization="设计文件："+files.join("、");
+  }
+  if(currentMode==="later") customization="购物车后填写";
   const material=currentMaterial();
   const sku=prod.name.toUpperCase().replace(/[^A-Z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,48);
-  const line={id:cartEditId||("l"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),productId:prod.id||"",sku,name:prod.name,sceneKey,scene:sceneData[sceneKey].name,g:currentGroup,p:currentProduct,qty,mode:currentMode,text,files,customization,material:material.name,materialId:material.id,thumb:prod.thumb||"",thumb2:prod.thumb2||"",thumbOrig:prod.thumbOrig||prod.image||""};
-  cartEditId=null;PODCart.upsert(line);
-  try{popover.classList.remove("open")}catch(e){}
-  showToast(K("cart.added",{name:prod.name}));
+  cart.push({scene:sceneData[sceneKey].name,sku,name:prod.name,qty,unit:info.unit,total:info.total,mode:currentMode,customization,material:material.name,materialId:material.id});
+  cartShippingQuote=null;document.getElementById("cartShippingResult").textContent="购物车已变化，请重新计算配送和税费。";renderCart();showToast("已加入购物车："+prod.name);
 }
-function K(key,vars){return window.WeddingI18n?.k?window.WeddingI18n.k(key,vars):key}
-function editCartLine(id){
-  const i=PODCart.items.find(x=>x.id===id);if(!i)return;
-  if(i.sceneKey&&i.sceneKey!==sceneKey&&sceneData[i.sceneKey])switchScene(i.sceneKey);
-  const el=document.querySelector(`.product[data-g="${i.g}"][data-p="${i.p}"]`)||document.querySelector(`.hotspot[data-group="${i.g}"]`);
-  try{openProduct(+i.g,+i.p,el);document.getElementById("qty").value=i.qty;if(i.mode==="text")document.getElementById("customText").value=i.text||"";updatePrice();cartEditId=i.id}catch(e){}
+function renderCart(){
+  document.getElementById("cartCount").textContent=cart.reduce((a,b)=>a+b.qty,0);
+  const list=document.getElementById("cartList");
+  if(!cart.length)list.innerHTML='<div class="cart-empty">购物车暂无商品</div>';
+  else list.innerHTML=cart.map(i=>`
+    <div class="cart-item">
+      <b>${escHtml(i.name)}</b>
+      <span>${escHtml(i.scene)} · ${i.qty} 件 · ¥${i.unit.toFixed(2)}/件</span>
+      <span>材质：${escHtml(i.material || "默认材质")}</span>
+      <span>${escHtml(i.customization)}</span>
+      <strong>¥${i.total.toFixed(2)}</strong>
+    </div>`).join("");
+  const subtotal=cart.reduce((a,b)=>a+b.total,0);
+  document.getElementById("cartTotalLabel").textContent=cartShippingQuote?"预计总计":"商品小计";
+  document.getElementById("cartTotal").textContent="¥"+(cartShippingQuote?cartShippingQuote.grand_total:subtotal).toFixed(2);
 }
 function escHtml(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function showToast(t){
@@ -1277,11 +1228,13 @@ document.getElementById("fileInput").onchange=e=>{
 };
 document.getElementById("addCart").onclick=addCart;
 document.getElementById("detailBtn").onclick=()=>showToast("这里可连接 Shopify / WooCommerce / 自建商品详情");
+document.getElementById("cartBtn").onclick=()=>document.getElementById("cartPanel").classList.add("open");
+document.getElementById("cartClose").onclick=()=>document.getElementById("cartPanel").classList.remove("open");
 document.getElementById("materialLightboxClose").onclick=()=>document.getElementById("materialLightbox").classList.remove("open");
 document.getElementById("materialLightbox").addEventListener("click",e=>{
   if(e.target.id==="materialLightbox") document.getElementById("materialLightbox").classList.remove("open");
 });
-
+document.getElementById("resetBtn").onclick=()=>{popover.classList.remove("open");document.querySelectorAll(".hotspot,.product").forEach(x=>x.classList.remove("active"));scene.style.transform=""};
 
 stage.addEventListener("mousemove",e=>{
   if(window.innerWidth<1000||sceneKey==="cream")return;
@@ -1408,12 +1361,73 @@ document.getElementById("sceneCurrent").addEventListener("click",e=>{e.stopPropa
 document.addEventListener("click",()=>document.getElementById("sceneMenu").classList.remove("open"));
 
 
+function cartPayload(){
+  return cart.map(i=>({sku:i.sku,name:i.name,quantity:i.qty,material:i.material,material_id:i.materialId,customization:i.customization}));
+}
 
-PODCart.init({onChange:items=>{cart=items},onEdit:editCartLine});
-(function(){const id=new URLSearchParams(location.search).get("cartEdit");if(id&&PODCart.items.some(x=>x.id===id)){history.replaceState(null,"",location.pathname+location.hash);setTimeout(()=>editCartLine(id),0)}})();
-renderSceneMenu();switchScene(sceneKey);applyHomeMeta();
-// Re-render the localized product area when the visitor switches language (keeps the current scene).
-window.addEventListener("wedding-language-change",()=>{sceneData=buildSceneData();switchScene(sceneKey);applyHomeMeta();PODCart.render()});
+async function estimateCartShipping(country=document.getElementById("cartCountry").value,postal=document.getElementById("cartPostal").value,shippingMethod=document.getElementById("cartShippingMethod")?.value||"standard"){
+  if(!cart.length){showToast("购物车暂无商品");return null}
+  const result=document.getElementById("cartShippingResult");result.textContent="计算中…";
+  try{
+    const r=await fetch("/api/storefront/shipping/quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cart:cartPayload(),country,postal_code:postal,currency:"CNY",shipping_method:shippingMethod})});
+    const d=await r.json();if(!r.ok)throw new Error(d.message||d.error||"配送试算失败");
+    cartShippingQuote=d;
+    const lg=window.WeddingI18n?.lang?.()||"zh";const T=lg==="de"?{tax:"Geschätzte Steuer",total:"Geschätzte Summe"}:lg==="en"?{tax:"Estimated tax",total:"Estimated total"}:{tax:"预计税费",total:"预计总计"};
+    result.innerHTML=`${escHtml(d.zone.name)} · ${d.shipping_options.map(o=>`${o.id===d.selected_shipping?"<b>":""}${escHtml(o.label)} ¥${o.amount} (${escHtml(o.eta_days)})${o.id===d.selected_shipping?"</b>":""}`).join("<br>")}<br>${T.tax} ¥${d.tax.amount} · ${escHtml(d.tax.mode)} · ${escHtml(d.tax.engine||"regional_rules")}<br><strong>${T.total} ¥${d.grand_total}</strong><br><span style="font-size:10px;color:var(--muted)">Rate engine: ${escHtml(d.rate_engine||"regional_rules")}</span>`;
+    renderCart();return d;
+  }catch(e){cartShippingQuote=null;result.textContent=e.message;renderCart();return null}
+}
+async function refreshCheckoutQuote(){
+  const country=document.getElementById("coCountry").value.trim().toUpperCase()||"CH",postal=document.getElementById("coPostal").value.trim();
+  const method=document.getElementById("coShippingMethod")?.value||"standard";const d=await estimateCartShipping(country,postal,method);
+  if(d){
+    const lg=window.WeddingI18n?.lang?.()||"zh";const T=lg==="de"?{qty:"Artikelmenge",sub:"Server-Zwischensumme",ship:"Versand",tax:"Geschätzte Steuer",total:"Geschätzter Zahlbetrag",note:"Der endgültige Betrag wird vor der PayPal-Erstellung serverseitig erneut berechnet."}:lg==="en"?{qty:"Item quantity",sub:"Server subtotal",ship:"Shipping",tax:"Estimated tax",total:"Estimated payment total",note:"The final amount is recalculated by the server before PayPal order creation."}:{qty:"商品数量",sub:"服务端商品小计",ship:"运费",tax:"预计税费",total:"预计支付总额",note:"最终金额会在 PayPal 创建前由服务端再次计算。"};
+    document.getElementById("checkoutSummary").innerHTML=`${T.qty}：${cart.reduce((a,b)=>a+b.qty,0)}<br>${T.sub}：¥${d.subtotal.toFixed(2)}<div class="quote-breakdown">${T.ship}（${escHtml((d.shipping_options.find(o=>o.id===d.selected_shipping)||{}).label||d.selected_shipping)}）：¥${d.shipping_amount.toFixed(2)}<br>${T.tax}：¥${d.tax.amount.toFixed(2)} (${escHtml(d.tax.mode)})<br><b>${T.total}：¥${d.grand_total.toFixed(2)}</b><br><span style="color:var(--muted)">${T.note}</span></div>`;
+  }
+  return d;
+}
+document.getElementById("cartQuoteBtn").onclick=()=>estimateCartShipping();
+
+function openCheckout(){
+  if(!cart.length){showToast("购物车暂无商品");return}
+  document.getElementById("coCountry").value=document.getElementById("cartCountry").value;
+  document.getElementById("coPostal").value=document.getElementById("cartPostal").value;document.getElementById("coShippingMethod").value=document.getElementById("cartShippingMethod")?.value||"standard";
+  document.getElementById("checkoutSummary").innerHTML="正在由服务端计算商品、运费和税费…";
+  document.getElementById("checkoutModal").classList.add("open");
+  refreshCheckoutQuote();
+}
+document.getElementById("checkoutBtn").onclick=openCheckout;
+
+document.getElementById("checkoutClose").onclick=()=>document.getElementById("checkoutModal").classList.remove("open");
+document.getElementById("checkoutCancel").onclick=()=>document.getElementById("checkoutModal").classList.remove("open");
+document.getElementById("coCountry").addEventListener("change",refreshCheckoutQuote);
+document.getElementById("coPostal").addEventListener("blur",refreshCheckoutQuote);document.getElementById("coShippingMethod").addEventListener("change",refreshCheckoutQuote);document.getElementById("cartShippingMethod").addEventListener("change",()=>estimateCartShipping());
+document.getElementById("paypalPayBtn").onclick=async()=>{
+  const email=document.getElementById("coEmail").value.trim();
+  if(!email){showToast("请填写邮箱");return}
+  const btn=document.getElementById("paypalPayBtn");btn.disabled=true;btn.textContent="创建支付中…";
+  try{
+    const r=await fetch("/api/payments/paypal/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+      cart:cartPayload(),
+      customer:{name:document.getElementById("coName").value.trim(),email},
+      shipping:{
+        address1:document.getElementById("coAddress").value.trim(),
+        city:document.getElementById("coCity").value.trim(),
+        postal_code:document.getElementById("coPostal").value.trim(),
+        country:document.getElementById("coCountry").value.trim().toUpperCase()
+      },
+      currency:document.getElementById("coCurrency").value,
+      shipping_method:document.getElementById("coShippingMethod").value
+    })});
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.message||data.error||"支付创建失败");
+    if(data.approval_url){location.href=data.approval_url;return}
+    throw new Error("PayPal 未返回 approval URL");
+  }catch(e){showToast(e.message)}
+  finally{btn.disabled=false;btn.textContent="前往 PayPal 支付"}
+};
+
+renderSceneMenu();renderCart();switchScene(sceneKey);
 </script>
 
 
@@ -1429,10 +1443,10 @@ window.addEventListener("wedding-language-change",()=>{sceneData=buildSceneData(
         <div class="focus-steps"><span>01 场景</span><span>02 套装</span><span>03 商品</span><span>04 设计</span><span>05 寄送</span></div>
       </div>
       <div class="product-wall">
-        <figure class="product-shot"><img src="assets/samples/thumb/wall-invitation-480.webp" srcset="assets/samples/thumb/wall-invitation-320.webp 320w, assets/samples/thumb/wall-invitation-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/invitation-monogram.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Ivory letterpress wedding invitation with logo mark"><figcaption><b>邀请卡</b><span>Stationery</span></figcaption></figure>
-        <figure class="product-shot"><img src="assets/samples/thumb/wall-tote-480.webp" srcset="assets/samples/thumb/wall-tote-320.webp 320w, assets/samples/thumb/wall-tote-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/tote-leaves.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Canvas favour tote printed with logo in leaf wreath"><figcaption><b>伴手礼包</b><span>Gift & bag</span></figcaption></figure>
-        <figure class="product-shot"><img src="assets/samples/thumb/wall-mug-480.webp" srcset="assets/samples/thumb/wall-mug-320.webp 320w, assets/samples/thumb/wall-mug-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/mug-cafe.webp'" width="480" height="480" loading="lazy" decoding="async" alt="White ceramic mug personalised with logo"><figcaption><b>纪念杯具</b><span>Drinkware</span></figcaption></figure>
-        <figure class="product-shot"><img src="assets/samples/thumb/wall-tee-480.webp" srcset="assets/samples/thumb/wall-tee-320.webp 320w, assets/samples/thumb/wall-tee-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/tee-brand.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Ivory T-shirt printed with logo"><figcaption><b>定制服饰</b><span>Apparel</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/mockups/invitation.jpg" alt="Invitation"><figcaption><b>邀请卡</b><span>Stationery</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/mockups/welcome_sign.jpg" alt="Welcome sign"><figcaption><b>迎宾标识</b><span>Signage</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/mockups/tote.jpg" alt="Tote bag"><figcaption><b>伴手礼包</b><span>Gift & bag</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/mockups/mug.jpg" alt="Mug"><figcaption><b>纪念杯具</b><span>Drinkware</span></figcaption></figure>
       </div>
     </div>
   </div>
@@ -1443,9 +1457,9 @@ window.addEventListener("wedding-language-change",()=>{sceneData=buildSceneData(
     <div class="focus-grid">
       <div class="studio-visual">
         <div class="studio-stack">
-          <img src="assets/samples/thumb/design-invitation-480.webp" srcset="assets/samples/thumb/design-invitation-320.webp 320w, assets/samples/thumb/design-invitation-480.webp 480w" sizes="(max-width:900px) 40vw, 260px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/invitation-monogram.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Invitation design">
-          <img src="assets/samples/thumb/design-tote-480.webp" srcset="assets/samples/thumb/design-tote-320.webp 320w, assets/samples/thumb/design-tote-480.webp 480w" sizes="(max-width:900px) 40vw, 260px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/tote-leaves.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Tote design">
-          <img src="assets/samples/thumb/design-hoodie-480.webp" srcset="assets/samples/thumb/design-hoodie-320.webp 320w, assets/samples/thumb/design-hoodie-480.webp 480w" sizes="(max-width:900px) 40vw, 260px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/hoodie-wave.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Hoodie design">
+          <img src="assets/showcase/invitation-monogram.jpg" alt="Invitation design">
+          <img src="assets/showcase/tote-leaves.jpg" alt="Tote design">
+          <img src="assets/showcase/hoodie-wave.jpg" alt="Hoodie design">
         </div>
       </div>
       <div class="focus-copy">
@@ -1982,35 +1996,18 @@ const wbThumbFonts=()=>{wbThemesReady().catch(()=>{});return Promise.all(WEDDING
 document.getElementById("wbLang").addEventListener("change",()=>{wbApplySampleLang();refreshWeddingPreview()});
 
 </script>
-<div class="product-modal" id="productModal">
-  <div class="product-modal-card" style="position:relative">
-    <button class="product-modal-close" id="productModalClose">×</button>
-    <div class="product-modal-img"><img id="productModalImg" alt="" decoding="async"></div>
-    <div class="product-modal-info">
-      <small id="productModalCat" style="color:var(--muted);font-size:11px;letter-spacing:.08em">PRODUCT</small>
-      <h3 id="productModalName"></h3>
-      <div class="price" id="productModalPrice"></div><div class="vat-tag" data-vat-label>excl. VAT</div>
-      <div id="productModalColors" class="color-swatches"></div>
-      <div class="product-modal-actions">
-        <button class="primary" id="productModalDesign">开始设计</button>
-        <button class="secondary" id="productModalClose2">关闭</button>
-      </div>
-    </div>
-  </div>
-</div>
-<script src="account-auth.js"></script>
-<script>
+<script src="account-auth.js">
 // Product detail modal (no page navigation)
 let currentModalProduct = null;
 function openProductModal(productId) {
-  if (!studioProductsById[productId]) return;
-  const p = homeProduct(productId);
+  const p = studioProductsById[productId];
+  if (!p) return;
   currentModalProduct = p;
   document.getElementById("productModalName").textContent = p.name || productId;
-  document.getElementById("productModalPrice").textContent = fmtEur(p.price, {from:true});
+  document.getElementById("productModalPrice").textContent = "€" + (p.price || p.base_cost_eur || 0).toFixed(2);
   document.getElementById("productModalCat").textContent = (p.category || "PRODUCT").toUpperCase();
   const img = document.getElementById("productModalImg");
-  img.src = p.image || p.thumb || "";
+  img.src = p.thumb || p.mockup_photo?.src || "";
   img.alt = p.name || productId;
   // Color swatches
   const colorsEl = document.getElementById("productModalColors");
@@ -2026,7 +2023,7 @@ function openProductModal(productId) {
         // Try color-specific image, fall back to main
         const colorKey = (btn.dataset.color || "").replace("#","").toLowerCase();
         const colorImg = `/assets/mockups/${productId}_${colorKey}.jpg`;
-        const mainImg = p.image || p.thumb || "";
+        const mainImg = p.thumb || p.mockup_photo?.src || "";
         const test = new Image();
         test.onload = () => { img.src = colorImg; };
         test.onerror = () => { img.src = mainImg; };
@@ -2048,6 +2045,21 @@ document.getElementById("productModal").onclick = e => {
 };
 </script>
 
-<div id="site-footer"></div><script src="/footer.js" defer></script>
+<div class="product-modal" id="productModal">
+  <div class="product-modal-card" style="position:relative">
+    <button class="product-modal-close" id="productModalClose">×</button>
+    <div class="product-modal-img"><img id="productModalImg" src="" alt=""></div>
+    <div class="product-modal-info">
+      <small id="productModalCat" style="color:var(--muted);font-size:11px;letter-spacing:.08em">PRODUCT</small>
+      <h3 id="productModalName"></h3>
+      <div class="price" id="productModalPrice"></div>
+      <div id="productModalColors" class="color-swatches"></div>
+      <div class="product-modal-actions">
+        <button class="primary" id="productModalDesign">开始设计</button>
+        <button class="secondary" id="productModalClose2">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
