@@ -858,8 +858,9 @@
     if (el.id === "quoteBtn") {
       if (!SERVER) { toast(t("needServer")); return; }
       try { await window.PODAuth?.require?.(); } catch { return; }
-      $("#payModal").classList.add("open"); return; }
-
+      $("#quoteTitle").textContent = t(`qt_${S.buyer}`); $("#quoteLead").textContent = t(`ql_${S.buyer}`); $("#vatField").style.display = S.buyer === "company" ? "" : "none"; $("#companyField").style.display = S.buyer === "individual" ? "none" : "";
+      const u=window.PODAuth?.user; if(u){ const f=$("#quoteForm"); if(f?.elements?.email&&!f.elements.email.value)f.elements.email.value=u.email||""; if(f?.elements?.name&&!f.elements.name.value)f.elements.name.value=u.name||""; }
+      $("#quoteModal").classList.add("open"); return; }
     if (el.id === "quoteCancel") { $("#quoteModal").classList.remove("open"); return; }
   });
   function catalogRefresh() { document.querySelectorAll("#drawerBody .add[data-toggle]").forEach(b => { const on = inSel(b.dataset.toggle); b.classList.toggle("in", on); b.textContent = on ? "✓" : "+"; }); }
@@ -907,38 +908,6 @@
   });
   window.addEventListener("resize", () => { clearTimeout(timers.rs); timers.rs = setTimeout(drawAll, 150); });
 
-
-  // Payment method selection after design
-  document.getElementById("payClose")?.addEventListener("click", () => document.getElementById("payModal").classList.remove("open"));
-  document.getElementById("payPaypal")?.addEventListener("click", () => startPayment("paypal"));
-  document.getElementById("payTwint")?.addEventListener("click", () => startPayment("twint"));
-  async function startPayment(method) {
-    const msg = document.getElementById("payMsg");
-    const form = document.getElementById("payForm");
-    const fd = new FormData(form);
-    const email = (fd.get("email") || "").trim();
-    if (!email || !email.includes("@")) { msg.textContent = "请填写有效邮箱"; return; }
-    msg.textContent = "正在创建支付…";
-    try {
-      const saved = await saveProject();
-      if (!saved) { msg.textContent = "请先保存方案"; return; }
-      const r = await fetch("/api/payments/paypal/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          method,
-          project_id: saved.id,
-          customer: { name: fd.get("name") || "", email },
-          shipping: { address1: fd.get("address1") || "", city: fd.get("city") || "", postal_code: fd.get("postal_code") || "", country: fd.get("country") || "CH" },
-          cart: finalItems().map(i => ({ product_id: i.product_id, qty: effQty(i), material_id: i.material_id }))
-        })
-      });
-      const d = await r.json();
-      if (d.approval_url) location.href = d.approval_url;
-      else msg.textContent = d.message || d.error || "支付创建失败";
-    } catch (e) { msg.textContent = e.message || "网络错误"; }
-  }
-
   // ------------------------------------------------------------------ boot
   // Shared header: language select (i18n.js) and the one market/currency selection (header.js PODMarket) drive the studio too.
   window.addEventListener("wedding-language-change", e => { const l = e.detail?.lang; if (l && l !== lang && ["zh", "en", "de"].includes(l)) { lang = l; window.PODCart?.relabel(); render(); } });
@@ -963,12 +932,10 @@
         if (qs.get("entry") === "home") {
           const preferredBuyer = (D.scenario_buyers?.[scId] || [])[0];
           if (!qs.get("buyer") && preferredBuyer) setBuyer(preferredBuyer);
-          // Only add products from the first kit/category of the current scene
-          const firstKit = sc.kits[0];
-          const ids = firstKit ? [...new Set(firstKit.items)] : [];
+          const ids = [...new Set(sc.kits.flatMap(k => k.items))];
           const keep = Object.fromEntries(S.items.map(i => [i.product_id, i]));
           S.items = ids.map(pid => keep[pid] || newItem(pid));
-          S.scenario = scId; S.kit = firstKit?.id || null; S.focus = qs.get("product") && ids.includes(qs.get("product")) ? qs.get("product") : (ids[0] || null);
+          S.scenario = scId; S.kit = null; S.focus = qs.get("product") && ids.includes(qs.get("product")) ? qs.get("product") : (ids[0] || null);
           S.view = "work"; S.tab = "design";
         } else S.view = "scenes";
       }

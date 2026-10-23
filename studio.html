@@ -285,26 +285,6 @@ body.has-sticky-buy{padding-bottom:84px}}
   <div class="spread" style="margin-top:14px"><span class="note" id="storeErr" style="color:var(--bad)"></span><button class="btn dark" id="storeBind" data-t="bind"></button></div>
   <div id="storeList" style="margin-top:16px"></div>
 </div></div>
-
-<div class="modal" id="payModal"><div class="panel">
-  <div class="spread"><h2 style="margin:0">确认并支付</h2><button class="x" id="payClose" aria-label="close">✕</button></div>
-  <p class="lead" style="margin-top:8px">设计已完成，请填写配送信息并选择支付方式。</p>
-  <form id="payForm" style="margin-top:12px">
-    <label class="field"><span>姓名</span><input class="input" name="name" autocomplete="name"></label>
-    <label class="field"><span>邮箱 *</span><input class="input" name="email" type="email" required autocomplete="email"></label>
-    <label class="field"><span>地址</span><input class="input" name="address1" autocomplete="street-address"></label>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <label class="field"><span>城市</span><input class="input" name="city" autocomplete="address-level2"></label>
-      <label class="field"><span>邮编</span><input class="input" name="postal_code" autocomplete="postal-code" value="4051"></label>
-    </div>
-    <label class="field"><span>国家</span><select class="input" name="country"><option value="CH">Switzerland</option><option value="DE">Germany</option><option value="FR">France</option><option value="GB">UK</option><option value="US">USA</option></select></label>
-  </form>
-  <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
-    <button class="btn dark" id="payPaypal" style="background:#0070ba;padding:14px">使用 PayPal 支付</button>
-    <button class="btn dark" id="payTwint" style="background:#000;padding:14px">使用 TWINT 支付</button>
-  </div>
-  <div class="note" id="payMsg" style="margin-top:12px"></div>
-</div></div>
 <div class="modal" id="quoteModal"><div class="panel">
   <h2 id="quoteTitle"></h2><p class="lead" id="quoteLead"></p>
   <form id="quoteForm">
