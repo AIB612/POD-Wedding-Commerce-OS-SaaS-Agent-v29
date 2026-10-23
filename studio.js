@@ -755,6 +755,19 @@
       for (const old of (window.PODCart?.items || []).filter(x => x.projectId && (x.projectId === prev || x.projectId === saved.id))) window.PODCart.remove(old.id);
       for (const line of lines) window.PODCart.upsert(line);
       toast(t("addedCart", { n: lines.length })); window.PODCart.open();
+      // Offer direct checkout after a short delay
+      setTimeout(() => {
+        const foot = document.getElementById("cartFoot");
+        if (foot && !document.getElementById("goPayNow")) {
+          const btn = document.createElement("button");
+          btn.id = "goPayNow";
+          btn.className = "cart-checkout";
+          btn.style.cssText = "margin-top:8px;background:#0070ba";
+          btn.textContent = "Proceed to payment →";
+          btn.onclick = () => { location.href = "checkout.html"; };
+          foot.insertBefore(btn, foot.querySelector(".pay-marks"));
+        }
+      }, 300);
     } finally { const b = $("#addCartBtn"); if (b) { b.disabled = false; b.textContent = "🛒 " + t("addToCart"); } }
   }
   async function saveProject({ silent = false } = {}) {
