@@ -1,8 +1,21 @@
 import {overview} from "./overview-service.js";
 import {pushProduct} from "../shopify/app.js";
 import {sendMessageDraft} from "../connectors/messaging.js";
-import {updateRecord, findRecord} from "../saas-store.js";import {marketingSummary,optimizationIdeas} from "./marketing-service.js";import {financeSummary} from "./finance-service.js";import {customerProfiles} from "./profile-service.js";import {discoverInfluencers} from "../connectors/social.js";import {createTask,tasks} from "./task-service.js";import {listForTenant} from "../saas-store.js";
+import {updateRecord, findRecord, listForTenant, addRecord} from "../saas-store.js";
+import { PODAgent } from "../pod-agent/index.js";import {marketingSummary,optimizationIdeas} from "./marketing-service.js";import {financeSummary} from "./finance-service.js";import {customerProfiles} from "./profile-service.js";import {discoverInfluencers} from "../connectors/social.js";import {createTask,tasks} from "./task-service.js";import {listForTenant} from "../saas-store.js";
 function intent(q=""){q=q.toLowerCase();if(/同步|sync|商品/.test(q))return "catalog";if(/广告|营销|roas|campaign/.test(q))return "marketing";if(/会话|inbox|消息|message|客服/.test(q))return "inbox";if(/达人|influencer|creator/.test(q))return "creator";if(/财务|利润|成本|margin/.test(q))return "finance";if(/客户|画像|segment|推荐/.test(q))return "customer";if(/订单|物流|shipment|order/.test(q))return "operations";if(/任务|task/.test(q))return "tasks";return "overview";}
+
+function getPODAgent(tenantId) {
+  return new PODAgent({
+    tenantId,
+    connectors: {
+      shopify: { pushProduct },
+      messaging: { sendMessage: sendMessageDraft }
+    },
+    store: { addRecord, updateRecord, listForTenant, findRecord }
+  });
+}
+
 export async function runOpsCommand({tenantId,message}){
   const type=intent(message);let data,plan=[];
   if(type==="marketing"){data={campaigns:await marketingSummary(tenantId),ideas:await optimizationIdeas(tenantId)};if(/创建|投放|自动|发布|scale|预算/.test(message)){data.task=await createTask(tenantId,{type:"campaign_publish",title:"Review and approve Agent-generated marketing action",risk:"high",payload:{request:message}})}plan=["Read unified campaign metrics","Calculate ROAS/CPA","Create approval-gated optimization actions"]}
