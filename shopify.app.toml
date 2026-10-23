@@ -1,7 +1,7 @@
 # Shopify app configuration template — "POD Wedding Studio" (Partner org: DropkingAI).
-# Fill client_id after creating the app, replace YOUR_DOMAIN with the public HTTPS host (APP_URL),
+# Fill client_id after creating the app, replace wed-swisspro.onrender.com with the public HTTPS host (APP_URL),
 # then `shopify app deploy` (Shopify CLI) to push this config. Never put the API secret here.
-client_id = "REPLACE_WITH_SHOPIFY_API_KEY"
+client_id = "4e392f4da930aabfdbfc5dcd512f5cc7"
 name = "POD Wedding Studio"
 # Embedded app with Shopify-managed install (legacy install flow OFF): Shopify loads
 #   GET application_url/?embedded=1&host=…&shop=…&hmac=…&id_token=…
@@ -9,7 +9,7 @@ name = "POD Wedding Studio"
 # no X-Frame-Options), App Bridge supplies a session token, and the server swaps it for an offline token
 # (token exchange) on first load. The /api/shopify/app/install + /callback OAuth routes stay as a fallback
 # for use_legacy_install_flow = true.
-application_url = "https://YOUR_DOMAIN"
+application_url = "https://wed-swisspro.onrender.com"
 embedded = true
 
 [build]
@@ -21,7 +21,7 @@ scopes = "write_products,read_orders,write_orders,write_fulfillments,read_fulfil
 use_legacy_install_flow = false  # Shopify-managed install + token exchange (set true to use /api/shopify/app/install)
 
 [auth]
-redirect_urls = [ "https://YOUR_DOMAIN/api/shopify/app/callback" ]
+redirect_urls = [ "https://wed-swisspro.onrender.com/api/shopify/app/callback" ]
 
 [webhooks]
 api_version = "2025-10"
@@ -31,10 +31,10 @@ api_version = "2025-10"
   # orders/* topics require approved Protected customer data access (Dev Dashboard > app > API access requests).
   [[webhooks.subscriptions]]
   topics = [ "orders/create", "app/uninstalled" ]
-  uri = "https://YOUR_DOMAIN/api/shopify/app/webhooks"
+  uri = "https://wed-swisspro.onrender.com/api/shopify/app/webhooks"
 
   # Mandatory GDPR compliance webhooks (can only be declared here, not via the API).
   [[webhooks.subscriptions]]
   compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
-  uri = "https://YOUR_DOMAIN/api/shopify/app/webhooks"
+  uri = "https://wed-swisspro.onrender.com/api/shopify/app/webhooks"
 
