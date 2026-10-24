@@ -51,7 +51,8 @@
     var slots=[].slice.call(host.querySelectorAll('[data-slot="actions"]')),extras=[].slice.call(document.querySelectorAll("[data-header-menu]"));
     var sub=variant==="studio"?'<span data-i18n="hdr.studioTagline" data-t="tagline">Scenario → design → pricing → delivery</span>':variant==="checkout"?'<span data-i18n="co.title">Checkout</span>':'<span data-i18n="hdr.tagline">Scene-based selection · customisation · tiered pricing · cart</span>';
     var back=(!isHome&&variant!=="checkout")?'<a class="btn" href="/" data-i18n="hdr.backToShop"'+(variant==="studio"?' data-t="backToShop"':'')+'>Back to wedding shop</a>':'';
-    var shopifyBtn='<button class="btn ghost topbar-shopify" id="shopifyConnectBtn" type="button" data-i18n="hdr.shopifyConnect">🔗 Connect Shopify</button>';
+    var isStudio=variant==="studio"||/\/studio(\.html)?$/.test(path);
+    var shopifyBtn=isStudio?'':'<button class="btn ghost topbar-shopify" id="shopifyConnectBtn" type="button" data-i18n="hdr.shopifyConnect">🔗 Connect Shopify</button>';
     var cartBtn=cart?'<button class="cart-btn" id="cartBtn" type="button" aria-haspopup="dialog" aria-controls="cartPanel">'+ICON_CART+'<span class="cart-btn-label" data-i18n="cart.button">Cart</span><span class="cart-badge" id="cartCount" data-n="0">0</span></button>':'';
     var h=document.createElement("header");h.className="sh topbar";h.setAttribute("data-variant",variant);
     if(isHome){

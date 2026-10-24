@@ -629,7 +629,7 @@
   function renderRoleBar() {
     const n = S.stores.length;
     $("#roleBar").innerHTML = `<label class="role"><span>${t("role")}</span><select id="roleSel" aria-label="${t("role")}">${D.buyer_types.map(b => `<option value="${b.id}" ${S.buyer === b.id ? "selected" : ""}>${esc(nm(b.name))}</option>`).join("")}</select></label>
-      <button class="btn storebtn ${S.stores.some(c => c.status === "connected") ? "bound" : ""}" data-bind="1">🔗 ${n ? t("storesN", { n }) : t("bindStore")}</button>`;
+      ${S.buyer === "merchant" ? `<button class="btn storebtn ${S.stores.some(c => c.status === "connected") ? "bound" : ""}" data-bind="1">🔗 ${n ? t("storesN", { n }) : t("bindStore")}</button>` : ""}`;
   }
   function openStoreModal() { $("#storeErr").textContent = ""; renderStoreModal(); if (S.platform === "shopify" && !$("#storeInput").value) { try { $("#storeInput").value = localStorage.getItem("pod-shopify-shop") || "dropkingdev.myshopify.com"; } catch {} } $("#storeModal").classList.add("open"); setTimeout(() => { $("#storeInput").focus(); $("#storeInput").select?.(); }, 50); }
   function renderStoreModal() {
@@ -941,13 +941,17 @@
       else S.stores.push(entry);
       if (!S.publishStore) S.publishStore = entry.id;
     };
+    // Shopify app login (this browser) => merchant role + bound shop.
+    const shopifyShop = () => { try { return localStorage.getItem("pod-shopify-shop") || ""; } catch { return ""; } };
+    const becomeMerchant = (shop, force) => { if (!shop && !force) return; if (S.buyer !== "merchant") setBuyer("merchant"); if (shop) syncShopifyStore(shop); saveDraft(); };
     if (SERVER) {
       fetch("/api/shopify/app/public-status").then(r => r.ok ? r.json() : null).then(st => {
-        const shop = st?.shops?.[0]?.shop;
-        if (shop) { syncShopifyStore(shop); renderRoleBar(); }
+        const mine = shopifyShop(), shop = st?.shops?.find(x => x.shop === mine)?.shop;
+        if (shop) { becomeMerchant(shop); render(); }
       }).catch(() => {});
     }
-    window.addEventListener("pod-shopify-connected", e => { if (e.detail?.shop) { syncShopifyStore(e.detail.shop); rerender(); } });
+    window.addEventListener("pod-shopify-connected", e => { if (e.detail?.shop) { becomeMerchant(e.detail.shop); render(); } });
+    window.addEventListener("pod-auth-changed", e => { if ((e.detail?.providers || []).includes("shopify")) { becomeMerchant(shopifyShop(), true); render(); } });
     if (SERVER) fetch("/api/storefront/fees").then(r => r.ok ? r.json() : null).then(f => { if (f) { FEES = f; if (S.view === "work") rerender(); } }).catch(() => {});
     try {
       if (qs.get("project") && SERVER) { const r = await fetch(`/api/studio/projects/${encodeURIComponent(qs.get("project"))}`); if (r.ok) { const p = await r.json(); S.projectId = p.id; restore({ ...p, all_items: p.all_items || p.items, view: "work", tab: "review" }, p.design_url); toast(t("loaded")); } }
@@ -975,6 +979,7 @@
       if (qs.get("product") && prod(qs.get("product"))) setTimeout(() => productDetail(qs.get("product")), 60);
       const keep = Date.now() - 30 * 864e5, plans = store.get(LOCAL_KEY) || [];   // local privacy: forget old plans
       if (plans.some(x => Date.parse(x.saved_at) < keep)) store.set(LOCAL_KEY, plans.filter(x => Date.parse(x.saved_at) >= keep));
+      if (qs.get("signed_in") === "shopify" || qs.get("shop_connected") || shopifyShop()) becomeMerchant(qs.get("shop_connected") || shopifyShop());
     } catch (err) { console.warn("studio restore failed", err); }
     render();
   })();
