@@ -273,18 +273,51 @@
   function renderPhoto(x, px, p, pl, ph, showArea, clean) {
     x.drawImage(ph.base, 0, 0, 100, 100);
     // Skip canvas recolour if we're already using a pre-generated color image
-    if (!ph.usedColorImg && pl.color && ph.mask && p.colors && pl.color.toLowerCase() !== p.colors[0].toLowerCase()) { // recolour the product, keep its shading
+    if (!ph.usedColorImg && pl.color && ph.mask && p.colors && pl.color.toLowerCase() !== p.colors[0].toLowerCase()) {
       const [c, cx] = layer(px); cx.fillStyle = pl.color; cx.fillRect(0, 0, 100, 100); cx.globalCompositeOperation = "destination-in"; cx.drawImage(ph.mask, 0, 0, 100, 100);
       x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = "multiply"; x.drawImage(c, 0, 0); x.restore();
     }
     const [ax, ay, aw, ah] = ph.area, r = { x: ax, y: ay, w: aw, h: ah };
     if (DESIGN) {
-      const [d, dx] = layer(px); drawDesign(dx, r, pl);                         // design in the print area
-      const [o, ox] = layer(px); ox.drawImage(d, 0, 0, 100, 100);
-      if (ph.shade) { ox.globalCompositeOperation = "multiply"; ox.drawImage(ph.shade, 0, 0, 100, 100); }   // folds / curvature
-      ox.globalCompositeOperation = "destination-in"; ox.drawImage(d, 0, 0, 100, 100);                    // keep design alpha
-      if (ph.mask) ox.drawImage(ph.mask, 0, 0, 100, 100);                                                  // stay on the product
-      x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(o, 0, 0); x.restore();
+      const [d, dx] = layer(px); 
+      drawDesign(dx, r, pl);
+      
+      // Enhanced realistic rendering
+      const [o, ox] = layer(px); 
+      ox.drawImage(d, 0, 0, 100, 100);
+      
+      // Apply shade map with softer blending for fabric texture
+      if (ph.shade) { 
+        ox.globalCompositeOperation = "multiply"; 
+        ox.globalAlpha = 0.85; // Softer shade application
+        ox.drawImage(ph.shade, 0, 0, 100, 100); 
+        ox.globalAlpha = 1;
+      }
+      
+      // Keep design within bounds
+      ox.globalCompositeOperation = "destination-in"; 
+      ox.drawImage(d, 0, 0, 100, 100);
+      if (ph.mask) ox.drawImage(ph.mask, 0, 0, 100, 100);
+      
+      // Composite with slight transparency for print-on-fabric effect
+      x.save(); 
+      x.setTransform(1, 0, 0, 1, 0, 0); 
+      x.globalAlpha = 0.97; // Slight transparency simulates ink absorption
+      x.drawImage(o, 0, 0); 
+      x.globalAlpha = 1;
+      x.restore();
+      
+      // Add subtle highlight for realism
+      const [hl, hlx] = layer(px);
+      const grad = hlx.createLinearGradient(ax, ay, ax + aw, ay + ah);
+      grad.addColorStop(0, "rgba(255,255,255,0.08)");
+      grad.addColorStop(0.3, "rgba(255,255,255,0)");
+      grad.addColorStop(1, "rgba(0,0,0,0.03)");
+      hlx.fillStyle = grad;
+      hlx.fillRect(ax, ay, aw, ah);
+      hlx.globalCompositeOperation = "destination-in";
+      hlx.drawImage(d, 0, 0, 100, 100);
+      x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(hl, 0, 0); x.restore();
     }
     if (!clean && (showArea || !DESIGN)) outline(x, r);
   }
