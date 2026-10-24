@@ -70,3 +70,15 @@
 .style-btn:hover{background:#f6f1eb}
 .ai-panel textarea{width:100%;min-height:60px;padding:10px;border:1px solid rgba(45,36,30,.15);border-radius:8px;font-size:14px;resize:vertical}
 .ai-panel .btn{margin-top:10px;width:100%}
+
+/* AI Pricing Plans */
+.ai-plans{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ai-plan{padding:12px;border:1px solid rgba(45,36,30,.15);border-radius:10px;text-align:center;cursor:pointer;transition:all .15s}
+.ai-plan:hover{border-color:#9a6d57}
+.ai-plan.selected{border-color:#28231f;background:#f8f4ef}
+.ai-plan.featured{border-color:#9a6d57;position:relative}
+.ai-plan.featured::before{content:"Popular";position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#9a6d57;color:#fff;font-size:10px;padding:2px 8px;border-radius:999px}
+.ai-plan b{display:block;font-size:13px}
+.ai-plan span{display:block;font-size:16px;font-weight:700;margin:4px 0}
+.ai-plan small{font-size:11px;color:#7c746c}
+@media(max-width:480px){.ai-plans{grid-template-columns:1fr}}

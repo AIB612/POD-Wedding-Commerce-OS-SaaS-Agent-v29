@@ -106,22 +106,75 @@
         const dh = (area[3] / 100) * ph;
         
         ctx.save();
-        // Apply slight perspective for realism
-        if (angle === 'detail') ctx.transform(1.1, 0.02, -0.02, 1.05, 0, 0);
+        // Perspective based on angle
+        if (angle === 'detail') { ctx.transform(1.08, 0.03, -0.02, 1.04, dx * 0.02, dy * 0.01); }
+        else if (angle === 'back') { ctx.transform(0.98, -0.01, 0.01, 0.98, 0, 0); }
+        
+        // Draw design with slight opacity for print effect
+        ctx.globalAlpha = 0.95;
         ctx.drawImage(design.canvas, dx, dy, dw, dh);
+        ctx.globalAlpha = 1;
         ctx.restore();
         
-        // Add subtle shadow/blend
+        // Fabric texture overlay
+        ctx.save();
         ctx.globalCompositeOperation = 'multiply';
-        ctx.fillStyle = 'rgba(0,0,0,0.03)';
+        const gradient = ctx.createLinearGradient(dx, dy, dx + dw, dy + dh);
+        gradient.addColorStop(0, 'rgba(255,255,255,0.02)');
+        gradient.addColorStop(0.5, 'rgba(0,0,0,0.04)');
+        gradient.addColorStop(1, 'rgba(255,255,255,0.01)');
+        ctx.fillStyle = gradient;
         ctx.fillRect(dx, dy, dw, dh);
-        ctx.globalCompositeOperation = 'source-over';
+        ctx.restore();
+        
+        // Edge softening
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        const edge = ctx.createLinearGradient(dx, dy, dx, dy + 8);
+        edge.addColorStop(0, 'rgba(0,0,0,0.15)');
+        edge.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = edge;
+        ctx.fillRect(dx, dy, dw, 8);
+        ctx.restore();
       }
     };
     img.src = src || '';
   }
 
+  const AI_PRICE = { single: 2.90, pack10: 19.90, unlimited: 49.90 };
+  
+  function checkAIAccess() {
+    // Check if user has AI credits or subscription
+    const credits = parseInt(localStorage.getItem("pod-ai-credits") || "0");
+    const sub = localStorage.getItem("pod-ai-sub");
+    return { credits, hasSub: sub === "unlimited", canUse: credits > 0 || sub === "unlimited" };
+  }
+  
+  function showPaywall(container) {
+    const panel = container.querySelector('#aiPanel');
+    panel.innerHTML = `
+      <h4>✨ AI Design Generator</h4>
+      <p style="font-size:13px;color:#7c746c;margin:0 0 16px">Generate unique designs with AI. Choose a plan:</p>
+      <div class="ai-plans">
+        <div class="ai-plan" data-plan="single"><b>Single</b><span>CHF ${AI_PRICE.single}</span><small>1 generation</small></div>
+        <div class="ai-plan featured" data-plan="pack10"><b>Pack of 10</b><span>CHF ${AI_PRICE.pack10}</span><small>Best value</small></div>
+        <div class="ai-plan" data-plan="unlimited"><b>Unlimited</b><span>CHF ${AI_PRICE.unlimited}/mo</span><small>No limits</small></div>
+      </div>
+      <button class="btn dark" id="aiPurchase" style="width:100%;margin-top:12px">Continue to payment</button>
+    `;
+    panel.querySelectorAll('.ai-plan').forEach(el => {
+      el.onclick = () => { panel.querySelectorAll('.ai-plan').forEach(e => e.classList.remove('selected')); el.classList.add('selected'); };
+    });
+    panel.querySelector('#aiPurchase').onclick = () => {
+      const plan = panel.querySelector('.ai-plan.selected')?.dataset.plan || 'single';
+      location.href = `/checkout.html?addon=ai_${plan}`;
+    };
+  }
+
   async function generateAI(container, product) {
+    const access = checkAIAccess();
+    if (!access.canUse) { showPaywall(container); return; }
+
     const prompt = container.querySelector('#aiPrompt').value;
     const btn = container.querySelector('#aiSubmit');
     btn.disabled = true;
