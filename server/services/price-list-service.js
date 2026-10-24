@@ -6,6 +6,7 @@ import fs from "node:fs";
 import "../../studio-pricing.js";
 import { findRecord, addRecord, updateRecord } from "../saas-store.js";
 import { HttpError } from "../http/middleware.js";
+import { fxFromChf } from "./fees-service.js";
 
 const catalog = JSON.parse(fs.readFileSync(new URL("../data/studio-catalog.json", import.meta.url), "utf8"));
 const RECORD_ID = "price_list_default";
@@ -54,7 +55,13 @@ export function getPriceList() { return cache || (cache = seedPriceList()); }
 export const priceListLoaded = () => loaded;
 
 /** Catalog view with the live price list attached (what every StudioPricing.quote call on the server uses). */
-export function withPrices(cat) { return { ...cat, price_list: getPriceList() }; }
+export function withPrices(cat) { return { ...cat, price_list: withUsd(getPriceList()) }; }
+/** USD prices = CHF list x fees fx (CHF->USD), unless an admin stored explicit USD rows. */
+export function withUsd(l) {
+  const fx = fxFromChf("USD"), products = {};
+  for (const [pid, mats] of Object.entries(l.products || {})) { products[pid] = {}; for (const [mid, row] of Object.entries(mats)) products[pid][mid] = row.USD ? row : { ...row, USD: (row.CHF || []).map(v => v == null ? null : Math.round(v * fx * 100) / 100) }; }
+  return { ...l, currencies: [...new Set([...(l.currencies || []), "USD"])], products };
+}
 
 /** Rows for the admin table. */
 export function priceRows() {
@@ -92,4 +99,4 @@ export async function updatePrices(changes, { by = "admin" } = {}) {
 }
 
 /** Public, compact list for browsers (served as /price-list.js and /api/prices). */
-export function publicPriceList() { const l = getPriceList(); return { version: l.version, tiers: l.tiers, currencies: l.currencies, products: l.products }; }
+export function publicPriceList() { const l = withUsd(getPriceList()); return { version: l.version, tiers: l.tiers, currencies: l.currencies, products: l.products }; }

@@ -7,16 +7,19 @@
      through window.PODMarket. It is kept in sync with the checkout country ("pod-checkout-v1"): CH/LI -> CH (CHF), other countries -> EU (EUR).
    - Guest order lookup lives at /account#find-order. */
 (function(){
-  var MKEY="pod-market-v1",CO_KEY="pod-checkout-v1",MARKETS={CH:{currency:"CHF",flag:"🇨🇭",label:"Switzerland"},EU:{currency:"EUR",flag:"🇪🇺",label:"European Union"}};
+  var MKEY="pod-market-v1",CO_KEY="pod-checkout-v1",MARKETS={CH:{currency:"CHF",flag:"🇨🇭",label:"Switzerland"},EU:{currency:"EUR",flag:"🇪🇺",label:"European Union"},US:{currency:"USD",flag:"🌐",label:"International"}},
+    EEA=["AT","BE","BG","CY","CZ","DE","DK","EE","ES","FI","FR","GR","HR","HU","IE","IT","LT","LU","LV","MT","NL","PL","PT","RO","SE","SI","SK","IS","NO"];
   function rd(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}}
   function wr(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-  function marketForCountry(c){return (c==="CH"||c==="LI")?"CH":"EU"}
+  function marketForCountry(c){c=String(c||"").toUpperCase();return (c==="CH"||c==="LI")?"CH":EEA.indexOf(c)>=0?"EU":"US"}
+  function langCountry(){try{var m=String(navigator.language||"").match(/-([A-Za-z]{2})$/);return m?m[1].toUpperCase():""}catch(e){return ""}}
   var Market={
     KEY:MKEY,list:MARKETS,marketForCountry:marketForCountry,
-    get:function(){var m=rd(MKEY);if(m&&MARKETS[m.id])return m.id;var co=rd(CO_KEY);return co&&co.country?marketForCountry(co.country):"CH"},
+    /** No user choice: checkout country if entered, else visitor geo (/api/geo, IP headers), else browser locale. */
+    get:function(){var co=rd(CO_KEY);if(co&&co.country)return marketForCountry(co.country);var m=rd(MKEY);if(m&&m.geo)return marketForCountry(m.geo);var lc=langCountry();return lc?marketForCountry(lc):"US"},
     currency:function(){return MARKETS[Market.get()].currency},
     /** Destination country used for cart quotes: the checkout country if it matches the market, otherwise the market's default. */
-    country:function(){var co=rd(CO_KEY)||{},m=Market.get();if(co.country&&marketForCountry(co.country)===m)return co.country;var s=rd(MKEY);return m==="CH"?"CH":(s&&s.country&&marketForCountry(s.country)==="EU"?s.country:"DE")},
+    country:function(){var co=rd(CO_KEY)||{},m=Market.get();if(co.country&&marketForCountry(co.country)===m)return co.country;var s=rd(MKEY);if(s&&s.geo&&marketForCountry(s.geo)===m)return s.geo;return m==="CH"?"CH":m==="EU"?"DE":"US"},
     set:function(id,opts){if(!MARKETS[id])return;var prev=Market.get(),s=rd(MKEY)||{};s.id=id;wr(MKEY,s);
       var co=rd(CO_KEY)||{};if(!co.country||marketForCountry(co.country)!==id){co.country=Market.country();wr(CO_KEY,co)}
       syncSelects();if(prev!==id&&!(opts&&opts.silent)){var ev=new CustomEvent("pod-market-change",{detail:{market:id,currency:MARKETS[id].currency},cancelable:true});if(window.dispatchEvent(ev))location.reload()}},
@@ -24,6 +27,9 @@
     setCountry:function(c){if(!c)return;var s=rd(MKEY)||{},id=marketForCountry(c);s.id=id;if(id==="EU")s.country=c;wr(MKEY,s);syncSelects()}
   };
   window.PODMarket=Market;
+  (function(){var s=rd(MKEY)||{};if(s.geo_at&&Date.now()-s.geo_at<864e5)return;var before=Market.get();
+    fetch("/api/geo").then(function(r){return r.ok?r.json():null}).then(function(g){if(!g||!g.country)return;var t=rd(MKEY)||{};t.geo=g.country;t.geo_at=Date.now();delete t.id;wr(MKEY,t);
+      if(Market.get()!==before){var ev=new CustomEvent("pod-market-change",{detail:{market:Market.get(),currency:Market.currency()},cancelable:true});if(window.dispatchEvent(ev))location.reload()}}).catch(function(){})})();
   function syncSelects(){var v=Market.get();document.querySelectorAll("select.sh-market").forEach(function(s){s.value=v})}
   function K(k,en){try{var w=window.WeddingI18n;if(w&&w.k){var v=w.k(k);if(v&&v!==k)return v}}catch(e){}return en}
   var css=".sh.topbar{position:sticky;top:0;z-index:60;width:100%;min-height:68px;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid rgba(45,36,30,.12);background:rgba(255,253,249,.86);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);font:14px/1.4 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;color:#28231f}"+
@@ -42,7 +48,8 @@
   ".sh-secure{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#4f775b;font-weight:600}"+
   "@media(max-width:720px){.sh.topbar{padding:8px 12px;min-height:56px;height:auto;flex-wrap:wrap;gap:8px}.sh .brand{gap:8px}.sh .logo{width:30px;height:30px;border-radius:10px;font-size:13px}.sh .brand b{font-size:12px;white-space:nowrap;letter-spacing:.03em}.sh .brand span{display:none}.sh .topbar-row2{grid-column:1/-1;grid-row:2;display:flex;gap:6px;min-width:0}.sh-market{padding:5px 24px 5px 10px;font-size:11px;background-position:right 8px center}}";
   var ICON_CART='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
-  function marketSelect(){var v=Market.get();return '<select class="sh-market" aria-label="Market and currency">'+Object.keys(MARKETS).map(function(id){var m=MARKETS[id];return '<option value="'+id+'"'+(id===v?' selected':'')+'>'+m.flag+' '+id+' · '+m.currency+'</option>'}).join("")+'</select>'}
+  function marketSelect(){return ""}
+  function _unusedMarketSelect(){var v=Market.get();return '<select class="sh-market" aria-label="Market and currency">'+Object.keys(MARKETS).map(function(id){var m=MARKETS[id];return '<option value="'+id+'"'+(id===v?' selected':'')+'>'+m.flag+' '+id+' · '+m.currency+'</option>'}).join("")+'</select>'}
   function mount(host){
     if(!host||document.querySelector("header.sh"))return;
     var st=document.createElement("style");st.id="site-header-style";st.textContent=css;document.head.appendChild(st);

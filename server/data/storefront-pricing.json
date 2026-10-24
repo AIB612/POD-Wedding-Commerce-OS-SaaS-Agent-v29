@@ -2,7 +2,7 @@
   "_comment": "Server-side price list mirrored from index.html (sceneData / materialsByType / priceInfo). self-test verifies it stays in sync.",
   "currency": "CNY",
   "storefront_currencies": {
-    "_comment": "Storefront charges CHF (CH/LI) or EUR (EU). Base prices and shipping zones stay in the internal base currency and are converted with these factors (1 base unit = rate). PLACEHOLDER rates: the shop owner must set real CHF/EUR prices or rates before going live.",
+    "_comment": "Storefront charges CHF (CH/LI), EUR (EU/EEA) or USD (everywhere else). Base (CNY) is converted with these factors (1 base unit = rate). USD = CHF rate x 1.13.",
     "CHF": {
       "rate": 0.12,
       "countries": [
@@ -39,10 +39,18 @@
         "RO",
         "SE",
         "SI",
-        "SK"
+        "SK",
+        "IS",
+        "NO"
       ]
     },
-    "default": "CHF"
+    "default": "USD",
+    "USD": {
+      "rate": 0.1356,
+      "countries": [
+        "US"
+      ]
+    }
   },
   "tiers": [
     {

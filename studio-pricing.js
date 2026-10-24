@@ -145,7 +145,8 @@
    */
   function packagingAddon(data, fees, input) {
     const market = data.markets.find(m => m.id === input.market) || data.markets[0];
-    const cur = market.currency === "CHF" ? "CHF" : "EUR", fx = market.currency === cur ? 1 : (market.fx_from_eur || 1);
+    const has = ["CHF", "EUR", "USD"].includes(market.currency) && Object.values(fees?.packaging || {}).some(p => p && p[market.currency] != null);
+    const cur = has ? market.currency : market.currency === "CHF" ? "CHF" : "EUR", fx = market.currency === cur ? 1 : (market.fx_from_eur || 1);
     const sel = input.mode === "none" ? [] : (input.packaging || []);
     const price = id => r2(Number(fees?.packaging?.[id]?.[cur] || 0) * fx);
     const lines = (input.items || []).map(it => { const prod = data.products.find(p => p.id === it.product_id) || {};

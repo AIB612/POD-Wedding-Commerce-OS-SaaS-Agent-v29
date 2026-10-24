@@ -7,7 +7,7 @@ import fs from "node:fs";
 import * as repo from "./repo.js";
 import { addRecord, updateRecord, getState } from "../saas-store.js";
 import { getPriceList } from "../services/price-list-service.js";
-import { getFees } from "../services/fees-service.js";
+import { getFees, SEED_FX } from "../services/fees-service.js";
 
 const TIMEOUT_MS = 15_000;
 export const DEFAULT_SCOPES = "write_products,read_orders,write_orders,write_fulfillments,read_fulfillments,write_merchant_managed_fulfillment_orders";
@@ -340,9 +340,11 @@ export async function onShopRedact(shop) {
 export function fxRates() {
   let env = {};
   try { env = JSON.parse(process.env.SHOPIFY_FX_RATES || "{}") || {}; } catch { console.warn("[shopify] SHOPIFY_FX_RATES is not valid JSON"); }
-  const admin = getFees()?.fx_rates || {};
+  env = Object.fromEntries(Object.entries(env || {}).filter(([k, v]) => /^[A-Z]{3}$/.test(k) && Number(v) > 0));
+  // Precedence: admin-edited rate > SHOPIFY_FX_RATES env > seeded default (SEED_FX, kept in fees so a redeploy never loses EUR/USD).
+  const admin = Object.fromEntries(Object.entries(getFees()?.fx_rates || {}).filter(([k, v]) => !(k in env) || Number(v) !== SEED_FX[k]));
   const out = { CHF: 1 };
-  for (const [k, v] of Object.entries({ ...env, ...admin })) if (/^[A-Z]{3}$/.test(k) && Number(v) > 0) out[k] = Number(v);
+  for (const [k, v] of Object.entries({ ...SEED_FX, ...env, ...admin })) if (/^[A-Z]{3}$/.test(k) && Number(v) > 0) out[k] = Number(v);
   return out;
 }
 export function fxFor(currency) { const r = fxRates()[String(currency || "").toUpperCase()]; return r ? { currency: String(currency).toUpperCase(), rate: r } : null; }

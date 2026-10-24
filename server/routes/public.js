@@ -15,6 +15,7 @@ import { protocolRegistry, ucpProfile, a2aAgentCard, acpFeed } from "../protocol
 import { createStorefrontCheckout, createTwintCheckout, twintOrderStatus, paymentMethods, handlePayPalReturn, publicOrderStatus, quoteStorefront, orderConfirmation, orderToken, handlePayPalCancel, lookupOrder } from "../services/checkout-service.js";
 import { publicPriceList } from "../services/price-list-service.js";
 import { publicFees } from "../services/fees-service.js";
+import { currencyForCountry } from "../services/pricing-service.js";
 import { publicProof, approvePublicProof, requestPublicProofChanges } from "../services/proof-service.js";
 import { createPayPalOrder, capturePayPalOrder } from "../connectors/paypal.js";
 import { submitRsvp } from "../services/rsvp-service.js";
@@ -104,6 +105,15 @@ export function publicRouter({ root, generatedDir }) {
     await handlePayPalCancel({ orderId: req.query.order, token: req.query.t });
     res.redirect(`/checkout.html?payment=cancelled`);
   }));
+  // Visitor country for the automatic currency (CH/LI CHF, EU/EEA EUR, else USD): CDN geo headers, then Accept-Language region.
+  router.get("/api/geo", (req, res) => {
+    res.setHeader("Cache-Control", "private, no-store");
+    const hdr = ["cf-ipcountry", "x-vercel-ip-country", "x-country-code", "x-appengine-country", "cloudfront-viewer-country", "fly-client-country"].map(h => String(req.headers[h] || "").toUpperCase()).find(v => /^[A-Z]{2}$/.test(v) && v !== "XX" && v !== "T1");
+    const al = String(req.headers["accept-language"] || "").match(/[a-z]{2,3}-([A-Z]{2})/i);
+    const country = hdr || (al ? al[1].toUpperCase() : "");
+    const currency = currencyForCountry(country);
+    res.json({ country: country || null, source: hdr ? "ip" : al ? "accept-language" : "default", currency });
+  });
   router.get("/api/storefront/fees", (req, res) => { res.setHeader("Cache-Control", "no-cache"); res.json(publicFees()); });
   const statusLimit = rateLimit({ bucket: "status", windowMs: 60_000, max: 60 });
   // Order confirmation (payment-success.html): protected by the signed token from the return URL.

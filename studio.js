@@ -403,7 +403,7 @@
     const n = S.items.length, v = S.view;
     const head = `<div class="modebar"><div><div class="eyebrow">${t("studioName")} · ${esc(nm(buyerDef().name))}</div><h2 style="margin:2px 0 0">${t("nav_" + v)}</h2>${v === "scenes" ? `<div class="note">${t("pickScene")}</div>` : ""}</div>
       <span class="row">${v === "all" ? `<input class="input" id="search" style="width:220px" placeholder="${t("search")}" value="${esc(S.search)}">` : ""}
-      <select class="input" id="marketSel" style="width:auto;padding:6px 10px" aria-label="${t("market")}">${D.markets.map(m => `<option value="${m.id}" ${S.market === m.id ? "selected" : ""}>${esc(nm(m.name))} · ${m.currency}</option>`).join("")}</select></span></div>`;
+      <span class="note" aria-label="${t("market")}">${esc(nm(market().name))} · ${market().currency}</span></span></div>`;
     const centre = v === "scenes" ? vScenes() : v === "all" ? vAll() : vStudio();
     const summary = `<div class="panel" id="summary">${n ? vSummary() : `<div class="eyebrow">${esc(nm(buyerDef().name))}</div><p class="note" style="margin-top:8px">${esc(nm(buyerDef().pitch))}</p><p class="note">${t("emptyHint")}</p>`}${n ? vFlowAction() : ""}</div>`;
     const right = v === "scenes" ? vKitsPanel() : summary;
@@ -717,7 +717,7 @@
   function saveDraft() { const s = snapshot(); s.view = S.view; s.tab = S.tab; store.set(DRAFT_KEY, s); }
   function restore(s, designUrl) {
     S.buyer = D.buyer_types.some(b => b.id === s.buyer_type) ? s.buyer_type : "individual"; S.scenario = s.scenario_id || null; S.kit = s.kit_id || null;
-    S.market = s.market || "CH"; if (window.PODMarket && S.market !== "US") S.market = PODMarket.get(); S.margin = s.margin || 0.4; S.autoExclude = s.auto_exclude !== false; S.packaging = s.packaging || []; S.packagingMode = s.packaging_mode === "none" ? "none" : "custom"; S.packagingRef = s.packaging_reference?.data_url ? s.packaging_reference : null; S.brand = s.brand || { name: "", message: "" };
+    S.market = s.market || "CH"; if (window.PODMarket) S.market = PODMarket.get(); S.margin = s.margin || 0.4; S.autoExclude = s.auto_exclude !== false; S.packaging = s.packaging || []; S.packagingMode = s.packaging_mode === "none" ? "none" : "custom"; S.packagingRef = s.packaging_reference?.data_url ? s.packaging_reference : null; S.brand = s.brand || { name: "", message: "" };
     const f = s.fulfillment || {}; S.ship = { mode: f.mode || (S.buyer === "merchant" ? "dropship" : "bulk"), address_country: f.address_country || "CH", deadline: f.deadline || "", sample_country: f.sample_country || "CH", recipients: f.recipients || [], recipients_text: s.recipients_text || (f.recipients || []).map(r => [r.name, r.country, r.size].filter(Boolean).join(", ")).join("\n") };
     S.items = (s.all_items || s.items || []).filter(i => prod(i.product_id)).map(i => ({ ...newItem(i.product_id), ...i, placement: { mode: null, scale: 1, dx: 0, dy: 0, color: null, ...(i.placement || {}) } }));
     S.browse = s.browse || S.browse;

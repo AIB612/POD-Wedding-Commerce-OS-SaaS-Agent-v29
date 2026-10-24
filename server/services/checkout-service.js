@@ -29,7 +29,7 @@ const STOREFRONT_MARGIN = Number(process.env.STOREFRONT_MARGIN || 0.4); // same 
 function quoteStudioLines(raws, cur) {
   if (!raws.length) return [];
   const cat = studioCatalog(), byId = new Map((cat.products || []).map(p => [p.id, p]));
-  const market = cur === "CHF" ? "CH" : "EU";
+  const market = cur === "CHF" ? "CH" : cur === "USD" ? "US" : "EU";
   const items = raws.map(r => {
     const qty = Number(r.quantity);
     if (!Number.isInteger(qty) || qty < 1 || qty > 10000) throw new HttpError(400, "invalid_quantity", `Invalid quantity for ${r.product_id}`);
@@ -325,7 +325,7 @@ async function saveDraftOrder({ tenantId, user, email, address, quote, provider,
 /** Which payment methods the storefront may offer right now (no secrets). */
 export async function paymentMethods(tenantId) {
   return {
-    paypal: { configured: paypalConfigured(await paypalCreds(tenantId)), currencies: ["CHF", "EUR"] },
+    paypal: { configured: paypalConfigured(await paypalCreds(tenantId)), currencies: ["CHF", "EUR", "USD"] },
     twint: { configured: twintConfigured(), currencies: ["CHF"], ...twintStatus() }
   };
 }

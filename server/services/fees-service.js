@@ -11,7 +11,9 @@ const seedZones = JSON.parse(fs.readFileSync(new URL("../data/saas-seed.json", i
 const pricing = JSON.parse(fs.readFileSync(new URL("../data/storefront-pricing.json", import.meta.url), "utf8"));
 const catalog = JSON.parse(fs.readFileSync(new URL("../data/studio-catalog.json", import.meta.url), "utf8"));
 const RECORD_ID = "fees_default";
-export const FEE_CURRENCIES = ["CHF", "EUR"];
+export const FEE_CURRENCIES = ["CHF", "EUR", "USD"];
+/** Default FX (units per 1 CHF), always present after a redeploy; admin edits win. */
+export const SEED_FX = { EUR: 0.95, USD: 1.13, HKD: 8.8, GBP: 0.88 };
 const METHODS = ["standard", "express"];
 const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
 const r4 = n => Math.round((Number(n) || 0) * 10000) / 10000;
@@ -32,13 +34,15 @@ export function seedFees() {
   }
   tax.zone_ch = 0.081;
   const packaging = Object.fromEntries((catalog.packaging || []).map(p => [p.id, { name: p.name?.en || p.id, CHF: 0, EUR: 0 }]));
-  return { id: RECORD_ID, version: 1, prices_include_vat: false, tax: { zones: tax, countries: {} }, shipping, packaging, default_production_days: 3, updated_at: null, updated_by: "seed" };
+  return { id: RECORD_ID, version: 1, fx_rates: { ...SEED_FX }, prices_include_vat: false, tax: { zones: tax, countries: {} }, shipping, packaging, default_production_days: 3, updated_at: null, updated_by: "seed" };
 }
 
 let cache = null;
 export async function initFees() {
   const stored = await findRecord("fee_settings", RECORD_ID);
-  if (stored) { const seed = seedFees(); for (const k of ["tax", "shipping", "packaging"]) stored[k] = { ...seed[k], ...(stored[k] || {}) }; cache = stored; }
+  if (stored) { const seed = seedFees(); for (const k of ["tax", "shipping", "packaging"]) stored[k] = { ...seed[k], ...(stored[k] || {}) };
+    for (const [z, ms] of Object.entries(stored.shipping)) for (const m of METHODS) if (ms?.[m] && !ms[m].USD && seed.shipping[z]?.[m]?.USD) ms[m].USD = seed.shipping[z][m].USD;
+    stored.fx_rates = { ...SEED_FX, ...(stored.fx_rates || {}) }; cache = stored; }
   else { cache = seedFees(); await addRecord("fee_settings", cache); }
   return cache;
 }
@@ -59,14 +63,16 @@ export function shippingAmount(zoneId, method, currency, { weight_kg, subtotal }
   return { amount: r2(Number(z.base) + weight_kg * Number(z.per_kg || 0)), free: false };
 }
 export function carrierDays(zoneId, method) { return getFees().shipping?.[zoneId]?.[method]?.days || (method === "express" ? [3, 6] : [6, 12]); }
-export function packagingPrice(id, currency) { return Number(getFees().packaging?.[id]?.[currency] || 0); }
+export const fxFromChf = c => c === "CHF" ? 1 : Number(getFees().fx_rates?.[c] || SEED_FX[c] || 0);
+/** Packaging price; USD falls back to CHF x fx when no USD price is set. */
+export function packagingPrice(id, currency) { const p = getFees().packaging?.[id] || {}; if (p[currency] != null) return Number(p[currency] || 0); return currency === "USD" ? r2(Number(p.CHF || 0) * fxFromChf("USD")) : 0; }
 export function pricesIncludeVat() { return getFees().prices_include_vat === true; }
 
 export function publicFees() {
   const f = getFees(), transit = {};
   for (const [z, ms] of Object.entries(f.shipping || {})) { transit[z] = {}; for (const [m, v] of Object.entries(ms || {})) if (Array.isArray(v?.days)) transit[z][m] = v.days; }
   // transit / production_days feed the public "Shipping & production times" page (no prices, no internal data).
-  return { version: f.version, prices_include_vat: !!f.prices_include_vat, packaging: f.packaging, production_days: Number(f.default_production_days ?? 3), transit_days: transit };
+  return { version: f.version, prices_include_vat: !!f.prices_include_vat, packaging: Object.fromEntries(Object.entries(f.packaging || {}).map(([id, p]) => [id, { ...p, USD: packagingPrice(id, "USD") }])), production_days: Number(f.default_production_days ?? 3), transit_days: transit };
 }
 
 const num = (v, min, max, label) => { const n = Number(v); if (!Number.isFinite(n) || n < min || n > max) throw new HttpError(400, "invalid_fee", `Invalid ${label}`); return n; };

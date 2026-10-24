@@ -326,7 +326,7 @@ await test("currency: stored from shop, FX conversion, refuse push without rate"
   const v = shopify.buildProductSetInput(product, { priceList, appUrl: "", fx: { currency: "HKD", rate: 9.6 } });
   assert.equal(v.variants[0].price, "143.04");
   process.env.SHOPIFY_FX_RATES = '{"HKD":9.6,"bad":1,"EUR":"x"}';
-  assert.deepEqual(shopify.fxRates(), { CHF: 1, HKD: 9.6 });
+  assert.deepEqual(shopify.fxRates(), { CHF: 1, EUR: 0.95, USD: 1.13, HKD: 9.6, GBP: 0.88 });
   mock.currency = "HKD";
   const r = await shopify.pushProduct(SHOP, "tee");
   assert.equal(r.currency, "HKD"); assert.equal(r.fx_rate, 9.6);
@@ -336,7 +336,8 @@ await test("currency: stored from shop, FX conversion, refuse push without rate"
   assert.equal(sent, (Math.round(chf * 9.6 * 100) / 100).toFixed(2));
   const st = await shopify.embeddedState(SHOP); assert.equal(st.currency, "HKD"); assert.deepEqual(st.fx, { currency: "HKD", rate: 9.6 });
   delete process.env.SHOPIFY_FX_RATES;
-  await assert.rejects(shopify.pushProduct(SHOP, "tee"), /no_fx_rate:HKD/);
+  assert.equal(shopify.fxRates().HKD, 8.8); // seeded default survives without env
+  mock.currency = "JPY"; await assert.rejects(shopify.pushProduct(SHOP, "tee"), /no_fx_rate:JPY/); mock.currency = "HKD";
   const { updateFees, getFees } = await import("./services/fees-service.js");
   await updateFees({ fx_rates: { HKD: 9.5 } });
   assert.equal(getFees().fx_rates.HKD, 9.5);
