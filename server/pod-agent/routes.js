@@ -26,5 +26,20 @@ export function podAgentRouter({ store = null, connectors = {} } = {}) {
     res.json(result);
   });
 
+  
+  r.post("/generate-design", async (req, res) => {
+    const { prompt, product_type = "general" } = req.body || {};
+    if (!prompt) return res.status(400).json({ error: "prompt_required" });
+    const system = `Generate a print-ready design for ${product_type}. Style: professional, high-resolution, suitable for print-on-demand. Transparent background preferred.`;
+    const result = await callAIAuto({ system, user: prompt });
+    // In production, this would call an image generation API (DALL-E, Midjourney, etc.)
+    // For now, return a placeholder or the text description
+    res.json({ 
+      description: result.text,
+      note: "Connect an image generation API (DALL-E, Stability AI) for actual image output",
+      prompt_used: prompt
+    });
+  });
+
   return r;
 }
