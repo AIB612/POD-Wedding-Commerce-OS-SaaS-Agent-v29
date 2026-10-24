@@ -41,9 +41,6 @@
   ".sh .sh-slot{display:inline-flex;align-items:center;gap:8px}"+
   ".sh .topbar-row2{display:contents}"+
   ".sh .btn{border:1px solid rgba(45,36,30,.12);background:#fff;border-radius:999px;padding:9px 13px;cursor:pointer;font-size:12px;color:#28231f;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}"+
-  ".sh .topbar-shopify{border-color:rgba(90,49,244,.28);background:#f8f5ff;color:#3d1ec9;font-weight:600}"+
-  ".sh .topbar-shopify:hover{background:#efe9ff}"+
-  ".sh .topbar-shopify.connected{border-color:rgba(47,133,90,.3);background:#f0fff4;color:#22543d}"+
   ".sh-market{appearance:none;-webkit-appearance:none;border:1px solid rgba(45,36,30,.14);background:#fff url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M1 1l4 4 4-4%27 stroke=%27%2328231f%27 fill=%27none%27 stroke-width=%271.4%27/%3E%3C/svg%3E\") no-repeat right 11px center;border-radius:999px;padding:7px 28px 7px 12px;font:inherit;font-size:12px;color:#28231f;cursor:pointer}"+
   ".sh-secure{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#4f775b;font-weight:600}"+
   "@media(max-width:720px){.sh.topbar{padding:8px 12px;min-height:56px;height:auto;flex-wrap:wrap;gap:8px}.sh .brand{gap:8px}.sh .logo{width:30px;height:30px;border-radius:10px;font-size:13px}.sh .brand b{font-size:12px;white-space:nowrap;letter-spacing:.03em}.sh .brand span{display:none}.sh .topbar-row2{grid-column:1/-1;grid-row:2;display:flex;gap:6px;min-width:0}.sh-market{padding:5px 24px 5px 10px;font-size:11px;background-position:right 8px center}}";
@@ -58,18 +55,16 @@
     var slots=[].slice.call(host.querySelectorAll('[data-slot="actions"]')),extras=[].slice.call(document.querySelectorAll("[data-header-menu]"));
     var sub=variant==="studio"?'<span data-i18n="hdr.studioTagline" data-t="tagline">Scenario → design → pricing → delivery</span>':variant==="checkout"?'<span data-i18n="co.title">Checkout</span>':'<span data-i18n="hdr.tagline">Scene-based selection · customisation · tiered pricing · cart</span>';
     var back=(!isHome&&variant!=="checkout")?'<a class="btn" href="/" data-i18n="hdr.backToShop"'+(variant==="studio"?' data-t="backToShop"':'')+'>Back to wedding shop</a>':'';
-    var isStudio=variant==="studio"||/\/studio(\.html)?$/.test(path);
-    var shopifyBtn=isStudio?'':'<button class="btn ghost topbar-shopify" id="shopifyConnectBtn" type="button" data-i18n="hdr.shopifyConnect">🔗 Connect Shopify</button>';
     var cartBtn=cart?'<button class="cart-btn" id="cartBtn" type="button" aria-haspopup="dialog" aria-controls="cartPanel">'+ICON_CART+'<span class="cart-btn-label" data-i18n="cart.button">Cart</span><span class="cart-badge" id="cartCount" data-n="0">0</span></button>':'';
     var h=document.createElement("header");h.className="sh topbar";h.setAttribute("data-variant",variant);
     if(isHome){
       h.innerHTML='<a class="brand sh-brand" href="/" aria-label="POD Wedding Studio — home"><div class="logo sh-logo">P</div><div><b class="sh-name">POD Wedding Studio</b>'+sub+'</div></a>'+
-        '<div class="actions sh-act"><div class="lang-switch" data-lang-switch></div><div class="topbar-row2 sh-slot">'+marketSelect()+shopifyBtn+'</div>'+cartBtn+'</div>';
+        '<div class="actions sh-act"><div class="lang-switch" data-lang-switch></div><div class="topbar-row2 sh-slot">'+marketSelect()+'</div>'+cartBtn+'</div>';
     }else{
       h.innerHTML='<a class="brand sh-brand" href="/" aria-label="POD Wedding Studio — home"><div class="logo sh-logo">P</div><div><b class="sh-name">POD Wedding Studio</b>'+sub+'</div></a>'+
         '<div class="actions sh-act">'+
         (variant==="checkout"?'<span class="sh-secure"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i18n="co.secure">Secure checkout</span></span>':'<div class="sh-slot"></div>')+
-        marketSelect()+'<div class="lang-switch" data-lang-switch></div>'+back+shopifyBtn+
+        marketSelect()+'<div class="lang-switch" data-lang-switch></div>'+back+
         (variant==="checkout"?'<div class="sh-slot"></div>':'')+cartBtn+'</div>';
     }
     host.parentNode.replaceChild(h,host);
@@ -77,29 +72,6 @@
     slots.forEach(function(s){slot.appendChild(s)});
     extras.forEach(function(e){e.classList.remove("sh-mi");slot.appendChild(e)});
     h.querySelectorAll("select.sh-market").forEach(function(s){s.addEventListener("change",function(){Market.set(s.value)})});
-    var shBtn=h.querySelector("#shopifyConnectBtn");
-    function setShopifyConnected(shop){
-      if(!shBtn||!shop)return;
-      shBtn.removeAttribute("data-i18n");
-      shBtn.classList.add("connected");
-      shBtn.textContent="🟢 Shopify: "+String(shop).replace(/\.myshopify\.com$/,"");
-      shBtn.title=shop;
-    }
-    if(shBtn){
-      shBtn.addEventListener("click",function(){
-        var saved="";
-        try{saved=localStorage.getItem("pod-shopify-shop")||""}catch(e){}
-        if(window.PODAuth&&window.PODAuth.openShopify)window.PODAuth.openShopify(saved||"dropkingdev.myshopify.com");
-        else location.href="/api/shopify/app/login?shop="+encodeURIComponent(saved||"dropkingdev.myshopify.com")+"&return_to="+encodeURIComponent(location.pathname+location.search);
-      });
-      if(/^https?:$/.test(location.protocol)){
-        fetch("/api/shopify/app/public-status").then(function(r){return r.ok?r.json():null}).then(function(d){
-          var conn=d&&d.shops&&d.shops[0]&&d.shops[0].shop;
-          if(conn){try{localStorage.setItem("pod-shopify-shop",conn)}catch(e){}setShopifyConnected(conn)}
-        }).catch(function(){});
-      }
-      window.addEventListener("pod-shopify-connected",function(e){if(e&&e.detail&&e.detail.shop)setShopifyConnected(e.detail.shop)});
-    }
     var relabel=function(){h.querySelectorAll("[data-i18n]").forEach(function(el){var k=el.getAttribute("data-i18n");if(k.indexOf("hdr.")===0||k==="co.secure"||k==="co.title"||k==="cart.button")el.textContent=K(k,el.textContent)})};
     window.addEventListener("wedding-language-change",relabel);document.addEventListener("DOMContentLoaded",function(){relabel();if(window.WeddingI18n&&WeddingI18n.mountSwitches)WeddingI18n.mountSwitches()});
   }
