@@ -26,6 +26,14 @@
    * Every amount is in the market currency. Lines whose price would exceed the market ceiling are
    * returned with reachable:false so the UI can grey them out (the "profit slider" filter).
    */
+  
+  /** Bundle discount: 5% off for 3+ items in same category */
+  function bundleDiscount(items) {
+    if (!items || items.length < 3) return 0;
+    const cats = new Set(items.map(i => D.products.find(p => p.id === i.product_id)?.category));
+    return cats.size === 1 ? 0.05 : 0.03;
+  }
+
   function quote(data, input) {
     const market = data.markets.find(m => m.id === input.market) || data.markets[0];
     const margin = clamp(Number(input.margin) || 0.4, 0.05, 0.8);
