@@ -1,3 +1,4 @@
+var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation", UV: "UV print", laser: "Laser engraving", embroidery: "Embroidery", offset: "Offset print", digital: "Digital print" };
 /* POD Studio v28 — V23 studio UI/components preserved; v24 focused catalog retained; v27 right-rail flow preserved; v28 makes Packaging/Review actionable.
  * Packaging: optional reference image + explicit "no custom packaging" choice.
  * Review: every unfinished check explains what is missing and jumps directly to the place where it can be fixed.
