@@ -262,6 +262,34 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   /** Prevent click-through on mobile overlays */
   
   /** Enhanced touch event handling for mobile */
+  
+  /** Comprehensive click-through protection */
+  function initClickGuard() {
+    const guard = document.createElement("div");
+    guard.id = "click-guard";
+    guard.style.cssText = "position:fixed;inset:0;z-index:9999;pointer-events:none;display:none";
+    document.body.appendChild(guard);
+    
+    // Block clicks during transitions
+    window.blockClicks = (ms = 300) => {
+      guard.style.display = "block";
+      guard.style.pointerEvents = "auto";
+      setTimeout(() => { guard.style.display = "none"; guard.style.pointerEvents = "none"; }, ms);
+    };
+    
+    // Auto-block after modal close
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(m => {
+        m.removedNodes.forEach(n => {
+          if (n.classList?.contains("modal") || n.classList?.contains("overlay")) {
+            window.blockClicks(200);
+          }
+        });
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
   function initMobileTouch() {
     if (!isMobile()) return;
     // Fast click for buttons
