@@ -194,7 +194,7 @@
         "area": [
           31.5,
           26.6,
-          37,
+          37.0,
           49.3
         ],
         "side": "assets/mockups/tee-side.jpg",
@@ -384,9 +384,9 @@
         "shade": "assets/mockups/polo_emb-shade.jpg",
         "area": [
           56.5,
-          30,
-          11,
-          11
+          30.0,
+          11.0,
+          11.0
         ],
         "views": {
           "front": "assets/mockups/polo_emb.jpg",
@@ -467,17 +467,17 @@
         "One size"
       ],
       "mockup_photo": {
-        "src": "assets/mockups/cap_emb.jpg",
-        "mask": "assets/mockups/cap_emb-mask.png",
-        "shade": "assets/mockups/cap_emb-shade.jpg",
+        "src": "assets/mockups/cap_emb-f2.jpg",
+        "mask": "assets/mockups/cap_emb-f2-mask.png",
+        "shade": "assets/mockups/cap_emb-f2-shade.jpg",
         "area": [
-          34.8,
-          35.3,
-          30.4,
-          15.2
+          32.0,
+          33.0,
+          36.0,
+          18.0
         ],
         "views": {
-          "front": "assets/mockups/cap_emb.jpg",
+          "front": "assets/mockups/cap_emb-f2.jpg",
           "back": "assets/mockups/cap-back.jpg",
           "side": "assets/mockups/cap-side.jpg"
         }
@@ -562,10 +562,10 @@
         "mask": "assets/mockups/fleece-mask.png",
         "shade": "assets/mockups/fleece-shade.jpg",
         "area": [
-          56,
-          30,
-          11,
-          11
+          56.0,
+          30.0,
+          11.0,
+          11.0
         ],
         "views": {
           "front": "assets/mockups/fleece.jpg",
@@ -747,7 +747,7 @@
           43.8,
           14.4,
           12.1,
-          20
+          20.0
         ],
         "views": {
           "front": "assets/mockups/leggings.jpg",
@@ -1171,8 +1171,8 @@
         "mask": "assets/mockups/pet_bed-mask.png",
         "shade": "assets/mockups/pet_bed-shade.jpg",
         "area": [
-          30,
-          40,
+          30.0,
+          40.0,
           39.8,
           29.9
         ],
@@ -1245,7 +1245,7 @@
         "area": [
           37.9,
           59.1,
-          24,
+          24.0,
           16.5
         ],
         "views": {
@@ -1317,7 +1317,7 @@
         "mask": "assets/mockups/mug-mask.png",
         "shade": "assets/mockups/mug-shade.jpg",
         "area": [
-          32,
+          32.0,
           42.5,
           29.9,
           29.3
@@ -1386,7 +1386,7 @@
         "mask": "assets/mockups/magic_mug-mask.png",
         "shade": "assets/mockups/magic_mug-shade.jpg",
         "area": [
-          32,
+          32.0,
           42.5,
           29.9,
           29.3
@@ -1728,7 +1728,7 @@
         "area": [
           42.5,
           51.3,
-          15,
+          15.0,
           15.4
         ],
         "side": "assets/mockups/thermos-side.jpg",
@@ -2156,7 +2156,7 @@
         "shade": "assets/mockups/tapestry-shade.jpg",
         "area": [
           22.7,
-          30,
+          30.0,
           54.8,
           47.5
         ],
@@ -2278,17 +2278,17 @@
       "weight_g": 2600,
       "technique": "dye-sublimation",
       "mockup_photo": {
-        "src": "assets/mockups/rug.jpg",
-        "mask": "assets/mockups/rug-mask.png",
-        "shade": "assets/mockups/rug-shade.jpg",
+        "src": "assets/mockups/rug-f2.jpg",
+        "mask": "assets/mockups/rug-f2-mask.png",
+        "shade": "assets/mockups/rug-f2-shade.jpg",
         "area": [
-          20.1,
-          30,
-          59.8,
-          39.8
+          16.8,
+          29.0,
+          67.3,
+          44.9
         ],
         "views": {
-          "front": "assets/mockups/rug.jpg",
+          "front": "assets/mockups/rug-f2.jpg",
           "back": "assets/mockups/rug-back.jpg",
           "side": "assets/mockups/rug-side.jpg"
         }
@@ -2646,7 +2646,7 @@
         "area": [
           17.5,
           31.5,
-          51,
+          51.0,
           36.5
         ],
         "views": {
@@ -2806,17 +2806,17 @@
       "weight_g": 10,
       "technique": "digital",
       "mockup_photo": {
-        "src": "assets/mockups/tattoo.jpg",
-        "mask": "assets/mockups/tattoo-mask.png",
-        "shade": "assets/mockups/tattoo-shade.jpg",
+        "src": "assets/mockups/tattoo-f2.jpg",
+        "mask": "assets/mockups/tattoo-f2-mask.png",
+        "shade": "assets/mockups/tattoo-f2-shade.jpg",
         "area": [
-          38.8,
-          38.8,
-          22.7,
-          22.7
+          26.2,
+          24.2,
+          50.2,
+          50.2
         ],
         "views": {
-          "front": "assets/mockups/tattoo.jpg",
+          "front": "assets/mockups/tattoo-f2.jpg",
           "back": "assets/mockups/tattoo-back.jpg",
           "side": "assets/mockups/tattoo-side.jpg"
         }
@@ -2891,17 +2891,17 @@
       "weight_g": 40,
       "technique": "digital",
       "mockup_photo": {
-        "src": "assets/mockups/greeting.jpg",
-        "mask": "assets/mockups/greeting-mask.png",
-        "shade": "assets/mockups/greeting-shade.jpg",
+        "src": "assets/mockups/greeting-f2.jpg",
+        "mask": "assets/mockups/greeting-f2-mask.png",
+        "shade": "assets/mockups/greeting-f2-shade.jpg",
         "area": [
-          25.3,
-          34.1,
-          49.1,
-          34.8
+          19.0,
+          28.5,
+          61.6,
+          43.8
         ],
         "views": {
-          "front": "assets/mockups/greeting.jpg",
+          "front": "assets/mockups/greeting-f2.jpg",
           "back": "assets/mockups/card-back.jpg",
           "side": "assets/mockups/greeting-side.jpg"
         }
@@ -2976,17 +2976,17 @@
       "weight_g": 15,
       "technique": "digital",
       "mockup_photo": {
-        "src": "assets/mockups/postcard.jpg",
-        "mask": "assets/mockups/postcard-mask.png",
-        "shade": "assets/mockups/postcard-shade.jpg",
+        "src": "assets/mockups/postcard-f2.jpg",
+        "mask": "assets/mockups/postcard-f2-mask.png",
+        "shade": "assets/mockups/postcard-f2-shade.jpg",
         "area": [
-          26.2,
-          34.3,
-          47.1,
-          33.4
+          18.8,
+          27.3,
+          62.9,
+          44.7
         ],
         "views": {
-          "front": "assets/mockups/postcard.jpg",
+          "front": "assets/mockups/postcard-f2.jpg",
           "back": "assets/mockups/postcard-back.jpg",
           "side": "assets/mockups/postcard-side.jpg"
         }
@@ -3062,18 +3062,18 @@
       "weight_g": 260,
       "technique": "digital",
       "mockup_photo": {
-        "src": "assets/mockups/notebook.jpg",
-        "mask": "assets/mockups/notebook-mask.png",
-        "shade": "assets/mockups/notebook-shade.jpg",
+        "src": "assets/mockups/notebook-f2.jpg",
+        "mask": "assets/mockups/notebook-f2-mask.png",
+        "shade": "assets/mockups/notebook-f2-shade.jpg",
         "area": [
-          37.8,
-          28.4,
-          30.1,
-          42.9
+          29.5,
+          21.4,
+          40.5,
+          57.4
         ],
         "back": "assets/mockups/notebook-back.jpg",
         "views": {
-          "front": "assets/mockups/notebook.jpg",
+          "front": "assets/mockups/notebook-f2.jpg",
           "back": "assets/mockups/notebook-back.jpg",
           "side": "assets/mockups/notebook-side.jpg"
         }
@@ -3381,7 +3381,7 @@
           36.8,
           23.4,
           26.4,
-          53
+          53.0
         ],
         "views": {
           "front": "assets/mockups/phone_case.jpg",
@@ -3419,17 +3419,17 @@
       "weight_g": 700,
       "technique": "UV",
       "mockup_photo": {
-        "src": "assets/mockups/mousepad_xl.jpg",
-        "mask": "assets/mockups/mousepad_xl-mask.png",
-        "shade": "assets/mockups/mousepad_xl-shade.jpg",
+        "src": "assets/mockups/mousepad_xl-f2.jpg",
+        "mask": "assets/mockups/mousepad_xl-f2-mask.png",
+        "shade": "assets/mockups/mousepad_xl-f2-shade.jpg",
         "area": [
-          14.1,
-          34.2,
-          71.3,
-          31.7
+          12.2,
+          33.3,
+          76.1,
+          33.9
         ],
         "views": {
-          "front": "assets/mockups/mousepad_xl.jpg",
+          "front": "assets/mockups/mousepad_xl-f2.jpg",
           "back": "assets/mockups/mousepad_xl-back.jpg",
           "side": "assets/mockups/mousepad-side.jpg"
         }
@@ -3549,17 +3549,17 @@
       "weight_g": 30,
       "technique": "sublimation",
       "mockup_photo": {
-        "src": "assets/mockups/lanyard.jpg",
-        "mask": "assets/mockups/lanyard-mask.png",
-        "shade": "assets/mockups/lanyard-shade.jpg",
+        "src": "assets/mockups/lanyard-f2.jpg",
+        "mask": "assets/mockups/lanyard-f2-mask.png",
+        "shade": "assets/mockups/lanyard-f2-shade.jpg",
         "area": [
-          67.5,
-          42,
-          5,
-          24
+          46.9,
+          6.4,
+          6.1,
+          51.0
         ],
         "views": {
-          "front": "assets/mockups/lanyard.jpg",
+          "front": "assets/mockups/lanyard-f2.jpg",
           "back": "assets/mockups/lanyard-back.jpg",
           "side": "assets/mockups/lanyard-side.jpg"
         }
@@ -3593,20 +3593,20 @@
       "weight_g": 350,
       "technique": "UV",
       "mockup_photo": {
-        "src": "assets/mockups/laptop_sleeve.jpg",
-        "mask": "assets/mockups/laptop_sleeve-mask.png",
-        "shade": "assets/mockups/laptop_sleeve-shade.jpg",
+        "src": "assets/mockups/laptop_sleeve-f2.jpg",
+        "mask": "assets/mockups/laptop_sleeve-f2-mask.png",
+        "shade": "assets/mockups/laptop_sleeve-f2-shade.jpg",
         "area": [
-          25.6,
-          33.3,
-          48.6,
-          34.3
+          16.3,
+          26.7,
+          67.1,
+          47.3
         ],
-        "side": "assets/mockups/laptop_sleeve-side.jpg",
+        "side": "assets/mockups/laptop_sleeve-side-v2.jpg",
         "views": {
-          "front": "assets/mockups/laptop_sleeve.jpg",
-          "back": "assets/mockups/laptop_sleeve-back.jpg",
-          "side": "assets/mockups/laptop_sleeve-side.jpg"
+          "front": "assets/mockups/laptop_sleeve-f2.jpg",
+          "back": "assets/mockups/laptop_sleeve-back-v2.jpg",
+          "side": "assets/mockups/laptop_sleeve-side-v2.jpg"
         }
       },
       "eco_tags": []
@@ -3915,7 +3915,7 @@
           34.2,
           25.8,
           31.7,
-          44
+          44.0
         ],
         "views": {
           "front": "assets/mockups/photo_frame.jpg",
@@ -3983,19 +3983,19 @@
       "weight_g": 40,
       "technique": "laser",
       "mockup_photo": {
-        "src": "assets/mockups/engraved_jewelry.jpg",
-        "mask": "assets/mockups/engraved_jewelry-mask.png",
-        "shade": "assets/mockups/engraved_jewelry-shade.jpg",
+        "src": "assets/mockups/engraved_jewelry-f2.jpg",
+        "mask": "assets/mockups/engraved_jewelry-f2-mask.png",
+        "shade": "assets/mockups/engraved_jewelry-f2-shade.jpg",
         "area": [
-          44,
-          47.3,
-          11.7,
-          11.7
+          42.2,
+          50.2,
+          17.3,
+          17.3
         ],
         "views": {
-          "front": "assets/mockups/engraved_jewelry.jpg",
-          "back": "assets/mockups/engraved_jewelry-back.jpg",
-          "side": "assets/mockups/engraved_jewelry-side.jpg"
+          "front": "assets/mockups/engraved_jewelry-f2.jpg",
+          "back": "assets/mockups/engraved_jewelry-back-v2.jpg",
+          "side": "assets/mockups/engraved_jewelry-side-v2.jpg"
         }
       },
       "eco_tags": [
@@ -4118,17 +4118,17 @@
       "weight_g": 25,
       "technique": "UV",
       "mockup_photo": {
-        "src": "assets/mockups/popsocket.jpg",
-        "mask": "assets/mockups/popsocket-mask.png",
-        "shade": "assets/mockups/popsocket-shade.jpg",
+        "src": "assets/mockups/popsocket-f2.jpg",
+        "mask": "assets/mockups/popsocket-f2-mask.png",
+        "shade": "assets/mockups/popsocket-f2-shade.jpg",
         "area": [
-          43.4,
-          43.4,
-          13.2,
-          13.2
+          34.3,
+          33.8,
+          31.7,
+          31.7
         ],
         "views": {
-          "front": "assets/mockups/popsocket.jpg",
+          "front": "assets/mockups/popsocket-f2.jpg",
           "back": "assets/mockups/popsocket-back.jpg",
           "side": "assets/mockups/popsocket-side.jpg"
         }
@@ -4177,7 +4177,7 @@
           36.8,
           23.9,
           26.4,
-          53
+          53.0
         ],
         "views": {
           "front": "assets/mockups/neck_gaiter.jpg",
@@ -4245,10 +4245,10 @@
         "mask": "assets/mockups/ski_case-mask.png",
         "shade": "assets/mockups/ski_case-shade.jpg",
         "area": [
-          30,
+          30.0,
           39.5,
-          40,
-          22
+          40.0,
+          22.0
         ],
         "views": {
           "front": "assets/mockups/ski_case.jpg",
@@ -4563,9 +4563,9 @@
         "src": "assets/mockups/beanie.jpg",
         "area": [
           24.5,
-          49,
+          49.0,
           51.9,
-          26
+          26.0
         ],
         "side": "assets/mockups/beanie-side.jpg",
         "back": "assets/mockups/beanie-back.jpg",
@@ -4670,18 +4670,20 @@
       ],
       "eco_tags": [],
       "mockup_photo": {
-        "src": "assets/mockups/snapback.jpg",
+        "src": "assets/mockups/snapback-f2.jpg",
         "area": [
-          31.9,
-          40.3,
-          49.3,
-          22.4
+          29.0,
+          30.0,
+          42.0,
+          19.0
         ],
         "views": {
-          "front": "assets/mockups/snapback.jpg",
+          "front": "assets/mockups/snapback-f2.jpg",
           "back": "assets/mockups/snapback-back.jpg",
           "side": "assets/mockups/snapback-side.jpg"
-        }
+        },
+        "mask": "assets/mockups/snapback-f2-mask.png",
+        "shade": "assets/mockups/snapback-f2-shade.jpg"
       }
     },
     {
@@ -4844,18 +4846,20 @@
       ],
       "eco_tags": [],
       "mockup_photo": {
-        "src": "assets/mockups/canvas_shoes.jpg",
+        "src": "assets/mockups/canvas_shoes-f2.jpg",
         "area": [
-          35.1,
-          37.7,
-          49.3,
-          21.1
+          36.0,
+          45.0,
+          40.0,
+          17.0
         ],
         "views": {
-          "front": "assets/mockups/canvas_shoes.jpg",
+          "front": "assets/mockups/canvas_shoes-f2.jpg",
           "back": "assets/mockups/canvas_shoes-back.jpg",
           "side": "assets/mockups/canvas_shoes-side.jpg"
-        }
+        },
+        "mask": "assets/mockups/canvas_shoes-f2-mask.png",
+        "shade": "assets/mockups/canvas_shoes-f2-shade.jpg"
       }
     },
     {
@@ -5152,10 +5156,10 @@
       "mockup_photo": {
         "src": "assets/mockups/fanny_pack.jpg",
         "area": [
-          26,
+          26.0,
           39.1,
-          48,
-          24
+          48.0,
+          24.0
         ],
         "views": {
           "front": "assets/mockups/fanny_pack.jpg",
@@ -5252,19 +5256,21 @@
       ],
       "eco_tags": [],
       "mockup_photo": {
-        "src": "assets/mockups/airpods_case.jpg",
+        "src": "assets/mockups/airpods_case-f2.jpg",
         "area": [
-          25.3,
-          36.7,
-          51.9,
-          35.6
+          24.5,
+          34.6,
+          51.3,
+          35.2
         ],
         "side": "assets/mockups/airpods_case-side.jpg",
         "views": {
-          "front": "assets/mockups/airpods_case.jpg",
-          "back": "assets/mockups/airpods_case-back.jpg",
+          "front": "assets/mockups/airpods_case-f2.jpg",
+          "back": "assets/mockups/airpods_case-back-v2.jpg",
           "side": "assets/mockups/airpods_case-side.jpg"
-        }
+        },
+        "mask": "assets/mockups/airpods_case-f2-mask.png",
+        "shade": "assets/mockups/airpods_case-f2-shade.jpg"
       }
     },
     {
@@ -5359,7 +5365,7 @@
       "mockup_photo": {
         "src": "assets/mockups/cable_pouch.jpg",
         "area": [
-          25,
+          25.0,
           39.5,
           51.9,
           28.8
@@ -5492,7 +5498,7 @@
         "src": "assets/mockups/rsvp_card.jpg",
         "area": [
           23.8,
-          13,
+          13.0,
           52.4,
           73.9
         ],
@@ -5540,7 +5546,7 @@
           20.3,
           41.5,
           59.4,
-          33
+          33.0
         ],
         "side": "assets/mockups/place_card-side.jpg",
         "views": {
@@ -5587,7 +5593,7 @@
           56.4,
           39.5,
           20.5,
-          29
+          29.0
         ],
         "side": "assets/mockups/table_number-side.jpg",
         "views": {
@@ -5631,7 +5637,7 @@
         "src": "assets/mockups/calendar.jpg",
         "area": [
           23.8,
-          17,
+          17.0,
           48.8,
           69.1
         ],
@@ -5681,19 +5687,21 @@
         "Recycled"
       ],
       "mockup_photo": {
-        "src": "assets/mockups/blanket.jpg",
+        "src": "assets/mockups/blanket-f2.jpg",
         "area": [
-          28.5,
-          27.8,
-          44,
-          52.8
+          21.6,
+          15.6,
+          56.8,
+          68.2
         ],
         "side": "assets/mockups/blanket-side.jpg",
         "views": {
-          "front": "assets/mockups/blanket.jpg",
+          "front": "assets/mockups/blanket-f2.jpg",
           "back": "assets/mockups/blanket-back.jpg",
           "side": "assets/mockups/blanket-side.jpg"
-        }
+        },
+        "mask": "assets/mockups/blanket-f2-mask.png",
+        "shade": "assets/mockups/blanket-f2-shade.jpg"
       }
     },
     {
@@ -5780,19 +5788,21 @@
         "Eco"
       ],
       "mockup_photo": {
-        "src": "assets/mockups/coaster.jpg",
+        "src": "assets/mockups/coaster-f2.jpg",
         "area": [
-          25.3,
-          55.3,
-          25.7,
-          25.7
+          30.8,
+          29.3,
+          38.1,
+          38.1
         ],
         "side": "assets/mockups/coaster-side.jpg",
         "views": {
-          "front": "assets/mockups/coaster.jpg",
+          "front": "assets/mockups/coaster-f2.jpg",
           "back": "assets/mockups/coaster-back.jpg",
           "side": "assets/mockups/coaster-side.jpg"
-        }
+        },
+        "mask": "assets/mockups/coaster-f2-mask.png",
+        "shade": "assets/mockups/coaster-f2-shade.jpg"
       }
     },
     {
@@ -5826,18 +5836,20 @@
         "Local Production"
       ],
       "mockup_photo": {
-        "src": "assets/mockups/name_badge.jpg",
+        "src": "assets/mockups/name_badge-f2.jpg",
         "area": [
-          22,
-          39,
-          59.2,
-          22.2
+          25.5,
+          39.9,
+          49.2,
+          18.4
         ],
         "views": {
-          "front": "assets/mockups/name_badge.jpg",
-          "back": "assets/mockups/name_badge-back.jpg",
-          "side": "assets/mockups/name_badge-side.jpg"
-        }
+          "front": "assets/mockups/name_badge-f2.jpg",
+          "back": "assets/mockups/name_badge-back-v2.jpg",
+          "side": "assets/mockups/name_badge-side-v2.jpg"
+        },
+        "mask": "assets/mockups/name_badge-f2-mask.png",
+        "shade": "assets/mockups/name_badge-f2-shade.jpg"
       }
     },
     {
@@ -5869,19 +5881,21 @@
       "technique": "UV print",
       "eco_tags": [],
       "mockup_photo": {
-        "src": "assets/mockups/pin.jpg",
+        "src": "assets/mockups/pin-f2.jpg",
         "area": [
-          40.1,
-          37.4,
-          27.5,
-          27.5
+          35.6,
+          35.1,
+          28.8,
+          28.8
         ],
-        "side": "assets/mockups/pin-side.jpg",
+        "side": "assets/mockups/pin-side-v2.jpg",
         "views": {
-          "front": "assets/mockups/pin.jpg",
+          "front": "assets/mockups/pin-f2.jpg",
           "back": "assets/mockups/pin-back.jpg",
-          "side": "assets/mockups/pin-side.jpg"
-        }
+          "side": "assets/mockups/pin-side-v2.jpg"
+        },
+        "mask": "assets/mockups/pin-f2-mask.png",
+        "shade": "assets/mockups/pin-f2-shade.jpg"
       }
     },
     {
@@ -5913,19 +5927,21 @@
       "technique": "UV print",
       "eco_tags": [],
       "mockup_photo": {
-        "src": "assets/mockups/keychain.jpg",
+        "src": "assets/mockups/keychain-f2.jpg",
         "area": [
-          38.3,
-          44.6,
-          30.6,
-          30.6
+          32.6,
+          40.1,
+          35.0,
+          35.0
         ],
         "side": "assets/mockups/keychain-side.jpg",
         "views": {
-          "front": "assets/mockups/keychain.jpg",
-          "back": "assets/mockups/keychain-back.jpg",
+          "front": "assets/mockups/keychain-f2.jpg",
+          "back": "assets/mockups/keychain-back-v2.jpg",
           "side": "assets/mockups/keychain-side.jpg"
-        }
+        },
+        "mask": "assets/mockups/keychain-f2-mask.png",
+        "shade": "assets/mockups/keychain-f2-shade.jpg"
       }
     },
     {
@@ -6124,18 +6140,20 @@
         "Recycled"
       ],
       "mockup_photo": {
-        "src": "assets/mockups/yoga_mat.jpg",
+        "src": "assets/mockups/yoga_mat-f2.jpg",
         "area": [
-          40.3,
-          36.9,
-          15,
-          42.5
+          36.6,
+          12.0,
+          26.8,
+          76.3
         ],
         "views": {
-          "front": "assets/mockups/yoga_mat.jpg",
+          "front": "assets/mockups/yoga_mat-f2.jpg",
           "back": "assets/mockups/yoga_mat-back.jpg",
           "side": "assets/mockups/yoga_mat-side.jpg"
-        }
+        },
+        "mask": "assets/mockups/yoga_mat-f2-mask.png",
+        "shade": "assets/mockups/yoga_mat-f2-shade.jpg"
       }
     },
     {
@@ -6228,7 +6246,7 @@
         "area": [
           33.5,
           27.6,
-          33,
+          33.0,
           59.4
         ],
         "views": {
@@ -6275,8 +6293,8 @@
         "src": "assets/mockups/packaging_insert.jpg",
         "area": [
           37.3,
-          31,
-          26,
+          31.0,
+          26.0,
           36.7
         ],
         "views": {
@@ -6364,18 +6382,20 @@
         "Plastic-free Packaging"
       ],
       "mockup_photo": {
-        "src": "assets/mockups/tissue_paper.jpg",
+        "src": "assets/mockups/tissue_paper-f2.jpg",
         "area": [
-          48.4,
-          58,
-          10.1,
-          14.3
+          29.1,
+          20.3,
+          42.2,
+          59.2
         ],
         "views": {
-          "front": "assets/mockups/tissue_paper.jpg",
+          "front": "assets/mockups/tissue_paper-f2.jpg",
           "back": "assets/mockups/tissue_paper-back.jpg",
           "side": "assets/mockups/tissue_paper-side.jpg"
-        }
+        },
+        "mask": "assets/mockups/tissue_paper-f2-mask.png",
+        "shade": "assets/mockups/tissue_paper-f2-shade.jpg"
       }
     }
   ],
