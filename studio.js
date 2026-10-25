@@ -264,6 +264,33 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   /** Enhanced touch event handling for mobile */
   
   /** Comprehensive click-through protection */
+  
+  /** Product view angles */
+  const VIEWS = ["front", "back", "side"];
+  let currentView = "front";
+  
+  function setView(view) {
+    if (!VIEWS.includes(view)) return;
+    currentView = view;
+    trackEvent("view_change", { view });
+    render();
+  }
+  
+  function getViewSrc(product, view = currentView) {
+    const mp = product.mockup_photo;
+    if (!mp) return null;
+    // Check for view-specific image
+    if (view === "front") return mp.src;
+    if (view === "back" && mp.back) return mp.back;
+    if (view === "side" && mp.side) return mp.side;
+    return mp.src; // fallback to front
+  }
+  
+  function hasMultiView(product) {
+    const mp = product.mockup_photo;
+    return mp && (mp.back || mp.side);
+  }
+
   function initClickGuard() {
     const guard = document.createElement("div");
     guard.id = "click-guard";
