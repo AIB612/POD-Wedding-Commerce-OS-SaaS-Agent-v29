@@ -236,6 +236,27 @@
   /** Parse CSV guest list for batch personalization */
   
   /** Validate design resolution for print */
+  
+  /** Calculate postage based on envelope size and destination */
+  function calcPostage(envelopeSize, dest = "CH", qty = 1) {
+    const rates = {
+      CH: { C6: 1.10, C5: 1.40, C4: 2.20, custom: 2.50 },
+      EU: { C6: 2.20, C5: 2.80, C4: 4.50, custom: 5.00 },
+      US: { C6: 3.50, C5: 4.50, C4: 7.00, custom: 8.00 }
+    };
+    const rate = rates[dest]?.[envelopeSize] || rates.CH.C5;
+    return { unit: rate, total: rate * qty, currency: dest === "CH" ? "CHF" : dest === "EU" ? "EUR" : "USD" };
+  }
+  /** Get bleed area (3mm standard) */
+  function getBleedArea(printAreaMm, bleedMm = 3) {
+    const [w, h] = printAreaMm;
+    return { 
+      safe: [w - bleedMm * 2, h - bleedMm * 2],
+      trim: [w, h],
+      bleed: [w + bleedMm * 2, h + bleedMm * 2]
+    };
+  }
+
   function validateDesign(design, printAreaMm) {
     if (!design) return { ok: false, msg: "No design" };
     const [w, h] = printAreaMm;
