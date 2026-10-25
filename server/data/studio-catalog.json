@@ -752,7 +752,7 @@
         "views": {
           "front": "assets/mockups/leggings.jpg",
           "back": "assets/mockups/leggings-back-bg.jpg",
-          "side": "assets/mockups/leggings-side-bg.jpg"
+          "side": "assets/mockups/leggings-side-c1.jpg"
         }
       },
       "materials": [
@@ -930,7 +930,7 @@
         "views": {
           "front": "assets/mockups/baby_body.jpg",
           "back": "assets/mockups/baby_body-back-bg.jpg",
-          "side": "assets/mockups/baby_body-side-bg.jpg"
+          "side": "assets/mockups/baby_body-side-c1.jpg"
         }
       },
       "materials": [
@@ -1021,7 +1021,7 @@
         "views": {
           "front": "assets/mockups/xmas_sweater.jpg",
           "back": "assets/mockups/sweater-back-bg.jpg",
-          "side": "assets/mockups/xmas_sweater-side-bg.jpg"
+          "side": "assets/mockups/xmas_sweater-side-c1.jpg"
         }
       },
       "materials": [
@@ -1108,7 +1108,7 @@
         ],
         "views": {
           "front": "assets/mockups/pet_bandana.jpg",
-          "back": "assets/mockups/pet_bandana-back-bg.jpg",
+          "back": "assets/mockups/pet_bandana-back-c1.jpg",
           "side": "assets/mockups/pet_bandana-side-bg.jpg"
         }
       },
@@ -1178,7 +1178,7 @@
         ],
         "views": {
           "front": "assets/mockups/pet_bed.jpg",
-          "back": "assets/mockups/pet_bed-back-bg.jpg",
+          "back": "assets/mockups/pet_bed-back-c1.jpg",
           "side": "assets/mockups/pet_bed-side-bg.jpg"
         }
       },
@@ -1250,8 +1250,8 @@
         ],
         "views": {
           "front": "assets/mockups/pet_bowl.jpg",
-          "back": "assets/mockups/pet_bowl-back-bg.jpg",
-          "side": "assets/mockups/pet_bowl-side-bg.jpg"
+          "back": "assets/mockups/pet_bowl-back-c1.jpg",
+          "side": "assets/mockups/pet_bowl-side-c1.jpg"
         }
       },
       "materials": [
@@ -1322,12 +1322,12 @@
           29.9,
           29.3
         ],
-        "side": "assets/mockups/mug-side-bg.jpg",
-        "back": "assets/mockups/mug-back-bg.jpg",
+        "side": "assets/mockups/mug-side-c1.jpg",
+        "back": "assets/mockups/mug-back-c1.jpg",
         "views": {
           "front": "assets/mockups/mug.jpg",
-          "back": "assets/mockups/mug-back-bg.jpg",
-          "side": "assets/mockups/mug-side-bg.jpg"
+          "back": "assets/mockups/mug-back-c1.jpg",
+          "side": "assets/mockups/mug-side-c1.jpg"
         }
       },
       "materials": [
@@ -1393,8 +1393,8 @@
         ],
         "views": {
           "front": "assets/mockups/magic_mug.jpg",
-          "back": "assets/mockups/magic_mug-back-bg.jpg",
-          "side": "assets/mockups/magic_mug-side-bg.jpg"
+          "back": "assets/mockups/magic_mug-back-c1.jpg",
+          "side": "assets/mockups/magic_mug-side-c1.jpg"
         }
       },
       "materials": [
@@ -1456,8 +1456,8 @@
         ],
         "views": {
           "front": "assets/mockups/espresso.jpg",
-          "back": "assets/mockups/espresso-back-bg.jpg",
-          "side": "assets/mockups/espresso-side-bg.jpg"
+          "back": "assets/mockups/espresso-back-c1.jpg",
+          "side": "assets/mockups/espresso-side-c1.jpg"
         }
       },
       "materials": [
@@ -1521,8 +1521,8 @@
         ],
         "views": {
           "front": "assets/mockups/enamel_mug.jpg",
-          "back": "assets/mockups/enamel_mug-back-bg.jpg",
-          "side": "assets/mockups/enamel_mug-side-bg.jpg"
+          "back": "assets/mockups/enamel_mug-back-c1.jpg",
+          "side": "assets/mockups/enamel_mug-side-c1.jpg"
         }
       },
       "materials": [
@@ -1592,12 +1592,12 @@
           32.1,
           32.1
         ],
-        "side": "assets/mockups/tumbler-side-bg.jpg",
-        "back": "assets/mockups/tumbler-back-bg.jpg",
+        "side": "assets/mockups/tumbler-side-c1.jpg",
+        "back": "assets/mockups/tumbler-back-c1.jpg",
         "views": {
           "front": "assets/mockups/tumbler.jpg",
-          "back": "assets/mockups/tumbler-back-bg.jpg",
-          "side": "assets/mockups/tumbler-side-bg.jpg"
+          "back": "assets/mockups/tumbler-back-c1.jpg",
+          "side": "assets/mockups/tumbler-side-c1.jpg"
         }
       },
       "materials": [
@@ -1667,10 +1667,10 @@
           17.6,
           18.3
         ],
-        "back": "assets/mockups/bottle-back-bg.jpg",
+        "back": "assets/mockups/bottle-back-c1.jpg",
         "views": {
           "front": "assets/mockups/bottle.jpg",
-          "back": "assets/mockups/bottle-back-bg.jpg",
+          "back": "assets/mockups/bottle-back-c1.jpg",
           "side": "assets/mockups/bottle-side-bg.jpg"
         }
       },
@@ -1731,11 +1731,11 @@
           15.0,
           15.4
         ],
-        "side": "assets/mockups/thermos-side-bg.jpg",
+        "side": "assets/mockups/thermos-side-c1.jpg",
         "views": {
           "front": "assets/mockups/thermos.jpg",
-          "back": "assets/mockups/thermos-back-bg.jpg",
-          "side": "assets/mockups/thermos-side-bg.jpg"
+          "back": "assets/mockups/thermos-back-c1.jpg",
+          "side": "assets/mockups/thermos-side-c1.jpg"
         }
       },
       "materials": [
@@ -1942,7 +1942,7 @@
         ],
         "views": {
           "front": "assets/mockups/framed.jpg",
-          "back": "assets/mockups/framed-back-bg.jpg",
+          "back": "assets/mockups/framed-back-c1.jpg",
           "side": "assets/mockups/frame-side-bg.jpg"
         }
       },
@@ -2087,8 +2087,8 @@
         ],
         "views": {
           "front": "assets/mockups/acrylic_wall.jpg",
-          "back": "assets/mockups/acrylic_wall-back-bg.jpg",
-          "side": "assets/mockups/wall_art-side-bg.jpg"
+          "back": "assets/mockups/acrylic_wall-back-c1.jpg",
+          "side": "assets/mockups/acrylic_wall-side-c1.jpg"
         }
       },
       "materials": [
@@ -2162,8 +2162,8 @@
         ],
         "views": {
           "front": "assets/mockups/tapestry.jpg",
-          "back": "assets/mockups/tapestry-back-bg.jpg",
-          "side": "assets/mockups/tapestry-side-bg.jpg"
+          "back": "assets/mockups/tapestry-back-c1.jpg",
+          "side": "assets/mockups/tapestry-side-c1.jpg"
         }
       },
       "materials": [
@@ -2225,11 +2225,11 @@
           53.2,
           40.5
         ],
-        "side": "assets/mockups/puzzle-side-bg.jpg",
+        "side": "assets/mockups/puzzle-side-c1.jpg",
         "views": {
           "front": "assets/mockups/puzzle.jpg",
-          "back": "assets/mockups/puzzle-back-bg.jpg",
-          "side": "assets/mockups/puzzle-side-bg.jpg"
+          "back": "assets/mockups/puzzle-back-c1.jpg",
+          "side": "assets/mockups/puzzle-side-c1.jpg"
         }
       },
       "materials": [
@@ -2419,11 +2419,11 @@
           22.9,
           18.5
         ],
-        "side": "assets/mockups/candle-side-bg.jpg",
+        "side": "assets/mockups/candle-side-c1.jpg",
         "views": {
           "front": "assets/mockups/candle.jpg",
-          "back": "assets/mockups/candle-back-bg.jpg",
-          "side": "assets/mockups/candle-side-bg.jpg"
+          "back": "assets/mockups/candle-back-c1.jpg",
+          "side": "assets/mockups/candle-side-c1.jpg"
         }
       },
       "materials": [
@@ -2569,8 +2569,8 @@
         ],
         "views": {
           "front": "assets/mockups/stocking.jpg",
-          "back": "assets/mockups/stocking-back-bg.jpg",
-          "side": "assets/mockups/stocking-side-bg.jpg"
+          "back": "assets/mockups/stocking-back-c1.jpg",
+          "side": "assets/mockups/stocking-side-c1.jpg"
         }
       },
       "materials": [
@@ -2731,11 +2731,11 @@
           62.7,
           20.9
         ],
-        "side": "assets/mockups/banner-side-bg.jpg",
+        "side": "assets/mockups/banner-side-c1.jpg",
         "views": {
           "front": "assets/mockups/banner.jpg",
           "back": "assets/mockups/banner-back-bg.jpg",
-          "side": "assets/mockups/banner-side-bg.jpg"
+          "side": "assets/mockups/banner-side-c1.jpg"
         }
       },
       "materials": [
@@ -2902,8 +2902,8 @@
         ],
         "views": {
           "front": "assets/mockups/greeting-f2.jpg",
-          "back": "assets/mockups/card-back-bg.jpg",
-          "side": "assets/mockups/greeting-side-bg.jpg"
+          "back": "assets/mockups/greeting-back-c1.jpg",
+          "side": "assets/mockups/greeting-side-c1.jpg"
         }
       },
       "materials": [
@@ -2987,7 +2987,7 @@
         ],
         "views": {
           "front": "assets/mockups/postcard-f2.jpg",
-          "back": "assets/mockups/postcard-back-bg.jpg",
+          "back": "assets/mockups/postcard-back-c1.jpg",
           "side": "assets/mockups/postcard-side-bg.jpg"
         }
       },
@@ -3071,10 +3071,10 @@
           40.5,
           57.4
         ],
-        "back": "assets/mockups/notebook-back-bg.jpg",
+        "back": "assets/mockups/notebook-back-c1.jpg",
         "views": {
           "front": "assets/mockups/notebook-f2.jpg",
-          "back": "assets/mockups/notebook-back-bg.jpg",
+          "back": "assets/mockups/notebook-back-c1.jpg",
           "side": "assets/mockups/notebook-side-bg.jpg"
         }
       },
@@ -3243,7 +3243,7 @@
         ],
         "views": {
           "front": "assets/mockups/menu_card-portrait.jpg",
-          "back": "assets/mockups/menu_card-back-bg.jpg",
+          "back": "assets/mockups/menu_card-back-c1.jpg",
           "side": "assets/mockups/menu_card-side-bg.jpg"
         }
       },
@@ -3326,11 +3326,11 @@
           33.2,
           33.2
         ],
-        "side": "assets/mockups/sticker-side-bg.jpg",
+        "side": "assets/mockups/sticker-side-c1.jpg",
         "views": {
           "front": "assets/mockups/sticker.jpg",
-          "back": "assets/mockups/sticker-back-bg.jpg",
-          "side": "assets/mockups/sticker-side-bg.jpg"
+          "back": "assets/mockups/sticker-back-c1.jpg",
+          "side": "assets/mockups/sticker-side-c1.jpg"
         }
       },
       "eco_tags": [
@@ -3385,7 +3385,7 @@
         ],
         "views": {
           "front": "assets/mockups/phone_case.jpg",
-          "back": "assets/mockups/phone-back-bg.jpg",
+          "back": "assets/mockups/phone_case-back-c1.jpg",
           "side": "assets/mockups/phone_case-side-bg.jpg"
         }
       },
@@ -3430,8 +3430,8 @@
         ],
         "views": {
           "front": "assets/mockups/mousepad_xl-f2.jpg",
-          "back": "assets/mockups/mousepad_xl-back-bg.jpg",
-          "side": "assets/mockups/mousepad-side-bg.jpg"
+          "back": "assets/mockups/mousepad_xl-back-c1.jpg",
+          "side": "assets/mockups/mousepad_xl-side-c1.jpg"
         }
       },
       "eco_tags": []
@@ -3646,11 +3646,11 @@
           21.3,
           25.5
         ],
-        "back": "assets/mockups/backpack-back-bg.jpg",
+        "back": "assets/mockups/backpack-back-c1.jpg",
         "views": {
           "front": "assets/mockups/backpack.jpg",
-          "back": "assets/mockups/backpack-back-bg.jpg",
-          "side": "assets/mockups/backpack-side-bg.jpg"
+          "back": "assets/mockups/backpack-back-c1.jpg",
+          "side": "assets/mockups/backpack-side-c1.jpg"
         }
       },
       "eco_tags": []
@@ -3693,8 +3693,8 @@
         ],
         "views": {
           "front": "assets/mockups/trophy.jpg",
-          "back": "assets/mockups/trophy-back-bg.jpg",
-          "side": "assets/mockups/trophy-side-bg.jpg"
+          "back": "assets/mockups/trophy-back-c1.jpg",
+          "side": "assets/mockups/trophy-side-c1.jpg"
         }
       },
       "materials": [
@@ -3843,8 +3843,8 @@
         ],
         "views": {
           "front": "assets/mockups/welcome_sign.jpg",
-          "back": "assets/mockups/welcome_sign-back-bg.jpg",
-          "side": "assets/mockups/welcome_sign-side-bg.jpg"
+          "back": "assets/mockups/welcome_sign-back-c1.jpg",
+          "side": "assets/mockups/welcome_sign-side-c1.jpg"
         }
       },
       "materials": [
@@ -3919,7 +3919,7 @@
         ],
         "views": {
           "front": "assets/mockups/photo_frame.jpg",
-          "back": "assets/mockups/photo_frame-back-bg.jpg",
+          "back": "assets/mockups/photo_frame-back-c1.jpg",
           "side": "assets/mockups/photo_frame-side-bg.jpg"
         }
       },
@@ -4041,7 +4041,7 @@
         "side": "assets/mockups/luggage_tag-side-bg.jpg",
         "views": {
           "front": "assets/mockups/luggage_tag.jpg",
-          "back": "assets/mockups/luggage_tag-back-bg.jpg",
+          "back": "assets/mockups/luggage_tag-back-c1.jpg",
           "side": "assets/mockups/luggage_tag-side-bg.jpg"
         }
       },
@@ -4252,8 +4252,8 @@
         ],
         "views": {
           "front": "assets/mockups/ski_case.jpg",
-          "back": "assets/mockups/ski_case-back-bg.jpg",
-          "side": "assets/mockups/ski_case-side-bg.jpg"
+          "back": "assets/mockups/ski_case-back-c1.jpg",
+          "side": "assets/mockups/ski_case-side-c1.jpg"
         }
       },
       "materials": [
@@ -4455,8 +4455,8 @@
         ],
         "views": {
           "front": "assets/mockups/long_sleeve.jpg",
-          "back": "assets/mockups/long_sleeve-back-bg.jpg",
-          "side": "assets/mockups/long_sleeve-side-bg.jpg"
+          "back": "assets/mockups/long_sleeve-back-c1.jpg",
+          "side": "assets/mockups/long_sleeve-side-c1.jpg"
         }
       }
     },
@@ -4902,7 +4902,7 @@
         "views": {
           "front": "assets/mockups/glass_cup.jpg",
           "back": "assets/mockups/glass_cup-back-bg.jpg",
-          "side": "assets/mockups/glass_cup-side-bg.jpg"
+          "side": "assets/mockups/glass_cup-side-c1.jpg"
         }
       }
     },
@@ -5008,7 +5008,7 @@
         "views": {
           "front": "assets/mockups/straw_tumbler.jpg",
           "back": "assets/mockups/straw_tumbler-back-bg.jpg",
-          "side": "assets/mockups/straw_tumbler-side-bg.jpg"
+          "side": "assets/mockups/straw_tumbler-side-c1.jpg"
         }
       }
     },
@@ -5059,8 +5059,8 @@
         ],
         "views": {
           "front": "assets/mockups/drawstring_bag.jpg",
-          "back": "assets/mockups/drawstring_bag-back-bg.jpg",
-          "side": "assets/mockups/drawstring_bag-side-bg.jpg"
+          "back": "assets/mockups/drawstring_bag-back-c1.jpg",
+          "side": "assets/mockups/drawstring_bag-side-c1.jpg"
         }
       }
     },
@@ -5215,7 +5215,7 @@
         ],
         "views": {
           "front": "assets/mockups/pouch.jpg",
-          "back": "assets/mockups/pouch-back-bg.jpg",
+          "back": "assets/mockups/pouch-back-c1.jpg",
           "side": "assets/mockups/pouch-side-bg.jpg"
         }
       }
@@ -5263,11 +5263,11 @@
           51.3,
           35.2
         ],
-        "side": "assets/mockups/airpods_case-side-bg.jpg",
+        "side": "assets/mockups/airpods_case-side-c1.jpg",
         "views": {
           "front": "assets/mockups/airpods_case-f2.jpg",
           "back": "assets/mockups/airpods_case-back-v2-bg.jpg",
-          "side": "assets/mockups/airpods_case-side-bg.jpg"
+          "side": "assets/mockups/airpods_case-side-c1.jpg"
         },
         "mask": "assets/mockups/airpods_case-f2-mask.png",
         "shade": "assets/mockups/airpods_case-f2-shade.jpg"
@@ -5320,8 +5320,8 @@
         ],
         "views": {
           "front": "assets/mockups/tablet_sleeve.jpg",
-          "back": "assets/mockups/tablet_sleeve-back-bg.jpg",
-          "side": "assets/mockups/tablet_sleeve-side-bg.jpg"
+          "back": "assets/mockups/tablet_sleeve-back-c1.jpg",
+          "side": "assets/mockups/tablet_sleeve-side-c1.jpg"
         }
       }
     },
@@ -5372,7 +5372,7 @@
         ],
         "views": {
           "front": "assets/mockups/cable_pouch.jpg",
-          "back": "assets/mockups/cable_pouch-back-bg.jpg",
+          "back": "assets/mockups/cable_pouch-back-c1.jpg",
           "side": "assets/mockups/cable_pouch-side-bg.jpg"
         }
       }
@@ -5420,7 +5420,7 @@
         "views": {
           "front": "assets/mockups/save_date-portrait.jpg",
           "back": "assets/mockups/save_date-back-bg.jpg",
-          "side": "assets/mockups/save_date-side-bg.jpg"
+          "side": "assets/mockups/save_date-side-c1.jpg"
         }
       },
       "materials": [
@@ -5551,7 +5551,7 @@
         "side": "assets/mockups/place_card-side-bg.jpg",
         "views": {
           "front": "assets/mockups/place_card.jpg",
-          "back": "assets/mockups/place_card-back-bg.jpg",
+          "back": "assets/mockups/place_card-back-c1.jpg",
           "side": "assets/mockups/place_card-side-bg.jpg"
         }
       }
@@ -5595,11 +5595,11 @@
           20.5,
           29.0
         ],
-        "side": "assets/mockups/table_number-side-bg.jpg",
+        "side": "assets/mockups/table_number-side-c1.jpg",
         "views": {
           "front": "assets/mockups/table_number.jpg",
-          "back": "assets/mockups/table_number-back-bg.jpg",
-          "side": "assets/mockups/table_number-side-bg.jpg"
+          "back": "assets/mockups/table_number-back-c1.jpg",
+          "side": "assets/mockups/table_number-side-c1.jpg"
         }
       }
     },
@@ -5641,11 +5641,11 @@
           48.8,
           69.1
         ],
-        "side": "assets/mockups/calendar-side-bg.jpg",
+        "side": "assets/mockups/calendar-side-c1.jpg",
         "views": {
           "front": "assets/mockups/calendar.jpg",
           "back": "assets/mockups/calendar-back-bg.jpg",
-          "side": "assets/mockups/calendar-side-bg.jpg"
+          "side": "assets/mockups/calendar-side-c1.jpg"
         }
       }
     },
@@ -5694,11 +5694,11 @@
           56.8,
           68.2
         ],
-        "side": "assets/mockups/blanket-side-bg.jpg",
+        "side": "assets/mockups/blanket-side-c1.jpg",
         "views": {
           "front": "assets/mockups/blanket-f2.jpg",
-          "back": "assets/mockups/blanket-back-bg.jpg",
-          "side": "assets/mockups/blanket-side-bg.jpg"
+          "back": "assets/mockups/blanket-back-c1.jpg",
+          "side": "assets/mockups/blanket-side-c1.jpg"
         },
         "mask": "assets/mockups/blanket-f2-mask.png",
         "shade": "assets/mockups/blanket-f2-shade.jpg"
@@ -5752,7 +5752,7 @@
         "side": "assets/mockups/towel-side-bg.jpg",
         "views": {
           "front": "assets/mockups/towel.jpg",
-          "back": "assets/mockups/towel-back-bg.jpg",
+          "back": "assets/mockups/towel-back-c1.jpg",
           "side": "assets/mockups/towel-side-bg.jpg"
         }
       }
@@ -5985,7 +5985,7 @@
         "side": "assets/mockups/photo_book-side-bg.jpg",
         "views": {
           "front": "assets/mockups/photo_book.jpg",
-          "back": "assets/mockups/photo_book-back-bg.jpg",
+          "back": "assets/mockups/photo_book-back-c1.jpg",
           "side": "assets/mockups/photo_book-side-bg.jpg"
         }
       }
@@ -6149,8 +6149,8 @@
         ],
         "views": {
           "front": "assets/mockups/yoga_mat-f2.jpg",
-          "back": "assets/mockups/yoga_mat-back-bg.jpg",
-          "side": "assets/mockups/yoga_mat-side-bg.jpg"
+          "back": "assets/mockups/yoga_mat-back-c1.jpg",
+          "side": "assets/mockups/yoga_mat-side-c1.jpg"
         },
         "mask": "assets/mockups/yoga_mat-f2-mask.png",
         "shade": "assets/mockups/yoga_mat-f2-shade.jpg"
@@ -6203,7 +6203,7 @@
         ],
         "views": {
           "front": "assets/mockups/sports_towel.jpg",
-          "back": "assets/mockups/sports_towel-back-bg.jpg",
+          "back": "assets/mockups/sports_towel-back-c1.jpg",
           "side": "assets/mockups/sports_towel-side-bg.jpg"
         }
       }
@@ -6251,7 +6251,7 @@
         ],
         "views": {
           "front": "assets/mockups/hang_tag.jpg",
-          "back": "assets/mockups/hang_tag-back-bg.jpg",
+          "back": "assets/mockups/hang_tag-back-c1.jpg",
           "side": "assets/mockups/hang_tag-side-bg.jpg"
         }
       }
@@ -6299,7 +6299,7 @@
         ],
         "views": {
           "front": "assets/mockups/packaging_insert.jpg",
-          "back": "assets/mockups/packaging_insert-back-bg.jpg",
+          "back": "assets/mockups/packaging_insert-back-c1.jpg",
           "side": "assets/mockups/packaging_insert-side-bg.jpg"
         }
       }
@@ -6391,8 +6391,8 @@
         ],
         "views": {
           "front": "assets/mockups/tissue_paper-f2.jpg",
-          "back": "assets/mockups/tissue_paper-back-bg.jpg",
-          "side": "assets/mockups/tissue_paper-side-bg.jpg"
+          "back": "assets/mockups/tissue_paper-back-c1.jpg",
+          "side": "assets/mockups/tissue_paper-side-c1.jpg"
         },
         "mask": "assets/mockups/tissue_paper-f2-mask.png",
         "shade": "assets/mockups/tissue_paper-f2-shade.jpg"
