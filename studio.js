@@ -240,6 +240,32 @@
   /** Calculate postage based on envelope size and destination */
   
   /** Compare screen color vs expected print color */
+  
+  /** Generate order timeline */
+  function orderTimeline(orderDate, prodDays = 3, shipDays = 3) {
+    const d = new Date(orderDate);
+    const stages = [
+      { name: "ordered", days: 0 },
+      { name: "production", days: 1 },
+      { name: "shipped", days: prodDays },
+      { name: "delivered", days: prodDays + shipDays }
+    ];
+    return stages.map(s => {
+      const date = new Date(d);
+      date.setDate(date.getDate() + s.days);
+      return { ...s, date: date.toISOString().slice(0, 10) };
+    });
+  }
+  /** Calculate batch pricing with volume discount */
+  function batchPrice(unitPrice, qty) {
+    let discount = 0;
+    if (qty >= 100) discount = 0.15;
+    else if (qty >= 50) discount = 0.12;
+    else if (qty >= 25) discount = 0.08;
+    else if (qty >= 10) discount = 0.04;
+    return { unit: unitPrice * (1 - discount), total: unitPrice * qty * (1 - discount), discount, qty };
+  }
+
   function colorShift(hex) {
     const r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16);
     const nr = Math.round(r * 0.95), ng = Math.round(g * 0.97), nb = Math.round(b * 0.92);
