@@ -243,6 +243,26 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   /** Compare screen color vs expected print color */
   
   /** Generate order timeline */
+  
+  /** Check contrast ratio between design and background */
+  function contrastRatio(fg, bg) {
+    const lum = hex => {
+      const rgb = [1,3,5].map(i => parseInt(hex.slice(i,i+2), 16) / 255);
+      const [r,g,b] = rgb.map(c => c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4));
+      return 0.2126*r + 0.7152*g + 0.0722*b;
+    };
+    const l1 = lum(fg), l2 = lum(bg);
+    return (Math.max(l1,l2) + 0.05) / (Math.min(l1,l2) + 0.05);
+  }
+  /** Get export options for design */
+  function exportOptions(design) {
+    return [
+      { format: "png", dpi: 300, label: "PNG 300dpi" },
+      { format: "pdf", dpi: 300, label: "PDF Print" },
+      { format: "jpg", dpi: 150, label: "JPG Web" }
+    ];
+  }
+
   function orderTimeline(orderDate, prodDays = 3, shipDays = 3) {
     const d = new Date(orderDate);
     const stages = [
