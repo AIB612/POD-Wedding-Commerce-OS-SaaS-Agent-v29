@@ -230,6 +230,14 @@
     }
     return c;
   }
+  function matchEnvelope(cardMm) {
+    const [w, h] = cardMm;
+    const max = Math.max(w, h), min = Math.min(w, h);
+    if (max <= 148 && min <= 105) return "C6";
+    if (max <= 210 && min <= 148) return "C5";
+    if (max <= 297 && min <= 210) return "C4";
+    return "custom";
+  }
   function hasTransparency(c) {
     const k = Math.min(1, 200 / Math.max(c.width, c.height)), tc = document.createElement("canvas"); tc.width = Math.max(1, Math.round(c.width * k)); tc.height = Math.max(1, Math.round(c.height * k));
     const x = tc.getContext("2d"); x.drawImage(c, 0, 0, tc.width, tc.height); const a = x.getImageData(0, 0, tc.width, tc.height).data;
