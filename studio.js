@@ -256,6 +256,28 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   /** Keyboard shortcuts */
   
   /** Auto-save current state */
+  
+  /** Detect mobile device */
+  function isMobile() {
+    return window.innerWidth < 860 || /iPhone|iPad|Android/i.test(navigator.userAgent);
+  }
+  /** Mobile-optimized touch targets */
+  function ensureTouchTargets() {
+    if (!isMobile()) return;
+    document.querySelectorAll("button, .btn, .chip").forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.height < 44) el.style.minHeight = "44px";
+      if (rect.width < 44) el.style.minWidth = "44px";
+    });
+  }
+  /** Prevent zoom on input focus (iOS) */
+  function preventZoom() {
+    const meta = document.querySelector("meta[name=viewport]");
+    if (meta && isMobile()) {
+      meta.content = "width=device-width, initial-scale=1, maximum-scale=1";
+    }
+  }
+
   let autoSaveTimer = null;
   function scheduleAutoSave(state) {
     clearTimeout(autoSaveTimer);
