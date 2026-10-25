@@ -33,14 +33,21 @@
   const msg = (t, cls = "") => { const e = $("#sellerMsg"); if (e) { e.textContent = t || ""; e.className = "seller-msg " + cls; } };
 
   // ---------------------------------------------------------------- data
+  // Customer-facing shipping suggestion per destination: ship from the nearest facility that makes the product
+  // (same routing as checkout), parcel rate by weight; small flat paper goods go as a letter. Rounded up to x.40/x.90.
+  const LETTER = { CHF: 2.5, EUR: 2.9, USD: 3.9 };
+  const isLetter = p => p.category === "stationery" && (p.weight_g || 0) <= 100;
+  const niceFee = v => Math.max(0, Math.ceil(v * 2) / 2 - 0.1);
   function suggest(pid, mid) {
-    const out = { cost: {}, retail: {}, ship: {} }, p = A.prod(pid), kg = (p.weight_g || 200) / 1000, from = (p.facilities || []).includes("f_ch") ? "CH" : "EU";
+    const out = { cost: {}, retail: {}, ship: {} }, p = A.prod(pid), kg = (p.weight_g || 200) / 1000;
     for (const [c, mk] of CUR) {
       const market = A.D.markets.find(m => m.id === mk);
       const q = A.P.quote(A.D, { market: mk, margin: A.S.margin, items: [{ product_id: pid, qty: 1, material_id: mid || undefined }], list: false }).lines[0];
       out.cost[c] = q ? q.unit_cost : 0; out.retail[c] = q ? q.price : 0;
-      const rate = A.D.shipping_rates?.[from]?.[mk] || A.D.shipping_rates?.[mk]?.[mk];
-      out.ship[c] = rate ? Math.ceil((rate.base + rate.per_kg * kg) * market.fx_from_eur * 10) / 10 - 0.1 : 0;
+      if (isLetter(p)) { out.ship[c] = LETTER[c]; continue; }
+      const route = A.P.facilityFor ? A.P.facilityFor(A.D, p, market) : null;
+      const rate = A.D.shipping_rates?.[route?.facility?.region || market.region]?.[market.region];
+      out.ship[c] = rate ? Math.round(niceFee((rate.base + rate.per_kg * kg) * market.fx_from_eur) * 100) / 100 : 0;
     }
     return out;
   }

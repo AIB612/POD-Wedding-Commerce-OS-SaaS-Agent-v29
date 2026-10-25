@@ -1039,7 +1039,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
     $("#roleBar").innerHTML = `<label class="role"><span>${t("role")}</span><select id="roleSel" aria-label="${t("role")}">${D.buyer_types.map(b => `<option value="${b.id}" ${S.buyer === b.id ? "selected" : ""}>${esc(nm(b.name))}</option>`).join("")}</select></label>
       ${S.buyer === "merchant" ? `<button class="btn storebtn ${S.stores.some(c => c.status === "connected") ? "bound" : ""}" data-bind="1">🔗 ${n ? t("storesN", { n }) : t("bindStore")}</button>` : ""}`;
   }
-  function openStoreModal() { $("#storeErr").textContent = ""; renderStoreModal(); if (S.platform === "shopify" && !$("#storeInput").value) { try { $("#storeInput").value = localStorage.getItem("pod-shopify-shop") || "dropkingdev.myshopify.com"; } catch {} } $("#storeModal").classList.add("open"); setTimeout(() => { $("#storeInput").focus(); $("#storeInput").select?.(); }, 50); }
+  function openStoreModal() { $("#storeErr").textContent = ""; renderStoreModal(); if (S.platform === "shopify" && !$("#storeInput").value) { try { $("#storeInput").value = localStorage.getItem("pod-shopify-shop") || ""; } catch {} } $("#storeModal").classList.add("open"); setTimeout(() => { $("#storeInput").focus(); $("#storeInput").select?.(); }, 50); }
   function renderStoreModal() {
     const sh = S.platform === "shopify";
     document.querySelectorAll("#platformSeg button").forEach(b => b.classList.toggle("active", b.dataset.platform === S.platform));

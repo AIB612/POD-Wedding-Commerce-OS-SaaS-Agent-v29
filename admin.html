@@ -829,7 +829,7 @@ async function replyDraft(){
 }
 
 // ---------- Shopify OAuth ----------
-function openShopify(){const inp=document.getElementById('shopifyDomain');if(inp&&!inp.value){try{inp.value=localStorage.getItem('pod-shopify-shop')||'dropkingdev.myshopify.com'}catch{}}document.getElementById('shopifyMask').classList.add('open');setTimeout(()=>{inp.focus();inp.select?.()},50)}
+function openShopify(){const inp=document.getElementById('shopifyDomain');if(inp&&!inp.value){try{inp.value=localStorage.getItem('pod-shopify-shop')||''}catch{}}document.getElementById('shopifyMask').classList.add('open');setTimeout(()=>{inp.focus();inp.select?.()},50)}
 function closeShopify(){document.getElementById('shopifyMask').classList.remove('open')}
 async function startShopifyOAuth(){
   let s=document.getElementById('shopifyDomain').value.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,'');

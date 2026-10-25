@@ -26,7 +26,7 @@ A.buttonsHtml=prov=>[["google",GOOGLE_SVG],["shop",SHOP_SVG]].filter(([p])=>!!pr
 A.anyProvider=prov=>["google","shop"].some(p=>!!prov?.[p]?.configured);
 function renderModal(){
   $("paTitle").textContent=K("auth.title");$("paSub").textContent=K("auth.sub");$("paFine").textContent=K("auth.terms");$("paClose").setAttribute("aria-label",K("auth.close"));
-  const savedShop=(()=>{try{return localStorage.getItem("pod-shopify-shop")||"dropkingdev.myshopify.com"}catch{return "dropkingdev.myshopify.com"}})();
+  const savedShop=(()=>{try{return localStorage.getItem("pod-shopify-shop")||""}catch{return ""}})();
   const shopifyHtml=`<button type="button" class="pa-opt shop" id="paShopifyToggle">${SHOP_SVG}<span>${esc(K("auth.shopifyConnect"))}</span></button><form class="pa-sh-box" id="paShopifyBox"><label for="paShopifyInput">${esc(K("auth.shopifyDomainLabel"))}</label><input class="pa-sh-inp" id="paShopifyInput" type="text" placeholder="your-store.myshopify.com" value="${esc(savedShop)}" autocomplete="off" spellcheck="false"><button type="submit" class="pa-sh-go" id="paShopifyGo">${esc(K("auth.shopifyGo"))}</button></form>`;
   $("paOpts").innerHTML=A.buttonsHtml(A._prov)+shopifyHtml+(A._guest?`<button type="button" class="pa-opt guest" id="paGuest"><span>${esc(K("auth.guest"))}</span><small>${esc(K("auth.guestSub"))}</small></button>`:"");
   const g=$("paGuest");if(g)g.onclick=A.continueAsGuest;
