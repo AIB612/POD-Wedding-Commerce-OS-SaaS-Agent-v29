@@ -49,17 +49,22 @@ async function sqliteDriver(file) {
   const mem = file === ":memory:";
   const abs = mem ? null : path.resolve(file);
   if (abs) fs.mkdirSync(path.dirname(abs), { recursive: true });
-  const conn = abs && fs.existsSync(abs) ? new SQL.Database(fs.readFileSync(abs)) : new SQL.Database();
-  const persist = () => { if (!abs) return; const tmp = `${abs}.tmp`; fs.writeFileSync(tmp, Buffer.from(conn.export())); fs.renameSync(tmp, abs); };
+  let conn = abs && fs.existsSync(abs) ? new SQL.Database(fs.readFileSync(abs)) : new SQL.Database();
+  // Several app processes (e.g. cPanel/LiteSpeed spawning more than one) may share the file: reload when another process wrote it,
+  // so one process never overwrites rows saved by another with its stale in-memory copy.
+  const mtime = () => { try { return fs.statSync(abs).mtimeMs; } catch { return 0; } };
+  let seen = abs ? mtime() : 0;
+  const sync = () => { if (!abs) return; const m = mtime(); if (m && m !== seen) { const fresh = new SQL.Database(fs.readFileSync(abs)); conn.close(); conn = fresh; seen = m; } };
+  const persist = () => { if (!abs) return; const tmp = `${abs}.tmp.${process.pid}`; fs.writeFileSync(tmp, Buffer.from(conn.export())); fs.renameSync(tmp, abs); seen = mtime(); };
   const norm = p => p.map(v => (v === undefined ? null : typeof v === "boolean" ? Number(v) : v));
   return {
     kind: "sqlite", file: abs || ":memory:",
     async query(sql, params = []) {
-      const st = conn.prepare(sql); st.bind(norm(params)); const rows = [];
+      sync(); const st = conn.prepare(sql); st.bind(norm(params)); const rows = [];
       while (st.step()) rows.push(st.getAsObject());
       st.free(); return rows;
     },
-    async run(sql, params = []) { conn.run(sql, norm(params)); const changes = conn.getRowsModified(); persist(); return { changes }; },
+    async run(sql, params = []) { sync(); conn.run(sql, norm(params)); const changes = conn.getRowsModified(); persist(); return { changes }; },
     async insertIgnore(table, row) { return this.run(`INSERT OR IGNORE INTO ${table} (${Object.keys(row).join(",")}) VALUES (${Object.keys(row).map(() => "?").join(",")})`, Object.values(row)); },
     async upsert(table, row, key) { const cols = Object.keys(row); return this.run(`INSERT INTO ${table} (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")}) ON CONFLICT(${key.join(",")}) DO UPDATE SET ${cols.filter(c => !key.includes(c)).map(c => `${c}=excluded.${c}`).join(",")}`, Object.values(row)); },
     async close() { persist(); conn.close(); }
