@@ -252,6 +252,34 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   /** Track user actions for analytics */
   
   /** Simple cache for API responses */
+  
+  /** Keyboard shortcuts */
+  const SHORTCUTS = {
+    "ctrl+z": () => undo(),
+    "ctrl+y": () => redo(),
+    "ctrl+s": () => saveDesign("autosave"),
+    "ctrl+d": () => trackEvent("duplicate"),
+    "escape": () => trackEvent("cancel")
+  };
+  function handleShortcut(e) {
+    const key = (e.ctrlKey || e.metaKey ? "ctrl+" : "") + e.key.toLowerCase();
+    if (SHORTCUTS[key]) { e.preventDefault(); SHORTCUTS[key](); return true; }
+    return false;
+  }
+  /** Touch gesture detection */
+  let touchStart = null;
+  function handleTouchStart(e) { touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() }; }
+  function handleTouchEnd(e) {
+    if (!touchStart) return null;
+    const dx = e.changedTouches[0].clientX - touchStart.x;
+    const dy = e.changedTouches[0].clientY - touchStart.y;
+    const dt = Date.now() - touchStart.t;
+    touchStart = null;
+    if (Math.abs(dx) > 50 && dt < 300) return dx > 0 ? "swipe-right" : "swipe-left";
+    if (Math.abs(dy) > 50 && dt < 300) return dy > 0 ? "swipe-down" : "swipe-up";
+    return null;
+  }
+
   const cache = new Map();
   function cached(key, fn, ttl = 60000) {
     const hit = cache.get(key);
