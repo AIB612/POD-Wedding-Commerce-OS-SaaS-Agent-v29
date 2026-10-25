@@ -20,15 +20,15 @@
   '.sf-addr{margin-top:10px!important;color:#e9e2d9!important;font-weight:600;overflow-wrap:anywhere}'+'@media(max-width:1100px){.sf-top{grid-template-columns:repeat(3,1fr)}.sf-col-brand,.sf-contact{grid-column:span 3}}'+
   '@media(max-width:900px){.sf-top{grid-template-columns:1fr 1fr}.sf-col-brand,.sf-contact{grid-column:1/-1}}'+
   '@media(max-width:520px){.sf-in{padding:40px 20px 24px}.sf-bottom{flex-direction:column;align-items:flex-start}}';
-  var y=new Date().getFullYear(),MAIL='Sherryxuex@Gmail.com'; /* contact e-mail shown in the footer (single place to change) */
+  var y=new Date().getFullYear(),MAIL=''; /* contact e-mail shown in the footer (single place to change) */
   var html='<footer class="sf" role="contentinfo"><div class="sf-in"><div class="sf-top">'+
    '<div class="sf-col-brand"><div class="sf-brand"><span class="sf-logo">P</span>Wed.AI</div><p>Matching wedding invitations, welcome signs, favours and gifts — designed in one studio, printed on demand and shipped from Switzerland across Europe.</p></div>'+
    '<nav aria-label="Shop"><h4>Shop</h4><ul><li><a href="/">Home</a></li><li><a href="/checkout">Cart &amp; checkout</a></li></ul></nav>'+
    '<nav aria-label="Create"><h4>Create</h4><ul><li><a href="/studio.html">Design studio</a></li><li><a href="/account">My designs &amp; orders</a></li><li><a href="/agent.html">POD Agent</a></li></ul></nav>'+
    '<nav aria-label="Help"><h4>Help</h4><ul><li><a href="/shipping">Shipping &amp; production times</a></li><li><a href="/returns">Returns &amp; defects</a></li><li><a href="/account#find-order">Find my order</a></li></ul></nav>'+
    '<nav aria-label="Legal"><h4>Legal</h4><ul><li><a href="/privacy">Privacy policy</a></li><li><a href="/terms">Terms of sale</a></li><li><a href="/returns">Returns policy</a></li><li><a href="/imprint">Imprint / Impressum</a></li></ul></nav>'+
-   '<div class="sf-contact"><h4>Questions about your order?</h4><p style="margin-top:0">We answer personally, usually within one business day.</p><a class="sf-mail" href="mailto:'+MAIL+'">Email us</a><p class="sf-addr">'+MAIL+'</p></div>'+
-  '</div><div class="sf-bottom"><div class="sf-legal"><span>&copy; '+y+' Chenxue Branny, Basel</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/imprint">Imprint</a><a href="mailto:'+MAIL+'">'+MAIL+'</a></div>'+
+   '<div class="sf-contact"><h4>Questions about your order?</h4><p style="margin-top:0">We answer personally, usually within one business day.</p></div>'+
+  '</div><div class="sf-bottom"><div class="sf-legal"><span>&copy; '+y+' Chenxue Branny, Basel</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/imprint">Imprint</a></div>'+
    '<span class="sf-loc" title="Market and currency (change it in the header)">'+(window.PODMarket?(PODMarket.get()+' · '+PODMarket.currency()):'CHF / EUR')+'</span>'+
    '<div class="sf-pay" aria-label="Payment methods"><span class="sf-badge sf-twint">TWINT</span><span class="sf-badge sf-pp">Pay<i>Pal</i></span></div>'+
   '</div></div></footer>';

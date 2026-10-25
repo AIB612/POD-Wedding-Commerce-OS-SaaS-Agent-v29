@@ -39,13 +39,13 @@ body{margin:0;min-height:100vh;background:linear-gradient(145deg,#e8ddd3,#f9f5ef
 <script>
 const token=new URLSearchParams(location.search).get("token");
 const K=(k,v)=>window.WeddingI18n?.k?WeddingI18n.k(k,v):k,$=id=>document.getElementById(id);
-const CONTACT="Sherryxuex@Gmail.com";
+const CONTACT="";
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 /** Friendly dead end: missing or invalid token → explain, offer sign-in, order lookup and contact. */
 function problem(kind){
   document.title=K("pf."+kind+".title")+" · Wed.AI";
   $("content").innerHTML=`<div class="state" role="alert"><div class="ic" aria-hidden="true">✉</div><h2>${esc(K("pf."+kind+".title"))}</h2><p>${esc(K("pf."+kind+".text"))}</p>
-  <div class="actions"><a class="b approve" href="/account.html#orders">${esc(K("pf.signin"))}</a><a class="b secondary" href="/account#find-order">${esc(K("pf.find"))}</a><a class="b secondary" href="mailto:${CONTACT}?subject=${encodeURIComponent("Proof link")}">${esc(K("pf.contact"))}</a></div></div>`;
+  <div class="actions"><a class="b approve" href="/account.html#orders">${esc(K("pf.signin"))}</a><a class="b secondary" href="/account#find-order">${esc(K("pf.find"))}</a></div></div>`;
 }
 async function load(){
   if(!token||token.length<8){problem("missing");return}
@@ -81,6 +81,6 @@ async function requestChanges(){
 }
 window.addEventListener('wedding-language-change',()=>location.reload());load();
 </script>
-<div id="site-footer"></div><script src="/footer.js" defer></script>
+<div id="site-footer"></div><script src="/footer.js?v=20261025a" defer></script>
 </body>
 </html>
