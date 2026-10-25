@@ -250,6 +250,35 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   /** Font recommendations by event type */
   
   /** Track user actions for analytics */
+  
+  /** Simple cache for API responses */
+  const cache = new Map();
+  function cached(key, fn, ttl = 60000) {
+    const hit = cache.get(key);
+    if (hit && Date.now() - hit.ts < ttl) return hit.data;
+    const data = fn();
+    cache.set(key, { data, ts: Date.now() });
+    return data;
+  }
+  /** Undo/redo stack for design changes */
+  const history = { stack: [], index: -1, max: 20 };
+  function pushHistory(state) {
+    history.stack = history.stack.slice(0, history.index + 1);
+    history.stack.push(JSON.stringify(state));
+    if (history.stack.length > history.max) history.stack.shift();
+    history.index = history.stack.length - 1;
+  }
+  function undo() {
+    if (history.index <= 0) return null;
+    history.index--;
+    return JSON.parse(history.stack[history.index]);
+  }
+  function redo() {
+    if (history.index >= history.stack.length - 1) return null;
+    history.index++;
+    return JSON.parse(history.stack[history.index]);
+  }
+
   function trackEvent(action, data = {}) {
     const event = { action, ...data, ts: Date.now(), page: "studio" };
     if (typeof gtag === "function") gtag("event", action, data);
