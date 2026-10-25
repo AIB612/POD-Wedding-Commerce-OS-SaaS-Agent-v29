@@ -30,7 +30,7 @@ api_version = "2025-10"
   # The server also tries webhookSubscriptionCreate per shop as a fallback (shop-specific subscriptions).
   # orders/* topics require approved Protected customer data access (Dev Dashboard > app > API access requests).
   [[webhooks.subscriptions]]
-  topics = [ "orders/create", "app/uninstalled" ]
+  topics = [ "app/uninstalled" ]  # add "orders/create" back once Protected customer data access is approved
   uri = "https://wed.swisspro.site/api/shopify/app/webhooks"
 
   # Mandatory GDPR compliance webhooks (can only be declared here, not via the API).
