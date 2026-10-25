@@ -281,6 +281,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
     if (!mp) return null;
     // Check for view-specific image
     if (view === "front") return mp.src;
+    if (mp.views && mp.views[view]) return mp.views[view]; // catalog views object (front/back/side)
     if (view === "back" && mp.back) return mp.back;
     if (view === "side" && mp.side) return mp.side;
     return mp.src; // fallback to front
@@ -288,7 +289,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   
   function hasMultiView(product) {
     const mp = product.mockup_photo;
-    return mp && (mp.back || mp.side);
+    return !!(mp && (mp.views?.back || mp.views?.side || mp.back || mp.side));
   }
 
   function initClickGuard() {
@@ -1004,10 +1005,22 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   // ------------------------------------------------------------------ drawers
   function openDrawer(title, body, foot = "") { $("#drawerTitle").textContent = title; $("#drawerBody").innerHTML = body; $("#drawerFoot").innerHTML = foot; $("#drawer").classList.add("open"); $("#drawerMask").classList.add("open"); $("#drawer").setAttribute("aria-hidden", "false"); drawAll(); }
   function closeDrawer() { $("#drawer").classList.remove("open"); $("#drawerMask").classList.remove("open"); $("#drawer").setAttribute("aria-hidden", "true"); }
+  /** Front / back / side photos (mockup_photo.views): front keeps the live design canvas, back/side show the product photo. */
+  function viewStrip(p) {
+    if (!hasMultiView(p)) return "";
+    const btn = v => { const src = v === "front" ? p.mockup_photo.src : getViewSrc(p, v); return src ? `<button type="button" class="pview${v === "front" ? " active" : ""}" data-pview="${v}" data-src="${esc(src)}" title="${esc(v)}"><img src="${esc(src)}" alt="${esc(v)}" loading="lazy"><span>${esc(v)}</span></button>` : ""; };
+    return `<img class="pview-img" alt="" style="display:none"><div class="pviews">${VIEWS.map(btn).join("")}</div>`;
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest?.(".pview"); if (!b) return;
+    const m = b.closest(".pmedia"), c = m.querySelector("canvas"), i = m.querySelector("img.pview-img");
+    m.querySelectorAll(".pview").forEach(x => x.classList.toggle("active", x === b));
+    if (b.dataset.pview === "front") { c.style.display = ""; i.style.display = "none"; } else { i.src = b.dataset.src; i.style.display = ""; c.style.display = "none"; }
+  });
   function productDetail(pid) {
     const p = prod(pid), tiers = [...D.qty_tiers].sort((a, b) => a.min_qty - b.min_qty).map(tr => ({ q: tr.min_qty, u: unitOf(P.quote(D, { market: S.market, ...qopts(), items: [{ product_id: pid, qty: tr.min_qty }] }).lines[0]) }));
     const facs = ["CH", "EU", "US"].map(r => { const f = P.facilityFor(D, p, D.markets.find(m => m.region === r)); return `<div class="kv"><span>${esc(nm(D.markets.find(m => m.region === r).name))}</span><b>${f ? `${esc(f.facility.city)} · ${f.days} ${t("days")}${f.cross_border ? " · " + t("cross") : ""}` : "—"}</b></div>`; }).join("");
-    const body = `<div class="pdetail"><canvas data-p="${pid}" data-size="500" data-area="1"></canvas><div>
+    const body = `<div class="pdetail"><div class="pmedia"><canvas data-p="${pid}" data-size="500" data-area="1"></canvas>${viewStrip(p)}</div><div>
       <div class="row"><span class="chip">${esc(p.technique)}</span><span class="chip gray">${t("cat_" + p.category)}</span>${(p.eco_tags||[]).map(x=>`<span class="chip gray">♻ ${esc(x)}</span>`).join("")}</div>
       <div class="kv"><span>${t("printArea")}</span><b>${p.print_area_mm[0]} × ${p.print_area_mm[1]} mm</b></div><div class="kv"><span>${t("weight")}</span><b>${p.weight_g} g</b></div>
       ${p.sizes ? `<div class="kv"><span>${t("sizes")}</span><b>${esc(p.sizes.join(" · "))}</b></div>` : ""}

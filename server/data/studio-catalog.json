@@ -196,7 +196,14 @@
           26.6,
           37,
           49.3
-        ]
+        ],
+        "side": "assets/mockups/tee-side.jpg",
+        "back": "assets/mockups/tee-back.jpg",
+        "views": {
+          "front": "assets/mockups/tee.jpg",
+          "back": "assets/mockups/tee-back.jpg",
+          "side": "assets/mockups/tee-side.jpg"
+        }
       },
       "materials": [
         {
@@ -286,7 +293,14 @@
           28.7,
           37.8,
           43.3
-        ]
+        ],
+        "side": "assets/mockups/hoodie-side.jpg",
+        "back": "assets/mockups/hoodie-back.jpg",
+        "views": {
+          "front": "assets/mockups/hoodie.jpg",
+          "back": "assets/mockups/hoodie-back.jpg",
+          "side": "assets/mockups/hoodie-side.jpg"
+        }
       },
       "materials": [
         {
@@ -373,7 +387,12 @@
           30,
           11,
           11
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/polo_emb.jpg",
+          "back": "assets/mockups/polo-back.jpg",
+          "side": "assets/mockups/polo-side.jpg"
+        }
       },
       "materials": [
         {
@@ -456,7 +475,12 @@
           35.3,
           30.4,
           15.2
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/cap_emb.jpg",
+          "back": "assets/mockups/cap-back.jpg",
+          "side": "assets/mockups/cap-side.jpg"
+        }
       },
       "materials": [
         {
@@ -542,7 +566,12 @@
           30,
           11,
           11
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/fleece.jpg",
+          "back": "assets/mockups/fleece-back.jpg",
+          "side": "assets/mockups/fleece-side.jpg"
+        }
       },
       "materials": [
         {
@@ -628,7 +657,12 @@
           29.4,
           37.8,
           45.5
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/windbreaker.jpg",
+          "back": "assets/mockups/windbreaker-back.jpg",
+          "side": "assets/mockups/windbreaker-side.jpg"
+        }
       },
       "materials": [
         {
@@ -714,7 +748,12 @@
           14.4,
           12.1,
           20
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/leggings.jpg",
+          "back": "assets/mockups/leggings-back.jpg",
+          "side": "assets/mockups/leggings-side.jpg"
+        }
       },
       "materials": [
         {
@@ -796,7 +835,13 @@
           43.8,
           36.3,
           41.4
-        ]
+        ],
+        "back": "assets/mockups/apron-back.jpg",
+        "views": {
+          "front": "assets/mockups/apron.jpg",
+          "back": "assets/mockups/apron-back.jpg",
+          "side": "assets/mockups/apron-side.jpg"
+        }
       },
       "materials": [
         {
@@ -880,7 +925,13 @@
           35.9,
           28.4,
           28.4
-        ]
+        ],
+        "back": "assets/mockups/baby_body-back.jpg",
+        "views": {
+          "front": "assets/mockups/baby_body.jpg",
+          "back": "assets/mockups/baby_body-back.jpg",
+          "side": "assets/mockups/baby_body-side.jpg"
+        }
       },
       "materials": [
         {
@@ -966,7 +1017,12 @@
           29.9,
           37.8,
           45.5
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/xmas_sweater.jpg",
+          "back": "assets/mockups/sweater-back.jpg",
+          "side": "assets/mockups/xmas_sweater-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1049,7 +1105,12 @@
           29.7,
           24.9,
           24.9
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/pet_bandana.jpg",
+          "back": "assets/mockups/pet_bandana-back.jpg",
+          "side": "assets/mockups/pet_bandana-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1114,7 +1175,12 @@
           40,
           39.8,
           29.9
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/pet_bed.jpg",
+          "back": "assets/mockups/pet_bed-back.jpg",
+          "side": "assets/mockups/pet_bed-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1181,7 +1247,12 @@
           59.1,
           24,
           16.5
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/pet_bowl.jpg",
+          "back": "assets/mockups/pet_bowl-back.jpg",
+          "side": "assets/mockups/pet_bowl-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1250,7 +1321,14 @@
           42.5,
           29.9,
           29.3
-        ]
+        ],
+        "side": "assets/mockups/mug-side.jpg",
+        "back": "assets/mockups/mug-back.jpg",
+        "views": {
+          "front": "assets/mockups/mug.jpg",
+          "back": "assets/mockups/mug-back.jpg",
+          "side": "assets/mockups/mug-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1312,7 +1390,12 @@
           42.5,
           29.9,
           29.3
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/magic_mug.jpg",
+          "back": "assets/mockups/magic_mug-back.jpg",
+          "side": "assets/mockups/magic_mug-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1370,7 +1453,12 @@
           53.2,
           17.6,
           16.9
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/espresso.jpg",
+          "back": "assets/mockups/espresso-back.jpg",
+          "side": "assets/mockups/espresso-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1430,7 +1518,12 @@
           47.4,
           26.4,
           23.5
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/enamel_mug.jpg",
+          "back": "assets/mockups/enamel_mug-back.jpg",
+          "side": "assets/mockups/enamel_mug-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1498,7 +1591,14 @@
           36.9,
           32.1,
           32.1
-        ]
+        ],
+        "side": "assets/mockups/tumbler-side.jpg",
+        "back": "assets/mockups/tumbler-back.jpg",
+        "views": {
+          "front": "assets/mockups/tumbler.jpg",
+          "back": "assets/mockups/tumbler-back.jpg",
+          "side": "assets/mockups/tumbler-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1566,7 +1666,13 @@
           49.7,
           17.6,
           18.3
-        ]
+        ],
+        "back": "assets/mockups/bottle-back.jpg",
+        "views": {
+          "front": "assets/mockups/bottle.jpg",
+          "back": "assets/mockups/bottle-back.jpg",
+          "side": "assets/mockups/bottle-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1624,7 +1730,13 @@
           51.3,
           15,
           15.4
-        ]
+        ],
+        "side": "assets/mockups/thermos-side.jpg",
+        "views": {
+          "front": "assets/mockups/thermos.jpg",
+          "back": "assets/mockups/thermos-back.jpg",
+          "side": "assets/mockups/thermos-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1685,7 +1797,13 @@
           20.4,
           31.7,
           42.2
-        ]
+        ],
+        "side": "assets/mockups/poster-side.jpg",
+        "views": {
+          "front": "assets/mockups/poster.jpg",
+          "back": "assets/mockups/poster-back.jpg",
+          "side": "assets/mockups/poster-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1756,7 +1874,13 @@
           20.4,
           31.7,
           42.2
-        ]
+        ],
+        "back": "assets/mockups/canvas-back.jpg",
+        "views": {
+          "front": "assets/mockups/canvas.jpg",
+          "back": "assets/mockups/canvas-back.jpg",
+          "side": "assets/mockups/canvas-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1815,7 +1939,12 @@
           20.4,
           31.7,
           42.2
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/framed.jpg",
+          "back": "assets/mockups/framed-back.jpg",
+          "side": "assets/mockups/frame-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1882,7 +2011,12 @@
           20.4,
           31.7,
           42.2
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/metal.jpg",
+          "back": "assets/mockups/metal-back.jpg",
+          "side": "assets/mockups/metal-side.jpg"
+        }
       },
       "materials": [
         {
@@ -1950,7 +2084,12 @@
           20.4,
           31.7,
           42.2
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/acrylic_wall.jpg",
+          "back": "assets/mockups/acrylic_wall-back.jpg",
+          "side": "assets/mockups/wall_art-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2020,7 +2159,12 @@
           30,
           54.8,
           47.5
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/tapestry.jpg",
+          "back": "assets/mockups/tapestry-back.jpg",
+          "side": "assets/mockups/tapestry-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2080,7 +2224,13 @@
           30.8,
           53.2,
           40.5
-        ]
+        ],
+        "side": "assets/mockups/puzzle-side.jpg",
+        "views": {
+          "front": "assets/mockups/puzzle.jpg",
+          "back": "assets/mockups/puzzle-back.jpg",
+          "side": "assets/mockups/puzzle-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2136,7 +2286,12 @@
           30,
           59.8,
           39.8
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/rug.jpg",
+          "back": "assets/mockups/rug-back.jpg",
+          "side": "assets/mockups/rug-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2197,7 +2352,13 @@
           28.3,
           48.4,
           48.4
-        ]
+        ],
+        "back": "assets/mockups/pillow-back.jpg",
+        "views": {
+          "front": "assets/mockups/pillow.jpg",
+          "back": "assets/mockups/pillow-back.jpg",
+          "side": "assets/mockups/pillow-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2257,7 +2418,13 @@
           50.3,
           22.9,
           18.5
-        ]
+        ],
+        "side": "assets/mockups/candle-side.jpg",
+        "views": {
+          "front": "assets/mockups/candle.jpg",
+          "back": "assets/mockups/candle-back.jpg",
+          "side": "assets/mockups/candle-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2316,7 +2483,12 @@
           38.6,
           23.1,
           23.1
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/ornament.jpg",
+          "back": "assets/mockups/ornament-back.jpg",
+          "side": "assets/mockups/ornament-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2394,7 +2566,12 @@
           45.8,
           18.5,
           23.1
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/stocking.jpg",
+          "back": "assets/mockups/stocking-back.jpg",
+          "side": "assets/mockups/stocking-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2471,7 +2648,12 @@
           31.5,
           51,
           36.5
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/wrap_paper.jpg",
+          "back": "assets/mockups/wrap_paper-back.jpg",
+          "side": "assets/mockups/wrap_paper-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2548,7 +2730,13 @@
           39.4,
           62.7,
           20.9
-        ]
+        ],
+        "side": "assets/mockups/banner-side.jpg",
+        "views": {
+          "front": "assets/mockups/banner.jpg",
+          "back": "assets/mockups/banner-back.jpg",
+          "side": "assets/mockups/banner-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2626,7 +2814,12 @@
           38.8,
           22.7,
           22.7
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/tattoo.jpg",
+          "back": "assets/mockups/tattoo-back.jpg",
+          "side": "assets/mockups/tattoo-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2706,7 +2899,12 @@
           34.1,
           49.1,
           34.8
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/greeting.jpg",
+          "back": "assets/mockups/card-back.jpg",
+          "side": "assets/mockups/greeting-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2786,7 +2984,12 @@
           34.3,
           47.1,
           33.4
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/postcard.jpg",
+          "back": "assets/mockups/postcard-back.jpg",
+          "side": "assets/mockups/postcard-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2867,7 +3070,13 @@
           28.4,
           30.1,
           42.9
-        ]
+        ],
+        "back": "assets/mockups/notebook-back.jpg",
+        "views": {
+          "front": "assets/mockups/notebook.jpg",
+          "back": "assets/mockups/notebook-back.jpg",
+          "side": "assets/mockups/notebook-side.jpg"
+        }
       },
       "materials": [
         {
@@ -2947,7 +3156,12 @@
           19.0,
           42.9,
           60.9
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/invitation-portrait.jpg",
+          "back": "assets/mockups/invitation-back.jpg",
+          "side": "assets/mockups/invitation-side.jpg"
+        }
       },
       "materials": [
         {
@@ -3026,7 +3240,12 @@
           17.6,
           33.8,
           67.6
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/menu_card-portrait.jpg",
+          "back": "assets/mockups/menu_card-back.jpg",
+          "side": "assets/mockups/menu_card-side.jpg"
+        }
       },
       "materials": [
         {
@@ -3106,7 +3325,13 @@
           33.5,
           33.2,
           33.2
-        ]
+        ],
+        "side": "assets/mockups/sticker-side.jpg",
+        "views": {
+          "front": "assets/mockups/sticker.jpg",
+          "back": "assets/mockups/sticker-back.jpg",
+          "side": "assets/mockups/sticker-side.jpg"
+        }
       },
       "eco_tags": [
         "Plastic-free Packaging",
@@ -3157,7 +3382,12 @@
           23.4,
           26.4,
           53
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/phone_case.jpg",
+          "back": "assets/mockups/phone-back.jpg",
+          "side": "assets/mockups/phone_case-side.jpg"
+        }
       },
       "eco_tags": []
     },
@@ -3197,7 +3427,12 @@
           34.2,
           71.3,
           31.7
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/mousepad_xl.jpg",
+          "back": "assets/mockups/mousepad_xl-back.jpg",
+          "side": "assets/mockups/mousepad-side.jpg"
+        }
       },
       "eco_tags": []
     },
@@ -3247,7 +3482,13 @@
           38.4,
           40.7,
           46.4
-        ]
+        ],
+        "back": "assets/mockups/tote-back.jpg",
+        "views": {
+          "front": "assets/mockups/tote.jpg",
+          "back": "assets/mockups/tote-back.jpg",
+          "side": "assets/mockups/tote-side.jpg"
+        }
       },
       "materials": [
         {
@@ -3316,7 +3557,12 @@
           42,
           5,
           24
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/lanyard.jpg",
+          "back": "assets/mockups/lanyard-back.jpg",
+          "side": "assets/mockups/lanyard-side.jpg"
+        }
       },
       "eco_tags": []
     },
@@ -3355,7 +3601,13 @@
           33.3,
           48.6,
           34.3
-        ]
+        ],
+        "side": "assets/mockups/laptop_sleeve-side.jpg",
+        "views": {
+          "front": "assets/mockups/laptop_sleeve.jpg",
+          "back": "assets/mockups/laptop_sleeve-back.jpg",
+          "side": "assets/mockups/laptop_sleeve-side.jpg"
+        }
       },
       "eco_tags": []
     },
@@ -3393,7 +3645,13 @@
           56.7,
           21.3,
           25.5
-        ]
+        ],
+        "back": "assets/mockups/backpack-back.jpg",
+        "views": {
+          "front": "assets/mockups/backpack.jpg",
+          "back": "assets/mockups/backpack-back.jpg",
+          "side": "assets/mockups/backpack-side.jpg"
+        }
       },
       "eco_tags": []
     },
@@ -3432,7 +3690,12 @@
           33.6,
           17.6,
           23.5
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/trophy.jpg",
+          "back": "assets/mockups/trophy-back.jpg",
+          "side": "assets/mockups/trophy-side.jpg"
+        }
       },
       "materials": [
         {
@@ -3503,7 +3766,13 @@
           29.4,
           21.1,
           31.7
-        ]
+        ],
+        "side": "assets/mockups/acrylic_stand-side.jpg",
+        "views": {
+          "front": "assets/mockups/acrylic_stand.jpg",
+          "back": "assets/mockups/acrylic_stand-back.jpg",
+          "side": "assets/mockups/acrylic_stand-side.jpg"
+        }
       },
       "materials": [
         {
@@ -3571,7 +3840,12 @@
           14.7,
           33.4,
           50.2
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/welcome_sign.jpg",
+          "back": "assets/mockups/welcome_sign-back.jpg",
+          "side": "assets/mockups/welcome_sign-side.jpg"
+        }
       },
       "materials": [
         {
@@ -3642,7 +3916,12 @@
           25.8,
           31.7,
           44
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/photo_frame.jpg",
+          "back": "assets/mockups/photo_frame-back.jpg",
+          "side": "assets/mockups/photo_frame-side.jpg"
+        }
       },
       "materials": [
         {
@@ -3712,7 +3991,12 @@
           47.3,
           11.7,
           11.7
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/engraved_jewelry.jpg",
+          "back": "assets/mockups/engraved_jewelry-back.jpg",
+          "side": "assets/mockups/engraved_jewelry-side.jpg"
+        }
       },
       "eco_tags": [
         "Local Production"
@@ -3753,7 +4037,13 @@
           41.8,
           17.6,
           26.4
-        ]
+        ],
+        "side": "assets/mockups/luggage_tag-side.jpg",
+        "views": {
+          "front": "assets/mockups/luggage_tag.jpg",
+          "back": "assets/mockups/luggage_tag-back.jpg",
+          "side": "assets/mockups/luggage_tag-side.jpg"
+        }
       },
       "eco_tags": []
     },
@@ -3792,7 +4082,12 @@
           35.4,
           42.2,
           42.2
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/gift_box.jpg",
+          "back": "assets/mockups/gift_box-back.jpg",
+          "side": "assets/mockups/gift_box-side.jpg"
+        }
       },
       "eco_tags": [
         "Local Production"
@@ -3831,7 +4126,12 @@
           43.4,
           13.2,
           13.2
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/popsocket.jpg",
+          "back": "assets/mockups/popsocket-back.jpg",
+          "side": "assets/mockups/popsocket-side.jpg"
+        }
       },
       "eco_tags": []
     },
@@ -3878,7 +4178,12 @@
           23.9,
           26.4,
           53
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/neck_gaiter.jpg",
+          "back": "assets/mockups/neck_gaiter-back.jpg",
+          "side": "assets/mockups/neck_gaiter-side.jpg"
+        }
       },
       "materials": [
         {
@@ -3944,7 +4249,12 @@
           39.5,
           40,
           22
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/ski_case.jpg",
+          "back": "assets/mockups/ski_case-back.jpg",
+          "side": "assets/mockups/ski_case-side.jpg"
+        }
       },
       "materials": [
         {
@@ -4020,7 +4330,12 @@
           17.8,
           51.5,
           58.7
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/sweatshirt.jpg",
+          "back": "assets/mockups/sweatshirt-back.jpg",
+          "side": "assets/mockups/sweatshirt-side.jpg"
+        }
       }
     },
     {
@@ -4075,7 +4390,12 @@
           20.2,
           45.3,
           57.6
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/zip_hoodie.jpg",
+          "back": "assets/mockups/zip_hoodie-back.jpg",
+          "side": "assets/mockups/zip_hoodie-side.jpg"
+        }
       }
     },
     {
@@ -4132,7 +4452,12 @@
           12.6,
           38.5,
           49.5
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/long_sleeve.jpg",
+          "back": "assets/mockups/long_sleeve-back.jpg",
+          "side": "assets/mockups/long_sleeve-side.jpg"
+        }
       }
     },
     {
@@ -4186,7 +4511,12 @@
           26.2,
           18.7,
           24.9
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/joggers.jpg",
+          "back": "assets/mockups/joggers-back.jpg",
+          "side": "assets/mockups/joggers-side.jpg"
+        }
       }
     },
     {
@@ -4236,7 +4566,14 @@
           49,
           51.9,
           26
-        ]
+        ],
+        "side": "assets/mockups/beanie-side.jpg",
+        "back": "assets/mockups/beanie-back.jpg",
+        "views": {
+          "front": "assets/mockups/beanie.jpg",
+          "back": "assets/mockups/beanie-back.jpg",
+          "side": "assets/mockups/beanie-side.jpg"
+        }
       }
     },
     {
@@ -4286,7 +4623,12 @@
           32.3,
           23.8,
           11.9
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/bucket_hat.jpg",
+          "back": "assets/mockups/bucket_hat-back.jpg",
+          "side": "assets/mockups/bucket_hat-side.jpg"
+        }
       }
     },
     {
@@ -4334,7 +4676,12 @@
           40.3,
           49.3,
           22.4
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/snapback.jpg",
+          "back": "assets/mockups/snapback-back.jpg",
+          "side": "assets/mockups/snapback-side.jpg"
+        }
       }
     },
     {
@@ -4385,7 +4732,12 @@
           33.9,
           14.1,
           31.9
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/socks.jpg",
+          "back": "assets/mockups/socks-back.jpg",
+          "side": "assets/mockups/sock-side.jpg"
+        }
       }
     },
     {
@@ -4437,7 +4789,12 @@
           60.8,
           25.5,
           12.1
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/slides.jpg",
+          "back": "assets/mockups/slides-back.jpg",
+          "side": "assets/mockups/slides-side.jpg"
+        }
       }
     },
     {
@@ -4493,7 +4850,12 @@
           37.7,
           49.3,
           21.1
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/canvas_shoes.jpg",
+          "back": "assets/mockups/canvas_shoes-back.jpg",
+          "side": "assets/mockups/canvas_shoes-side.jpg"
+        }
       }
     },
     {
@@ -4532,7 +4894,12 @@
           27.1,
           36.1,
           27.7
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/glass_cup.jpg",
+          "back": "assets/mockups/glass_cup-back.jpg",
+          "side": "assets/mockups/glass_cup-side.jpg"
+        }
       }
     },
     {
@@ -4581,7 +4948,12 @@
           15.2,
           31.5,
           51.3
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/travel_mug.jpg",
+          "back": "assets/mockups/travel_mug-back.jpg",
+          "side": "assets/mockups/travel_mug-side.jpg"
+        }
       }
     },
     {
@@ -4628,7 +5000,12 @@
           23.6,
           31.2,
           52.6
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/straw_tumbler.jpg",
+          "back": "assets/mockups/straw_tumbler-back.jpg",
+          "side": "assets/mockups/straw_tumbler-side.jpg"
+        }
       }
     },
     {
@@ -4675,7 +5052,12 @@
           35.9,
           42.9,
           49.5
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/drawstring_bag.jpg",
+          "back": "assets/mockups/drawstring_bag-back.jpg",
+          "side": "assets/mockups/drawstring_bag-side.jpg"
+        }
       }
     },
     {
@@ -4722,7 +5104,12 @@
           48.9,
           59.4,
           35.6
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/duffle_bag.jpg",
+          "back": "assets/mockups/duffle_bag-back.jpg",
+          "side": "assets/mockups/duffle_bag-side.jpg"
+        }
       }
     },
     {
@@ -4769,7 +5156,12 @@
           39.1,
           48,
           24
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/fanny_pack.jpg",
+          "back": "assets/mockups/fanny_pack-back.jpg",
+          "side": "assets/mockups/fanny_pack-side.jpg"
+        }
       }
     },
     {
@@ -4816,7 +5208,12 @@
           38.6,
           69.3,
           41.6
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/pouch.jpg",
+          "back": "assets/mockups/pouch-back.jpg",
+          "side": "assets/mockups/pouch-side.jpg"
+        }
       }
     },
     {
@@ -4861,7 +5258,13 @@
           36.7,
           51.9,
           35.6
-        ]
+        ],
+        "side": "assets/mockups/airpods_case-side.jpg",
+        "views": {
+          "front": "assets/mockups/airpods_case.jpg",
+          "back": "assets/mockups/airpods_case-back.jpg",
+          "side": "assets/mockups/airpods_case-side.jpg"
+        }
       }
     },
     {
@@ -4908,7 +5311,12 @@
           18.3,
           52.8,
           38.1
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/tablet_sleeve.jpg",
+          "back": "assets/mockups/tablet_sleeve-back.jpg",
+          "side": "assets/mockups/tablet_sleeve-side.jpg"
+        }
       }
     },
     {
@@ -4955,7 +5363,12 @@
           39.5,
           51.9,
           28.8
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/cable_pouch.jpg",
+          "back": "assets/mockups/cable_pouch-back.jpg",
+          "side": "assets/mockups/cable_pouch-side.jpg"
+        }
       }
     },
     {
@@ -4997,7 +5410,12 @@
           23.9,
           42.1,
           59.4
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/save_date-portrait.jpg",
+          "back": "assets/mockups/save_date-back.jpg",
+          "side": "assets/mockups/save_date-side.jpg"
+        }
       },
       "materials": [
         {
@@ -5077,7 +5495,12 @@
           13,
           52.4,
           73.9
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/rsvp_card.jpg",
+          "back": "assets/mockups/rsvp_card-back.jpg",
+          "side": "assets/mockups/rsvp_card-side.jpg"
+        }
       }
     },
     {
@@ -5118,7 +5541,13 @@
           41.5,
           59.4,
           33
-        ]
+        ],
+        "side": "assets/mockups/place_card-side.jpg",
+        "views": {
+          "front": "assets/mockups/place_card.jpg",
+          "back": "assets/mockups/place_card-back.jpg",
+          "side": "assets/mockups/place_card-side.jpg"
+        }
       }
     },
     {
@@ -5159,7 +5588,13 @@
           39.5,
           20.5,
           29
-        ]
+        ],
+        "side": "assets/mockups/table_number-side.jpg",
+        "views": {
+          "front": "assets/mockups/table_number.jpg",
+          "back": "assets/mockups/table_number-back.jpg",
+          "side": "assets/mockups/table_number-side.jpg"
+        }
       }
     },
     {
@@ -5199,7 +5634,13 @@
           17,
           48.8,
           69.1
-        ]
+        ],
+        "side": "assets/mockups/calendar-side.jpg",
+        "views": {
+          "front": "assets/mockups/calendar.jpg",
+          "back": "assets/mockups/calendar-back.jpg",
+          "side": "assets/mockups/calendar-side.jpg"
+        }
       }
     },
     {
@@ -5246,7 +5687,13 @@
           27.8,
           44,
           52.8
-        ]
+        ],
+        "side": "assets/mockups/blanket-side.jpg",
+        "views": {
+          "front": "assets/mockups/blanket.jpg",
+          "back": "assets/mockups/blanket-back.jpg",
+          "side": "assets/mockups/blanket-side.jpg"
+        }
       }
     },
     {
@@ -5293,7 +5740,13 @@
           15.1,
           35.6,
           71.3
-        ]
+        ],
+        "side": "assets/mockups/towel-side.jpg",
+        "views": {
+          "front": "assets/mockups/towel.jpg",
+          "back": "assets/mockups/towel-back.jpg",
+          "side": "assets/mockups/towel-side.jpg"
+        }
       }
     },
     {
@@ -5333,7 +5786,13 @@
           55.3,
           25.7,
           25.7
-        ]
+        ],
+        "side": "assets/mockups/coaster-side.jpg",
+        "views": {
+          "front": "assets/mockups/coaster.jpg",
+          "back": "assets/mockups/coaster-back.jpg",
+          "side": "assets/mockups/coaster-side.jpg"
+        }
       }
     },
     {
@@ -5373,7 +5832,12 @@
           39,
           59.2,
           22.2
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/name_badge.jpg",
+          "back": "assets/mockups/name_badge-back.jpg",
+          "side": "assets/mockups/name_badge-side.jpg"
+        }
       }
     },
     {
@@ -5411,7 +5875,13 @@
           37.4,
           27.5,
           27.5
-        ]
+        ],
+        "side": "assets/mockups/pin-side.jpg",
+        "views": {
+          "front": "assets/mockups/pin.jpg",
+          "back": "assets/mockups/pin-back.jpg",
+          "side": "assets/mockups/pin-side.jpg"
+        }
       }
     },
     {
@@ -5449,7 +5919,13 @@
           44.6,
           30.6,
           30.6
-        ]
+        ],
+        "side": "assets/mockups/keychain-side.jpg",
+        "views": {
+          "front": "assets/mockups/keychain.jpg",
+          "back": "assets/mockups/keychain-back.jpg",
+          "side": "assets/mockups/keychain-side.jpg"
+        }
       }
     },
     {
@@ -5489,7 +5965,13 @@
           20.3,
           59.2,
           59.2
-        ]
+        ],
+        "side": "assets/mockups/photo_book-side.jpg",
+        "views": {
+          "front": "assets/mockups/photo_book.jpg",
+          "back": "assets/mockups/photo_book-back.jpg",
+          "side": "assets/mockups/photo_book-side.jpg"
+        }
       }
     },
     {
@@ -5543,7 +6025,12 @@
           40.5,
           48.4,
           40.9
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/sports_bra.jpg",
+          "back": "assets/mockups/sports_bra-back.jpg",
+          "side": "assets/mockups/sports_bra-side.jpg"
+        }
       }
     },
     {
@@ -5598,7 +6085,12 @@
           20.2,
           46.9,
           61.6
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/team_jersey.jpg",
+          "back": "assets/mockups/team_jersey-back.jpg",
+          "side": "assets/mockups/team_jersey-side.jpg"
+        }
       }
     },
     {
@@ -5638,7 +6130,12 @@
           36.9,
           15,
           42.5
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/yoga_mat.jpg",
+          "back": "assets/mockups/yoga_mat-back.jpg",
+          "side": "assets/mockups/yoga_mat-side.jpg"
+        }
       }
     },
     {
@@ -5685,7 +6182,12 @@
           7.7,
           37.2,
           83.8
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/sports_towel.jpg",
+          "back": "assets/mockups/sports_towel-back.jpg",
+          "side": "assets/mockups/sports_towel-side.jpg"
+        }
       }
     },
     {
@@ -5728,7 +6230,12 @@
           27.6,
           33,
           59.4
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/hang_tag.jpg",
+          "back": "assets/mockups/hang_tag-back.jpg",
+          "side": "assets/mockups/hang_tag-side.jpg"
+        }
       }
     },
     {
@@ -5771,7 +6278,12 @@
           31,
           26,
           36.7
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/packaging_insert.jpg",
+          "back": "assets/mockups/packaging_insert-back.jpg",
+          "side": "assets/mockups/packaging_insert-side.jpg"
+        }
       }
     },
     {
@@ -5812,7 +6324,12 @@
           20.2,
           46.6,
           62.3
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/mailer_bag.jpg",
+          "back": "assets/mockups/mailer_bag-back.jpg",
+          "side": "assets/mockups/mailer_bag-side.jpg"
+        }
       }
     },
     {
@@ -5853,7 +6370,12 @@
           58,
           10.1,
           14.3
-        ]
+        ],
+        "views": {
+          "front": "assets/mockups/tissue_paper.jpg",
+          "back": "assets/mockups/tissue_paper-back.jpg",
+          "side": "assets/mockups/tissue_paper-side.jpg"
+        }
       }
     }
   ],
