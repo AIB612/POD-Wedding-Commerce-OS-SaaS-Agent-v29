@@ -260,6 +260,29 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   /** Detect mobile device */
   
   /** Prevent click-through on mobile overlays */
+  
+  /** Enhanced touch event handling for mobile */
+  function initMobileTouch() {
+    if (!isMobile()) return;
+    // Fast click for buttons
+    document.querySelectorAll("button, .btn, a").forEach(el => {
+      el.style.touchAction = "manipulation";
+    });
+    // Prevent scroll-triggered clicks
+    let scrolling = false;
+    document.addEventListener("touchmove", () => { scrolling = true; }, { passive: true });
+    document.addEventListener("touchend", () => { setTimeout(() => scrolling = false, 100); }, { passive: true });
+    document.addEventListener("click", e => { if (scrolling) e.preventDefault(); }, true);
+  }
+  /** Fix sticky hover on mobile */
+  function fixStickyHover() {
+    if (!isMobile()) return;
+    document.addEventListener("touchstart", () => {}, { passive: true });
+    const style = document.createElement("style");
+    style.textContent = "@media(hover:none){*:hover{background:inherit!important}}";
+    document.head.appendChild(style);
+  }
+
   function preventClickThrough() {
     document.querySelectorAll(".modal, .overlay, .dropdown, .popup").forEach(el => {
       el.addEventListener("touchend", e => e.stopPropagation(), { passive: false });
