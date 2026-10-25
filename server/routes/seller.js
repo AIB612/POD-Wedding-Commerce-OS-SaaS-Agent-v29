@@ -35,7 +35,7 @@ export function sellerRouter({ generatedDir }) {
   r.get("/api/seller/shopify", ah(async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     const a = await allowedShop(req, req.query.shop);
-    res.json({ configured: shopify.isConfigured(), shop: a.shop, connected: !a.reason, reason: a.reason || null, currency: a.row?.currency_code || null, currencies: seller.CURRENCIES, connect_url: a.shop ? `/api/shopify/app/login?shop=${encodeURIComponent(a.shop)}&return_to=${encodeURIComponent("/studio.html")}` : null });
+    res.json({ configured: shopify.isConfigured(), shop: a.shop, connected: !a.reason, reason: a.reason || null, currency: a.row?.currency_code || null, currencies: seller.CURRENCIES, fx_chf: a.row?.currency_code && !seller.CURRENCIES.includes(a.row.currency_code) ? (shopify.fxRates()[a.row.currency_code] || null) : null, connect_url: a.shop ? `/api/shopify/app/login?shop=${encodeURIComponent(a.shop)}&return_to=${encodeURIComponent("/studio.html")}` : null });
   }));
   r.post("/api/seller/publish", rateLimit({ bucket: "seller-publish", windowMs: 60 * 60_000, max: 60 }), express.json({ limit: "100kb" }), ah(async (req, res) => {
     const a = await allowedShop(req, req.body?.shop);

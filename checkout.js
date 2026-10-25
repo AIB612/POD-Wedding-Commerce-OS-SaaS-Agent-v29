@@ -2,7 +2,9 @@
  * Every amount comes from the server quote (/api/storefront/shipping/quote); the server re-quotes again on payment create. */
 (function () {
   const CART_KEY = "pod-cart-v1", CO_KEY = "pod-checkout-v1";
-  const COUNTRIES = ["CH", "LI", "DE", "AT", "FR", "IT", "NL", "BE", "LU", "ES", "PT", "IE", "DK", "SE", "FI", "PL", "CZ"];
+  // CH/LI (CHF) · EU/EEA (EUR) · international (USD) — every country the shipping zones serve, so the checkout
+  // country (which also drives the currency) never silently falls back to Switzerland/CHF.
+  const COUNTRIES = ["CH", "LI", "DE", "AT", "FR", "IT", "NL", "BE", "LU", "ES", "PT", "IE", "DK", "SE", "FI", "PL", "CZ", "SK", "SI", "HU", "HR", "RO", "BG", "GR", "EE", "LV", "LT", "MT", "CY", "NO", "IS", "US", "GB", "CA", "AU", "NZ", "JP", "SG", "HK", "AE", "MX", "BR", "CN"];
   const LOCALE = { zh: "zh-CN", en: "en-GB", de: "de-CH" };
   const I = () => window.WeddingI18n || { k: x => x, t: x => x, lang: () => "en" };
   const K = (key, vars) => I().k(key, vars);
@@ -52,7 +54,7 @@
     try { dn = new Intl.DisplayNames([LOCALE[I().lang()] || "en"], { type: "region" }); } catch (e) {}
     const cur = $("country").value || saved.country || (window.PODMarket ? PODMarket.country() : "CH");
     $("country").innerHTML = COUNTRIES.map(c => `<option value="${c}">${esc(dn ? dn.of(c) : c)}</option>`).join("");
-    $("country").value = COUNTRIES.includes(cur) ? cur : "CH";
+    $("country").value = COUNTRIES.includes(cur) ? cur : ({ CH: "CH", EU: "DE", US: "US" }[window.PODMarket ? PODMarket.get() : "CH"] || "CH");
   }
 
   function renderSummary() {

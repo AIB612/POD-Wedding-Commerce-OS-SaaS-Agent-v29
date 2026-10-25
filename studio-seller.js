@@ -113,17 +113,28 @@
       : `<div class="box note">No images yet.</div>`;
     return `${opts}<p class="note">Final product images rendered from your design on the studio mockups. Review the result before listing; adjust placement in the Design tab if needed.</p>${imgs}<div class="row" style="margin-top:12px"><button class="btn" id="sellerGen">↻ Regenerate</button></div>`;
   }
+  /** What Shopify will receive: the shop's own currency (from the connected store), converted from CHF when needed. */
+  function shopPrice(pr) {
+    const c = st.conn, cur = c?.currency; if (!cur) return null;
+    if (CUR.some(([k]) => k === cur)) return { cur, amount: Number(pr.prices[cur]) || 0, via: null };
+    return c.fx_chf ? { cur, amount: Math.round((Number(pr.prices.CHF) || 0) * c.fx_chf * 100) / 100, via: `CHF ${(Number(pr.prices.CHF) || 0).toFixed(2)} × ${c.fx_chf}` } : { cur, amount: null, via: null };
+  }
+  function shopPriceNote(pr) {
+    const sp = shopPrice(pr); if (!sp) return "";
+    if (sp.amount == null) return `<p class="note" style="color:var(--warn)">Your Shopify store sells in ${A.esc(sp.cur)}, but no CHF→${A.esc(sp.cur)} rate is configured — publishing will fail until an admin adds it.</p>`;
+    return `<div class="box" id="sellerShopPrice"><b>Your Shopify store (${A.esc(st.conn.shop)}) sells in ${A.esc(sp.cur)}:</b> variant price ${money(sp.amount, sp.cur)}${sp.via ? ` <span class="note">(${A.esc(sp.via)})</span>` : ""}</div>`;
+  }
   function vPricing(pr) {
     const row = (lab, key, src) => CUR.map(([c]) => `<label>${lab} (${c})<input type="number" min="0" step="0.1" inputmode="decimal" data-${key}="${c}" value="${src[c] ?? ""}"></label>`).join("");
     const margin = c => { const pv = Number(pr.prices[c]), co = pr.sg.cost[c]; return pv > 0 ? Math.round((pv - co) / pv * 100) : 0; };
     const mats = A.prod(st.pid).materials || [];
-    const matSel = mats.length ? `<label class="seller-field" style="margin-bottom:10px;max-width:340px">Material / variant<select id="sellerMat">${mats.map(m => `<option value="${A.esc(m.id)}" ${m.id === pr.material_id ? "selected" : ""}>${A.esc(A.nm(m.name) || m.id)}${m.delta_eur ? ` (${m.delta_eur > 0 ? "+" : "−"}€${Math.abs(m.delta_eur).toFixed(2)} cost)` : ""}</option>`).join("")}</select></label>` : "";
+    const matSel = mats.length ? `<label class="seller-field" style="margin-bottom:10px;max-width:340px">Material / variant<select id="sellerMat">${mats.map(m => `<option value="${A.esc(m.id)}" ${m.id === pr.material_id ? "selected" : ""}>${A.esc(A.nm(m.name) || m.id)}${m.delta_eur ? ` (${m.delta_eur > 0 ? "+" : "−"}${money(Math.abs(m.delta_eur) * (A.D.markets.find(x => x.id === A.S.market)?.fx_from_eur || 1))} cost)` : ""}</option>`).join("")}</select></label>` : "";
     return `${matSel}<label class="seller-field" style="margin-bottom:10px">Product title<input id="sellerTitle2" maxlength="255" value="${A.esc(pr.title)}"></label>
       <label class="seller-field" style="margin-bottom:14px">Description (optional)<textarea id="sellerDesc" rows="3" maxlength="5000">${A.esc(pr.description)}</textarea></label>
       <h3 style="margin:0 0 8px">Retail price</h3><div class="seller-grid">${row("Price", "price", pr.prices)}</div>
       <p class="note" style="margin-top:8px">Base cost: ${CUR.map(([c]) => money(pr.sg.cost[c], c)).join(" · ")} — margin ${CUR.map(([c]) => `${c} ${margin(c)}%`).join(" · ")}</p>
       <div class="row"><button class="btn sm" id="sellerSuggest">Use suggested retail (${CUR.map(([c]) => money(pr.sg.retail[c], c)).join(" / ")})</button></div>
-      <p class="note">The price in your shop's currency becomes the variant price; the other two are pinned on matching Shopify Markets price lists when available, and always saved as a product metafield.</p>`;
+      ${shopPriceNote(pr)}<p class="note">The price in your shop's currency becomes the variant price; the other two are pinned on matching Shopify Markets price lists when available, and always saved as a product metafield.</p>`;
   }
   function vShipping(pr) {
     const fee = CUR.map(([c]) => `<label>Shipping fee (${c})<input type="number" min="0" step="0.1" data-fee="${c}" value="${pr.fee[c] ?? ""}"></label>`).join("");
@@ -136,7 +147,7 @@
   function vPublish(pr) {
     const c = st.conn, imgs = pr.images.filter(i => i.on);
     const conn = !c ? `<div class="box note">Checking Shopify connection…</div>`
-      : c.connected ? `<div class="box"><b>✓ Shopify · ${A.esc(c.shop)}</b><div class="note">${c.currency ? `Shop currency ${A.esc(c.currency)}` : ""}</div></div>`
+      : c.connected ? `<div class="box"><b>✓ Shopify · ${A.esc(c.shop)}</b><div class="note">${c.currency ? `Shop currency ${A.esc(c.currency)}${(() => { const sp = shopPrice(pr); return sp?.amount != null ? ` · variant price ${money(sp.amount, sp.cur)}${sp.via ? ` (${A.esc(sp.via)})` : ""}` : ""; })()}` : ""}</div></div>`
       : `<div class="box"><b>Connect your Shopify store</b> <button class="btn sm ghost" id="sellerRecheck" type="button">↻ Re-check</button><p class="note">${c.reason === "not_owner" ? "You are not signed in with this store. Sign in with Shopify to publish to it." : "No Shopify store is connected for this account yet."}</p>
          <div class="row"><input class="input" id="sellerShop" placeholder="your-store.myshopify.com" value="${A.esc(c.shop || A.shopifyShop() || "")}" style="min-width:240px"><button class="btn dark" id="sellerConnect">Connect Shopify</button></div></div>`;
     const res = st.result ? `<div class="box" style="border-color:#cfe5d6;background:#f3faf5"><b>✓ Product created in Shopify (${A.esc(st.result.status)})</b><div class="note">${st.result.images} images · prices synced: ${A.esc(st.result.prices_synced.join(", "))}</div>
@@ -178,7 +189,7 @@
     try { const r = await fetch(`/api/seller/shopify${shop ? `?shop=${encodeURIComponent(shop)}` : ""}`, { cache: "no-store", credentials: "same-origin" }); st.conn = await r.json(); }
     catch { st.conn = { connected: false, reason: "network" }; }
     if (!st.conn.connected && !shop && A.shopifyShop()) return loadConn(A.shopifyShop());
-    if (st.step === "publish") draw();
+    if (st.step === "publish" || st.step === "pricing") draw();
   }
   async function publish() {
     const pr = cur(); st.busy = true; st.result = null; draw(); msg("Uploading images…");

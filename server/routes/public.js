@@ -23,6 +23,24 @@ import cors from "cors";
 
 const VERSION = JSON.parse(fs.readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version;
 
+// Offline IP -> country (GeoLite2 via geoip-country; optional dependency, no external calls).
+let geoip = null;
+try { geoip = (await import("geoip-country")).default; } catch { console.warn("[geo] geoip-country not installed; falling back to Accept-Language"); }
+const isLocal = a => /^(::1|127\.|::ffff:127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::ffff:(10|192\.168)\.)/.test(String(a || ""));
+/** Client IP: Express req.ip when trust proxy is configured; behind the local LiteSpeed/Passenger proxy use the
+ *  right-most X-Forwarded-For hop (the one the proxy appended — client-supplied hops to its left are ignored). */
+export function clientIp(req) {
+  const peer = req.socket?.remoteAddress || "";
+  if (req.app?.get("trust proxy")) return req.ip;
+  if (!isLocal(peer)) return peer;
+  const xff = String(req.headers["x-forwarded-for"] || "").split(",").map(s => s.trim()).filter(Boolean);
+  return xff.length ? xff[xff.length - 1] : String(req.headers["x-real-ip"] || peer);
+}
+function ipCountry(req) {
+  if (!geoip) return "";
+  try { const ip = clientIp(req).replace(/^::ffff:/, ""); if (!ip || isLocal(ip)) return ""; return geoip.lookup(ip)?.country || ""; } catch { return ""; }
+}
+
 export function publicRouter({ root, generatedDir }) {
   const router = express.Router();
   const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html", "/shipping": "shipping.html", "/shipping.html": "shipping.html", "/returns": "returns.html", "/returns.html": "returns.html", "/imprint": "imprint.html", "/imprint.html": "imprint.html", "/impressum": "imprint.html", "/agent.html": "agent.html", "/agent": "agent.html" };
@@ -109,10 +127,11 @@ export function publicRouter({ root, generatedDir }) {
   router.get("/api/geo", (req, res) => {
     res.setHeader("Cache-Control", "private, no-store");
     const hdr = ["cf-ipcountry", "x-vercel-ip-country", "x-country-code", "x-appengine-country", "cloudfront-viewer-country", "fly-client-country"].map(h => String(req.headers[h] || "").toUpperCase()).find(v => /^[A-Z]{2}$/.test(v) && v !== "XX" && v !== "T1");
+    const ipc = hdr ? "" : ipCountry(req);
     const al = String(req.headers["accept-language"] || "").match(/[a-z]{2,3}-([A-Z]{2})/i);
-    const country = hdr || (al ? al[1].toUpperCase() : "");
+    const country = hdr || ipc || (al ? al[1].toUpperCase() : "");
     const currency = currencyForCountry(country);
-    res.json({ country: country || null, source: hdr ? "ip" : al ? "accept-language" : "default", currency });
+    res.json({ country: country || null, source: hdr || ipc ? "ip" : al ? "accept-language" : "default", currency });
   });
   router.get("/api/storefront/fees", (req, res) => { res.setHeader("Cache-Control", "no-cache"); res.json(publicFees()); });
   const statusLimit = rateLimit({ bucket: "status", windowMs: 60_000, max: 60 });
