@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>POD Wedding Studio — custom wedding stationery, signs &amp; gifts</title>
+<title>Wed.AI — custom wedding stationery, signs &amp; gifts</title>
 <meta name="description" content="Design matching wedding invitations, welcome signs, favours and gifts in one scene-based studio. Printed on demand and shipped across Europe."/>
 <link rel="preload" as="image" href="assets/scenes/gifts-1200.webp" imagesrcset="assets/scenes/gifts-800.webp 800w, assets/scenes/gifts-1200.webp 1200w" imagesizes="(max-width:1000px) 100vw, calc(100vw - 420px)" fetchpriority="high"/>
 <style>
@@ -608,11 +608,12 @@ button{color:inherit}
 <link rel="stylesheet" href="cart.css">
 <link rel="stylesheet" href="mobile.css"><script async src="https://www.googletagmanager.com/gtag/js?id=G-GED5TST3DP"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-GED5TST3DP");</script>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 </head>
 <body>
 <div class="app">
   <!-- Shared header (header.js). "Create wedding website" is a secondary action → lives in the header "Menu". -->
-  <div id="site-header" data-cart><button class="btn wedding-site-btn" id="weddingSiteBtn" type="button" data-header-menu>Create wedding website</button></div><script src="/header.js?v=20261024b"></script>
+  <div id="site-header" data-cart><button class="btn wedding-site-btn" id="weddingSiteBtn" type="button" data-header-menu>Create wedding website</button></div><script src="/header.js?v=20261025b"></script>
 
   <main class="layout">
     <section class="stage" id="stage">
@@ -981,9 +982,9 @@ let sceneData = buildSceneData();
 
 /** Per-language document metadata (html lang, title, description). */
 const HOME_META={
-  en:{title:"POD Wedding Studio — custom wedding stationery, signs & gifts",desc:"Design matching wedding invitations, welcome signs, favours and gifts in one scene-based studio. Printed on demand and shipped across Europe.",alt:"Wedding table scene with personalised gifts",agent:"Open the wedding customisation agent",lightbox:"Material close-up",placeholder:"e.g. Amelia & Noah / 18 June 2027 / Welcome to our wedding"},
+  en:{title:"Wed.AI — custom wedding stationery, signs & gifts",desc:"Design matching wedding invitations, welcome signs, favours and gifts in one scene-based studio. Printed on demand and shipped across Europe.",alt:"Wedding table scene with personalised gifts",agent:"Open the wedding customisation agent",lightbox:"Material close-up",placeholder:"e.g. Amelia & Noah / 18 June 2027 / Welcome to our wedding"},
   zh:{title:"POD Wedding Scene Studio",desc:"在一个场景式工作室中统一设计婚礼邀请卡、迎宾标识、伴手礼与周边，按需生产并配送至欧洲各地。",alt:"婚礼餐桌场景与定制礼品",agent:"打开婚礼定制 Agent",lightbox:"材质大图",placeholder:"例如：Amelia & Noah / 18 June 2027 / Welcome to our wedding"},
-  de:{title:"POD Wedding Studio — individuelle Hochzeitspapeterie, Schilder & Geschenke",desc:"Gestalten Sie passende Hochzeitseinladungen, Willkommensschilder, Gastgeschenke und Präsente in einem szenenbasierten Studio. Print on Demand, Versand in ganz Europa.",alt:"Hochzeitstisch-Szene mit personalisierten Geschenken",agent:"Hochzeits-Agent öffnen",lightbox:"Material-Nahaufnahme",placeholder:"z. B. Amelia & Noah / 18 June 2027 / Welcome to our wedding"}
+  de:{title:"Wed.AI — individuelle Hochzeitspapeterie, Schilder & Geschenke",desc:"Gestalten Sie passende Hochzeitseinladungen, Willkommensschilder, Gastgeschenke und Präsente in einem szenenbasierten Studio. Print on Demand, Versand in ganz Europa.",alt:"Hochzeitstisch-Szene mit personalisierten Geschenken",agent:"Hochzeits-Agent öffnen",lightbox:"Material-Nahaufnahme",placeholder:"z. B. Amelia & Noah / 18 June 2027 / Welcome to our wedding"}
 };
 function applyHomeMeta(){
   const l=homeLang(),m=HOME_META[l]||HOME_META.en;

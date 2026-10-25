@@ -26,7 +26,7 @@ try {
 
   // Brand: one name; header.js carries it, old per-page variants are gone.
   const hdr = (await get("/header.js")).text;
-  assert.match(hdr, /POD Wedding Studio/); assert.match(hdr, /pod-market-v1/);
+  assert.match(hdr, /Wed.AI/); assert.match(hdr, /pod-market-v1/);
   for (const f of ["index.html", "studio.html", "checkout.html", "payment-success.html", "account.html", "proof.html"]) {
     const s = fs.readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
     assert.doesNotMatch(s, /POD WEDDING STUDIO|<b>POD STUDIO<\/b>/, f);

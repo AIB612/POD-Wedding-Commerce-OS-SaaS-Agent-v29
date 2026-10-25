@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="robots" content="noindex"/>
-<title>Review your wedding proof · POD Wedding Studio</title>
+<title>Review your wedding proof · Wed.AI</title>
 <style>
 body{margin:0;min-height:100vh;background:linear-gradient(145deg,#e8ddd3,#f9f5ef);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#292521}
 .pf-wrap{display:grid;place-items:center;padding:28px 16px 8px}
@@ -25,9 +25,10 @@ body{margin:0;min-height:100vh;background:linear-gradient(145deg,#e8ddd3,#f9f5ef
 </style>
 <link rel="stylesheet" href="mobile.css"><script async src="https://www.googletagmanager.com/gtag/js?id=G-GED5TST3DP"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-GED5TST3DP");</script>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 </head>
 <body>
-<div id="site-header"></div><script src="/header.js?v=20261024b"></script>
+<div id="site-header"></div><script src="/header.js?v=20261025b"></script>
 <main class="pf-wrap">
 <div class="card">
   <div class="hero"><small>WEDDING PROOF</small><h1 data-i18n="pf.title">Review your wedding proof</h1><p data-i18n="pf.lead">Production starts once you approve. Please check names, text, material and the overall look.</p></div>
@@ -42,7 +43,7 @@ const CONTACT="Sherryxuex@Gmail.com";
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 /** Friendly dead end: missing or invalid token → explain, offer sign-in, order lookup and contact. */
 function problem(kind){
-  document.title=K("pf."+kind+".title")+" · POD Wedding Studio";
+  document.title=K("pf."+kind+".title")+" · Wed.AI";
   $("content").innerHTML=`<div class="state" role="alert"><div class="ic" aria-hidden="true">✉</div><h2>${esc(K("pf."+kind+".title"))}</h2><p>${esc(K("pf."+kind+".text"))}</p>
   <div class="actions"><a class="b approve" href="/account.html#orders">${esc(K("pf.signin"))}</a><a class="b secondary" href="/account#find-order">${esc(K("pf.find"))}</a><a class="b secondary" href="mailto:${CONTACT}?subject=${encodeURIComponent("Proof link")}">${esc(K("pf.contact"))}</a></div></div>`;
 }
@@ -70,7 +71,7 @@ async function approve(){
   try{
     const r=await fetch("/api/proofs/public/"+encodeURIComponent(token)+"/approve",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
     const d=await r.json();if(!r.ok)throw new Error(d.message||K("pf.error"));
-    $("content").innerHTML=`<div class="state"><div class="ok">${esc(K("pf.done"))}</div><p>${esc(K("pf.doneText"))}</p><p><a href="/" style="color:inherit">POD Wedding Studio</a></p></div>`;
+    $("content").innerHTML=`<div class="state"><div class="ok">${esc(K("pf.done"))}</div><p>${esc(K("pf.doneText"))}</p><p><a href="/" style="color:inherit">Wed.AI</a></p></div>`;
   }catch(e){alert(e.message||K("pf.error"));b.disabled=false;b.textContent=K("pf.approve")}
 }
 async function requestChanges(){

@@ -31,7 +31,7 @@ const addrLines=a=>[a.name,a.address1,a.address2,[a.postal_code,a.city].filter(B
 
 function route(){const h=location.hash.replace(/^#\/?/,"");const [sec,id]=h.split("/");return {sec:NAV.includes(sec)?sec:"overview",id:id?decodeURIComponent(id):""}}
 function frame(sec,inner){
- document.title=`${K("acct.nav."+sec)} · ${K("acct.title")} · POD Wedding Studio`;
+ document.title=`${K("acct.nav."+sec)} · ${K("acct.title")} · Wed.AI`;
  return `<div class="shell"><aside class="side" aria-label="${esc(K("acct.title"))}"><div class="who">${avatar(user)}<div><b>${esc(user.name||user.email)}</b><span>${esc(user.email)}</span></div></div>
  <nav class="nav">${NAV.map(n=>`<a href="#${n}" ${n===sec?'aria-current="page"':""}>${I[n]}<span>${esc(K("acct.nav."+n))}</span></a>`).join("")}<div class="sep"></div><button type="button" id="signOut">${I.out}<span>${esc(K("acct.nav.signout"))}</span></button></nav></aside>
  <main class="main" id="main">${inner}</main></div>`;
@@ -142,7 +142,7 @@ function wireFindOrder(){const f=$("foForm");if(!f)return;f.onsubmit=async e=>{e
   out.innerHTML=`<div class="addr def" style="gap:8px"><div class="card-h" style="margin:0"><b>${esc(o.id)}</b>${pill(o.stage)}</div><dl class="kv small"><dt>${esc(K("fo.placed"))}</dt><dd>${esc(dt(o.placed_at))||"—"}</dd><dt>${esc(K("fo.items"))}</dt><dd>${o.item_count}</dd>${est?`<dt>${esc(K("pay.delivery"))}</dt><dd>${esc(est)}</dd>`:""}${o.proof?`<dt>${esc(K("ps.step.proof"))}</dt><dd>${esc(o.proof.ready?(o.proof.status==="Approved"?K("pf.approved"):K("acct.od.proofOpen")):K("acct.od.proofPreparing"))}</dd>`:""}${o.tracking?`<dt>${esc(K("fo.tracking"))}</dt><dd>${esc(o.tracking.carrier)} ${o.tracking.url?`<a href="${esc(o.tracking.url)}" rel="noopener" target="_blank">${esc(o.tracking.number)}</a>`:esc(o.tracking.number)}</dd>`:""}</dl><p class="muted small" style="margin:0">${esc(K("ps.noToken"))}</p></div>`;
  }catch(err){out.innerHTML=`<div class="err">${esc(K("co.err.network"))}</div>`}finally{b.disabled=false}}}
 async function signedOut(){
- document.title=`${K("acct.title")} · POD Wedding Studio`;
+ document.title=`${K("acct.title")} · Wed.AI`;
  const prov=await PODAuth.providers(),any=PODAuth.anyProvider?PODAuth.anyProvider(prov):true;
  const signin=any?`<main class="card signin"><div class="empty" style="padding:10px 0 0"><div class="ic">${I.profile}</div></div><h1>${esc(K("acct.so.title"))}</h1><p>${esc(K("acct.so.text"))}</p><div class="pa-opts">${PODAuth.buttonsHtml(prov)}</div><p class="muted small" style="margin:16px 0 0">${esc(K("auth.terms"))}</p></main>`:"";
  app.innerHTML=`<div class="shell acct-out" style="grid-template-columns:${any?"minmax(0,1fr) minmax(0,1fr)":"minmax(0,560px)"};justify-content:center;align-items:start">${signin}<div style="${any?"margin-top:60px":"margin-top:40px"}">${findOrderCard()}</div></div>`;
