@@ -57,6 +57,15 @@ await test("productSet input: shop-currency price, weight, files, three-currency
   assert.deepEqual(JSON.parse(mf.shipping_fee), { EUR: 4.9, CHF: 6.5, USD: 5.5 });
   assert.equal(mf.processing_days, "3");
   assert.equal(seller.buildSellerProductInput(l, { shopCurrency: "GBP", fx: { GBP: 0.9 } }).variants[0].price, "26.01");
+  // material: defaults to the first one, explicit pick recorded in option, SKU and metafields; unknown -> 422
+  assert.equal(l.material.id, "organic_180"); assert.match(l.sku, /^wedai-tee-organic_180-/);
+  const m = seller.cleanListing({ ...listing(["https://a.b/seller-media/" + "b".repeat(24) + ".png"]), material_id: "heavy_240" });
+  const mi = seller.buildSellerProductInput(m, { shopCurrency: "USD" }), mmf = Object.fromEntries(mi.metafields.map(x => [x.key, x.value]));
+  assert.equal(mi.productOptions[0].name, "Material"); assert.equal(mi.variants[0].optionValues[0].optionName, "Material");
+  assert.equal(mmf.base_product, "tee:heavy_240"); assert.match(mmf.material, /^heavy_240 · /); assert.match(m.sku, /heavy_240/);
+  assert.throws(() => seller.cleanListing({ ...listing(["https://a.b/seller-media/" + "b".repeat(24) + ".png"]), material_id: "nope" }), /material/);
+  const sd = seller.cleanListing({ ...listing(["https://a.b/seller-media/" + "b".repeat(24) + ".png"]), product_id: "rsvp_card" });
+  assert.equal(sd.material, null); assert.equal(seller.buildSellerProductInput(sd, { shopCurrency: "USD" }).productOptions[0].name, "Title");
 });
 await test("HTTP: media upload -> public URL; publish needs connected + owned shop; returns admin link", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "seller-"));
@@ -80,7 +89,7 @@ await test("HTTP: media upload -> public URL; publish needs connected + owned sh
     r = await realFetch(`${base}/api/seller/publish`, { method: "POST", headers: { "Content-Type": "application/json", "x-admin-api-key": "change-me" }, body: JSON.stringify({ shop: SHOP, ...listing([m.url]) }) });
     const d = await r.json(); assert.equal(r.status, 200, JSON.stringify(d));
     assert.equal(d.admin_url, "https://admin.shopify.com/store/dropkingdev/products/77");
-    assert.deepEqual(d.prices_synced.sort(), ["CHF", "EUR"]); assert.ok(d.warnings.some(w => /USD/.test(w)));
+    assert.deepEqual(d.prices_synced.sort(), ["CHF", "EUR"]); assert.match(d.markets_note, /^USD prices saved as product data; add this market in Shopify/); assert.ok(!d.warnings.some(w => /USD/.test(w)));
     const ps = calls.find(c => c.query?.includes("productSet")); assert.equal(ps.variables.input.variants[0].price, "28.90");
     const fp = calls.find(c => c.query?.includes("priceListFixedPricesAdd")); assert.equal(fp.variables.prices[0].price.amount, "29.90");
   } finally { srv.close(); }

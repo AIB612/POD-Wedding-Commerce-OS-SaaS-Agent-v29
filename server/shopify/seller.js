@@ -61,7 +61,8 @@ export function cleanListing(body = {}, catalogProducts = shopify.catalog().prod
   if (!(weight >= 0 && weight <= 70000)) throw err(422, "invalid_weight", "Weight must be 0–70000 g");
   const zones = (Array.isArray(s.zones) ? s.zones : []).map(z => String(z).toUpperCase()).filter(z => /^[A-Z]{2,6}$/.test(z)).slice(0, 20);
   const mats = product.materials || [];
-  const material = mats.find(m => m.id === body.material_id) || null;
+  if (body.material_id && mats.length && !mats.some(m => m.id === body.material_id)) throw err(422, "invalid_material", "Unknown material for this product");
+  const material = mats.find(m => m.id === body.material_id) || mats[0] || null;
   return {
     product, material, prices, images,
     title: clip(body.title, 255) || (product.name?.en || product.id),
@@ -81,12 +82,14 @@ export function buildSellerProductInput(l, { shopCurrency = "CHF", fx = shopify.
   const sh = l.shipping;
   const ship = `<p><strong>Shipping:</strong> ships from ${esc(sh.ship_from)} to ${esc(sh.zones.join(", "))}; made to order in ${sh.processing_days} business day(s).</p>`;
   const desc = l.description ? `<p>${esc(l.description).replace(/\n/g, "<br>")}</p>` : `<p>${esc(l.title)} — personalised wedding product, printed on demand.</p>`;
+  const matName = l.material ? clip(l.material.name?.en || Object.values(l.material.name || {})[0] || l.material.id, 255) : "";
+  const opt = l.material ? { name: "Material", value: matName } : { name: "Title", value: "Default Title" };
   const mf = (key, type, value) => ({ namespace: SELLER_NS, key, type, value: typeof value === "string" ? value : JSON.stringify(value) });
   return {
     title: l.title, descriptionHtml: desc + ship, vendor: "POD Wedding Studio", productType: l.product.category || "", status: l.status,
     tags: ["pod-wedding", "wed-ai-seller", l.product.category].filter(Boolean),
-    productOptions: [{ name: "Title", position: 1, values: [{ name: "Default Title" }] }],
-    variants: [{ optionValues: [{ optionName: "Title", name: "Default Title" }], price: money(price), sku: l.sku, inventoryPolicy: "CONTINUE", taxable: true,
+    productOptions: [{ name: opt.name, position: 1, values: [{ name: opt.value }] }],
+    variants: [{ optionValues: [{ optionName: opt.name, name: opt.value }], price: money(price), sku: l.sku, inventoryPolicy: "CONTINUE", taxable: true,
       inventoryItem: { requiresShipping: true, tracked: false, measurement: { weight: { value: l.shipping.weight_g, unit: "GRAMS" } } } }],
     files: l.images.map((u, i) => ({ originalSource: u, contentType: "IMAGE", alt: `${l.title} mockup ${i + 1}` })),
     metafields: [
@@ -96,7 +99,8 @@ export function buildSellerProductInput(l, { shopCurrency = "CHF", fx = shopify.
       mf("ship_from", "single_line_text_field", l.shipping.ship_from),
       mf("shipping_zones", "json", l.shipping.zones),
       mf("shipping_profile", "single_line_text_field", l.shipping.profile),
-      mf("base_product", "single_line_text_field", l.product.id + (l.material ? `:${l.material.id}` : ""))
+      mf("base_product", "single_line_text_field", l.product.id + (l.material ? `:${l.material.id}` : "")),
+      ...(l.material ? [mf("material", "single_line_text_field", `${l.material.id} · ${matName}`)] : [])
     ]
   };
 }
@@ -120,18 +124,19 @@ export async function publishListing(shop, listing) {
   const ue = d?.productSet?.userErrors || [];
   if (ue.length) throw err(422, "shopify_user_errors", ue.map(e => `${(e.field || []).join(".")}: ${e.message}`).join("; "));
   const p = d.productSet.product, variantId = p.variants?.nodes?.[0]?.id;
-  const warnings = [], synced = [currency.toUpperCase()];
+  const warnings = [], synced = [currency.toUpperCase()], missing = [];
   if (!isPublicBase(mediaBase())) warnings.push("Images are served from a non-public URL; Shopify cannot fetch them. Set APP_URL to the public https domain.");
   try {
     const lists = (await shopify.graphql(s, PRICE_LISTS))?.priceLists?.nodes || [];
     for (const c of CURRENCIES.filter(c => c !== currency.toUpperCase())) {
       const pl = lists.find(x => x.currency === c);
-      if (!pl) { warnings.push(`No ${c} price list (Shopify Markets) in this store; ${c} price saved as metafield only.`); continue; }
+      if (!pl) { missing.push(c); continue; }
       const r = await shopify.graphql(s, FIXED_PRICES, { priceListId: pl.id, prices: [{ variantId, price: { amount: money(listing.prices[c]), currencyCode: c } }] });
       const e = r?.priceListFixedPricesAdd?.userErrors || [];
       if (e.length) warnings.push(`${c} price list: ${e.map(x => x.message).join("; ")}`); else synced.push(c);
     }
-  } catch (e) { warnings.push(`Markets price sync skipped: ${e.message} (needs read_markets/write_markets or read/write_products with Markets access)`); }
+  } catch (e) { missing.splice(0, missing.length, ...CURRENCIES.filter(c => !synced.includes(c))); console.warn("[seller] price lists:", e.message); }
+  const markets_note = missing.length ? `${missing.join("/")} prices saved as product data; add ${missing.length > 1 ? "these markets" : "this market"} in Shopify to make them live prices.` : null;
   await repo.saveProductLink({ shop: s, localProductId: `seller:${listing.sku}`, shopifyProductId: p.id, variantIds: variantId ? { [listing.sku]: variantId } : {} }).catch(() => {});
-  return { shop: s, shopify_product_id: p.id, handle: p.handle, admin_url: p.legacyResourceId ? adminProductUrl(s, p.legacyResourceId) : null, shop_currency: currency, prices_synced: synced, status: listing.status, images: listing.images.length, warnings };
+  return { shop: s, shopify_product_id: p.id, handle: p.handle, admin_url: p.legacyResourceId ? adminProductUrl(s, p.legacyResourceId) : null, shop_currency: currency, prices_synced: synced, markets_note, material: listing.material?.id || null, sku: listing.sku, status: listing.status, images: listing.images.length, warnings };
 }

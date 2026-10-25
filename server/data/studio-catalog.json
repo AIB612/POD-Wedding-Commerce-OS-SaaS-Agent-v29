@@ -2939,14 +2939,14 @@
       "weight_g": 30,
       "technique": "digital",
       "mockup_photo": {
-        "src": "assets/mockups/invitation.jpg",
-        "mask": "assets/mockups/invitation-mask.png",
-        "shade": "assets/mockups/invitation-shade.jpg",
+        "src": "assets/mockups/invitation-portrait.jpg",
+        "mask": "assets/mockups/invitation-portrait-mask.png",
+        "shade": "assets/mockups/invitation-portrait-shade.jpg",
         "area": [
-          34.2,
-          27.3,
-          31.7,
-          45.1
+          28.7,
+          19.0,
+          42.9,
+          60.9
         ]
       },
       "materials": [
@@ -3018,14 +3018,14 @@
       "weight_g": 20,
       "technique": "digital",
       "mockup_photo": {
-        "src": "assets/mockups/menu_card.jpg",
-        "mask": "assets/mockups/menu_card-mask.png",
-        "shade": "assets/mockups/menu_card-shade.jpg",
+        "src": "assets/mockups/menu_card-portrait.jpg",
+        "mask": "assets/mockups/menu_card-portrait-mask.png",
+        "shade": "assets/mockups/menu_card-portrait-shade.jpg",
         "area": [
-          39.4,
-          28.6,
-          21.1,
-          42.5
+          33.2,
+          17.6,
+          33.8,
+          67.6
         ]
       },
       "materials": [
@@ -4991,14 +4991,52 @@
         "Local Production"
       ],
       "mockup_photo": {
-        "src": "assets/mockups/save_date.jpg",
+        "src": "assets/mockups/save_date-portrait.jpg",
         "area": [
-          30.9,
-          26.5,
-          38.5,
-          54.3
+          29.1,
+          23.9,
+          42.1,
+          59.4
         ]
-      }
+      },
+      "materials": [
+        {
+          "id": "cotton_300",
+          "name": {
+            "zh": "棉纹艺术纸 300g",
+            "en": "Cotton art paper 300 g",
+            "de": "Baumwollpapier 300 g"
+          },
+          "delta_eur": 0
+        },
+        {
+          "id": "pearl",
+          "name": {
+            "zh": "珠光纸",
+            "en": "Pearl shimmer",
+            "de": "Perlglanz"
+          },
+          "delta_eur": 0.25
+        },
+        {
+          "id": "kraft",
+          "name": {
+            "zh": "再生牛皮纸",
+            "en": "Recycled kraft",
+            "de": "Recycling-Kraftpapier"
+          },
+          "delta_eur": -0.1
+        },
+        {
+          "id": "vellum",
+          "name": {
+            "zh": "半透明硫酸纸",
+            "en": "Vellum",
+            "de": "Transparentpapier"
+          },
+          "delta_eur": 0.35
+        }
+      ]
     },
     {
       "id": "rsvp_card",

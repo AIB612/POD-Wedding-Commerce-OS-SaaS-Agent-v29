@@ -54,7 +54,7 @@
     if (st.products[pid]) return st.products[pid];
     const p = A.prod(pid), it = st.items.find(i => i.product_id === pid) || {}, sg = suggest(pid, it.material_id);
     return (st.products[pid] = { images: [], uploaded: [], sg, title: `${A.nm(p.name) || pid}${A.S.brand?.name ? " · " + A.S.brand.name : ""}`, description: "",
-      prices: { ...sg.retail }, fee: { ...sg.ship }, processing: p.production_days ?? 3, weight: p.weight_g || 200, ship_from: (p.facilities || []).includes("f_ch") ? "CH" : "EU", zones: ["CH", "EU", "US"], status: "DRAFT", material_id: it.material_id || "" });
+      prices: { ...sg.retail }, fee: { ...sg.ship }, processing: p.production_days ?? 3, weight: p.weight_g || 200, ship_from: (p.facilities || []).includes("f_ch") ? "CH" : "EU", zones: ["CH", "EU", "US"], status: "DRAFT", material_id: it.material_id || (p.materials || [])[0]?.id || "" });
   }
   const cur = () => st.products[st.pid];
 
@@ -109,7 +109,9 @@
   function vPricing(pr) {
     const row = (lab, key, src) => CUR.map(([c]) => `<label>${lab} (${c})<input type="number" min="0" step="0.1" inputmode="decimal" data-${key}="${c}" value="${src[c] ?? ""}"></label>`).join("");
     const margin = c => { const pv = Number(pr.prices[c]), co = pr.sg.cost[c]; return pv > 0 ? Math.round((pv - co) / pv * 100) : 0; };
-    return `<label class="seller-field" style="margin-bottom:10px">Product title<input id="sellerTitle2" maxlength="255" value="${A.esc(pr.title)}"></label>
+    const mats = A.prod(st.pid).materials || [];
+    const matSel = mats.length ? `<label class="seller-field" style="margin-bottom:10px;max-width:340px">Material / variant<select id="sellerMat">${mats.map(m => `<option value="${A.esc(m.id)}" ${m.id === pr.material_id ? "selected" : ""}>${A.esc(A.nm(m.name) || m.id)}${m.delta_eur ? ` (${m.delta_eur > 0 ? "+" : "−"}€${Math.abs(m.delta_eur).toFixed(2)} cost)` : ""}</option>`).join("")}</select></label>` : "";
+    return `${matSel}<label class="seller-field" style="margin-bottom:10px">Product title<input id="sellerTitle2" maxlength="255" value="${A.esc(pr.title)}"></label>
       <label class="seller-field" style="margin-bottom:14px">Description (optional)<textarea id="sellerDesc" rows="3" maxlength="5000">${A.esc(pr.description)}</textarea></label>
       <h3 style="margin:0 0 8px">Retail price</h3><div class="seller-grid">${row("Price", "price", pr.prices)}</div>
       <p class="note" style="margin-top:8px">Base cost: ${CUR.map(([c]) => money(pr.sg.cost[c], c)).join(" · ")} — margin ${CUR.map(([c]) => `${c} ${margin(c)}%`).join(" · ")}</p>
@@ -123,6 +125,7 @@
       <label>Ships from<select id="sellerFrom">${["CH", "EU", "US"].map(z => `<option ${pr.ship_from === z ? "selected" : ""}>${z}</option>`).join("")}</select></label></div>
       <div class="seller-field" style="margin-top:12px">Shipping zones<div class="seller-zones">${["CH", "EU", "US", "UK", "WORLD"].map(z => `<label><input type="checkbox" data-zone="${z}" ${pr.zones.includes(z) ? "checked" : ""}> ${z}</label>`).join("")}</div></div>`;
   }
+  const matLabel = pr => { const m = (A.prod(st.pid).materials || []).find(x => x.id === pr.material_id); return m ? A.nm(m.name) || m.id : ""; };
   function vPublish(pr) {
     const c = st.conn, imgs = pr.images.filter(i => i.on);
     const conn = !c ? `<div class="box note">Checking Shopify connection…</div>`
@@ -130,8 +133,8 @@
       : `<div class="box"><b>Connect your Shopify store</b><p class="note">${c.reason === "not_owner" ? "You are not signed in with this store. Sign in with Shopify to publish to it." : "No Shopify store is connected for this account yet."}</p>
          <div class="row"><input class="input" id="sellerShop" placeholder="your-store.myshopify.com" value="${A.esc(c.shop || A.shopifyShop() || "")}" style="min-width:240px"><button class="btn dark" id="sellerConnect">Connect Shopify</button></div></div>`;
     const res = st.result ? `<div class="box" style="border-color:#cfe5d6;background:#f3faf5"><b>✓ Product created in Shopify (${A.esc(st.result.status)})</b><div class="note">${st.result.images} images · prices synced: ${A.esc(st.result.prices_synced.join(", "))}</div>
-      ${st.result.admin_url ? `<a class="btn dark" style="margin-top:8px" href="${A.esc(st.result.admin_url)}" target="_blank" rel="noopener" id="sellerAdminLink">Open in Shopify admin ↗</a>` : ""}${(st.result.warnings || []).map(w => `<p class="note" style="color:var(--warn)">⚠ ${A.esc(w)}</p>`).join("")}</div>` : "";
-    return `${conn}<div class="box"><h3 style="margin:0 0 6px">${A.esc(pr.title)}</h3><div class="note">${imgs.length} images · ${CUR.map(([k]) => money(pr.prices[k], k)).join(" / ")} · shipping ${CUR.map(([k]) => money(pr.fee[k], k)).join(" / ")} · ${pr.processing} d processing · ${pr.weight} g · from ${pr.ship_from} → ${pr.zones.join(", ")}</div>
+      ${st.result.admin_url ? `<a class="btn dark" style="margin-top:8px" href="${A.esc(st.result.admin_url)}" target="_blank" rel="noopener" id="sellerAdminLink">Open in Shopify admin ↗</a>` : ""}${st.result.markets_note ? `<p class="note">ℹ ${A.esc(st.result.markets_note)}</p>` : ""}${(st.result.warnings || []).map(w => `<p class="note" style="color:var(--warn)">⚠ ${A.esc(w)}</p>`).join("")}</div>` : "";
+    return `${conn}<div class="box"><h3 style="margin:0 0 6px">${A.esc(pr.title)}</h3><div class="note">${imgs.length} images · ${CUR.map(([k]) => money(pr.prices[k], k)).join(" / ")} · shipping ${CUR.map(([k]) => money(pr.fee[k], k)).join(" / ")} · ${pr.processing} d processing · ${pr.weight} g${matLabel(pr) ? ` · ${A.esc(matLabel(pr))}` : ""} · from ${pr.ship_from} → ${pr.zones.join(", ")}</div>
       <label class="seller-field" style="margin-top:10px;max-width:260px">Status in Shopify<select id="sellerStatus"><option value="DRAFT" ${pr.status === "DRAFT" ? "selected" : ""}>Draft (review in Shopify)</option><option value="ACTIVE" ${pr.status === "ACTIVE" ? "selected" : ""}>Active (visible)</option></select></label>
       <p class="note">No payment is taken: we produce and ship each order when a customer buys in your store.</p></div>${res}`;
   }
@@ -193,6 +196,8 @@
   function onInput(e) {
     const el = e.target, pr = cur(), d = el.dataset; if (!pr) return;
     if (el.id === "sellerProd") { st.pid = el.value; st.result = null; if (!cur().images.length) generate(st.pid); else draw(); return; }
+    if (el.id === "sellerMat") { if (pr.material_id === el.value) return; const sg = suggest(st.pid, el.value), same = CUR.every(([c]) => Number(pr.prices[c]) === Number(pr.sg.retail[c]));
+      pr.material_id = el.value; pr.sg = sg; if (same) pr.prices = { ...sg.retail }; st.result = null; draw(); return; }
     if (d.img) { pr.images[+d.img].on = el.checked; return; }
     if (d.price) { pr.prices[d.price] = el.value; return; }
     if (d.fee) { pr.fee[d.fee] = el.value; return; }
