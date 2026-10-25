@@ -15,6 +15,7 @@ import { publicRouter } from "./routes/public.js";
 import { adminRouter } from "./routes/admin.js";
 import carrierRates from "./routes/carrier-rates.js";
 import { studioRouter } from "./routes/studio.js";
+import { sellerRouter } from "./routes/seller.js";
 import { podAgentRouter } from "./pod-agent/routes.js";
 import { initPriceList } from "./services/price-list-service.js";
 import { initFees } from "./services/fees-service.js";
@@ -42,13 +43,14 @@ export async function createApp({ root = projectRoot, generatedDir = path.join(p
   // 1 MB default JSON limit; /api/invitations sets its own larger limit (photos are embedded as data URLs).
   const json = express.json({ limit: "1mb" });
   // Larger bodies only where images are uploaded (invitation sites, studio designs).
-  app.use((req, res, next) => (req.path === "/api/invitations" || req.path === "/api/studio/projects" ? next() : json(req, res, next)));
+  app.use((req, res, next) => (req.path === "/api/invitations" || req.path === "/api/studio/projects" || req.path === "/api/seller/media" ? next() : json(req, res, next)));
   app.use(tenantContext);
   app.use(userContext);
 
   app.use(accountRouter());
   app.use(publicRouter({ root, generatedDir }));
   app.use(studioRouter({ generatedDir }));
+  app.use(sellerRouter({ generatedDir }));
   app.use("/api/pod-agent", podAgentRouter());
   app.use("/pod-agent", express.static(new URL("./pod-agent", import.meta.url).pathname));
   app.use(carrierRates);

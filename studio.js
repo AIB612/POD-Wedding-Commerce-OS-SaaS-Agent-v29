@@ -22,6 +22,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
     wooHint: ["例如 https://shop.example.com。会跳转到你的 WordPress 后台授权，API 密钥由 WooCommerce 直接发给服务器并加密保存。", "e.g. https://shop.example.com. You approve in your WordPress admin; WooCommerce sends the API keys straight to our server, stored encrypted.", "z. B. https://shop.example.com. Freigabe im WordPress-Admin; die Schlüssel gehen verschlüsselt an unseren Server."],
     st_requested: ["已提交，等待平台开通", "Requested — awaiting activation", "Angefragt – wartet auf Freischaltung"], st_pending_authorization: ["等待授权", "Awaiting authorisation", "Wartet auf Freigabe"],
     st_connected: ["已连接", "Connected", "Verbunden"], st_local: ["待授权（需启动服务）", "Pending (needs the server)", "Ausstehend (Server nötig)"],
+    publishShopify: ["发布到 Shopify", "Publish to Shopify", "In Shopify veröffentlichen"], sellerLead: ["生成成品图、设置三币种零售价与物流，然后直接上架到你的 Shopify 店铺——无需付款。", "Generate product mockups, set EUR/CHF/USD retail prices and shipping, then list it in your Shopify store — no payment needed.", "Mockups erstellen, Preise in EUR/CHF/USD und Versand festlegen und direkt in Ihrem Shopify-Shop listen — ohne Zahlung."],
     publishTo: ["发布到店铺", "Publish to", "Veröffentlichen in"], later: ["稍后再绑定", "Connect later", "Später verbinden"], connectedOk: ["店铺已连接", "Shop connected", "Shop verbunden"],
     material: ["材质", "Material", "Material"], materialHint: ["不同材质会改变单价", "The material changes the unit price", "Das Material ändert den Stückpreis"],
     privacy: ["设计在服务器上加密保存（AES-256-GCM），未下单的方案 30 天后自动删除，已询价的方案 90 天后删除。永久免费，无需订阅。", "Designs are stored encrypted on the server (AES-256-GCM); plans without an order are deleted after 30 days, plans with a quote request after 90 days. Free forever, no subscription.", "Designs werden verschlüsselt gespeichert (AES-256-GCM); Pläne ohne Bestellung werden nach 30 Tagen gelöscht, mit Anfrage nach 90 Tagen. Dauerhaft kostenlos, ohne Abo."],
@@ -592,6 +593,8 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
     if (S.submittedRef) { const em=S.submission?.email_status; return `<div class="flow-footer final"><div class="flow-complete">✓ ${t("flowSubmitted", { ref: esc(S.submittedRef) })}<div class="flow-meta" style="margin-top:5px">${em==="sent"?"Confirmation email sent":em==="not_configured"?"Email queued — provider not configured":"Order request saved"}</div></div><a class="btn dark flow-cta" href="account.html">View order status →</a></div>`; }
     if (buyDirect()) { const why = blockReasons();
       return `<div class="flow-footer final"><div class="flow-meta" id="buyMeta">${why.length ? esc(t("blockedBy", { r: why.join(" · ") })) : t("buyLead")}</div><button class="btn dark flow-cta" id="addCartBtn" ${why.length ? "aria-disabled=\"true\" data-blocked=\"1\"" : ""}>🛒 ${t("addToCart")}</button>${S.buyer === "company" && SERVER ? `<button class="btn flow-secondary ghost" id="quoteBtn">${t("bulkQuote")}</button>` : ""}${SERVER ? "" : `<div class="flow-meta">${t("needServer")}</div>`}</div>`; }
+    if (S.buyer === "merchant") { const why = blockReasons();
+      return `<div class="flow-footer final"><div class="flow-meta" id="sellerMeta">${why.length ? esc(t("blockedBy", { r: why.join(" · ") })) : t("sellerLead")}</div><button class="btn dark flow-cta" id="publishShopifyBtn" ${why.length ? 'aria-disabled="true" data-blocked="1"' : ""}>⇪ ${t("publishShopify")}</button><button class="btn flow-secondary ghost" id="quoteBtn" ${ok ? "" : "disabled"}>${t(`cta_${S.buyer}`)}</button>${SERVER ? "" : `<div class="flow-meta">${t("needServer")}</div>`}</div>`; }
     return `<div class="flow-footer final"><div class="flow-meta">${ok ? t(`ql_${S.buyer}`) : t("flowReviewBlocked")}</div><button class="btn dark flow-cta" id="quoteBtn" ${ok ? "" : "disabled"}>${t(`cta_${S.buyer}`)}</button>${SERVER ? "" : `<button class="btn flow-secondary" id="exportBtn">${t("exportJson")}</button><div class="flow-meta">${t("needServer")}</div>`}</div>`;
   }
   function vStudio() {
@@ -770,7 +773,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
     const packagingReview = `<div class="box"><div class="spread"><h3 style="margin:0">${t("packTitle")}</h3><button class="btn sm ghost" data-reviewfix="packaging">${t("t_packaging")} →</button></div>${S.packagingMode === "none" ? `<div class="pkg-ref none" style="margin-top:10px"><div><b>✓ ${t("packNone")}</b><small>${t("packNoneLead")}</small></div></div>` : `<div class="note" style="margin:6px 0 10px">${t("packSelected", { n: S.packaging.length })}</div>${packagingReferenceBlock(true)}`}</div>`;
     return `${alert}<div class="grid2"><div class="box review-checks"><h3>${t("checks")}</h3>${tasks}</div>
       <div>${packagingReview}<div class="box"><h3>${buyDirect() ? t("addToCart") : t(`cta_${S.buyer}`)}</h3><p class="note">${buyDirect() ? t("buyLead") : t(`ql_${S.buyer}`)}</p>
-        ${S.buyer === "merchant" ? `<label class="field" style="margin-top:10px">${t("publishTo")}<select class="input" id="publishSel"><option value="">${t("later")}</option>${S.stores.map(c => `<option value="${esc(c.id)}" ${S.publishStore === c.id ? "selected" : ""}>${c.platform === "shopify" ? "Shopify" : "WooCommerce"} · ${esc(c.store)} — ${t("st_" + c.status)}</option>`).join("")}</select></label><button class="btn sm" data-bind="1">+ ${t("bindStore")}</button>` : ""}
+        ${S.buyer === "merchant" ? `<label class="field" style="margin-top:10px">${t("publishTo")}<select class="input" id="publishSel"><option value="">${t("later")}</option>${S.stores.map(c => `<option value="${esc(c.id)}" ${S.publishStore === c.id ? "selected" : ""}>${c.platform === "shopify" ? "Shopify" : "WooCommerce"} · ${esc(c.store)} — ${t("st_" + c.status)}</option>`).join("")}</select></label><button class="btn sm" data-bind="1">+ ${t("bindStore")}</button><button class="btn dark big" id="publishShopifyBtn2" type="button">⇪ ${t("publishShopify")}</button><p class="note">${t("sellerLead")}</p>` : ""}
         ${SERVER ? "" : `<p class="note" style="margin-top:8px">${t("needServer")}</p>`}</div></div></div>
       <div class="mgrid" style="margin-bottom:14px">${q.lines.map(l => `<div class="mtile" style="cursor:default"><canvas data-p="${l.product_id}" data-size="260"></canvas><div class="spread"><span>${esc(nm(prod(l.product_id).name))}</span><span class="note">${S.buyer === "merchant" ? money(l.price) : `${l.qty}×`}</span></div></div>`).join("")}</div>
       <div class="row"><button class="btn" id="dlAll">⤓ ${t("downloadAll")}</button><button class="btn" id="saveBtn">${t("save")}</button></div>`;
@@ -1073,6 +1076,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
     if (el.id === "saveBtn") return saveProject();
     if (el.id === "exportBtn") return exportPlan();
     if (el.id === "addCartBtn") return addToCart();
+    if (el.id === "publishShopifyBtn" || el.id === "publishShopifyBtn2") { const why = blockReasons(); if (why.length) { toast(t("blockedBy", { r: why[0] })); return; } if (!SERVER) { toast(t("needServer")); return; } return window.StudioSeller?.open(); }
     if (el.id === "quoteBtn") {
       if (!SERVER) { toast(t("needServer")); return; }
       try { await window.PODAuth?.require?.(); } catch { return; }
@@ -1126,6 +1130,8 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   });
   window.addEventListener("resize", () => { clearTimeout(timers.rs); timers.rs = setTimeout(drawAll, 150); });
 
+  // Seller publish panel (studio-seller.js) reads studio state through this narrow API.
+  window.StudioApp = { D, P, M, S, t, nm, money, esc, toast, prod, matsOf, effPl, finalItems, quoteFinal, lang: () => lang, shopifyShop: () => { try { return localStorage.getItem("pod-shopify-shop") || ""; } catch { return ""; } } };
   // ------------------------------------------------------------------ boot
   // Shared header: language select (i18n.js) and the one market/currency selection (header.js PODMarket) drive the studio too.
   window.addEventListener("wedding-language-change", e => { const l = e.detail?.lang; if (l && l !== lang && ["zh", "en", "de"].includes(l)) { lang = l; window.PODCart?.relabel(); render(); } });

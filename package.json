@@ -13,7 +13,7 @@
     "test:flows": "node server/flow-test.js",
     "test:http": "node server/http-flow-test.js",
     "test:hardening": "node server/hardening-test.js",
-    "test:all": "node server/self-test.js && node server/studio-test.js && node server/flow-test.js && node server/hardening-test.js && node server/checkout-test.js && node server/http-flow-test.js && node server/order-lookup-test.js && node server/storefront-pages-test.js && node server/shopify-test.js",
+    "test:all": "node server/self-test.js && node server/studio-test.js && node server/flow-test.js && node server/hardening-test.js && node server/checkout-test.js && node server/http-flow-test.js && node server/order-lookup-test.js && node server/storefront-pages-test.js && node server/shopify-test.js && node server/seller-test.js",
     "build:studio-data": "node server/build-studio-data.js",
     "test:studio": "node server/studio-test.js",
     "mockups:generate": "python3 scripts/generate_mockups.py > /dev/null && node server/build-studio-data.js",
@@ -30,7 +30,8 @@
     "test:promo": "node server/promo-test.js",
     "test:lookup": "node server/order-lookup-test.js",
     "test:pages": "node server/storefront-pages-test.js",
-    "test:shopify": "node server/shopify-test.js"
+    "test:shopify": "node server/shopify-test.js",
+    "test:seller": "node server/seller-test.js"
   },
   "engines": {
     "node": ">=20"
