@@ -230,6 +230,37 @@
     }
     return c;
   }
+  
+  /** Save current design to library */
+  
+  /** Parse CSV guest list for batch personalization */
+  function parseGuestCSV(text) {
+    const lines = text.trim().split("\n");
+    const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+    return lines.slice(1).map(line => {
+      const vals = line.split(",").map(v => v.trim());
+      const guest = {};
+      headers.forEach((h, i) => guest[h] = vals[i] || "");
+      return guest;
+    }).filter(g => g.name || g.email);
+  }
+
+  function saveDesign(name) {
+    const designs = JSON.parse(localStorage.getItem("pod-designs") || "[]");
+    designs.unshift({ id: Date.now(), name: name || "Design", data: designDataUrl(), ts: new Date().toISOString() });
+    localStorage.setItem("pod-designs", JSON.stringify(designs.slice(0, 20)));
+    return designs[0];
+  }
+  /** Load design from library */
+  function loadDesign(id) {
+    const designs = JSON.parse(localStorage.getItem("pod-designs") || "[]");
+    return designs.find(d => d.id === id);
+  }
+  /** List saved designs */
+  function listDesigns() {
+    return JSON.parse(localStorage.getItem("pod-designs") || "[]");
+  }
+
   function matchEnvelope(cardMm) {
     const [w, h] = cardMm;
     const max = Math.max(w, h), min = Math.min(w, h);
