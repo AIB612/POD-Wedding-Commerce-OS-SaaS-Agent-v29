@@ -234,6 +234,25 @@
   /** Save current design to library */
   
   /** Parse CSV guest list for batch personalization */
+  
+  /** Validate design resolution for print */
+  function validateDesign(design, printAreaMm) {
+    if (!design) return { ok: false, msg: "No design" };
+    const [w, h] = printAreaMm;
+    const dpiW = design.width / (w / 25.4);
+    const dpiH = design.height / (h / 25.4);
+    const dpi = Math.min(dpiW, dpiH);
+    if (dpi >= 300) return { ok: true, dpi: Math.round(dpi), level: "good" };
+    if (dpi >= 150) return { ok: true, dpi: Math.round(dpi), level: "warn" };
+    return { ok: false, dpi: Math.round(dpi), level: "bad", msg: "Resolution too low" };
+  }
+  /** Calculate latest order date */
+  function calcDeadline(eventDate, prodDays = 3, shipDays = 3) {
+    const d = new Date(eventDate);
+    d.setDate(d.getDate() - prodDays - shipDays - 2);
+    return d.toISOString().slice(0, 10);
+  }
+
   function parseGuestCSV(text) {
     const lines = text.trim().split("\n");
     const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
