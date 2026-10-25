@@ -66,6 +66,8 @@
     resetPl: ["重置摆放", "Reset placement", "Zurücksetzen"], applyAll: ["应用到同类商品", "Apply to similar products", "Auf ähnliche anwenden"],
     dpiGood: ["打印清晰", "Print-ready", "Druckfertig"], dpiWarn: ["分辨率偏低", "Low resolution", "Niedrige Auflösung"], dpiBad: ["分辨率不足", "Too low", "Zu niedrig"],
     download: ["下载效果图", "Download mockup", "Mockup laden"], printArea: ["印刷区域", "Print area", "Druckbereich"], technique: ["工艺", "Technique", "Technik"],
+    prodDays: ["生产", "Production", "Produktion"],
+    days: ["天", "days", "Tage"],
     sizes: ["尺码", "Sizes", "Größen"], colors: ["颜色", "Colours", "Farben"], production: ["生产地", "Production", "Produktion"], leadTime: ["生产", "production", "Produktion"],
     days: ["天", "days", "Tage"], tiers: ["数量阶梯价", "Quantity pricing", "Staffelpreise"], add: ["加入方案", "Add to selection", "Hinzufügen"], remove: ["从方案移除", "Remove", "Entfernen"], inLine: ["已在方案中", "In selection", "Ausgewählt"],
     marginTitle: ["目标利润率", "Target margin", "Zielmarge"], basePrice: ["出厂价（每单）", "Base price / order", "Basispreis / Bestellung"], retail: ["建议零售价", "Suggested retail", "Empf. Verkaufspreis"],
@@ -418,7 +420,7 @@
         <input type="color" id="tdColor" value="${td.color}" style="width:34px;height:32px;border:0;background:none;padding:0" aria-label="colour"></div>
         <div class="row" style="margin-top:8px"><div class="seg">${["serif", "sans", "script", "monogram"].map(s => `<button data-style="${s}" class="${td.style === s ? "active" : ""}">${t(s)}</button>`).join("")}</div><button class="btn dark sm" id="tdUse">${t("useText")}</button></div></div></div>`;
     const editor = `<div class="editor"><canvas data-p="${p.id}" data-area="1" data-size="900"></canvas><div class="ctl">
-      <div><h3 style="margin:0">${esc(nm(p.name))}</h3><div class="row" style="margin-top:6px">${d ? `<span class="chip ${d.level}">${d.label} · ${d.dpi} dpi</span>` : `<span class="chip gray">${t("noDesign")}</span>`}<span class="chip gray">${t("printArea")} ${p.print_area_mm[0]}×${p.print_area_mm[1]} mm</span><span class="chip gray">${esc(p.technique)}</span>${lowContrast(f) ? `<span class="chip warn">${t("lowContrast")}</span>` : ""}</div></div>
+      <div><h3 style="margin:0">${esc(nm(p.name))}</h3><div class="row" style="margin-top:6px">${d ? `<span class="chip ${d.level}">${d.label} · ${d.dpi} dpi</span>` : `<span class="chip gray">${t("noDesign")}</span>`}<span class="chip gray">${t("printArea")} ${p.print_area_mm[0]}×${p.print_area_mm[1]} mm</span><span class="chip gray">${esc(p.technique)}</span>${p.production_days ? `<span class="chip gray">${p.production_days} ${t("days")}</span>` : ""}${lowContrast(f) ? `<span class="chip warn">${t("lowContrast")}</span>` : ""}</div></div>
       <div class="seg">${["contain", "cover", "tile"].map(m => `<button data-mode="${m}" class="${mode === m ? "active" : ""}">${t({ contain: "fit", cover: "fill", tile: "tile" }[m])}${!pl.mode && mode === m ? ` · ${t("auto")}` : ""}</button>`).join("")}</div>
       <label class="note">${t("scale")}<input type="range" min="0.3" max="2.5" step="0.05" value="${pl.scale}" data-pl="scale"></label>
       <label class="note">${t("offsetX")}<input type="range" min="-1" max="1" step="0.02" value="${pl.dx}" data-pl="dx"></label>
