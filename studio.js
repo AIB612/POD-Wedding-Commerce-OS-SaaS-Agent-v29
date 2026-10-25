@@ -254,6 +254,30 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   /** Simple cache for API responses */
   
   /** Keyboard shortcuts */
+  
+  /** Auto-save current state */
+  let autoSaveTimer = null;
+  function scheduleAutoSave(state) {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => {
+      localStorage.setItem("pod-autosave", JSON.stringify({ state, ts: Date.now() }));
+      trackEvent("autosave");
+    }, 2000);
+  }
+  /** Recover session from auto-save */
+  function recoverSession() {
+    const saved = localStorage.getItem("pod-autosave");
+    if (!saved) return null;
+    const { state, ts } = JSON.parse(saved);
+    const age = Date.now() - ts;
+    if (age > 86400000) return null; // expire after 24h
+    return { state, age: Math.round(age / 60000) + " min ago" };
+  }
+  /** Clear auto-save */
+  function clearAutoSave() {
+    localStorage.removeItem("pod-autosave");
+  }
+
   const SHORTCUTS = {
     "ctrl+z": () => undo(),
     "ctrl+y": () => redo(),
