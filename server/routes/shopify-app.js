@@ -141,7 +141,8 @@ router.get("/api/shopify/app/callback", ah(async (req, res) => {
   try {
     const r = await shopify.completeInstall(req.query);
     try {
-      const { data } = await shopify.graphqlRaw(r.shop, "{ shop { name email myshopifyDomain } }");
+      // Shop name/email are nice-to-have: a failing lookup must not skip the seller session (publish needs it).
+      const { data } = await shopify.graphqlRaw(r.shop, "{ shop { name email myshopifyDomain } }").catch(e => { console.warn("[shopify] shop lookup on callback failed:", e.message); return { data: null }; });
       const rawEmail = String(data?.shop?.email || "").trim().toLowerCase();
       const email = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(rawEmail) ? rawEmail : `${r.shop.replace(/\.myshopify\.com$/, "")}@shopify-merchant.local`;
       const name = String(data?.shop?.name || r.shop).slice(0, 120);

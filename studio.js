@@ -129,7 +129,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
     vatNote: ["价格来自统一价目表；运费与增值税按配送国家在结账时计算。", "Prices from our standard price list; shipping and VAT are calculated for your delivery country at checkout.", "Preise laut Standardpreisliste; Versand und MwSt. werden an der Kasse für Ihr Lieferland berechnet."],
     addToCart: ["加入购物车", "Add to cart", "In den Warenkorb"], addingCart: ["正在保存设计…", "Saving your design…", "Design wird gespeichert…"], addedCart: ["已加入购物车：{n} 件商品", "Added to cart: {n} product(s)", "In den Warenkorb gelegt: {n} Produkt(e)"],
     buyLead: ["直接下单：设计会保存到你的账户，付款后我们会发送数字校样。", "Buy directly: your design is saved to your account and we send a digital proof after payment.", "Direkt kaufen: Ihr Design wird im Konto gespeichert, nach der Zahlung erhalten Sie einen digitalen Korrekturabzug."],
-    blockedBy: ["还不能加入购物车：{r}", "Can't add to cart yet: {r}", "Noch nicht möglich: {r}"], bulkQuote: ["企业批量询价", "Company / bulk quote", "Firmen-/Mengenangebot"],
+    blockedBy: ["还不能加入购物车：{r}", "Can't add to cart yet: {r}", "Noch nicht möglich: {r}"], blockedPublish: ["还不能发布：{r}", "Can't publish yet: {r}", "Noch nicht veröffentlichbar: {r}"], bulkQuote: ["企业批量询价", "Company / bulk quote", "Firmen-/Mengenangebot"],
     s_profitSet: ["每卖出一套的利润", "Profit per set sold", "Gewinn pro verkauftem Set"], s_total: ["总价（含运费）", "Total incl. delivery", "Gesamt inkl. Versand"],
     products_: ["商品", "Products", "Produkte"], delivery_: ["运费", "Delivery", "Versand"], units: ["件数", "Units", "Stück"], perPersonCost: ["每人成本", "Cost per person", "Kosten pro Person"],
     avgDays: ["送达市场", "Delivery to market", "Lieferung"], marginR: ["实际利润率", "Actual margin", "Ist-Marge"], scenario: ["场景", "Scenario", "Szenario"], kit: ["套装", "Kit", "Set"], custom: ["自选", "Custom", "Individuell"],
@@ -799,7 +799,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
     if (buyDirect()) { const why = blockReasons();
       return `<div class="flow-footer final"><div class="flow-meta" id="buyMeta">${why.length ? esc(t("blockedBy", { r: why.join(" · ") })) : t("buyLead")}</div><button class="btn dark flow-cta" id="addCartBtn" ${why.length ? "aria-disabled=\"true\" data-blocked=\"1\"" : ""}>🛒 ${t("addToCart")}</button>${S.buyer === "company" && SERVER ? `<button class="btn flow-secondary ghost" id="quoteBtn">${t("bulkQuote")}</button>` : ""}${SERVER ? "" : `<div class="flow-meta">${t("needServer")}</div>`}</div>`; }
     if (S.buyer === "merchant") { const why = blockReasons();
-      return `<div class="flow-footer final"><div class="flow-meta" id="sellerMeta">${why.length ? esc(t("blockedBy", { r: why.join(" · ") })) : t("sellerLead")}</div><button class="btn dark flow-cta" id="publishShopifyBtn" ${why.length ? 'aria-disabled="true" data-blocked="1"' : ""}>⇪ ${t("publishShopify")}</button><button class="btn flow-secondary ghost" id="quoteBtn" ${ok ? "" : "disabled"}>${t(`cta_${S.buyer}`)}</button>${SERVER ? "" : `<div class="flow-meta">${t("needServer")}</div>`}</div>`; }
+      return `<div class="flow-footer final"><div class="flow-meta" id="sellerMeta" role="status">${why.length ? esc(t("blockedPublish", { r: why.join(" · ") })) : t("sellerLead")}</div><button class="btn dark flow-cta" id="publishShopifyBtn" ${why.length ? 'aria-disabled="true" data-blocked="1"' : ""}>⇪ ${t("publishShopify")}</button><button class="btn flow-secondary ghost" id="quoteBtn" ${ok ? "" : "disabled"}>${t(`cta_${S.buyer}`)}</button>${SERVER ? "" : `<div class="flow-meta">${t("needServer")}</div>`}</div>`; }
     return `<div class="flow-footer final"><div class="flow-meta">${ok ? t(`ql_${S.buyer}`) : t("flowReviewBlocked")}</div><button class="btn dark flow-cta" id="quoteBtn" ${ok ? "" : "disabled"}>${t(`cta_${S.buyer}`)}</button>${SERVER ? "" : `<button class="btn flow-secondary" id="exportBtn">${t("exportJson")}</button><div class="flow-meta">${t("needServer")}</div>`}</div>`;
   }
   function vStudio() {
@@ -933,7 +933,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   function checks() {
     const out = [], d = delivery(), q = quoteAll(), items = finalItems();
     const designOk = !!S.design;
-    const available = quoteFinal().lines.length > 0;
+    const available = (S.buyer === "merchant" ? q : quoteFinal()).lines.length > 0; // sellers set their own retail price in the publish panel
     out.push({ id: "availability", ok: available, label: t("ck_availability"), help: available ? "" : t("fix_availability"), fix: "pricing" });
     out.push({ id: "design", ok: designOk, label: t("ck_design"), help: designOk ? "" : t("fix_design"), fix: "design" });
 
@@ -952,7 +952,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
     }
     if (S.buyer === "merchant") {
       const n = q.totals.unreachable.length;
-      out.push({ id: "margin", ok: !n, warn: !!(n && S.autoExclude), label: t("ck_margin"), help: n ? t("fix_margin", { n }) : "", fix: "pricing" });
+      out.push({ id: "margin", ok: !n, warn: !!n, label: t("ck_margin"), help: n ? t("fix_margin", { n }) : "", fix: "pricing" });
     } else {
       const sizeRows = items.map(i => ({ i, s: sizeState(i) })).filter(x => x.s), badSizes = sizeRows.filter(x => x.s.sum !== x.s.qty);
       if (sizeRows.length) out.push({ id: "sizes", ok: !badSizes.length, label: t("ck_sizes"), help: badSizes.length ? t("fix_sizes", { n: badSizes.length }) : "", fix: "delivery" });
@@ -1281,7 +1281,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
     if (el.id === "saveBtn") return saveProject();
     if (el.id === "exportBtn") return exportPlan();
     if (el.id === "addCartBtn") return addToCart();
-    if (el.id === "publishShopifyBtn" || el.id === "publishShopifyBtn2") { const why = blockReasons(); if (why.length) { toast(t("blockedBy", { r: why[0] })); return; } if (!SERVER) { toast(t("needServer")); return; } return window.StudioSeller?.open(); }
+    if (el.id === "publishShopifyBtn" || el.id === "publishShopifyBtn2") { const why = blockReasons(); if (why.length) { toast(t("blockedPublish", { r: why[0] })); const m = $("#sellerMeta"); if (m) m.textContent = t("blockedPublish", { r: why.join(" · ") }); return; } if (!SERVER) { toast(t("needServer")); return; } return window.StudioSeller?.open(); }
     if (el.id === "quoteBtn") {
       if (!SERVER) { toast(t("needServer")); return; }
       try { await window.PODAuth?.require?.(); } catch { return; }
@@ -1336,7 +1336,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   window.addEventListener("resize", () => { clearTimeout(timers.rs); timers.rs = setTimeout(drawAll, 150); });
 
   // Seller publish panel (studio-seller.js) reads studio state through this narrow API.
-  window.StudioApp = { D, P, M, S, t, nm, money, esc, toast, prod, matsOf, effPl, finalItems, quoteFinal, lang: () => lang, shopifyShop: () => { try { return localStorage.getItem("pod-shopify-shop") || ""; } catch { return ""; } } };
+  window.StudioApp = { D, P, M, S, t, nm, money, esc, toast, prod, matsOf, effPl, finalItems, sellerItems: () => S.items.filter(i => i.include), quoteFinal, lang: () => lang, shopifyShop: () => { try { return localStorage.getItem("pod-shopify-shop") || ""; } catch { return ""; } } };
   // ------------------------------------------------------------------ boot
   // Shared header: language select (i18n.js) and the one market/currency selection (header.js PODMarket) drive the studio too.
   window.addEventListener("wedding-language-change", e => { const l = e.detail?.lang; if (l && l !== lang && ["zh", "en", "de"].includes(l)) { lang = l; window.PODCart?.relabel(); render(); } });

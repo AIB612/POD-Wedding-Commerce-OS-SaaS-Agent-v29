@@ -17,7 +17,7 @@
 .seller-steps{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 16px}.seller-steps button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer}.seller-steps button.active{background:#292622;color:#fff;border-color:#292622}.seller-steps button.done:not(.active){background:var(--accent-soft)}
 .seller-imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}.seller-imgs figure{margin:0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px;position:relative}.seller-imgs img{width:100%;display:block;border-radius:10px;background:#efe8df}.seller-imgs figcaption{font-size:11px;color:var(--muted);margin-top:4px;display:flex;justify-content:space-between}
 .seller-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.seller-grid label,.seller-field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}.seller-grid input,.seller-field input,.seller-field select,.seller-field textarea{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;color:var(--ink);background:#fff}
-.seller-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}.seller-msg{font-size:12px;min-height:16px}.seller-msg.bad{color:var(--bad)}.seller-msg.ok{color:var(--ok)}
+.seller-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}.seller-msg{font-size:12px;min-height:16px}.seller-why{font-size:12px;color:var(--warn,#9a6b00);max-width:340px;text-align:right}.seller-msg.bad{color:var(--bad)}.seller-msg.ok{color:var(--ok)}
 .seller-zones{display:flex;gap:8px;flex-wrap:wrap}.seller-zones label{flex-direction:row;align-items:center;gap:5px;color:var(--ink)}
 @media(max-width:720px){.seller-grid{grid-template-columns:1fr}}`;
     document.head.appendChild(s);
@@ -45,7 +45,7 @@
     return out;
   }
   function newState() {
-    const items = A.finalItems();
+    const items = (A.sellerItems || A.finalItems)(); // sellers set their own retail; studio margin target does not exclude products here
     const pid = items[0]?.product_id;
     st = { step: "preview", items, pid, products: {}, conn: null, result: null, busy: false };
     items.forEach(i => initProduct(i.product_id));
@@ -130,7 +130,7 @@
     const c = st.conn, imgs = pr.images.filter(i => i.on);
     const conn = !c ? `<div class="box note">Checking Shopify connection…</div>`
       : c.connected ? `<div class="box"><b>✓ Shopify · ${A.esc(c.shop)}</b><div class="note">${c.currency ? `Shop currency ${A.esc(c.currency)}` : ""}</div></div>`
-      : `<div class="box"><b>Connect your Shopify store</b><p class="note">${c.reason === "not_owner" ? "You are not signed in with this store. Sign in with Shopify to publish to it." : "No Shopify store is connected for this account yet."}</p>
+      : `<div class="box"><b>Connect your Shopify store</b> <button class="btn sm ghost" id="sellerRecheck" type="button">↻ Re-check</button><p class="note">${c.reason === "not_owner" ? "You are not signed in with this store. Sign in with Shopify to publish to it." : "No Shopify store is connected for this account yet."}</p>
          <div class="row"><input class="input" id="sellerShop" placeholder="your-store.myshopify.com" value="${A.esc(c.shop || A.shopifyShop() || "")}" style="min-width:240px"><button class="btn dark" id="sellerConnect">Connect Shopify</button></div></div>`;
     const res = st.result ? `<div class="box" style="border-color:#cfe5d6;background:#f3faf5"><b>✓ Product created in Shopify (${A.esc(st.result.status)})</b><div class="note">${st.result.images} images · prices synced: ${A.esc(st.result.prices_synced.join(", "))}</div>
       ${st.result.admin_url ? `<a class="btn dark" style="margin-top:8px" href="${A.esc(st.result.admin_url)}" target="_blank" rel="noopener" id="sellerAdminLink">Open in Shopify admin ↗</a>` : ""}${st.result.markets_note ? `<p class="note">ℹ ${A.esc(st.result.markets_note)}</p>` : ""}${(st.result.warnings || []).map(w => `<p class="note" style="color:var(--warn)">⚠ ${A.esc(w)}</p>`).join("")}</div>` : "";
@@ -143,17 +143,32 @@
     $("#sellerSteps").innerHTML = STEPS.map(s => `<button type="button" data-step="${s}" class="${st.step === s ? "active" : ""} ${STEPS.indexOf(s) < STEPS.indexOf(st.step) ? "done" : ""}">${LBL[s]}</button>`).join("");
     $("#sellerBody").innerHTML = ({ preview: vPreview, pricing: vPricing, shipping: vShipping, publish: vPublish })[st.step](pr);
     const i = STEPS.indexOf(st.step);
-    $("#sellerNav").innerHTML = `${i > 0 ? `<button class="btn" data-step="${STEPS[i - 1]}">← Back</button>` : ""}${i < 3 ? `<button class="btn dark" id="sellerNext" data-step="${STEPS[i + 1]}">Next →</button>` : `<button class="btn dark" id="sellerPublish" ${st.busy || !st.conn?.connected ? "disabled" : ""}>${st.busy ? "Publishing…" : st.result ? "Publish again" : "⇪ Publish to Shopify"}</button>`}`;
+    const why = i === 3 && !st.busy ? publishBlock() : "";
+    $("#sellerNav").innerHTML = `${i > 0 ? `<button class="btn" data-step="${STEPS[i - 1]}">← Back</button>` : ""}${i < 3 ? `<button class="btn dark" id="sellerNext" data-step="${STEPS[i + 1]}">Next →</button>` : `${why ? `<span class="seller-why" id="sellerWhy" role="status">${A.esc(why)}</span>` : ""}<button class="btn dark" id="sellerPublish" ${st.busy || why ? "disabled" : ""} ${why ? `aria-describedby="sellerWhy" title="${A.esc(why)}"` : ""}>${st.busy ? "Publishing…" : st.result ? "Publish again" : "⇪ Publish to Shopify"}</button>`}`;
+  }
+  /** Why the Publish button is disabled right now ("" = ready). Shown inline next to the button. */
+  function publishBlock() {
+    const c = st.conn;
+    if (!c) return "Checking your Shopify connection…";
+    if (!c.connected) {
+      if (c.reason === "network") return "Couldn't reach the server to check your Shopify connection — use Re-check.";
+      if (c.configured === false) return "Shopify publishing isn't configured on this site yet.";
+      if (c.reason === "not_owner") return `Sign in with Shopify as ${c.shop} to publish there (Connect Shopify above).`;
+      return c.shop ? `${c.shop} isn't connected yet — click Connect Shopify above.` : "Connect your Shopify store above to publish.";
+    }
+    for (const s of ["preview", "pricing", "shipping"]) { const v = validate(s); if (v) return v; }
+    return "";
   }
   function validate(step) {
     const pr = cur();
     if (step === "preview" && !pr.images.some(i => i.on)) return "Generate and select at least one image.";
     if (step === "pricing") { for (const [c] of CUR) if (!(Number(pr.prices[c]) > 0)) return `Enter a retail price in ${c}.`; if (!pr.title.trim()) return "Enter a product title."; }
-    if (step === "shipping") { for (const [c] of CUR) if (!(Number(pr.fee[c]) >= 0) || pr.fee[c] === "") return `Enter a shipping fee in ${c} (0 for free).`; if (!pr.zones.length) return "Choose at least one shipping zone."; }
+    if (step === "shipping") { for (const [c] of CUR) if (!(Number(pr.fee[c]) >= 0) || pr.fee[c] === "") return `Enter a shipping fee in ${c} (0 for free).`; if (!pr.zones.length) return "Choose at least one shipping zone.";
+      const w = Number(pr.weight), d = Number(pr.processing); if (!(w >= 0 && w <= 70000) || pr.weight === "") return "Enter the weight in grams (0–70000)."; if (!(d >= 0 && d <= 60) || pr.processing === "") return "Enter a processing time of 0–60 days."; }
     return "";
   }
   async function loadConn(shop) {
-    try { const r = await fetch(`/api/seller/shopify${shop ? `?shop=${encodeURIComponent(shop)}` : ""}`); st.conn = await r.json(); }
+    try { const r = await fetch(`/api/seller/shopify${shop ? `?shop=${encodeURIComponent(shop)}` : ""}`, { cache: "no-store", credentials: "same-origin" }); st.conn = await r.json(); }
     catch { st.conn = { connected: false, reason: "network" }; }
     if (!st.conn.connected && !shop && A.shopifyShop()) return loadConn(A.shopifyShop());
     if (st.step === "publish") draw();
@@ -186,6 +201,7 @@
     if (el.id === "sellerGen") return generate(st.pid);
     if (el.id === "sellerSuggest") { cur().prices = { ...cur().sg.retail }; return draw(); }
     if (el.id === "sellerPublish") return publish();
+    if (el.id === "sellerRecheck") { st.conn = null; draw(); return loadConn(); }
     if (el.id === "sellerConnect") {
       const raw = ($("#sellerShop")?.value || "").trim().toLowerCase(), shop = /^[a-z0-9][a-z0-9-]*$/.test(raw) ? `${raw}.myshopify.com` : raw.replace(/^https?:\/\//, "").replace(/\/$/, "");
       if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) return msg("Enter your store as your-store.myshopify.com", "bad");
@@ -211,7 +227,7 @@
   async function open() {
     A = window.StudioApp; if (!A) return;
     if (!A.S.design) { A.toast("Upload or create a design first"); return; }
-    if (!A.finalItems().length) { A.toast("Select at least one product"); return; }
+    if (!(A.sellerItems || A.finalItems)().length) { A.toast("Select at least one product"); return; }
     css(); shell(); newState(); document.getElementById("sellerModal").classList.add("open"); document.addEventListener("keydown", onKey);
     msg(""); draw(); loadConn(); await generate(st.pid);
   }
