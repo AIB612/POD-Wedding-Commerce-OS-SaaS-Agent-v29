@@ -11,7 +11,21 @@
     const a = area[0] / area[1]; let w = box.w, h = w / a; if (h > box.h) { h = box.h; w = h * a; }
     return { x: box.x + (box.w - w) / 2, y: box.y + (box.h - h) / 2, w, h };
   }
-  function shade(x, color, light = 0.12) { // soft vertical light
+  // Simulate CMYK color shift (screens are RGB, print is CMYK)
+function cmykShift(hex) {
+  const r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16);
+  // CMYK conversion approximation - colors appear slightly muted
+  const k = 1 - Math.max(r, g, b) / 255;
+  const c = (1 - r/255 - k) / (1 - k) || 0;
+  const m = (1 - g/255 - k) / (1 - k) || 0;
+  const y = (1 - b/255 - k) / (1 - k) || 0;
+  // Add slight yellow shift and reduce saturation (typical CMYK behavior)
+  const nr = Math.round(255 * (1 - c) * (1 - k) * 0.97);
+  const ng = Math.round(255 * (1 - m) * (1 - k) * 0.98);
+  const nb = Math.round(255 * (1 - y) * (1 - k) * 0.95);
+  return `rgb(${nr},${ng},${nb})`;
+}
+function shade(x, color, light = 0.12) { // soft vertical light
     const g = x.createLinearGradient(0, 0, 100, 100); g.addColorStop(0, `rgba(255,255,255,${light})`); g.addColorStop(1, `rgba(0,0,0,${light})`); return g;
   }
   function drawDesign(x, rect, pl, clip) {
@@ -306,6 +320,20 @@
       x.drawImage(o, 0, 0); 
       x.globalAlpha = 1;
       x.restore();
+      
+      // Paper texture overlay based on product category
+      if (p.category === "stationery" || p.shape === "card") {
+        const [tex, texx] = layer(px);
+        texx.globalAlpha = 0.04;
+        for (let i = 0; i < 200; i++) {
+          const tx = Math.random() * 100, ty = Math.random() * 100;
+          texx.fillStyle = Math.random() > 0.5 ? "#000" : "#fff";
+          texx.fillRect(tx, ty, 0.3, 0.3);
+        }
+        texx.globalCompositeOperation = "destination-in";
+        texx.drawImage(d, 0, 0, 100, 100);
+        x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(tex, 0, 0); x.restore();
+      }
       
       // Add subtle highlight for realism
       const [hl, hlx] = layer(px);
