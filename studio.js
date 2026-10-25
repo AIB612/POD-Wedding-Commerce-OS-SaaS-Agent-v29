@@ -245,6 +245,36 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   /** Generate order timeline */
   
   /** Check contrast ratio between design and background */
+  
+  /** Font recommendations by event type */
+  const FONT_PAIRS = {
+    wedding: [
+      { heading: "Playfair Display", body: "Lato", style: "classic" },
+      { heading: "Great Vibes", body: "Montserrat", style: "romantic" },
+      { heading: "Cinzel", body: "Raleway", style: "elegant" }
+    ],
+    corporate: [
+      { heading: "Roboto", body: "Open Sans", style: "modern" },
+      { heading: "Montserrat", body: "Source Sans", style: "professional" }
+    ],
+    party: [
+      { heading: "Pacifico", body: "Nunito", style: "fun" },
+      { heading: "Bebas Neue", body: "Poppins", style: "bold" }
+    ]
+  };
+  function recommendFonts(eventType = "wedding") {
+    return FONT_PAIRS[eventType] || FONT_PAIRS.wedding;
+  }
+  /** Design template suggestions */
+  function designTemplates(category) {
+    const templates = {
+      stationery: ["minimal", "floral", "geometric", "vintage"],
+      apparel: ["centered", "left-chest", "full-front", "back"],
+      gifts: ["photo", "monogram", "pattern", "text-only"]
+    };
+    return templates[category] || templates.stationery;
+  }
+
   function contrastRatio(fg, bg) {
     const lum = hex => {
       const rgb = [1,3,5].map(i => parseInt(hex.slice(i,i+2), 16) / 255);
