@@ -258,6 +258,30 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   /** Auto-save current state */
   
   /** Detect mobile device */
+  
+  /** Prevent click-through on mobile overlays */
+  function preventClickThrough() {
+    document.querySelectorAll(".modal, .overlay, .dropdown, .popup").forEach(el => {
+      el.addEventListener("touchend", e => e.stopPropagation(), { passive: false });
+      el.addEventListener("click", e => e.stopPropagation());
+    });
+    // Prevent ghost clicks after touch
+    let lastTouch = 0;
+    document.addEventListener("touchend", () => { lastTouch = Date.now(); }, { passive: true });
+    document.addEventListener("click", e => {
+      if (Date.now() - lastTouch < 300) e.preventDefault();
+    }, true);
+  }
+  /** Fix iOS double-tap zoom */
+  function fixDoubleTap() {
+    let lastTap = 0;
+    document.addEventListener("touchend", e => {
+      const now = Date.now();
+      if (now - lastTap < 300) e.preventDefault();
+      lastTap = now;
+    }, { passive: false });
+  }
+
   function isMobile() {
     return window.innerWidth < 860 || /iPhone|iPad|Android/i.test(navigator.userAgent);
   }
