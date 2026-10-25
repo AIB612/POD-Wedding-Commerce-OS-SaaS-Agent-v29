@@ -358,6 +358,17 @@ await test("currency: stored from shop, FX conversion, refuse push without rate"
     assert.equal(bad.ok, false); assert.equal(shopify.fxRates().HKD, 9.5148);
     const down = await fx.syncMarket({ fetchImpl: async () => { throw new Error("offline"); } });
     assert.equal(down.ok, false); assert.match(fx.getMarket().last_error, /offline/); assert.equal(shopify.fxRates().HKD, 9.5148);
+    { // storefront USD follows the same effective rate (price list display + legacy charge factor)
+      const { publicPriceList } = await import("./services/price-list-service.js");
+      const { rateFor } = await import("./services/pricing-service.js");
+      const { fxFromChf } = await import("./services/fees-service.js");
+      assert.equal(fxFromChf("USD"), 1.2125);
+      const [pid, mats] = Object.entries(publicPriceList().products)[0], row = Object.values(mats)[0];
+      assert.equal(row.USD[0], Math.round(row.CHF[0] * 1.2125 * 100) / 100);
+      assert.equal(rateFor("USD"), Math.round(0.12 * 1.2125 * 1e6) / 1e6);
+      await updateFees({ fx_overrides: { USD: 1.2 } }); assert.equal(fxFromChf("USD"), 1.2); assert.equal(Object.values(publicPriceList().products[pid])[0].USD[0], Math.round(row.CHF[0] * 1.2 * 100) / 100);
+      await updateFees({ fx_overrides: {} });
+    }
     console.log("  ok  FX market sync: primary + fallback source, cached, overrides, failure keeps last rates");
   }
   await updateFees({ fx_rates: {} }); mock.currency = "CHF";

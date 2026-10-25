@@ -1,5 +1,6 @@
 // Server-side quote for the storefront cart. The browser total is display-only;
 // the amount sent to PayPal is always recomputed here from data/storefront-pricing.json.
+import { fxFromChf } from "./fees-service.js";
 import fs from "node:fs";
 import { HttpError } from "../http/middleware.js";
 
@@ -55,6 +56,8 @@ export function currencyForCountry(country) {
 /** Conversion factor from the internal base currency (storefront-pricing.json "currency") to `currency`. */
 export function rateFor(currency) {
   if (!currency || currency === pricing.currency) return 1;
+  // USD follows the live CHF→USD rate (market sync / admin override), so it always matches the price list USD rows.
+  if (currency === "USD" && Number(pricing.storefront_currencies?.CHF?.rate) > 0) { const fx = fxFromChf("USD"); if (fx > 0) return Math.round(Number(pricing.storefront_currencies.CHF.rate) * fx * 1e6) / 1e6; }
   const r = Number(pricing.storefront_currencies?.[currency]?.rate);
   if (!(r > 0)) throw new HttpError(400, "unsupported_currency", `Unsupported currency: ${currency}`);
   return r;

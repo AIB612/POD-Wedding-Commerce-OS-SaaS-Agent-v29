@@ -2,13 +2,12 @@
 // webhook HMAC + dedupe, orders/create -> local order, app/uninstalled, GDPR topics,
 // product push via productSet, fulfillment via fulfillmentCreate. Admin GraphQL API only.
 // All HTTP goes through globalThis.fetch (tests replace it).
-import { getMarket } from "../services/fx-service.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import * as repo from "./repo.js";
 import { addRecord, updateRecord, getState } from "../saas-store.js";
 import { getPriceList } from "../services/price-list-service.js";
-import { getFees, SEED_FX } from "../services/fees-service.js";
+import { getFees, SEED_FX, effectiveFx } from "../services/fees-service.js";
 
 const TIMEOUT_MS = 15_000;
 export const DEFAULT_SCOPES = "write_products,read_orders,write_orders,write_fulfillments,read_fulfillments,write_merchant_managed_fulfillment_orders";
@@ -343,10 +342,7 @@ export async function onShopRedact(shop) {
 export function fxRates() {
   let env = {};
   try { env = JSON.parse(process.env.SHOPIFY_FX_RATES || "{}") || {}; } catch { console.warn("[shopify] SHOPIFY_FX_RATES is not valid JSON"); }
-  const f = getFees() || {}, out = { CHF: 1 };
-  for (const layer of [SEED_FX, f.fx_rates, env, getMarket()?.rates, f.fx_overrides]) for (const [k, v] of Object.entries(layer || {})) if (/^[A-Z]{3}$/.test(k) && Number(v) > 0) out[k] = Number(v);
-  out.CHF = 1;
-  return out;
+  return effectiveFx({ env });
 }
 export function fxFor(currency) { const r = fxRates()[String(currency || "").toUpperCase()]; return r ? { currency: String(currency).toUpperCase(), rate: r } : null; }
 export async function refreshShopCurrency(shop) {

@@ -3,6 +3,7 @@
 // carrier day ranges (delivery estimates) and packaging add-on prices. Seeded from the previous values
 // (saas-seed.json zones converted with storefront-pricing.json rates; packaging at 0) so nothing changes until edited.
 // Persisted in the data store (collection "fee_settings").
+import { getMarket } from "./fx-service.js";
 import fs from "node:fs";
 import { findRecord, addRecord, updateRecord } from "../saas-store.js";
 import { HttpError } from "../http/middleware.js";
@@ -63,7 +64,15 @@ export function shippingAmount(zoneId, method, currency, { weight_kg, subtotal }
   return { amount: r2(Number(z.base) + weight_kg * Number(z.per_kg || 0)), free: false };
 }
 export function carrierDays(zoneId, method) { return getFees().shipping?.[zoneId]?.[method]?.days || (method === "express" ? [3, 6] : [6, 12]); }
-export const fxFromChf = c => c === "CHF" ? 1 : Number(getFees().fx_rates?.[c] || SEED_FX[c] || 0);
+/** Effective CHF→X rates for the storefront (and Shopify, which adds SHOPIFY_FX_RATES): seed < last stored admin table
+ * (fees.fx_rates) < daily market rates (fx-service) < explicit admin overrides (fees.fx_overrides). */
+export function effectiveFx({ env } = {}) {
+  const f = getFees() || {}, out = { CHF: 1 };
+  for (const layer of [SEED_FX, f.fx_rates, env, getMarket()?.rates, f.fx_overrides]) for (const [k, v] of Object.entries(layer || {})) if (/^[A-Z]{3}$/.test(k) && Number(v) > 0) out[k] = Number(v);
+  out.CHF = 1;
+  return out;
+}
+export const fxFromChf = c => c === "CHF" ? 1 : Number(effectiveFx()[c] || 0);
 /** Packaging price; USD falls back to CHF x fx when no USD price is set. */
 export function packagingPrice(id, currency) { const p = getFees().packaging?.[id] || {}; if (p[currency] != null) return Number(p[currency] || 0); return currency === "USD" ? r2(Number(p.CHF || 0) * fxFromChf("USD")) : 0; }
 export function pricesIncludeVat() { return getFees().prices_include_vat === true; }
