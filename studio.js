@@ -247,6 +247,31 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
   /** Check contrast ratio between design and background */
   
   /** Font recommendations by event type */
+  
+  /** Track user actions for analytics */
+  function trackEvent(action, data = {}) {
+    const event = { action, ...data, ts: Date.now(), page: "studio" };
+    if (typeof gtag === "function") gtag("event", action, data);
+    console.log("[track]", action, data);
+    return event;
+  }
+  /** Safe wrapper for async operations */
+  async function safeAsync(fn, fallback = null) {
+    try { return await fn(); }
+    catch (e) { console.error("[error]", e.message); trackEvent("error", { msg: e.message }); return fallback; }
+  }
+  /** Validate order before submission */
+  function validateOrder(order) {
+    const errors = [];
+    if (!order.items?.length) errors.push("No items");
+    if (!order.design) errors.push("No design");
+    order.items?.forEach((item, i) => {
+      const v = validateDesign(order.design, item.printArea || [100, 100]);
+      if (v.level === "bad") errors.push(`Item ${i+1}: low resolution`);
+    });
+    return { ok: errors.length === 0, errors };
+  }
+
   const FONT_PAIRS = {
     wedding: [
       { heading: "Playfair Display", body: "Lato", style: "classic" },
