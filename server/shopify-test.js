@@ -343,6 +343,23 @@ await test("currency: stored from shop, FX conversion, refuse push without rate"
   assert.equal(getFees().fx_rates.HKD, 9.5);
   assert.equal((await shopify.pushProduct(SHOP, "tee")).fx_rate, 9.5);
   await assert.rejects(updateFees({ fx_rates: { hk: 1 } }), /Invalid currency/);
+  { // market sync: parsed, cached, wins over stored/env; overrides win over market; failure keeps last rates
+    const fx = await import("./services/fx-service.js");
+    const okFetch = async url => ({ ok: true, json: async () => url.includes("er-api") ? { result: "success", time_last_update_utc: "Sun, 25 Oct 2026 00:02:31 +0000", rates: { CHF: 1, EUR: 1.0824, USD: 1.2124, HKD: 9.5132, JPY: 185.1, bad: 2 } } : {} });
+    const r = await fx.syncMarket({ fetchImpl: okFetch });
+    assert.equal(r.ok, true); assert.equal(r.source, "open.er-api.com");
+    assert.equal(shopify.fxRates().HKD, 9.5132); assert.equal(shopify.fxRates().JPY, 185.1); assert.equal(shopify.fxRates().CHF, 1);
+    assert.equal(shopify.fxFor("jpy").rate, 185.1);
+    await updateFees({ fx_overrides: { HKD: 9.7 } }); assert.equal(shopify.fxRates().HKD, 9.7);
+    await updateFees({ fx_overrides: {} }); assert.equal(shopify.fxRates().HKD, 9.5132);
+    const fb = await fx.syncMarket({ fetchImpl: async url => url.includes("er-api") ? { ok: false, status: 503 } : { ok: true, json: async () => ({ date: "2026-10-23", rates: { EUR: 1.0838, USD: 1.2125, HKD: 9.5148 } }) } });
+    assert.equal(fb.ok, true); assert.match(fb.source, /frankfurter/); assert.equal(shopify.fxRates().HKD, 9.5148);
+    const bad = await fx.syncMarket({ fetchImpl: async () => ({ ok: true, json: async () => ({ result: "success", rates: { EUR: 900 } }) }) });
+    assert.equal(bad.ok, false); assert.equal(shopify.fxRates().HKD, 9.5148);
+    const down = await fx.syncMarket({ fetchImpl: async () => { throw new Error("offline"); } });
+    assert.equal(down.ok, false); assert.match(fx.getMarket().last_error, /offline/); assert.equal(shopify.fxRates().HKD, 9.5148);
+    console.log("  ok  FX market sync: primary + fallback source, cached, overrides, failure keeps last rates");
+  }
   await updateFees({ fx_rates: {} }); mock.currency = "CHF";
 });
 await test("HTTP: embedded webhook retry/status + order sync routes need session token", async () => {

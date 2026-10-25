@@ -44,6 +44,8 @@ const badRequest = (res, e) => res.status(400).json({ error: e.message });
 
 import { priceRows, updatePrices } from "../services/price-list-service.js";
 import { getFees, updateFees, seedFees } from "../services/fees-service.js";
+import { getMarket, syncMarket } from "../services/fx-service.js";
+import { fxRates } from "../shopify/app.js";
 import { listPromos, createPromo, updatePromo, deletePromo } from "../services/promo-service.js";
 import { sendShippedEmail } from "../services/checkout-service.js";
 import { fulfillLocalOrder } from "../shopify/app.js";
@@ -109,7 +111,8 @@ export function adminRouter({ root } = {}) {
   // Price list (single source of truth for sell prices of every Studio / homepage product).
   r.get("/api/saas/prices", A, (req, res) => res.json(priceRows()));
   // Fees & tax (VAT per zone/country, incl./excl. switch, shipping per zone+method in CHF/EUR, carrier days, packaging add-ons).
-  r.get("/api/saas/fees", A, (req, res) => res.json({ ...getFees(), seed: seedFees() }));
+  r.get("/api/saas/fees", A, (req, res) => res.json({ ...getFees(), seed: seedFees(), fx_market: getMarket(), fx_effective: fxRates() }));
+  r.post("/api/saas/fx/sync", AP, ah(async (req, res) => res.json({ ...(await syncMarket()), fx_effective: fxRates() })));
   r.put("/api/saas/fees", AP, ah(async (req, res) => res.json(await updateFees(req.body || {}, { by: req.get("x-admin-user") || "admin" }))));
   // Promo codes
   r.get("/api/saas/promos", A, ah(async (req, res) => res.json({ promos: await listPromos(req.tenantId) })));

@@ -101,6 +101,10 @@ export async function updateFees(body = {}, { by = "admin" } = {}) {
     for (const c of FEE_CURRENCIES) if (v[c] !== undefined) next.packaging[id][c] = r2(num(v[c], 0, 1000, `${id} ${c}`));
   }
   // CHF -> Shopify store currency rates (units per 1 CHF), e.g. { HKD: 9.6 }; replaces the whole table when sent.
+  if (body.fx_overrides !== undefined) {
+    next.fx_overrides = {};
+    for (const [c, v] of Object.entries(body.fx_overrides || {})) { if (!/^[A-Z]{3}$/.test(c)) throw new HttpError(400, "invalid_currency", `Invalid currency ${c}`); if (v === null || v === "") continue; next.fx_overrides[c] = r4(num(v, 0.0001, 100000, `FX override ${c}`)); }
+  }
   if (body.fx_rates !== undefined) {
     next.fx_rates = {};
     for (const [c, v] of Object.entries(body.fx_rates || {})) { if (!/^[A-Z]{3}$/.test(c)) throw new HttpError(400, "invalid_currency", `Invalid currency ${c}`); if (v === null || v === "") continue; next.fx_rates[c] = r4(num(v, 0.0001, 100000, `FX rate ${c}`)); }
