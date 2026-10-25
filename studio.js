@@ -238,6 +238,23 @@
   /** Validate design resolution for print */
   
   /** Calculate postage based on envelope size and destination */
+  
+  /** Compare screen color vs expected print color */
+  function colorShift(hex) {
+    const r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16);
+    const nr = Math.round(r * 0.95), ng = Math.round(g * 0.97), nb = Math.round(b * 0.92);
+    return { screen: hex, print: `#${nr.toString(16).padStart(2,'0')}${ng.toString(16).padStart(2,'0')}${nb.toString(16).padStart(2,'0')}`, shift: Math.abs(r-nr) + Math.abs(g-ng) + Math.abs(b-nb) };
+  }
+  /** Calculate overall quality score */
+  function qualityScore(design, printAreaMm) {
+    const v = validateDesign(design, printAreaMm);
+    let score = 100;
+    if (v.level === "warn") score -= 20;
+    if (v.level === "bad") score -= 50;
+    if (!design?.transparent && design?.width < 1000) score -= 10;
+    return { score: Math.max(0, score), level: score >= 80 ? "good" : score >= 50 ? "ok" : "poor" };
+  }
+
   function calcPostage(envelopeSize, dest = "CH", qty = 1) {
     const rates = {
       CH: { C6: 1.10, C5: 1.40, C4: 2.20, custom: 2.50 },
