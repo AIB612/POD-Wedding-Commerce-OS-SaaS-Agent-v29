@@ -6449,15 +6449,15 @@
         }
       ],
       "scene_image": {
-        "src": "assets/scenes/creator.jpg",
+        "src": "assets/scenes/creator-v2.jpg",
         "hotspots": [
           [
-            30.5,
-            56
+            29.5,
+            60.8
           ],
           [
-            69.5,
-            63.1
+            55.5,
+            61.6
           ]
         ]
       },
@@ -6526,19 +6526,19 @@
         }
       ],
       "scene_image": {
-        "src": "assets/scenes/community.jpg",
+        "src": "assets/scenes/community-v2.jpg",
         "hotspots": [
           [
-            24,
-            57.4
+            15,
+            55
           ],
           [
-            50,
-            53.1
+            39.6,
+            57
           ],
           [
-            76,
-            57.9
+            72.9,
+            75.5
           ]
         ]
       },
@@ -6610,19 +6610,19 @@
         }
       ],
       "scene_image": {
-        "src": "assets/scenes/corporate.jpg",
+        "src": "assets/scenes/corporate-v2.jpg",
         "hotspots": [
           [
-            24,
-            59
+            28,
+            79
           ],
           [
-            50,
-            53.1
+            57,
+            64
           ],
           [
-            76,
-            53.1
+            88,
+            56
           ]
         ]
       },
@@ -6676,15 +6676,15 @@
         }
       ],
       "scene_image": {
-        "src": "assets/scenes/art.jpg",
+        "src": "assets/scenes/art-v2.jpg",
         "hotspots": [
           [
-            30.5,
-            53.1
+            42.5,
+            52
           ],
           [
-            69.5,
-            53.8
+            73.6,
+            59
           ]
         ]
       },
@@ -6824,15 +6824,15 @@
         }
       ],
       "scene_image": {
-        "src": "assets/scenes/seasonal.jpg",
+        "src": "assets/scenes/seasonal-v2.jpg",
         "hotspots": [
           [
-            30.5,
-            56.4
+            17.9,
+            62.5
           ],
           [
-            69.5,
-            56
+            81.5,
+            55.6
           ]
         ]
       },
