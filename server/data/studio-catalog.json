@@ -6526,19 +6526,19 @@
         }
       ],
       "scene_image": {
-        "src": "assets/scenes/community-v5.jpg",
+        "src": "assets/scenes/community-v6.jpg",
         "hotspots": [
           [
             17.9,
-            33
+            52
           ],
           [
-            32,
-            66
+            40.3,
+            37
           ],
           [
-            84.4,
-            74.6
+            71.4,
+            73
           ]
         ]
       },
