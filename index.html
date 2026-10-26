@@ -891,7 +891,7 @@ button{color:inherit}
   </div>
 </aside>
 
-<script src="studio-data.js?v=20261026s6"></script>
+<script src="studio-data.js?v=20261026s7"></script>
 <script src="/price-list.js"></script>
 <script src="studio-pricing.js"></script>
 <script src="i18n.js"></script>
@@ -974,6 +974,7 @@ function buildSceneData(){
       recommended:HOME_RECOMMENDED.has(id),
       image:sc.scene_image?.src||"",
       hotspots:sc.scene_image?.hotspots||[],
+      hotspotSpace:sc.scene_image?.hotspot_space||"",
       colors:["#d8cec2","#eadfd4","#c8b9ac","#c7b29c"],
       groups:(sc.kits||[]).map(k=>[pick(k.name,k.id),(k.items||[]).map(homeProduct),k.id])
     }];
@@ -1085,12 +1086,18 @@ function focusKit(gi){
   const group=document.querySelector(`.group[data-group="${gi}"]`);
   group?.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
+let hotspotResizeT;window.addEventListener("resize",()=>{clearTimeout(hotspotResizeT);hotspotResizeT=setTimeout(()=>{if(sceneData[sceneKey]?.hotspotSpace==="image")renderHotspots()},150)});
 function renderHotspots(){
   const wrap=document.getElementById("hotspots");
   const s=sceneData[sceneKey];
   const pos=i=>{
     if(!(s.hotspots&&s.hotspots[i]))return ["","",""];
-    const [x,y]=s.hotspots[i],flip=x>55;
+    let [x,y]=s.hotspots[i];
+    if(s.hotspotSpace==="image"){ // hotspot given in % of the 3:2 source image → map through object-fit:cover
+      const r=scene.getBoundingClientRect(),A=r.width/Math.max(1,r.height),I=1.5;
+      if(A<I)x=+(((x/100-.5)*I/A+.5)*100).toFixed(1);else if(A>I)y=+(((y/100-.5)*A/I+.5)*100).toFixed(1);
+    }
+    const flip=x>55;
     return [` style="left:${x}%;top:${y}%;bottom:auto;transform:translate(-50%,-50%)"`,` style="--x:${x}%;--y:${y}%"`,flip?" pos flip":" pos"];
   };
   wrap.innerHTML=s.groups.map((g,i)=>`

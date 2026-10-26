@@ -6526,21 +6526,22 @@
         }
       ],
       "scene_image": {
-        "src": "assets/scenes/community-v6.jpg",
+        "src": "assets/scenes/community-v7.jpg",
         "hotspots": [
           [
-            17.9,
-            52
+            38.4,
+            68.6
           ],
           [
-            40.3,
-            37
+            49.8,
+            57.3
           ],
           [
-            71.4,
-            73
+            65.4,
+            59
           ]
-        ]
+        ],
+        "hotspot_space": "image"
       },
       "eco_friendly": true
     },
