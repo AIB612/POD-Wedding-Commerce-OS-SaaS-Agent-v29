@@ -54,6 +54,8 @@ const res = (body, status = 200) => ({ ok: status < 300, status, text: async () 
   assert.equal(q2.sign, sign4px({ app_key: "key", method: q2.method, timestamp: q2.timestamp, v: q2.v, body: calls[n].opt.body, secret: "sec" }));
   assert.equal(b2.ioss_no, "IM123"); assert.equal(b2.sender.state, "Guangdong");
   assert.ok(!JSON.stringify(calls).includes('"sec"') && !calls.some(c => c.url.includes("=sec")), "secret is never sent");
+  setFetch(async () => res({ data: null, errors: null, msg: "未查询到相关物流轨迹", result: "AT014002" }));
+  assert.deepEqual(await a.track("NEW1"), { status: "info_received", events: [] }, "no scans yet is not an error");
 }
 // 3. YunExpress adapter: token exchange (cached) + signed calls; response shapes from the official docs / sandbox.
 {

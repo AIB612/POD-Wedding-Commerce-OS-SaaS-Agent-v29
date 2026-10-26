@@ -26,7 +26,7 @@ export function createFourPx({ env = process.env, mode = "sandbox" } = {}) {
     // access_token (OAuth / platform customers) is sent but NOT signed — per the 4PX docs it is excluded like language.
     if (env.FOURPX_ACCESS_TOKEN) qs.set("access_token", env.FOURPX_ACCESS_TOKEN);
     const r = await httpJson(`${base}?${qs}`, { method: "POST", headers: { "content-type": "application/json" }, body });
-    if (!r.ok || String(r.body?.result) !== "1") { const e0 = r.body?.errors?.[0]; fail([e0?.error_code, e0?.error_msg || r.body?.msg || r.body?.message || `http_${r.status}`].filter(Boolean).join(" "), { status: r.status, errors: r.body?.errors, result: r.body?.result }); }
+    if (!r.ok || String(r.body?.result) !== "1") { const e0 = r.body?.errors?.[0]; fail(r.body?.result && r.body.result !== "0" && !e0 ? `${r.body.result} ${r.body?.msg || ""}`.trim() : [e0?.error_code, e0?.error_msg || r.body?.msg || r.body?.message || `http_${r.status}`].filter(Boolean).join(" "), { status: r.status, errors: r.body?.errors, result: r.body?.result }); }
     return r.body.data || {};
   }
   return {
@@ -54,7 +54,10 @@ export function createFourPx({ env = process.env, mode = "sandbox" } = {}) {
       return { url: d.label_url_info?.logistics_label || d.label_url || null, pdf_base64: null };
     },
     async track(number) {
-      const d = await call("tr.order.tracking.get", "1.0.0", { deliveryOrderNo: number });
+      let d;
+      // AT014002 / 未查询到相关物流轨迹 = no scans yet (normal right after creation) → empty timeline, not an error.
+      try { d = await call("tr.order.tracking.get", "1.0.0", { deliveryOrderNo: number }); }
+      catch (e) { if (/AT014002|未查询到|no.*track/i.test(e.message + JSON.stringify(e.detail || {}))) return { status: "info_received", events: [] }; throw e; }
       const evs = (d.trackingList || []).map(e => ({ time: e.occurDatetime, location: e.occurLocation || "", text: e.trackingContent || "", code: e.businessLinkCode || "" }));
       const last = evs[0]?.code || "";
       return { status: /FPX_S_OK|DELIVERED/i.test(last) ? "delivered" : /FPX_[IX]_|EXCEPTION|RETURN/i.test(last) ? "exception" : evs.length ? "in_transit" : "info_received", events: evs };
