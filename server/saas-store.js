@@ -32,8 +32,9 @@ async function writeSnapshot() {
   if (!file || !state) return;
   const tmp = `${file}.${process.pid}.tmp`;
   await fs.mkdir(path.dirname(file), { recursive: true });
-  await fs.writeFile(tmp, JSON.stringify(state), "utf8");
+  await fs.writeFile(tmp, JSON.stringify(state), { encoding: "utf8", mode: 0o600 }); // orders, accounts, sessions: owner-only
   await fs.rename(tmp, file); // atomic replace: never leaves a half-written file
+  await fs.chmod(file, 0o600).catch(() => {});
 }
 
 function schedulePersist() {
