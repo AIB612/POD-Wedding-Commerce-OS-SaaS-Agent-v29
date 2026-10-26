@@ -194,6 +194,7 @@ table.compact th,table.compact td{height:40px;padding:8px 12px}
       <button data-page="orders"><span class="ico">□</span><span>订单管理</span><span class="badge" id="badge-orders">8</span></button>
       <button data-page="studio-sync"><span class="ico">◈</span><span>Studio / 账号</span><span class="badge" id="badge-studio">0</span></button>
       <button data-page="logistics"><span class="ico">⇢</span><span>物流管理</span><span class="badge">2</span></button>
+      <button data-page="carriers"><span class="ico">✈</span><span>承运商 / Carriers</span></button>
       <button data-page="catalog"><span class="ico">◇</span><span>商品 / 采购</span></button>
       <button data-page="prices"><span class="ico">¤</span><span>价目表 / Price list</span></button>
       <button data-page="fees"><span class="ico">%</span><span>费用与税 / Fees &amp; tax</span></button>
@@ -318,6 +319,11 @@ table.compact th,table.compact td{height:40px;padding:8px 12px}
     <section class="page" id="catalog">
       <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>商品 / 采购</span></div><div class="page-head-row"><div><h1>商品主数据 / 采购成本</h1><p>Supplier Feed → Master Catalog → Listing → Seller Channels</p></div><div class="page-actions"><button class="ant-btn" data-action="agent:检查商品同步和采购成本异常">AI 成本检查</button><button class="ant-btn primary" data-action="agent:同步供应商商品到已连接店铺">同步商品</button></div></div></div>
       <div class="content"><div class="table-card"><div class="table-toolbar"><strong>Master Catalog</strong><button class="ant-btn" data-action="import-feed">导入 Supplier Feed</button></div><div class="table-wrap"><table><thead><tr><th>SKU</th><th>产品</th><th>供应成本</th><th>到岸成本</th><th>售价</th><th>毛利率</th><th>库存</th><th>渠道状态</th></tr></thead><tbody id="catalogBody"></tbody></table></div></div></div>
+    </section>
+
+    <section class="page" id="carriers">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>承运商 / Carriers</span></div><div class="page-head-row"><div><h1>Carriers · YunExpress &amp; 4PX</h1><p>Shipments, labels, tracking, alerts, carrier settings and shipping-fee rules</p></div></div></div>
+      <div class="content adm-sec" id="carriersSection"></div>
     </section>
 
     <section class="page" id="prices">

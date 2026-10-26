@@ -156,7 +156,76 @@ function shopify(root){
   load().catch(e=>say($("msg"),false,e.message));
 }
 
-const mounts={prices,fees,promos,shopify},mounted=new Set();
+// ---------- Carriers (YunExpress 云途 / 4PX 递四方) — gated by LOGISTICS_ENABLED ----------
+function carriers(root){
+  const C={yunexpress:"YunExpress 云途",fourpx:"4PX 递四方"},ST=["created","label_ready","info_received","in_transit","delivered","exception","cancelled","error"];
+  const opts=(o,sel)=>Object.entries(o).map(([v,l])=>`<option value="${esc(v)}"${v===sel?" selected":""}>${esc(l)}</option>`).join("");
+  root.innerHTML=`<div class="query-card adm-bar"><div class="lang-switch" role="group" aria-label="Tabs">${["shipments","create","settings","rules"].map((t,i)=>`<button data-tab="${t}"${i?"":` class="active"`}>${{shipments:"Shipments",create:"Create / batch",settings:"Carrier settings",rules:"Shipping-fee rules"}[t]}</button>`).join("")}</div><span class="adm-msg" data-r="msg" aria-live="polite"></span></div><div data-r="body"></div>`;
+  const $=n=>root.querySelector(`[data-r="${n}"]`),msg=(ok,t)=>say($("msg"),ok,t),body=()=>$("body");
+  let tab="shipments";
+  root.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{root.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));tab=b.dataset.tab;show()});
+  async function label(id,refresh){const t=cfg.tenant();const r=await fetch(`/api/saas/carriers/shipments/${encodeURIComponent(id)}/label${refresh?"?refresh=1":""}`,{headers:{"x-admin-api-key":cfg.getKey(),...(t?{"x-tenant-id":t}:{})}});
+    if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||"label failed")}const u=URL.createObjectURL(await r.blob());const a=document.createElement("a");a.href=u;a.download=`label-${id}.pdf`;a.click();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+  async function shipments(){
+    body().innerHTML=`<div class="query-card adm-bar"><input class="ant-input" type="search" data-f="q" placeholder="Order or tracking number…" style="max-width:240px"><select class="ant-select" data-f="carrier"><option value="">All carriers</option>${opts(C)}</select>
+      <select class="ant-select" data-f="status"><option value="">All statuses</option>${ST.map(s=>`<option>${s}</option>`).join("")}</select><input class="ant-input" type="date" data-f="from" aria-label="From"><input class="ant-input" type="date" data-f="to" aria-label="To">
+      <label><input type="checkbox" data-f="alerts"> Alerts only</label><button class="ant-btn" data-a="poll">Refresh all tracking</button></div>
+      <div class="table-card"><div class="table-wrap"><table class="adm-table"><thead><tr><th>Order</th><th>Carrier</th><th>Tracking</th><th>Status</th><th>Alert</th><th>Created</th><th></th></tr></thead><tbody data-r="rows"></tbody></table></div></div><div data-r="detail"></div>`;
+    const f=n=>body().querySelector(`[data-f="${n}"]`);
+    async function load(){const q=new URLSearchParams();for(const n of ["q","carrier","status","from","to"])if(f(n).value)q.set(n,f(n).value);if(f("alerts").checked)q.set("alerts","1");
+      const rows=await api("/api/saas/carriers/shipments?"+q);
+      $("rows").innerHTML=rows.map(s=>`<tr><td>${esc(s.order_id)}</td><td>${esc(C[s.carrier]||s.carrier)}<br><span class="adm-meta">${esc(s.mode)}</span></td><td>${s.tracking_url?`<a href="${esc(s.tracking_url)}" target="_blank" rel="noopener">${esc(s.tracking_number)}</a>`:esc(s.tracking_number||"—")}</td><td>${esc(s.status)}</td><td>${s.alert?`<b style="color:#c0392b">${esc(s.alert.text)}</b>`:""}</td><td>${esc(String(s.created_at).slice(0,16).replace("T"," "))}</td>
+        <td><button class="ant-btn" data-d="${esc(s.id)}">Detail</button></td></tr>`).join("")||`<tr><td colspan="7">No shipments</td></tr>`;
+      $("rows").querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>detail(b.dataset.d))}
+    async function detail(id){const s=await api(`/api/saas/carriers/shipments/${encodeURIComponent(id)}`);
+      $("detail").innerHTML=`<div class="table-card" style="padding:16px"><strong>${esc(s.order_id)} · ${esc(C[s.carrier])} · ${esc(s.tracking_number||"")}</strong> <span class="adm-meta">${esc(s.status)} · ${esc(s.weight_kg)} kg · ${esc(s.country)}${s.last_error?" · "+esc(s.last_error):""}</span>
+        <div class="adm-bar" style="margin:10px 0"><button class="ant-btn" data-x="refresh">Refresh tracking</button><button class="ant-btn" data-x="label">Download label</button><button class="ant-btn" data-x="reprint">Re-fetch label</button><button class="ant-btn" data-x="cancel">Cancel shipment</button></div>
+        <ol>${(s.events||[]).map(e=>`<li><b>${esc(String(e.time||"").replace("T"," ").slice(0,16))}</b> ${esc(e.location)} — ${esc(e.text)}</li>`).join("")||"<li>No tracking events yet</li>"}</ol></div>`;
+      const x=n=>$("detail").querySelector(`[data-x="${n}"]`);
+      x("refresh").onclick=()=>api(`/api/saas/carriers/shipments/${id}/refresh`,{method:"POST"}).then(()=>{msg(true,"Tracking refreshed");load();detail(id)}).catch(e=>msg(false,e.message));
+      x("label").onclick=()=>label(id,false).catch(e=>msg(false,e.message));x("reprint").onclick=()=>label(id,true).catch(e=>msg(false,e.message));
+      x("cancel").onclick=()=>confirm("Cancel this shipment with the carrier?")&&api(`/api/saas/carriers/shipments/${id}/cancel`,{method:"POST"}).then(()=>{msg(true,"Cancelled");load();detail(id)}).catch(e=>msg(false,e.message))}
+    body().querySelectorAll("[data-f]").forEach(e=>e.onchange=()=>load().catch(er=>msg(false,er.message)));f("q").oninput=()=>load().catch(()=>{});
+    body().querySelector('[data-a="poll"]').onclick=()=>api("/api/saas/carriers/poll",{method:"POST"}).then(r=>{msg(true,`Polled ${r.polled}`);load()}).catch(e=>msg(false,e.message));
+    await load()}
+  async function create(){
+    const rows=await api("/api/saas/carriers/shippable-orders");
+    body().innerHTML=`<div class="query-card adm-bar"><select class="ant-select" data-c="carrier"><option value="">Default carrier per destination</option>${opts(C)}</select><button class="ant-btn primary" data-c="go">Create shipments for selected</button></div>
+      <div class="table-card"><div class="table-wrap"><table class="adm-table"><thead><tr><th><input type="checkbox" data-c="all"></th><th>Order</th><th>Status</th><th>Country</th><th>Items</th><th>Placed</th></tr></thead><tbody>${rows.map(o=>`<tr><td><input type="checkbox" data-o="${esc(o.id)}"></td><td>${esc(o.id)}</td><td>${esc(o.status)}</td><td>${esc(o.country)}</td><td>${o.items}</td><td>${esc(String(o.created_at||"").slice(0,10))}</td></tr>`).join("")||`<tr><td colspan="6">No paid orders waiting for a shipment</td></tr>`}</tbody></table></div></div><pre data-c="out" class="adm-meta"></pre>`;
+    const c=n=>body().querySelector(`[data-c="${n}"]`);c("all").onchange=e=>body().querySelectorAll("[data-o]").forEach(x=>x.checked=e.target.checked);
+    c("go").onclick=async()=>{const ids=[...body().querySelectorAll("[data-o]:checked")].map(x=>x.dataset.o);if(!ids.length)return msg(false,"Select orders first");
+      try{const r=await api("/api/saas/carriers/shipments/batch",{method:"POST",body:JSON.stringify({order_ids:ids,carrier:c("carrier").value||undefined})});msg(r.failed===0,`${r.created} created, ${r.failed} failed`);c("out").textContent=r.results.map(x=>`${x.order_id}: ${x.ok?x.tracking_number:x.error}`).join("\n")}catch(e){msg(false,e.message)}}}
+  async function settings(){
+    const d=await api("/api/saas/carriers/settings"),s=d.settings;
+    body().innerHTML=`<div class="table-card" style="padding:16px"><table class="adm-table"><thead><tr><th>Carrier</th><th>Enabled</th><th>Environment</th><th>Product / service code</th><th>Credentials</th></tr></thead><tbody>${d.carriers.map(c=>`<tr><td>${esc(c.name)}</td><td><input type="checkbox" data-s="${c.id}.enabled"${c.enabled?" checked":""}></td><td><select class="ant-select" data-s="${c.id}.mode">${opts({sandbox:"Sandbox",production:"Production"},c.mode)}</select></td><td><input class="ant-input" data-s="${c.id}.service" value="${esc(c.service)}"></td><td>${c.mock?"mock mode":c.configured?"configured":"missing: "+esc(c.required_env.join(", "))}</td></tr>`).join("")}</tbody></table>
+      <p>Default carrier <select class="ant-select" data-g="default_carrier">${opts(C,s.default_carrier)}</select></p>
+      <p>Per destination (one per line, e.g. <code>DE=fourpx</code>)<br><textarea class="ant-input" rows="5" data-g="by">${esc(Object.entries(s.default_by_country).map(([k,v])=>`${k}=${v}`).join("\n"))}</textarea></p>
+      <p>Alert when no tracking update for <input class="ant-input adm-num" data-g="nu" value="${s.alert_days_no_update}" style="width:60px"> days, or not delivered after <input class="ant-input adm-num" data-g="ud" value="${s.alert_days_undelivered}" style="width:60px"> days</p>
+      <button class="ant-btn primary" data-g="save">Save settings</button></div>`;
+    const g=n=>body().querySelector(`[data-g="${n}"]`),v=k=>body().querySelector(`[data-s="${k}"]`);
+    g("save").onclick=()=>api("/api/saas/carriers/settings",{method:"PUT",body:JSON.stringify({carriers:Object.fromEntries(Object.keys(C).map(id=>[id,{enabled:v(id+".enabled").checked,mode:v(id+".mode").value,service:v(id+".service").value}])),
+      default_carrier:g("default_carrier").value,default_by_country:Object.fromEntries(g("by").value.split(/\n/).map(l=>l.split("=").map(x=>x.trim())).filter(x=>x[0]&&x[1]).map(([a,b])=>[a.toUpperCase(),b])),alert_days_no_update:+g("nu").value,alert_days_undelivered:+g("ud").value})}).then(()=>msg(true,"Saved")).catch(e=>msg(false,e.message))}
+  async function rules(){
+    const d=await api("/api/saas/carriers/rules");
+    body().innerHTML=`<div class="table-card" style="padding:16px"><p class="adm-meta">Customer-facing shipping fees in CHF (converted to the checkout currency). Applied only when "Active" is ticked — otherwise checkout keeps the Fees &amp; tax shipping prices. Free-shipping thresholds from Fees &amp; tax still apply. Tiers: <code>max_kg:price</code>, comma-separated.</p>
+      <p><label><input type="checkbox" data-r2="active"${d.active?" checked":""}> Active (overrides checkout shipping for matching destinations)</label> · Markup % <input class="ant-input adm-num" data-r2="pct" value="${d.markup_pct}" style="width:70px"> + fixed CHF <input class="ant-input adm-num" data-r2="fix" value="${d.markup_fixed}" style="width:70px"></p>
+      <table class="adm-table"><thead><tr><th>Name</th><th>Carrier</th><th>Countries (ISO, * = rest)</th><th>Method</th><th>Weight tiers</th><th></th></tr></thead><tbody data-r2="rows"></tbody></table>
+      <button class="ant-btn" data-r2="add">Add rule</button> <button class="ant-btn primary" data-r2="save">Save rules</button>
+      <p>Preview: country <input class="ant-input" data-r2="pc" value="DE" style="width:50px"> weight kg <input class="ant-input adm-num" data-r2="pw" value="0.5" style="width:60px"> <button class="ant-btn" data-r2="prev">Price</button> <span data-r2="pout"></span></p></div>`;
+    const q=n=>body().querySelector(`[data-r2="${n}"]`);
+    const row=r=>`<tr data-rule="${esc(r.id||"")}"><td><input class="ant-input" data-k="name" value="${esc(r.name||"")}"></td><td><select class="ant-select" data-k="carrier">${opts(C,r.carrier)}</select></td><td><input class="ant-input" data-k="countries" value="${esc((r.countries||[]).join(","))}"></td><td><select class="ant-select" data-k="method">${opts({standard:"Standard",express:"Express"},r.method)}</select></td><td><input class="ant-input" data-k="tiers" value="${esc((r.tiers||[]).map(t=>`${t.max_kg}:${t.price}`).join(", "))}"></td><td><button class="ant-btn" data-del>✕</button></td></tr>`;
+    const bind=()=>q("rows").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>b.closest("tr").remove());
+    q("rows").innerHTML=d.rules.map(row).join("");bind();
+    q("add").onclick=()=>{q("rows").insertAdjacentHTML("beforeend",row({carrier:"yunexpress",countries:["*"],method:"standard",tiers:[{max_kg:0.5,price:9.9},{max_kg:2,price:19.9}]}));bind()};
+    const collect=()=>({active:q("active").checked,markup_pct:+q("pct").value||0,markup_fixed:+q("fix").value||0,rules:[...q("rows").querySelectorAll("tr")].map(tr=>{const k=n=>tr.querySelector(`[data-k="${n}"]`).value;
+      return {id:tr.dataset.rule||undefined,name:k("name"),carrier:k("carrier"),countries:k("countries"),method:k("method"),tiers:k("tiers").split(",").map(x=>x.split(":").map(Number)).filter(x=>x.length===2).map(([max_kg,price])=>({max_kg,price}))}})});
+    q("save").onclick=()=>api("/api/saas/carriers/rules",{method:"PUT",body:JSON.stringify(collect())}).then(r=>{msg(true,`Saved ${r.rules.length} rule(s)${r.active?" — ACTIVE at checkout":" (inactive)"}`)}).catch(e=>msg(false,e.message));
+    q("prev").onclick=()=>api("/api/saas/carriers/rules/preview",{method:"POST",body:JSON.stringify({rules:{...collect(),active:true},country:q("pc").value,weight_kg:+q("pw").value})}).then(r=>q("pout").textContent=r.fee?`${r.fee.carrier}: CHF ${r.fee.amount_chf}`:"no matching rule → current checkout price").catch(e=>msg(false,e.message))}
+  async function show(){try{body().innerHTML="Loading…";await({shipments,create,settings,rules})[tab]()}catch(e){body().innerHTML=`<div class="table-card" style="padding:16px">${/disabled/.test(e.message)?"Carrier logistics is switched off. Set <code>LOGISTICS_ENABLED=true</code> in the server .env to use it.":esc(e.message)}</div>`}}
+  show();
+}
+
+const mounts={prices,fees,promos,shopify,carriers},mounted=new Set();
 window.AdminSections={
   ids:Object.keys(mounts),
   init(o){cfg={...cfg,...o}},

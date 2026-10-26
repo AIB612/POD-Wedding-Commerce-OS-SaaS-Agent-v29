@@ -13,6 +13,7 @@ import shopifyApp from "./routes/shopify-app.js";
 import { getDb } from "./db/index.js";
 import { publicRouter } from "./routes/public.js";
 import { adminRouter } from "./routes/admin.js";
+import { logisticsRouter } from "./routes/logistics.js";
 import carrierRates from "./routes/carrier-rates.js";
 import { studioRouter } from "./routes/studio.js";
 import { sellerRouter } from "./routes/seller.js";
@@ -54,6 +55,7 @@ export async function createApp({ root = projectRoot, generatedDir = path.join(p
   app.use("/api/pod-agent", podAgentRouter());
   app.use("/pod-agent", express.static(new URL("./pod-agent", import.meta.url).pathname));
   app.use(carrierRates);
+  app.use(logisticsRouter());
   app.use(adminRouter({ root }));
 
   app.use(notFound);
