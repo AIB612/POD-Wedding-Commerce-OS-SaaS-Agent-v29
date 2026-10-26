@@ -45,6 +45,14 @@ const res = (body, status = 200) => ({ ok: status < 300, status, text: async () 
   assert.equal((await a.track("LX999DE")).status, "delivered");
   await assert.rejects(a.cancel("x"), /fourpx: bad/);
   await assert.rejects(createFourPx({ env: {} }).createShipment(ship), /not_configured/);
+  assert.equal(q.access_token, undefined, "no token unless configured"); assert.equal(body.sender.state, "");
+  // Optional access_token: sent as a query param, excluded from the signature; IOSS passed through when set.
+  const t = createFourPx({ env: { FOURPX_APP_KEY: "key", FOURPX_APP_SECRET: "sec", FOURPX_ACCESS_TOKEN: "tok32", FOURPX_IOSS_NO: "IM123", FOURPX_PROD_BASE_URL: "https://open.4px.com" }, mode: "production" });
+  const n = calls.length; await t.createShipment({ ...ship, from: { ...ship.from, state: "Guangdong" } });
+  const u2 = new URL(calls[n].url), q2 = Object.fromEntries(u2.searchParams), b2 = JSON.parse(calls[n].opt.body);
+  assert.equal(u2.origin + u2.pathname, "https://open.4px.com/router/api/service"); assert.equal(q2.access_token, "tok32");
+  assert.equal(q2.sign, sign4px({ app_key: "key", method: q2.method, timestamp: q2.timestamp, v: q2.v, body: calls[n].opt.body, secret: "sec" }));
+  assert.equal(b2.ioss_no, "IM123"); assert.equal(b2.sender.state, "Guangdong");
   assert.ok(!JSON.stringify(calls).includes('"sec"') && !calls.some(c => c.url.includes("=sec")), "secret is never sent");
 }
 // 3. YunExpress adapter: token exchange (cached) + signed calls; response shapes from the official docs / sandbox.

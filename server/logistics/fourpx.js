@@ -1,5 +1,6 @@
 // 4PX (递四方) Open Platform adapter — POST https://open.4px.com/router/api/service (test: https://open-test.4px.com/router/api/service).
 // Query params: method, app_key, v, timestamp(ms), format=json, sign[, language]. Body = compact JSON.
+// Optional access_token query param (FOURPX_ACCESS_TOKEN), excluded from the signature.
 // sign = md5_lower( "app_key"+K+"format"+"json"+"method"+M+"timestamp"+T+"v"+V + body + appSecret )  (sorted, no access_token/language).
 // Methods: ds.xms.order.create (v1.1.0) · ds.xms.label.get (v1.1.0) · tr.order.tracking.get (v1.0.0) · ds.xms.order.cancel (v1.0.0).
 import crypto from "node:crypto";
@@ -22,6 +23,8 @@ export function createFourPx({ env = process.env, mode = "sandbox" } = {}) {
     if (!key || !secret) fail("not_configured");
     const body = JSON.stringify(payload), timestamp = String(Date.now());
     const qs = new URLSearchParams({ method, app_key: key, v, timestamp, format: "json", language: "en", sign: sign4px({ app_key: key, method, timestamp, v, body, secret }) });
+    // access_token (OAuth / platform customers) is sent but NOT signed — per the 4PX docs it is excluded like language.
+    if (env.FOURPX_ACCESS_TOKEN) qs.set("access_token", env.FOURPX_ACCESS_TOKEN);
     const r = await httpJson(`${base}?${qs}`, { method: "POST", headers: { "content-type": "application/json" }, body });
     if (!r.ok || String(r.body?.result) !== "1") fail(r.body?.msg || r.body?.errors?.[0]?.error_msg || `http_${r.status}`, { status: r.status, errors: r.body?.errors });
     return r.body.data || {};
@@ -30,9 +33,9 @@ export function createFourPx({ env = process.env, mode = "sandbox" } = {}) {
     id: "fourpx", name: "4PX 递四方", configured: !!(key && secret), mode,
     async createShipment(s) {
       const d = await call("ds.xms.order.create", "1.1.0", {
-        ref_no: s.reference, business_type: "BDS", duty_type: "U", is_insure: "N",
+        ref_no: s.reference, ...(env.FOURPX_IOSS_NO || env.IOSS_NO ? { ioss_no: env.FOURPX_IOSS_NO || env.IOSS_NO } : {}), business_type: "BDS", duty_type: "U", is_insure: "N",
         logistics_service_info: { logistics_product_code: s.service || env.FOURPX_PRODUCT_CODE || DEFAULT_PRODUCT },
-        sender: { first_name: s.from.name || "Wed.AI", company: s.from.company || "", phone: s.from.phone || "", country: s.from.country, city: s.from.city || "", street: s.from.address1 || "", post_code: s.from.postal_code || "" },
+        sender: { first_name: s.from.name || "Wed.AI", company: s.from.company || "", phone: s.from.phone || "", country: s.from.country, state: s.from.state || "", city: s.from.city || "", street: s.from.address1 || "", post_code: s.from.postal_code || "" },
         recipient_info: { first_name: s.to.first_name, last_name: s.to.last_name, company: s.to.company || "", phone: s.to.phone || "", email: s.to.email || "", post_code: s.to.postal_code, country: s.to.country, state: s.to.state || "", city: s.to.city, street: [s.to.address1, s.to.address2].filter(Boolean).join(" ") },
         parcel_list: [{ weight: Math.round(s.weight_kg * 1000), parcel_value: s.declared_value, currency: s.currency, include_battery: "N",
           declare_product_info: s.items.map(i => ({ declare_product_name_en: i.name_en, declare_product_name_cn: i.name_cn || i.name_en, declare_product_code_qty: i.quantity, declare_unit_price_export: i.unit_value, currency_export: s.currency, declare_unit_price_import: i.unit_value, currency_import: s.currency, brand_export: "none", brand_import: "none", hscode_export: i.hs_code || "", hscode_import: i.hs_code || "" })) }],

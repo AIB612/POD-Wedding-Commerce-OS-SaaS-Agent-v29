@@ -94,7 +94,7 @@ export function shipmentRequest(order, settings, carrier) {
     unit_value: r2((Number(l.unit_price) || 1) * usd(order.currency)), unit_weight_kg: 0.12, hs_code: process.env.LOGISTICS_DEFAULT_HS_CODE || "4909" }));
   return { reference: order.id, service: settings.carriers[carrier].service, weight_kg: r2(orderWeight(order)), currency: "USD", declared_value: r2(items.reduce((s, i) => s + i.unit_value * i.quantity, 0)),
     to: { first_name: first, last_name: rest.join(" ") || first, company: a.company || "", address1: a.address1, address2: a.address2 || "", city: a.city, state: a.state || a.province || "", postal_code: a.postal_code, country: String(a.country || "").toUpperCase(), phone: a.phone || order.customer_phone || "", email: order.customer_email || "" },
-    from: { name: process.env.SHIPPING_ORIGIN_NAME || "Wed.AI", country: process.env.SHIPPING_ORIGIN_COUNTRY || "CN", city: process.env.SHIPPING_ORIGIN_CITY || "", address1: process.env.SHIPPING_ORIGIN_ADDRESS1 || "", postal_code: process.env.SHIPPING_ORIGIN_POSTAL || "", phone: process.env.SHIPPING_ORIGIN_PHONE || "" },
+    from: { name: process.env.SHIPPING_ORIGIN_NAME || "Wed.AI", country: process.env.SHIPPING_ORIGIN_COUNTRY || "CN", city: process.env.SHIPPING_ORIGIN_CITY || "", state: process.env.SHIPPING_ORIGIN_STATE || "", address1: process.env.SHIPPING_ORIGIN_ADDRESS1 || "", postal_code: process.env.SHIPPING_ORIGIN_POSTAL || "", phone: process.env.SHIPPING_ORIGIN_PHONE || "" },
     items };
 }
 const err = (m, status = 400) => Object.assign(new Error(m), { status });
