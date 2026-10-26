@@ -6610,19 +6610,19 @@
         }
       ],
       "scene_image": {
-        "src": "assets/scenes/corporate-v2.jpg",
+        "src": "assets/scenes/corporate-v3.jpg",
         "hotspots": [
           [
-            28,
-            79
+            19.4,
+            80
           ],
           [
-            57,
+            54,
             64
           ],
           [
-            88,
-            56
+            84,
+            68.6
           ]
         ]
       },
@@ -6676,15 +6676,15 @@
         }
       ],
       "scene_image": {
-        "src": "assets/scenes/art-v2.jpg",
+        "src": "assets/scenes/art-v3.jpg",
         "hotspots": [
           [
-            42.5,
+            19.3,
             52
           ],
           [
-            73.6,
-            59
+            73,
+            52
           ]
         ]
       },
