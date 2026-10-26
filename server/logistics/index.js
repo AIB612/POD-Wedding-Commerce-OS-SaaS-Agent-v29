@@ -6,6 +6,7 @@ import crypto from "node:crypto";
 import { createYunExpress, REQUIRED_ENV as YUN_ENV } from "./yunexpress.js";
 import { createFourPx, REQUIRED_ENV as FPX_ENV } from "./fourpx.js";
 import { createMock } from "./mock.js";
+import { effectiveFx } from "../services/fees-service.js";
 import { addRecord, findRecord, findWhere, listForTenant, updateRecord } from "../saas-store.js";
 
 export const CARRIERS = { yunexpress: { name: "YunExpress 云途", env: YUN_ENV, make: createYunExpress, track_url: n => `https://www.yuntrack.com/parcelTracking?id=${encodeURIComponent(n)}` },
@@ -84,12 +85,14 @@ export async function quoteOverride(tenantId, args) { if (!enabled()) return nul
 
 // ---------- shipments ----------
 const labelDir = () => path.resolve(process.env.LOGISTICS_LABEL_DIR || "./data/labels");
+// Customs values are declared in USD (YunExpress default; accepted by 4PX). Order currency → CHF → USD via the shop FX table.
+function usd(cur = "CHF") { const fx = effectiveFx(); const toChf = cur === "CHF" ? 1 : 1 / (Number(fx[cur]) || 1); return toChf * (Number(fx.USD) || 1.1); }
 export function orderWeight(order) { const n = (order.items || []).reduce((a, l) => a + (Number(l.quantity) || 0), 0); return Math.max(0.2, n * 0.12); }
 export function shipmentRequest(order, settings, carrier) {
   const a = order.shipping_address || {}; const [first, ...rest] = String(a.name || order.customer_name || "Customer").trim().split(/\s+/);
   const items = (order.items || []).map(l => ({ sku: l.product_id || l.sku || "item", name_en: String(l.name || "Printed wedding stationery").slice(0, 60), name_cn: "印刷品", quantity: Number(l.quantity) || 1,
-    unit_value: r2(Number(l.unit_price) || 1), unit_weight_kg: 0.12, hs_code: process.env.LOGISTICS_DEFAULT_HS_CODE || "4909" }));
-  return { reference: order.id, service: settings.carriers[carrier].service, weight_kg: r2(orderWeight(order)), currency: order.currency || "CHF", declared_value: r2(order.subtotal || items.reduce((s, i) => s + i.unit_value * i.quantity, 0)),
+    unit_value: r2((Number(l.unit_price) || 1) * usd(order.currency)), unit_weight_kg: 0.12, hs_code: process.env.LOGISTICS_DEFAULT_HS_CODE || "4909" }));
+  return { reference: order.id, service: settings.carriers[carrier].service, weight_kg: r2(orderWeight(order)), currency: "USD", declared_value: r2(items.reduce((s, i) => s + i.unit_value * i.quantity, 0)),
     to: { first_name: first, last_name: rest.join(" ") || first, company: a.company || "", address1: a.address1, address2: a.address2 || "", city: a.city, state: a.state || a.province || "", postal_code: a.postal_code, country: String(a.country || "").toUpperCase(), phone: a.phone || order.customer_phone || "", email: order.customer_email || "" },
     from: { name: process.env.SHIPPING_ORIGIN_NAME || "Wed.AI", country: process.env.SHIPPING_ORIGIN_COUNTRY || "CN", city: process.env.SHIPPING_ORIGIN_CITY || "", address1: process.env.SHIPPING_ORIGIN_ADDRESS1 || "", postal_code: process.env.SHIPPING_ORIGIN_POSTAL || "", phone: process.env.SHIPPING_ORIGIN_PHONE || "" },
     items };
@@ -129,7 +132,7 @@ export async function createShipment(tenantId, orderId, { carrier } = {}) {
   const id = `shp_${crypto.randomUUID()}`, base = { id, tenant_id: tenantId, order_id: order.id, carrier: cid, mode: a.mode, weight_kg: req.weight_kg, country: req.to.country, created_at: now(), updated_at: now(), events: [] };
   try {
     const r = await a.createShipment(req);
-    const row = { ...base, status: "created", carrier_order_id: r.carrier_order_id, tracking_number: r.tracking_number, tracking_url: r.tracking_number ? CARRIERS[cid].track_url(r.tracking_number) : "" };
+    const row = { ...base, status: "created", carrier_order_id: r.carrier_order_id, tracking_number: r.tracking_number, last_mile_number: r.last_mile_number || "", tracking_url: r.tracking_number ? CARRIERS[cid].track_url(r.tracking_number) : "" };
     await addRecord("carrier_shipments", row);
     await updateRecord("orders", order.id, { carrier: CARRIERS[cid].name, tracking_number: row.tracking_number, tracking_url: row.tracking_url, tracking_status: "created", shipment_id: id, updated_at: now() });
     return row;
@@ -172,7 +175,7 @@ export async function refreshTracking(tenantId, id) {
   if (!s.tracking_number || s.status === "cancelled") return s;
   const t = await adapter(s.carrier, null).track(s.tracking_number);
   const events = [...t.events].sort((a, b) => String(b.time).localeCompare(String(a.time)));
-  const patch = { status: t.status, events, tracked_at: now(), updated_at: now(), ...(t.status === "delivered" && !s.delivered_at ? { delivered_at: now() } : {}) };
+  const patch = { status: t.status, events, ...(t.last_mile_number ? { last_mile_number: t.last_mile_number } : {}), tracked_at: now(), updated_at: now(), ...(t.status === "delivered" && !s.delivered_at ? { delivered_at: now() } : {}) };
   await updateRecord("carrier_shipments", id, patch);
   const o = await findRecord("orders", s.order_id);
   if (o && o.shipment_id === id) await updateRecord("orders", o.id, { tracking_status: t.status, tracking_last_event: events[0] ? { time: events[0].time, text: events[0].text, location: events[0].location } : null,
