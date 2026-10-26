@@ -37,7 +37,8 @@ export function createYunExpress({ env = process.env, mode = "sandbox" } = {}) {
     tokens.set(k, { v: t, exp: Date.now() + Number(r.body.expiresIn || r.body?.result?.expiresIn || 7200) * 1000 });
     return t;
   }
-  async function call(method, path, { query, body } = {}) {
+  async function callRaw(method, path, opts) { return call(method, path, { ...opts, raw: true }); }
+  async function call(method, path, { query, body, raw } = {}) {
     if (!appId || !secret) fail("not_configured");
     const t = await token(), date = String(Date.now()), bodyText = body ? JSON.stringify(body) : "";
     const qs = query ? "?" + new URLSearchParams(query) : "";
@@ -45,7 +46,7 @@ export function createYunExpress({ env = process.env, mode = "sandbox" } = {}) {
       headers: { "content-type": "application/json", "accept-language": "en-US", token: t, date, sign: signYun(secret, { method, path, date, body: bodyText }) } });
     const ok = r.ok && r.body?.success === true;
     if (!ok) fail(`${r.body?.code ? r.body.code + " " : ""}${r.body?.msg || r.body?.message || `http_${r.status}`}`, { status: r.status, code: r.body?.code });
-    return r.body.result;
+    return raw ? r.body : r.body.result;
   }
   return {
     id: "yunexpress", name: "YunExpress 云途", configured: !!(appId && secret), mode,
@@ -63,6 +64,10 @@ export function createYunExpress({ env = process.env, mode = "sandbox" } = {}) {
       const r = await call("POST", "/v1/order/package/create", { body });
       // tracking_number (last-mile) is often null at creation; the YT waybill number is trackable on yuntrack.com and via the API.
       return { carrier_order_id: r.waybill_number, tracking_number: r.waybill_number, last_mile_number: r.tracking_number || "", raw_status: "created" };
+    },
+    async listProducts(country) {
+      const r = await callRaw("GET", "/v1/basic-data/products/getlist", { query: { country_code: country } });
+      return (r.detail || r.result || []).map(p => ({ code: p.product_code, name: p.product_name }));
     },
     async getLabel(orderNo) {
       const r = await call("GET", "/v1/order/label/get", { query: { order_number: orderNo } });

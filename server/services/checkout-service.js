@@ -107,7 +107,7 @@ async function packagingAndWarnings(cart, items, cur) {
 }
 
 /** Full storefront quote: merchandise (+ packaging) − promo + shipping + VAT, in the charge currency. All fees from the admin "Fees & tax" settings. */
-export async function quoteStorefront({ tenantId, cart, currency, country, postal_code, shipping_method, promo_code, proof_choice }) {
+export async function quoteStorefront({ tenantId, cart, currency, country, postal_code, shipping_method, promo_code, proof_choice, admin_preview = false }) {
   const cc = String(country || "").toUpperCase().slice(0, 2);
   const cur = storefrontCurrency(currency, cc);
   const rate = rateFor(cur); // legacy shipping zones + free-shipping thresholds are kept in the base currency (CNY)
@@ -134,7 +134,7 @@ export async function quoteStorefront({ tenantId, cart, currency, country, posta
   const options = await Promise.all(ship.shipping_options.map(async o => {
     const managed = ship.rate_engine === "regional_rules" ? shippingAmount(zoneId, o.id, cur, { weight_kg: ship.weight_kg, subtotal: merch.total }) : null;
     // Carrier fee rules (admin → Carriers) only when LOGISTICS_ENABLED=true AND the rules are switched active; free-shipping thresholds still win.
-    const fxc = effectiveFx()[cur], carrierFee = managed?.free || !fxc ? null : await quoteOverride(tenantId, { country: cc, method: o.id, weight_kg: ship.weight_kg ?? weight });
+    const fxc = effectiveFx()[cur], carrierFee = managed?.free || !fxc ? null : await quoteOverride(tenantId, { country: cc, method: o.id, weight_kg: ship.weight_kg ?? weight, admin_preview });
     const amount = carrierFee ? round2(carrierFee.amount_chf * fxc) : managed ? managed.amount : round2(o.amount * rate);
     const days = carrierDays(zoneId, o.id);
     return { ...o, amount, ...(managed ? { free_applied: managed.free } : {}), carrier_days: days,

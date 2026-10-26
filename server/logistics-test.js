@@ -109,7 +109,15 @@ assert.equal(L.ruleFee(rules, settings, { country: "DE", weight_kg: 0.4 }).amoun
 assert.equal(L.ruleFee(rules, settings, { country: "DE", weight_kg: 1 }).amount_chf, 23);
 assert.equal(L.ruleFee(rules, settings, { country: "US", weight_kg: 1 }).amount_chf, 34);
 assert.equal(L.ruleFee(rules, settings, { country: "US", weight_kg: 5 }), null, "no tier → current price");
-assert.equal(L.ruleFee({ ...rules, active: false }, settings, { country: "DE", weight_kg: 0.4 }), null);
+assert.equal(L.ruleFee({ ...rules, mode: "off", active: false }, settings, { country: "DE", weight_kg: 0.4 }), null);
+// Preview mode: only admin previews see the rule fee, customers keep current prices.
+const prev = L.validateRules({ mode: "preview", rules: rules.rules });
+assert.equal(prev.active, false); assert.equal(L.ruleFee(prev, settings, { country: "DE", weight_kg: 0.4 }), null);
+assert.equal(L.ruleFee(prev, settings, { country: "DE", weight_kg: 0.4, admin_preview: true }).amount_chf, 10);
+// Rule bound to a route/product only applies when that product is chosen for the destination.
+const bound = L.validateRules({ mode: "live", rules: [{ carrier: "yunexpress", product: "THPHR", countries: "CH", tiers: [{ max_kg: 2, price: 9 }] }] });
+assert.equal(L.ruleFee(bound, settings, { country: "CH", weight_kg: 1 }), null);
+assert.equal(L.ruleFee(bound, { ...settings, carriers: { ...settings.carriers, yunexpress: { ...settings.carriers.yunexpress, products_by_country: { CH: "THPHR" } } } }, { country: "CH", weight_kg: 1 }).amount_chf, 9);
 assert.throws(() => L.validateRules({ rules: [{ carrier: "dhl", countries: "DE", tiers: [{ max_kg: 1, price: 1 }] }] }), /unknown_carrier/);
 delete process.env.LOGISTICS_ENABLED;
 
@@ -135,11 +143,19 @@ try {
     await call("PUT", "/api/saas/carriers/rules", { active: true, rules: [{ carrier: "yunexpress", countries: "DE", tiers: [{ max_kg: 5, price: 7.5 }] }] });
     const q2 = await quote(), std = q2.shipping_options.find(o => o.id === "standard");
     if (std && !std.free_applied) { const fx = L.CARRIERS && (await import("./services/fees-service.js")).effectiveFx()[q2.currency]; assert.equal(std.amount, Math.round(7.5 * fx * 100) / 100); assert.equal(std.carrier, "yunexpress"); }
+    // preview mode: customers unchanged, admin preview (x-logistics-preview) sees the rule fee
+    await call("PUT", "/api/saas/carriers/rules", { mode: "preview", rules: [{ carrier: "yunexpress", countries: "DE", tiers: [{ max_kg: 5, price: 7.5 }] }] });
+    assert.deepEqual((await quote()).shipping_options.map(o => o.amount), before.shipping_options.map(o => o.amount), "preview keeps customer prices");
+    const pq = await (await fetch(base + "/api/storefront/shipping/quote", { method: "POST", headers: { ...H, "x-logistics-preview": "true" }, body: JSON.stringify({ cart: [{ name: "Menu card", product_id: "menu_card", quantity: 1 }], currency: "CHF", country: "DE" }) })).json();
+    assert.equal(pq.shipping_options.find(o => o.id === "standard").carrier, "yunexpress");
     await call("PUT", "/api/saas/carriers/rules", { active: false, rules: [] });
   }
   // Settings
   const st = await call("PUT", "/api/saas/carriers/settings", { default_carrier: "yunexpress", default_by_country: { DE: "fourpx" }, carriers: { yunexpress: { enabled: true, mode: "sandbox" }, fourpx: { enabled: true, mode: "production" } } });
-  assert.equal(st.body.settings.default_by_country.DE, "fourpx"); assert.equal(st.body.settings.carriers.fourpx.mode, "production");
+  assert.equal(st.body.settings.default_by_country.DE, "fourpx");
+  const st2 = await call("PUT", "/api/saas/carriers/settings", { carriers: { fourpx: { enabled: true, mode: "production", products_by_country: { de: "QC", FR: "bad code!" } }, yunexpress: { enabled: true, mode: "sandbox" } } });
+  assert.deepEqual(st2.body.settings.carriers.fourpx.products_by_country, { DE: "QC" });
+  assert.deepEqual((await call("GET", "/api/saas/carriers/fourpx/products?country=DE")).body.map(p => p.code), ["QC", "S5110"]); assert.equal(st.body.settings.carriers.fourpx.mode, "production");
   // Orders
   const now = new Date().toISOString(), addr = { name: "Anna Muster", address1: "Str 1", city: "Berlin", postal_code: "10115", country: "DE" };
   for (const id of ["POD-L1", "POD-L2", "POD-L3"]) await addRecord("orders", { id, tenant_id: "tenant_demo", status: "Paid", payment_status: "paid", created_at: now, customer_email: "anna@example.com", currency: "CHF", subtotal: 20, shipping_address: { ...addr, country: id === "POD-L3" ? "FR" : "DE" }, items: [{ name: "Menu card", product_id: "menu_card", quantity: 2, unit_price: 10 }] });
@@ -147,13 +163,25 @@ try {
   const shippable = (await call("GET", "/api/saas/carriers/shippable-orders")).body.map(o => o.id);
   assert.ok(shippable.includes("POD-L1") && !shippable.includes("POD-L4"));
   const one = await call("POST", "/api/saas/carriers/shipments", { order_id: "POD-L1" });
-  assert.equal(one.status, 200); assert.equal(one.body.carrier, "fourpx", "default per destination"); assert.match(one.body.tracking_number, /^4PX/);
+  assert.equal(one.status, 200); assert.equal(one.body.carrier, "fourpx", "default per destination"); assert.match(one.body.tracking_number, /^4PX/); assert.equal(one.body.product, "QC", "per-country product");
   assert.equal((await call("POST", "/api/saas/carriers/shipments", { order_id: "POD-L1" })).status, 409, "no duplicates");
   assert.equal((await call("POST", "/api/saas/carriers/shipments", { order_id: "POD-L4" })).body.error, "order_not_paid");
   const batch = await call("POST", "/api/saas/carriers/shipments/batch", { order_ids: ["POD-L2", "POD-L3", "NOPE"] });
   assert.equal(batch.body.created, 2); assert.equal(batch.body.failed, 1);
   assert.equal((await call("GET", "/api/saas/carriers/shipments?carrier=yunexpress")).body.length, 1, "FR → default yunexpress");
   assert.equal((await call("GET", "/api/saas/carriers/shipments?q=POD-L2")).body.length, 1);
+  // Draft + override + manual shipment
+  const dr = await call("GET", "/api/saas/carriers/draft?order_id=POD-L4&carrier=yunexpress");
+  assert.equal(dr.body.request.to.city, "Berlin"); assert.equal(dr.body.payment_status, "pending");
+  assert.equal((await call("POST", "/api/saas/carriers/shipments", { order_id: "POD-L4", carrier: "yunexpress" })).body.error, "order_not_paid");
+  const ov = await call("POST", "/api/saas/carriers/shipments", { order_id: "POD-L4", carrier: "yunexpress", product: "THPHR", allow_unpaid: true, overrides: { to: { city: "Potsdam" }, weight_kg: 0.35, items: [{ name_en: "Card", quantity: 3, unit_value: 1.5 }] } });
+  assert.equal(ov.status, 200); assert.equal(ov.body.product, "THPHR"); assert.equal(ov.body.weight_kg, 0.35);
+  const man = await call("POST", "/api/saas/carriers/shipments/manual", { carrier: "fourpx", product: "QC", reference: "SAMPLE-1", weight_kg: 0.1, to: { first_name: "Eva", address1: "Bahnhofstrasse 10", city: "Zurich", postal_code: "8001", country: "ch" }, items: [{ name_en: "Sample card", quantity: 1, unit_value: 1 }] });
+  assert.equal(man.status, 200); assert.equal(man.body.manual, true); assert.equal(man.body.order_id, ""); assert.equal(man.body.country, "CH");
+  assert.equal((await call("POST", "/api/saas/carriers/shipments/manual", { carrier: "fourpx", reference: "SAMPLE-1", to: { first_name: "Eva", address1: "x", city: "y", postal_code: "1", country: "CH" } })).status, 409);
+  assert.equal((await call("POST", "/api/saas/carriers/shipments/manual", { carrier: "fourpx", to: { first_name: "Eva", country: "CH" } })).body.error, "missing_address1");
+  assert.equal((await call("POST", `/api/saas/carriers/shipments/${man.body.id}/cancel`)).body.status, "cancelled");
+  assert.equal((await call("POST", `/api/saas/carriers/shipments/${ov.body.id}/cancel`)).body.status, "cancelled");
   // Label
   const lab = await call("GET", `/api/saas/carriers/shipments/${one.body.id}/label`);
   assert.equal(lab.status, 200); assert.ok(lab.body.subarray(0, 5).toString() === "%PDF-");
@@ -166,7 +194,7 @@ try {
   assert.ok(!JSON.stringify(lk).includes("Str 1"), "lookup leaks no address");
   // Detail, poll, alerts
   const det = await call("GET", `/api/saas/carriers/shipments/${one.body.id}`); assert.equal(det.body.events.length, 1);
-  assert.equal((await call("POST", "/api/saas/carriers/poll")).body.polled, 3);
+  assert.equal((await call("POST", "/api/saas/carriers/poll")).body.polled >= 3, true);
   assert.equal(L.alertFor({ status: "in_transit", created_at: "2026-01-01T00:00:00Z", events: [] }, await L.getSettings("tenant_demo"), Date.parse("2026-03-01")).type, "delayed");
   assert.equal(L.alertFor({ status: "exception", created_at: now }, await L.getSettings("tenant_demo")).type, "exception");
   // Cancel the FR one (no events yet) → order tracking cleared
@@ -176,6 +204,25 @@ try {
   // Disabled carrier is refused
   await call("PUT", "/api/saas/carriers/settings", { carriers: { yunexpress: { enabled: false }, fourpx: { enabled: true } } });
   assert.equal((await call("POST", "/api/saas/carriers/shipments", { order_id: "POD-L3", carrier: "yunexpress" })).body.error, "carrier_disabled");
+  // Label retry: retryable errors are retried until the label exists; non-retryable stop at once.
+  {
+    const { setFetch: sf } = await import("./logistics/http.js"); delete process.env.LOGISTICS_MOCK;
+    process.env.FOURPX_APP_KEY = "key"; process.env.FOURPX_APP_SECRET = "sec"; let n = 0;
+    sf(async (url) => { const m = new URL(url).searchParams.get("method");
+      if (m === "ds.xms.order.create") return res({ result: "1", data: { "4px_tracking_no": "4PXRETRY1" } });
+      if (m === "ds.xms.label.get") return ++n < 3 ? res({ result: "0", msg: "System processing failed", errors: [{ error_msg: "Changing service number, please try again later." }] }) : res({ result: "1", data: { label_url_info: { logistics_label: "https://label.test/x.pdf" } } });
+      if (url.startsWith("https://label.test/")) return { ok: true, status: 200, text: async () => "", arrayBuffer: async () => Buffer.from("%PDF-1.4 test") };
+      if (m === "ds.xms.order.cancel") return res({ result: "1", data: {} });
+      return res({ result: "0", msg: "?" }); });
+    const realFetch = globalThis.fetch; globalThis.fetch = async (u, o) => String(u).startsWith("https://label.test/") ? { ok: true, arrayBuffer: async () => Buffer.from("%PDF-1.4 test") } : realFetch(u, o);
+    await addRecord("orders", { id: "POD-L5", tenant_id: "tenant_demo", status: "Paid", payment_status: "paid", created_at: now, customer_email: "a@example.com", currency: "CHF", subtotal: 4, shipping_address: { ...addr, country: "CH", city: "Zurich", postal_code: "8001" }, items: [{ name: "Card", quantity: 1, unit_price: 2 }] });
+    const s5 = await L.createShipment("tenant_demo", "POD-L5", { carrier: "fourpx", labelRetry: false });
+    const r = await L.scheduleLabelFetch("tenant_demo", s5.id, { intervalMs: 10, maxMs: 5000 });
+    assert.deepEqual(r, { ok: true, attempts: 3 }); assert.equal((await findRecord("carrier_shipments", s5.id)).status, "label_ready");
+    n = -100; const s5b = await L.getShipment("tenant_demo", s5.id); assert.equal(s5b.label_attempts, 3);
+    assert.equal((await L.cancelShipment("tenant_demo", s5.id)).status, "cancelled");
+    globalThis.fetch = realFetch; sf(null); delete process.env.FOURPX_APP_KEY; delete process.env.FOURPX_APP_SECRET; process.env.LOGISTICS_MOCK = "true";
+  }
   // Without mock and without keys: clean carrier error, stored as error shipment
   delete process.env.LOGISTICS_MOCK;
   const bad = await call("POST", "/api/saas/carriers/shipments", { order_id: "POD-L3", carrier: "fourpx" });

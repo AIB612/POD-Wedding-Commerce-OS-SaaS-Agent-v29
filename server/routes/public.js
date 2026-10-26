@@ -111,7 +111,9 @@ export function publicRouter({ root, generatedDir }) {
   const quoteLimit = rateLimit({ bucket: "shipping-quote", windowMs: 60_000, max: 60 });
   router.post("/api/storefront/shipping/quote", quoteLimit, ah(async (req, res) => {
     const b = req.body || {};
-    res.json(await quoteStorefront({ tenantId: req.tenantId, cart: b.cart, currency: b.currency, country: b.country, postal_code: b.postal_code, shipping_method: b.shipping_method, promo_code: b.promo_code, proof_choice: b.proof_choice }));
+    res.json(await quoteStorefront({ tenantId: req.tenantId, cart: b.cart, currency: b.currency, country: b.country, postal_code: b.postal_code, shipping_method: b.shipping_method, promo_code: b.promo_code, proof_choice: b.proof_choice,
+      // Admin-only preview of carrier fee rules in "preview" mode (never used by checkout/order creation).
+      admin_preview: isAdminRequest(req) && req.get("x-logistics-preview") === "true" }));
   }));
   router.get("/api/payments/paypal/return", payLimit, ah(async (req, res) => {
     const { orderId, status } = await handlePayPalReturn({ orderId: req.query.order, paypalToken: req.query.token });

@@ -26,7 +26,7 @@ export function createFourPx({ env = process.env, mode = "sandbox" } = {}) {
     // access_token (OAuth / platform customers) is sent but NOT signed — per the 4PX docs it is excluded like language.
     if (env.FOURPX_ACCESS_TOKEN) qs.set("access_token", env.FOURPX_ACCESS_TOKEN);
     const r = await httpJson(`${base}?${qs}`, { method: "POST", headers: { "content-type": "application/json" }, body });
-    if (!r.ok || String(r.body?.result) !== "1") fail(r.body?.msg || r.body?.errors?.[0]?.error_msg || `http_${r.status}`, { status: r.status, errors: r.body?.errors });
+    if (!r.ok || String(r.body?.result) !== "1") { const e0 = r.body?.errors?.[0]; fail([e0?.error_code, e0?.error_msg || r.body?.msg || r.body?.message || `http_${r.status}`].filter(Boolean).join(" "), { status: r.status, errors: r.body?.errors, result: r.body?.result }); }
     return r.body.data || {};
   }
   return {
@@ -43,6 +43,10 @@ export function createFourPx({ env = process.env, mode = "sandbox" } = {}) {
         deliver_type_info: { deliver_type: "1" }
       });
       return { carrier_order_id: d["4px_tracking_no"] || d.ds_consignment_no, tracking_number: d.logistics_channel_no || d["4px_tracking_no"], raw_status: "created" };
+    },
+    async listProducts() {
+      const d = await call("ds.xms.logistics_product.getlist", "1.0.0", { transport_mode: "1" });
+      return (Array.isArray(d) ? d : []).map(p => ({ code: p.logistics_product_code, name: p.logistics_product_name_en && p.logistics_product_name_en !== p.logistics_product_code ? `${p.logistics_product_name_cn} · ${p.logistics_product_name_en}` : p.logistics_product_name_cn, tracked: p.order_track === "Y" }));
     },
     async getOrder(requestNo) { const d = await call("ds.xms.order.get", "1.1.0", { request_no: requestNo }); return Array.isArray(d) ? d[0] || null : d; },
     async getLabel(orderNo) {
