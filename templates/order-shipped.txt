@@ -1,6 +1,9 @@
-Your order {{order_id}} has shipped.
-{{#carrier}}Carrier: {{carrier}}
-{{/carrier}}{{#tracking_number}}Tracking number: {{tracking_number}}
-{{/tracking_number}}{{#tracking_url}}Track: {{tracking_url}}
+{{#test}}*** TEST EMAIL · 测试邮件 — sample order and tracking number, not a real shipment ***
+
+{{/test}}Your order {{order_id}} has shipped. · 您的订单 {{order_id}} 已发货。
+{{#carrier}}Carrier · 承运商: {{carrier}}
+{{/carrier}}{{#tracking_number}}Tracking number · 运单号: {{tracking_number}}
+{{/tracking_number}}{{#status_label}}Status · 状态: {{status_label}}
+{{/status_label}}{{#tracking_url}}Track · 查询物流: {{tracking_url}}
 {{/tracking_url}}
-Order details: {{order_url}}
+Order details · 订单详情: {{order_url}}

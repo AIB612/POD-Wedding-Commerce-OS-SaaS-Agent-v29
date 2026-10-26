@@ -160,7 +160,7 @@
     $("shipOptions").innerHTML = q.shipping_options.map(o => {
       const dis = o.id === "express" && !hasPhone;
       return `<label class="co-opt${dis ? " disabled" : ""}"><input type="radio" name="ship" value="${o.id}" ${o.id === state.method ? "checked" : ""} ${dis ? "disabled" : ""}>
-        <div><b>${esc(K(o.id === "express" ? "co.express" : "co.standard"))}</b>${o.delivery ? `<span class="co-eta" data-eta="${esc(o.delivery.from)}|${esc(o.delivery.to)}">${esc(arrives(o.delivery))}</span>` : ""}<span>${o.delivery ? esc(K("co.prodDays", { p: o.delivery.production_days, a: o.carrier_days[0], b: o.carrier_days[1] })) : esc(K("co.days", { d: o.eta_days }))}${dis ? " · " + esc(K("co.expressPhone")) : ""}</span></div>
+        <div><b>${esc(K(o.id === "express" ? "co.express" : "co.standard"))}</b>${o.carrier_name ? `<span class="co-carrier" style="display:block;font-size:12px;opacity:.75">${esc(K("co.via", { c: o.carrier_name }))}</span>` : ""}${o.delivery ? `<span class="co-eta" data-eta="${esc(o.delivery.from)}|${esc(o.delivery.to)}">${esc(arrives(o.delivery))}</span>` : ""}<span>${o.delivery ? esc(K("co.prodDays", { p: o.delivery.production_days, a: o.carrier_days[0], b: o.carrier_days[1] })) : esc(K("co.days", { d: o.eta_days }))}${dis ? " · " + esc(K("co.expressPhone")) : ""}</span></div>
         <strong>${o.amount === 0 ? esc(K("co.free")) : money(o.amount, q.currency)}</strong></label>`;
     }).join("");
   }

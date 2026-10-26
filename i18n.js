@@ -653,7 +653,7 @@ const K={
 'acct.order.tax':{en:'VAT'},
 'acct.order.shipTo':{en:'Shipping address'},
 'acct.order.payment':{en:'Payment method'},
-'acct.order.tracking':{en:'Tracking'},
+'acct.order.tracking':{zh:'物流跟踪',en:'Tracking',de:'Sendungsverfolgung'},
 'acct.order.timeline':{en:'Order status'},
 'acct.order.reviewProof':{en:'Review your proof'},
 'acct.order.notFound':{en:'Order not found'},
@@ -789,7 +789,7 @@ const K={
 'fo.order':{zh:'订单号',en:'Order number',de:'Bestellnummer'},'fo.email':{zh:'邮箱',en:'E-mail',de:'E-Mail'},'fo.submit':{zh:'查询',en:'Find order',de:'Bestellung suchen'},
 'fo.notFound':{zh:'未找到匹配的订单。请检查订单号和邮箱。',en:'We could not find an order with this number and e-mail. Please check both and try again.',de:'Keine Bestellung mit dieser Nummer und E-Mail gefunden. Bitte prüfen.'},
 'fo.limit':{zh:'尝试次数过多，请稍后再试。',en:'Too many attempts. Please wait a few minutes and try again.',de:'Zu viele Versuche. Bitte in ein paar Minuten erneut versuchen.'},
-'fo.status':{zh:'状态',en:'Status',de:'Status'},'fo.placed':{zh:'下单日期',en:'Placed',de:'Bestellt am'},'fo.items':{zh:'件商品',en:'items',de:'Artikel'},'fo.tracking':{zh:'物流跟踪',en:'Tracking',de:'Sendungsverfolgung'},'fo.trk.created':{zh:'已创建运单',en:'Label created',de:'Etikett erstellt'},'fo.trk.label_ready':{zh:'已创建运单',en:'Label created',de:'Etikett erstellt'},'fo.trk.info_received':{zh:'承运商已收到信息',en:'Info received',de:'Daten übermittelt'},'fo.trk.in_transit':{zh:'运输中',en:'In transit',de:'Unterwegs'},'fo.trk.delivered':{zh:'已签收',en:'Delivered',de:'Zugestellt'},'fo.trk.exception':{zh:'物流异常',en:'Delivery issue',de:'Zustellproblem'},'fo.proof':{zh:'查看效果图',en:'Review proof',de:'Abzug prüfen'},
+'fo.status':{zh:'状态',en:'Status',de:'Status'},'fo.placed':{zh:'下单日期',en:'Placed',de:'Bestellt am'},'fo.items':{zh:'件商品',en:'items',de:'Artikel'},'fo.tracking':{zh:'物流跟踪',en:'Tracking',de:'Sendungsverfolgung'},'co.via':{zh:'承运商：{c}',en:'via {c}',de:'mit {c}'},'fo.trk.created':{zh:'已创建运单',en:'Label created',de:'Etikett erstellt'},'fo.trk.label_ready':{zh:'面单已生成',en:'Label ready',de:'Etikett bereit'},'fo.trk.cancelled':{zh:'运单已取消',en:'Shipment cancelled',de:'Sendung storniert'},'fo.trk.error':{zh:'下单失败',en:'Carrier error',de:'Fehler'},'fo.trk.timeline':{zh:'物流轨迹',en:'Tracking history',de:'Sendungsverlauf'},'fo.trk.none':{zh:'承运商尚未扫描包裹，通常 1–3 天内更新。',en:'No carrier scans yet — usually within 1–3 days.',de:'Noch keine Scans – meist innerhalb von 1–3 Tagen.'},'fo.trk.track':{zh:'在承运商网站查询',en:'Track on carrier site',de:'Beim Versender verfolgen'},'fo.trk.number':{zh:'运单号',en:'Tracking number',de:'Sendungsnummer'},'fo.trk.carrier':{zh:'承运商',en:'Carrier',de:'Versanddienst'},'fo.trk.info_received':{zh:'承运商已接单',en:'Info received',de:'Daten übermittelt'},'fo.trk.in_transit':{zh:'运输中',en:'In transit',de:'Unterwegs'},'fo.trk.delivered':{zh:'已签收',en:'Delivered',de:'Zugestellt'},'fo.trk.exception':{zh:'物流异常',en:'Delivery issue',de:'Zustellproblem'},'fo.proof':{zh:'查看效果图',en:'Review proof',de:'Abzug prüfen'},
 'pay.delivery':{en:'Estimated delivery'},
 'acct.so.title':{en:'Sign in to your account'},
 'acct.so.text':{en:'See your orders, saved designs and addresses. One tap, no password.'}

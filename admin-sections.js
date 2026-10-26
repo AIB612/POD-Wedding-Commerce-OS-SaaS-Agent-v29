@@ -160,25 +160,45 @@ function shopify(root){
 function carriers(root){
   const C={yunexpress:"YunExpress 云途",fourpx:"4PX 递四方"},ST=["created","label_ready","info_received","in_transit","delivered","exception","cancelled","error"];
   const opts=(o,sel)=>Object.entries(o).map(([v,l])=>`<option value="${esc(v)}"${v===sel?" selected":""}>${esc(l)}</option>`).join("");
-  root.innerHTML=`<div class="query-card adm-bar"><div class="lang-switch" role="group" aria-label="Tabs">${["shipments","create","manual","settings","rules"].map((t,i)=>`<button data-tab="${t}"${i?"":` class="active"`}>${{shipments:"Shipments",create:"From order / batch",manual:"Manual shipment",settings:"Carrier settings & routes",rules:"Shipping fees"}[t]}</button>`).join("")}</div><span class="adm-msg" data-r="msg" aria-live="polite"></span></div><div data-r="body"></div>`;
+  root.innerHTML=`<div class="query-card adm-bar"><div class="lang-switch" role="group" aria-label="Tabs">${["shipments","exceptions","create","manual","bulk","settings","rules"].map((t,i)=>`<button data-tab="${t}"${i?"":` class="active"`}>${{shipments:"Shipments 运单",exceptions:"Exceptions 异常",create:"From order 按订单",manual:"Manual 手动",bulk:"Excel bulk 批量",settings:"Settings 设置",rules:"Shipping fees 运费"}[t]}</button>`).join("")}</div><span class="adm-msg" data-r="msg" aria-live="polite"></span></div><div data-r="body"></div>`;
   const $=n=>root.querySelector(`[data-r="${n}"]`),msg=(ok,t)=>say($("msg"),ok,t),body=()=>$("body");
   let tab="shipments";
   root.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{root.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));tab=b.dataset.tab;show()});
   async function label(id,refresh){const t=cfg.tenant();const r=await fetch(`/api/saas/carriers/shipments/${encodeURIComponent(id)}/label${refresh?"?refresh=1":""}`,{headers:{"x-admin-api-key":cfg.getKey(),...(t?{"x-tenant-id":t}:{})}});
     if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||"label failed")}const u=URL.createObjectURL(await r.blob());const a=document.createElement("a");a.href=u;a.download=`label-${id}.pdf`;a.click();setTimeout(()=>URL.revokeObjectURL(u),5000)}
-  async function shipments(){
+  const LS={created:["已创建运单","Label created"],label_ready:["面单已生成","Label ready"],info_received:["承运商已接单","Info received"],in_transit:["运输中","In transit"],delivered:["已签收","Delivered"],exception:["物流异常","Delivery issue"],cancelled:["运单已取消","Shipment cancelled"],error:["下单失败","Carrier error"]};
+  const zh=()=>{try{return (window.WeddingI18n?.lang?.()||"zh")==="zh"}catch{return true}};
+  const lsl=s=>{const l=LS[s];return l?(zh()?`${l[0]} · ${l[1]}`:`${l[1]} · ${l[0]}`):(s||"—")};
+  const lsTag=s=>`<span class="tag ${s==="delivered"?"green":s==="exception"||s==="error"?"red":s==="cancelled"?"":s==="in_transit"?"blue":"gold"}">${esc(lsl(s))}</span>`;
+  async function dl(url,name){const t=cfg.tenant();const r=await fetch(url,{credentials:"same-origin",headers:{"x-admin-api-key":cfg.getKey(),...(t?{"x-tenant-id":t}:{})}});
+    if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||"download failed")}const u=URL.createObjectURL(await r.blob());const a=document.createElement("a");a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+  const money=(v,c)=>v==null||v===""?"—":`${c?c+" ":""}${Number(v).toFixed(2)}`;
+  const SRC={live_api:"Live API 实时报价",price_table:"Price table 价目表",none:"—"};
+  // Channel comparison: every enabled carrier × route with cost, customer fee and margin; "use" fills the form.
+  async function channels(el,qs,onPick){
+    el.innerHTML=`<div class="adm-meta">Loading channel prices… 正在获取渠道报价…</div>`;
+    try{const d=await api("/api/saas/carriers/quotes?"+qs);
+      const src=Object.entries(d.sources).filter(([k])=>!k.endsWith("_error")).map(([k,v])=>`${C[k]||k}: ${SRC[v]||v}${d.sources[k+"_error"]?` (${esc(d.sources[k+"_error"])})`:""}`).join(" · ");
+      el.innerHTML=`<div class="table-card" style="padding:10px;margin:8px 0"><div class="adm-bar"><strong>Channels 渠道比价 · ${esc(d.country)} · ${esc(d.weight_kg)} kg</strong><span class="adm-meta">${src}${d.customer_fee_chf!=null?` · customer paid CHF ${Number(d.customer_fee_chf).toFixed(2)}`:""}</span>${d.cheapest?`<button class="ant-btn primary" data-ch="cheap">Use cheapest 用最便宜</button>`:""}</div>
+      <div class="table-wrap" style="max-height:320px;overflow:auto"><table class="adm-table"><thead><tr><th>Carrier</th><th>Route 渠道</th><th>Days</th><th style="text-align:right">Cost 成本</th><th style="text-align:right">CHF</th><th style="text-align:right">Customer fee 客户运费</th><th style="text-align:right">Margin 毛利</th><th>Source 来源</th><th></th></tr></thead><tbody>
+      ${d.channels.map((c,i)=>`<tr${c.auto_ok?"":` style="opacity:.55" title="battery / Amazon line — not auto-picked"`}><td>${esc(c.carrier_name)}<br><span class="adm-meta">${esc(c.mode)}</span></td><td><b>${esc(c.product)}</b>${c.default_route?" ★":""}<br><span class="adm-meta">${esc(c.name||"")}</span></td><td>${esc(c.days||"")}</td><td style="text-align:right">${money(c.cost,c.cost_currency)}</td><td style="text-align:right">${money(c.cost_chf)}</td><td style="text-align:right">${money(c.customer_fee_chf)}</td><td style="text-align:right;color:${c.margin_chf<0?"#c0392b":"inherit"}">${money(c.margin_chf)}</td><td>${esc(SRC[c.source]||c.source)}</td><td><button class="ant-btn" data-ch="${i}">Use</button></td></tr>`).join("")||`<tr><td colspan="9">No prices — add a price table in Settings, or pick a route manually</td></tr>`}</tbody></table></div></div>`;
+      el.querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>{const c=b.dataset.ch==="cheap"?d.cheapest:d.channels[+b.dataset.ch];onPick(c.carrier,c.product)});
+    }catch(e){el.innerHTML=`<div class="adm-msg err">${esc(e.message)}</div>`}}
+  async function shipments(onlyAlerts=false){
     body().innerHTML=`<div class="query-card adm-bar"><input class="ant-input" type="search" data-f="q" placeholder="Order or tracking number…" style="max-width:240px"><select class="ant-select" data-f="carrier"><option value="">All carriers</option>${opts(C)}</select>
       <select class="ant-select" data-f="status"><option value="">All statuses</option>${ST.map(s=>`<option>${s}</option>`).join("")}</select><input class="ant-input" type="date" data-f="from" aria-label="From"><input class="ant-input" type="date" data-f="to" aria-label="To">
-      <label><input type="checkbox" data-f="alerts"> Alerts only</label><button class="ant-btn" data-a="poll">Refresh all tracking</button></div>
-      <div class="table-card"><div class="table-wrap"><table class="adm-table"><thead><tr><th>Order</th><th>Carrier</th><th>Tracking</th><th>Status</th><th>Alert</th><th>Created</th><th></th></tr></thead><tbody data-r="rows"></tbody></table></div></div><div data-r="detail"></div>`;
+      <label><input type="checkbox" data-f="alerts"> Alerts only 仅异常</label><button class="ant-btn" data-a="poll">Sync tracking now 立即同步</button><label class="adm-meta"><input type="checkbox" data-a="auto" checked> Auto-refresh 60s</label>
+      <button class="ant-btn" data-a="csv">Export CSV</button><button class="ant-btn" data-a="labels">Download labels (selected) 批量下载面单</button><span class="adm-meta" data-r="sync"></span></div>
+      <div class="table-card"><div class="table-wrap"><table class="adm-table"><thead><tr><th><input type="checkbox" data-a="all"></th><th>Order</th><th>Carrier</th><th>Tracking</th><th>Status 物流状态</th><th>Alert</th><th>Created</th><th></th></tr></thead><tbody data-r="rows"></tbody></table></div></div><div data-r="detail"></div>`;
     const f=n=>body().querySelector(`[data-f="${n}"]`);
     async function load(){const q=new URLSearchParams();for(const n of ["q","carrier","status","from","to"])if(f(n).value)q.set(n,f(n).value);if(f("alerts").checked)q.set("alerts","1");
       const rows=await api("/api/saas/carriers/shipments?"+q);
-      $("rows").innerHTML=rows.map(s=>`<tr><td>${esc(s.order_id||("manual · "+(s.reference||"")))}</td><td>${esc(C[s.carrier]||s.carrier)}<br><span class="adm-meta">${esc(s.mode)}</span></td><td>${s.tracking_url?`<a href="${esc(s.tracking_url)}" target="_blank" rel="noopener">${esc(s.tracking_number)}</a>`:esc(s.tracking_number||"—")}</td><td>${esc(s.status)}</td><td>${s.alert?`<b style="color:#c0392b">${esc(s.alert.text)}</b>`:""}</td><td>${esc(String(s.created_at).slice(0,16).replace("T"," "))}</td>
-        <td><button class="ant-btn" data-d="${esc(s.id)}">Detail</button></td></tr>`).join("")||`<tr><td colspan="7">No shipments</td></tr>`;
+      $("rows").innerHTML=rows.map(s=>`<tr><td><input type="checkbox" data-sel="${esc(s.id)}"></td><td>${esc(s.order_id||("manual · "+(s.reference||"")))}</td><td>${esc(C[s.carrier]||s.carrier)}<br><span class="adm-meta">${esc(s.mode)}</span></td><td>${s.tracking_url?`<a href="${esc(s.tracking_url)}" target="_blank" rel="noopener">${esc(s.tracking_number)}</a>`:esc(s.tracking_number||"—")}</td><td>${lsTag(s.status)}</td><td>${s.alert?`<b style="color:#c0392b">${esc(s.alert.text)}</b>`:""}</td><td>${esc(String(s.created_at).slice(0,16).replace("T"," "))}</td>
+        <td><button class="ant-btn" data-d="${esc(s.id)}">Detail</button></td></tr>`).join("")||`<tr><td colspan="8">No shipments</td></tr>`;
+      api("/api/saas/carriers/sync-status").then(x=>{const el=$("sync");if(el)el.textContent=`Scheduled sync every ${x.sync_minutes||"—"} min · last run ${x.last_run_at?new Date(x.last_run_at).toLocaleString():"—"}${x.last_run_at?` (${x.polled} tracked, ${x.changed} changed, ${x.errors} errors)`:""}`}).catch(()=>{});
       $("rows").querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>detail(b.dataset.d))}
     async function detail(id){const s=await api(`/api/saas/carriers/shipments/${encodeURIComponent(id)}`);
-      $("detail").innerHTML=`<div class="table-card" style="padding:16px"><strong>${esc(s.order_id)} · ${esc(C[s.carrier])} · ${esc(s.tracking_number||"")}</strong> <span class="adm-meta">${esc(s.status)} · ${esc(s.mode)} · route ${esc(s.product||"")} · ${esc(s.weight_kg)} kg · ${esc(s.country)}${s.recipient?" · "+esc(s.recipient):""}${s.last_error?" · "+esc(s.last_error):""}${s.label_at?" · label ✓":s.label_error?` · label pending (${esc(s.label_attempts||0)} tries: ${esc(s.label_error)})`:""}</span>
+      $("detail").innerHTML=`<div class="table-card" style="padding:16px"><strong>${esc(s.order_id)} · ${esc(C[s.carrier])} · ${esc(s.tracking_number||"")}</strong> <span class="adm-meta">${esc(lsl(s.status))} · ${esc(s.mode)} · route ${esc(s.product||"")} · ${esc(s.weight_kg)} kg · ${esc(s.country)}${s.recipient?" · "+esc(s.recipient):""}${s.last_error?" · "+esc(s.last_error):""}${s.label_at?" · label ✓":s.label_error?` · label pending (${esc(s.label_attempts||0)} tries: ${esc(s.label_error)})`:""}</span>
         <div class="adm-bar" style="margin:10px 0"><button class="ant-btn" data-x="refresh">Refresh tracking</button><button class="ant-btn" data-x="label">Download label</button><button class="ant-btn" data-x="reprint">Re-fetch label</button><button class="ant-btn" data-x="retry">Retry label in background</button><button class="ant-btn" data-x="cancel">Cancel shipment</button></div>
         <ol>${(s.events||[]).map(e=>`<li><b>${esc(String(e.time||"").replace("T"," ").slice(0,16))}</b> ${esc(e.location)} — ${esc(e.text)}</li>`).join("")||"<li>No tracking events yet</li>"}</ol></div>`;
       const x=n=>$("detail").querySelector(`[data-x="${n}"]`);
@@ -187,8 +207,16 @@ function carriers(root){
       x("label").onclick=()=>label(id,false).catch(e=>msg(false,e.message));x("reprint").onclick=()=>label(id,true).catch(e=>msg(false,e.message));
       x("cancel").onclick=()=>confirm("Cancel this shipment with the carrier?")&&api(`/api/saas/carriers/shipments/${id}/cancel`,{method:"POST"}).then(()=>{msg(true,"Cancelled");load();detail(id)}).catch(e=>msg(false,e.message))}
     body().querySelectorAll("[data-f]").forEach(e=>e.onchange=()=>load().catch(er=>msg(false,er.message)));f("q").oninput=()=>load().catch(()=>{});
-    body().querySelector('[data-a="poll"]').onclick=()=>api("/api/saas/carriers/poll",{method:"POST"}).then(r=>{msg(true,`Polled ${r.polled}`);load()}).catch(e=>msg(false,e.message));
+    body().querySelector('[data-a="poll"]').onclick=()=>api("/api/saas/carriers/poll",{method:"POST"}).then(r=>{msg(true,`Synced ${r.polled} shipment(s), ${r.changed||0} status change(s)`);load()}).catch(e=>msg(false,e.message));
+    const qsNow=()=>{const q=new URLSearchParams();for(const n of ["q","carrier","status","from","to"])if(f(n).value)q.set(n,f(n).value);if(f("alerts").checked)q.set("alerts","1");return q};
+    body().querySelector('[data-a="all"]').onchange=e=>body().querySelectorAll("[data-sel]").forEach(x=>x.checked=e.target.checked);
+    body().querySelector('[data-a="csv"]').onclick=()=>dl("/api/saas/carriers/shipments/export.csv?"+qsNow(),`shipments-${new Date().toISOString().slice(0,10)}.csv`).catch(e=>msg(false,e.message));
+    body().querySelector('[data-a="labels"]').onclick=()=>{const ids=[...body().querySelectorAll("[data-sel]:checked")].map(x=>x.dataset.sel);if(!ids.length)return msg(false,"Select shipments first 请先勾选运单");
+      dl("/api/saas/carriers/shipments/labels.zip?ids="+encodeURIComponent(ids.join(",")),`labels-${new Date().toISOString().slice(0,10)}.zip`).then(()=>msg(true,`Downloaded ${ids.length} label(s) (ZIP)`)).catch(e=>msg(false,e.message))};
+    if(onlyAlerts){f("alerts").checked=true}
+    clearInterval(carriers._auto);carriers._auto=setInterval(()=>{if(!document.body.contains(body())||!body().querySelector('[data-a="auto"]'))return clearInterval(carriers._auto);if(body().querySelector('[data-a="auto"]').checked&&!document.hidden)load().catch(()=>{})},60000);
     await load()}
+  const exceptions=()=>shipments(true);
   // Shared shipment form (prefilled from an order draft, or blank for a manual shipment).
   async function productOptions(carrier,country,sel){try{const l=await api(`/api/saas/carriers/${carrier}/products?country=${encodeURIComponent(country||"")}`);return `<option value="">(default route)</option>`+l.map(p=>`<option value="${esc(p.code)}"${p.code===sel?" selected":""}>${esc(p.code)} — ${esc(p.name)}</option>`).join("")+(sel&&!l.some(p=>p.code===sel)?`<option selected value="${esc(sel)}">${esc(sel)}</option>`:"")}catch(e){return `<option value="${esc(sel||"")}">${esc(sel||"(default route)")} (product list: ${esc(e.message)})</option>`}}
   function shipForm(el,{orderId,draft,onDone}){
@@ -201,10 +229,14 @@ function carriers(root){
       <p class="adm-meta" style="margin:8px 0 2px">Customs items (one per line: name_en | quantity | unit value USD | unit kg | HS code)</p>
       <textarea class="ant-input" rows="3" data-sf="items" style="width:100%">${esc((r.items||[]).map(i=>[i.name_en,i.quantity,i.unit_value,i.unit_weight_kg,i.hs_code].join(" | ")).join("\n"))}</textarea>
       ${orderId&&draft?.payment_status!=="paid"?`<p><label><input type="checkbox" data-sf="unpaid"> Order is not paid — create anyway (test)</label></p>`:""}
+      <div class="adm-bar" style="margin:6px 0"><button class="ant-btn" data-sf="cmp">Compare channels & cost 渠道比价</button></div><div data-sf="chan"></div>
       <button class="ant-btn primary" data-sf="go">Create shipment with carrier</button> <span class="adm-meta">Mode: ${esc(draft?.mode||"see Carrier settings")}</span></div>`;
     const g=n=>el.querySelector(`[data-sf="${n}"]`);
     const loadP=async()=>{g("product").innerHTML=await productOptions(g("carrier").value,el.querySelector('[data-to="country"]').value,g("carrier").value===(draft?.carrier)?draft?.product:"")};
     g("carrier").onchange=loadP;el.querySelector('[data-to="country"]').onchange=loadP;loadP();
+    const cmp=()=>{const q=new URLSearchParams({country:el.querySelector('[data-to="country"]').value,postal_code:el.querySelector('[data-to="postal_code"]').value,weight_kg:g("weight").value});if(orderId)q.set("order_id",orderId);
+      channels(g("chan"),q,async(car,prod)=>{g("carrier").value=car;g("product").innerHTML=await productOptions(car,el.querySelector('[data-to="country"]').value,prod);g("product").value=prod;msg(true,`Selected ${C[car]} · ${prod}`)})};
+    g("cmp").onclick=cmp;cmp();
     g("go").onclick=async()=>{
       const toV=Object.fromEntries(F.map(k=>[k,el.querySelector(`[data-to="${k}"]`).value]));
       const items=g("items").value.split("\n").map(l=>l.split("|").map(x=>x.trim())).filter(x=>x[0]).map(([name_en,quantity,unit_value,unit_weight_kg,hs_code])=>({name_en,quantity:+quantity||1,unit_value:+unit_value,unit_weight_kg:+unit_weight_kg||0.1,hs_code}));
@@ -213,14 +245,15 @@ function carriers(root){
       g("go").disabled=true;
       try{const s=await api(orderId?"/api/saas/carriers/shipments":"/api/saas/carriers/shipments/manual",{method:"POST",body:JSON.stringify(body)});msg(true,`Created ${s.tracking_number} (${s.product}) — label is fetched automatically`);onDone&&onDone(s)}catch(e){msg(false,e.message)}finally{g("go").disabled=false}};
   }
-  async function create(){
+  async function create(prefill){
     const [rows,all]=await Promise.all([api("/api/saas/carriers/shippable-orders"),api("/api/saas/orders").catch(()=>[])]);
     body().innerHTML=`<div class="query-card adm-bar"><input class="ant-input" data-c="q" placeholder="Any order number…" style="max-width:220px" list="carrierOrders"><datalist id="carrierOrders">${all.slice(0,300).map(o=>`<option value="${esc(o.id)}">${esc(o.status||"")}</option>`).join("")}</datalist><button class="ant-btn" data-c="prep">Prepare shipment</button>
-      <span style="flex:1"></span><select class="ant-select" data-c="carrier"><option value="">Default carrier per destination</option>${opts(C)}</select><button class="ant-btn primary" data-c="go">Batch-create for selected</button></div>
+      <span style="flex:1"></span><select class="ant-select" data-c="carrier"><option value="">Default carrier per destination</option><option value="cheapest">Cheapest channel 最便宜渠道</option>${opts(C)}</select><button class="ant-btn primary" data-c="go">Batch-create for selected</button></div>
       <div data-c="form"></div>
       <div class="table-card"><div class="table-toolbar"><strong>Paid orders without a shipment</strong></div><div class="table-wrap"><table class="adm-table"><thead><tr><th><input type="checkbox" data-c="all"></th><th>Order</th><th>Status</th><th>Country</th><th>Items</th><th>Placed</th><th></th></tr></thead><tbody>${rows.map(o=>`<tr><td><input type="checkbox" data-o="${esc(o.id)}"></td><td>${esc(o.id)}</td><td>${esc(o.status)}</td><td>${esc(o.country)}</td><td>${o.items}</td><td>${esc(String(o.created_at||"").slice(0,10))}</td><td><button class="ant-btn" data-p="${esc(o.id)}">Prepare…</button></td></tr>`).join("")||`<tr><td colspan="7">No paid orders waiting for a shipment</td></tr>`}</tbody></table></div></div><pre data-c="out" class="adm-meta"></pre>`;
     const c=n=>body().querySelector(`[data-c="${n}"]`);c("all").onchange=e=>body().querySelectorAll("[data-o]").forEach(x=>x.checked=e.target.checked);
     const prep=async id=>{try{const d=await api(`/api/saas/carriers/draft?order_id=${encodeURIComponent(id)}`);shipForm(c("form"),{orderId:id,draft:d,onDone:()=>{tab="shipments";root.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab==="shipments"));show()}})}catch(e){msg(false,e.message)}};
+    if(typeof prefill==="string"&&prefill)prep(prefill);
     c("prep").onclick=()=>c("q").value&&prep(c("q").value.trim());body().querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>prep(b.dataset.p));
     c("go").onclick=async()=>{const ids=[...body().querySelectorAll("[data-o]:checked")].map(x=>x.dataset.o);if(!ids.length)return msg(false,"Select orders first");
       try{const r=await api("/api/saas/carriers/shipments/batch",{method:"POST",body:JSON.stringify({order_ids:ids,carrier:c("carrier").value||undefined})});msg(r.failed===0,`${r.created} created, ${r.failed} failed`);c("out").textContent=r.results.map(x=>`${x.order_id}: ${x.ok?x.tracking_number:x.error}`).join("\n")}catch(e){msg(false,e.message)}}}
@@ -233,7 +266,16 @@ function carriers(root){
       <div class="adm-bar" style="margin-top:6px"><input class="ant-input" data-g="newcc" placeholder="Country, e.g. DE" style="width:120px"><button class="ant-btn" data-g="add">Add country</button></div>
       <p>Default carrier for other countries <select class="ant-select" data-g="default_carrier">${opts(C,s.default_carrier)}</select></p>
       <p>Alert when no tracking update for <input class="ant-input adm-num" data-g="nu" value="${s.alert_days_no_update}" style="width:60px"> days, or not delivered after <input class="ant-input adm-num" data-g="ud" value="${s.alert_days_undelivered}" style="width:60px"> days</p>
-      <button class="ant-btn primary" data-g="save">Save settings</button></div>`;
+      <h3 style="margin:16px 0 6px">Sender / return address 发件人地址</h3><p class="adm-meta">Used on every new shipment. Empty fields fall back to SHIPPING_ORIGIN_* in the server .env.</p>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:6px">${["name","company","phone","email","address1","address2","city","state","postal_code","country"].map(k=>`<label class="adm-meta">${k}<input class="ant-input" data-snd="${k}" value="${esc(s.sender?.[k]||"")}"></label>`).join("")}</div>
+      <p style="margin-top:12px">IOSS number (EU, IM + 10 digits) <input class="ant-input" data-g="ioss" value="${esc(s.ioss_no||"")}" placeholder="IM0000000000" style="width:160px"> · 4PX handover 交货方式 <select class="ant-select" data-g="handover">${opts({pickup:"Pickup by 4PX 上门揽收",dropoff:"Drop-off at 4PX warehouse 自送到仓"},s.carriers.fourpx.handover||"pickup")}</select>
+        · Tracking sync every 物流同步间隔 <select class="ant-select" data-g="sync">${opts({0:"Off",15:"15 min",30:"30 min",60:"1 h",120:"2 h",180:"3 h",360:"6 h",720:"12 h",1440:"24 h"},String(s.sync_minutes??60))}</select></p>
+      <h3 style="margin:16px 0 6px">Channel price tables 渠道价目表 (fallback when the carrier's live quote is unavailable)</h3>
+      <p class="adm-meta">One per line: <code>carrier | route | countries (DE,FR or *) | currency | first kg | first price | additional kg | additional price | days</code> — e.g. <code>yunexpress | THPHR | * | CNY | 0.5 | 45 | 0.5 | 30 | 8-15</code></p>
+      <textarea class="ant-input" data-g="pt" rows="4" style="width:100%;height:auto">${esc((s.price_tables||[]).map(t=>[t.carrier,t.product,t.countries.join(","),t.currency,t.first_kg,t.first_price,t.add_kg,t.add_price,t.days].join(" | ")).join("\n"))}</textarea>
+      <p><button class="ant-btn primary" data-g="save">Save settings</button></p>
+      <h3 style="margin:16px 0 6px">Shipped e-mail 发货通知邮件</h3><p class="adm-meta">Tracking sync never e-mails customers automatically — a draft is stored on the order. Preview the template or send one TEST e-mail to the configured test address.</p>
+      <div class="adm-bar"><input class="ant-input" data-g="eo" placeholder="Order number for preview" style="width:200px"><button class="ant-btn" data-g="ep">Preview 预览</button><button class="ant-btn" data-g="et">Send test email 发送测试邮件</button></div><div data-g="eout"></div></div>`;
     const g=n=>body().querySelector(`[data-g="${n}"]`),v=k=>body().querySelector(`[data-s="${k}"]`);
     const ccs=[...new Set([...Object.keys(s.default_by_country),...Object.keys(s.carriers.yunexpress.products_by_country||{}),...Object.keys(s.carriers.fourpx.products_by_country||{})])].sort();
     const row=cc=>{const car=s.default_by_country[cc]||s.default_carrier,prod=s.carriers[car]?.products_by_country?.[cc]||"";const tr=document.createElement("tr");tr.dataset.cc=cc;
@@ -242,8 +284,35 @@ function carriers(root){
       tr.querySelector('[data-k="car"]').onchange=()=>ld("");tr.querySelector('[data-k="del"]').onclick=()=>tr.remove();ld(prod);g("routes").appendChild(tr)};
     ccs.forEach(row);g("add").onclick=()=>{const cc=g("newcc").value.trim().toUpperCase();if(/^[A-Z]{2}$/.test(cc)&&!g("routes").querySelector(`[data-cc="${cc}"]`)){row(cc);g("newcc").value=""}};
     g("save").onclick=()=>{const by={},pbc={yunexpress:{},fourpx:{}};g("routes").querySelectorAll("tr").forEach(tr=>{const car=tr.querySelector('[data-k="car"]').value,p=tr.querySelector('[data-k="prod"]').value;by[tr.dataset.cc]=car;if(p)pbc[car][tr.dataset.cc]=p});
-      api("/api/saas/carriers/settings",{method:"PUT",body:JSON.stringify({carriers:Object.fromEntries(Object.keys(C).map(id=>[id,{enabled:v(id+".enabled").checked,mode:v(id+".mode").value,service:v(id+".service").value,products_by_country:pbc[id]}])),
-        default_carrier:g("default_carrier").value,default_by_country:by,alert_days_no_update:+g("nu").value,alert_days_undelivered:+g("ud").value})}).then(()=>{msg(true,"Saved");settings()}).catch(e=>msg(false,e.message))}}
+      api("/api/saas/carriers/settings",{method:"PUT",body:JSON.stringify({carriers:Object.fromEntries(Object.keys(C).map(id=>[id,{enabled:v(id+".enabled").checked,mode:v(id+".mode").value,service:v(id+".service").value,products_by_country:pbc[id],...(id==="fourpx"?{handover:g("handover").value}:{})}])),
+        default_carrier:g("default_carrier").value,default_by_country:by,alert_days_no_update:+g("nu").value,alert_days_undelivered:+g("ud").value,
+        sender:Object.fromEntries([...body().querySelectorAll("[data-snd]")].map(i=>[i.dataset.snd,i.value])),ioss_no:g("ioss").value,sync_minutes:+g("sync").value,
+        price_tables:g("pt").value.split("\n").map(l=>l.split("|").map(x=>x.trim())).filter(x=>x[0]).map(([carrier,product,countries,currency,first_kg,first_price,add_kg,add_price,days])=>({carrier,product,countries,currency,first_kg,first_price,add_kg,add_price,days}))})})
+        .then(()=>{msg(true,"Saved 已保存");settings()}).catch(e=>msg(false,e.message))};
+    g("ep").onclick=()=>{const o=g("eo").value.trim();if(!o)return msg(false,"Enter an order number");api(`/api/saas/carriers/orders/${encodeURIComponent(o)}/shipped-email`).then(r=>{g("eout").innerHTML=`<p class="adm-meta">Draft · not sent · to ${esc(r.to_masked)} · ${esc(r.subject)}</p><iframe sandbox style="width:100%;height:420px;border:1px solid #eee;border-radius:8px" srcdoc="${esc(r.html)}"></iframe>`}).catch(e=>msg(false,e.message))};
+    g("et").onclick=()=>confirm("Send ONE test shipped e-mail (sample order, TEST tracking number) to the configured test address?")&&api("/api/saas/carriers/test-shipped-email",{method:"POST"}).then(r=>msg(r.status==="sent",`Test e-mail: ${r.status}${r.provider?" via "+r.provider:""}${r.from?" from "+r.from:""} → ${r.to_masked}`)).catch(e=>msg(false,e.message));
+  }
+  async function bulk(){
+    body().innerHTML=`<div class="table-card" style="padding:16px"><strong>Excel bulk shipments · Excel 批量下单</strong>
+      <ol class="adm-meta" style="margin:8px 0 12px 18px"><li>Download the template 下载模板 → fill one row per item; rows with the same order_ref are one parcel. 相同订单参考号 = 同一包裹。</li><li>Leave carrier / route blank to auto-pick the cheapest channel. 承运商/渠道留空 = 自动选最便宜。</li><li>Upload .xlsx or .csv → check the preview (per-row errors, channel, cost) → Confirm. 上传 → 预览 → 确认创建。</li><li>Download the results sheet (tracking numbers, labels, errors). 下载结果表。</li></ol>
+      <div class="adm-bar"><button class="ant-btn" data-b="tpl">Download template 下载模板</button><input type="file" data-b="file" accept=".xlsx,.csv"><button class="ant-btn" data-b="prev">Upload & preview 上传预览</button></div>
+      <div data-b="out"></div></div>`;
+    const b=n=>body().querySelector(`[data-b="${n}"]`);
+    b("tpl").onclick=()=>dl("/api/saas/carriers/bulk/template.xlsx","wedai-bulk-shipments-template.xlsx").catch(e=>msg(false,e.message));
+    b("prev").onclick=async()=>{const file=b("file").files[0];if(!file)return msg(false,"Choose a file 请选择文件");
+      const t=cfg.tenant();b("out").innerHTML="Checking… 校验中…";
+      const r=await fetch("/api/saas/carriers/bulk/preview",{method:"POST",credentials:"same-origin",headers:{"x-admin-api-key":cfg.getKey(),"x-file-name":encodeURIComponent(file.name),"Content-Type":"application/octet-stream",...(t?{"x-tenant-id":t}:{})},body:file});
+      const d=await r.json().catch(()=>({}));if(!r.ok){b("out").innerHTML="";return msg(false,d.error||"preview failed")}
+      const st=await api("/api/saas/carriers/settings").catch(()=>null),modes=st?st.carriers.map(c=>`${c.name}: ${c.mode}`).join(" · "):"";
+      b("out").innerHTML=`<p><b>${d.parcels}</b> parcel(s) · <b style="color:#389e0d">${d.valid} valid</b> · <b style="color:${d.invalid?"#c0392b":"inherit"}">${d.invalid} with errors</b> · est. cost CHF ${Number(d.total_cost_chf).toFixed(2)} · <span class="adm-meta">Environment 环境: ${esc(modes)}</span></p>
+        <div class="table-wrap"><table class="adm-table"><thead><tr><th>Ref</th><th>Lines</th><th>Recipient</th><th>Country</th><th>kg</th><th>Channel 渠道</th><th style="text-align:right">Cost CHF</th><th>Source</th><th>Order link</th><th>Errors 错误</th></tr></thead><tbody>
+        ${d.rows.map(x=>`<tr style="${x.ok?"":"background:#fff1f0"}"><td>${esc(x.ref)}</td><td>${esc(x.lines.join(","))}</td><td>${esc(x.recipient)}<br><span class="adm-meta">${esc(x.city)}</span></td><td>${esc(x.country)}</td><td>${esc(x.weight_kg)}</td><td>${x.channel?`${esc(C[x.channel.carrier]||x.channel.carrier)} · <b>${esc(x.channel.product||"default")}</b>${x.channel.auto?" (auto)":""}${x.channel.note?`<br><span class="adm-meta">${esc(x.channel.note)}</span>`:""}`:"—"}</td><td style="text-align:right">${money(x.channel?.cost_chf)}</td><td>${esc(SRC[x.channel?.source]||"")}</td><td>${esc(x.linked_order||"")}</td><td style="color:#c0392b">${esc(x.errors.join("; "))}</td></tr>`).join("")}</tbody></table></div>
+        <div class="adm-bar" style="margin-top:10px"><button class="ant-btn primary" data-b="go"${d.valid?"":" disabled"}>Confirm: create ${d.valid} shipment(s) 确认创建</button><span class="adm-meta">Rows with errors are skipped. 有错误的行将跳过。</span></div><div data-b="res"></div>`;
+      b("go").onclick=async()=>{if(!confirm(`Create ${d.valid} shipment(s) with the carriers now? 现在向承运商创建 ${d.valid} 个运单？\n${modes}`))return;b("go").disabled=true;
+        try{const r2=await api("/api/saas/carriers/bulk/commit",{method:"POST",body:JSON.stringify({token:d.token})});msg(r2.failed===0,`${r2.created} created, ${r2.failed} failed`);
+          b("res").innerHTML=`<p><button class="ant-btn" data-b="xls">Download results 下载结果表 (.xlsx)</button></p><pre class="adm-meta">${esc(r2.results.map(x=>`${x.ref}: ${x.ok?`${x.carrier} ${x.product} ${x.tracking_number}`:"FAILED "+x.error}`).join("\n"))}</pre>`;
+          b("xls").onclick=()=>dl(`/api/saas/carriers/bulk/${d.token}/results.xlsx`,"wedai-bulk-results.xlsx").catch(e=>msg(false,e.message))}catch(e){msg(false,e.message);b("go").disabled=false}}};
+  }
   async function rules(){
     const d=await api("/api/saas/carriers/rules");
     body().innerHTML=`<div class="table-card" style="padding:16px"><p class="adm-meta">Customer shipping fee per channel (carrier + optional route) in CHF, converted to the checkout currency. Free-shipping thresholds from Fees &amp; tax still apply. Tiers: <code>max_kg:price</code>, comma-separated. Destinations or weights without a matching rule keep the current Fees &amp; tax price.</p>
@@ -262,7 +331,8 @@ function carriers(root){
     q("prev").onclick=()=>api("/api/saas/carriers/rules/preview",{method:"POST",body:JSON.stringify({rules:{...collect(),mode:"live"},country:q("pc").value,weight_kg:+q("pw").value})}).then(r=>q("pout").textContent=r.fee?`${r.fee.carrier}: CHF ${r.fee.amount_chf}`:"no matching rule → current checkout price").catch(e=>msg(false,e.message));
     q("quote").onclick=()=>api("/api/storefront/shipping/quote",{method:"POST",headers:{"x-logistics-preview":"true"},body:JSON.stringify({cart:[{name:"Menu card",product_id:"menu_card",quantity:Math.max(1,Math.round((+q("pw").value||0.2)/0.12))}],currency:"CHF",country:q("pc").value})}).then(r=>q("pout").textContent=r.shipping_options.map(o=>`${o.id}: ${r.currency} ${o.amount}${o.carrier?` (${o.carrier} rule)`:" (Fees & tax)"}`).join(" · ")).catch(e=>msg(false,e.message));
   }
-  async function show(){try{body().innerHTML="Loading…";await({shipments,create,manual,settings,rules})[tab]()}catch(e){body().innerHTML=`<div class="table-card" style="padding:16px">${/disabled/.test(e.message)?"Carrier logistics is switched off. Set <code>LOGISTICS_ENABLED=true</code> in the server .env to use it.":esc(e.message)}</div>`}}
+  async function show(){try{body().innerHTML="Loading…";await({shipments,exceptions,create,manual,bulk,settings,rules})[tab]()}catch(e){body().innerHTML=`<div class="table-card" style="padding:16px">${/disabled/.test(e.message)?"Carrier logistics is switched off. Set <code>LOGISTICS_ENABLED=true</code> in the server .env to use it.":esc(e.message)}</div>`}}
+  window.AdminSections.prepareShipment=id=>{tab="create";root.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab==="create"));body().innerHTML="Loading…";create(id).catch(e=>msg(false,e.message))};
   show();
 }
 

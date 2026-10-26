@@ -33,7 +33,7 @@ try {
   const { order } = await r.json();
   assert.equal(order.id, "POD-2026-LOOKUP0001"); assert.equal(order.stage, "shipped"); assert.equal(order.payment_status, "paid");
   assert.equal(order.item_count, 42); assert.deepEqual(order.delivery_estimate, { from: "2026-11-02", to: "2026-11-05" });
-  assert.deepEqual(order.tracking, { carrier: "Swiss Post", number: "99.00.1234", url: "https://track.example/99" });
+  assert.deepEqual({ carrier: order.tracking.carrier, number: order.tracking.number, url: order.tracking.url, events: order.tracking.events }, { carrier: "Swiss Post", number: "99.00.1234", url: "https://track.example/99", events: [] });
   const raw = JSON.stringify(order);
   for (const secret of ["Secretstrasse", "Anna Muster", "Anna.Muster", "123.45", "grand_total", "shipping_address", "customer_email", "token"]) assert.ok(!raw.includes(secret), `leaks ${secret}`);
   r = await lookup({ order: "POD-2026-LOOKUP0002", email: "ben@example.com" });

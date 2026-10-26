@@ -1,5 +1,6 @@
 // Authenticated back-office routes (SaaS admin, Shopify, refunds, ops agent, MCP / A2A tools).
 import express from "express";
+import { onOrderStatusChanged } from "../logistics/index.js";
 import { ah } from "../http/middleware.js";
 import { requireAdmin, requireApproval } from "../auth.js";
 import { runOpsCommand } from "../services/agent-ops-service.js";
@@ -86,7 +87,7 @@ export function adminRouter({ root } = {}) {
   r.get("/api/saas/order-events", A, ah(async (req, res) => res.json(await listForTenant("order_events", req.tenantId))));
   r.post("/api/saas/users/:id/status", AP, ah(async (req,res)=>{const status=["active","disabled"].includes(req.body?.status)?req.body.status:null;if(!status)return res.status(400).json({error:"invalid_status"});const row=await updateRecord("customer_accounts",req.params.id,{status,updated_at:new Date().toISOString()});row?res.json({id:row.id,status:row.status}):res.sendStatus(404);}));
   r.post("/api/saas/orders/:id/status", AP, ah(async (req,res)=>{
-    const allowed=["Needs approval","Quote requested","Order requested","Sample requested","Proof ready","Changes requested","Approved","Production","Shipped","Delivered","Cancelled"];
+    const allowed=["Needs approval","Quote requested","Order requested","Sample requested","Proof ready","Changes requested","Approved","Production","Ready to ship","Label created","Shipped","Delivered","Cancelled"];
     const status=String(req.body?.status||"").slice(0,80);if(!allowed.includes(status))return res.status(400).json({error:"invalid_status",allowed});
     const cur=await findRecord("orders",req.params.id);if(!cur||cur.tenant_id!==req.tenantId)return res.sendStatus(404);
     // Proof-first orders: production / shipping stay blocked until the customer approves the proof (proof.html).
@@ -100,7 +101,8 @@ export function adminRouter({ root } = {}) {
     let shopify_fulfillment;
     if(status==="Shipped"){const b=req.body||{},cur2=await findRecord("orders",row.id);try{shopify_fulfillment=await fulfillLocalOrder(row.id,{tracking_number:b.tracking_number||cur2?.tracking_number,carrier:b.carrier||cur2?.carrier,tracking_url:/^https:\/\//.test(String(b.tracking_url||""))?b.tracking_url:cur2?.tracking_url});}catch(e){shopify_fulfillment={status:"error",error:e.message};}
       if(shopify_fulfillment?.status==="not_linked")shopify_fulfillment=undefined;}
-    res.json({id:row.id,status:row.status,email_status,event_id:evt.id,...(shopify_fulfillment?{shopify_fulfillment}:{})});
+    const logistics=await onOrderStatusChanged(req.tenantId,cur,status).catch(e=>({error:e.message}));
+    res.json({id:row.id,status:row.status,email_status,event_id:evt.id,...(logistics?{logistics}:{}),...(shopify_fulfillment?{shopify_fulfillment}:{})});
   }));
   r.post("/api/saas/orders/:id/resend-email", AP, ah(async (req,res)=>{
     const row=await findRecord("orders",req.params.id);if(!row||row.tenant_id!==req.tenantId)return res.sendStatus(404);

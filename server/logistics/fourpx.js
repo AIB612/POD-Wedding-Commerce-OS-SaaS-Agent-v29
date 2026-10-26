@@ -33,16 +33,23 @@ export function createFourPx({ env = process.env, mode = "sandbox" } = {}) {
     id: "fourpx", name: "4PX 递四方", configured: !!(key && secret), mode,
     async createShipment(s) {
       const d = await call("ds.xms.order.create", "1.1.0", {
-        ref_no: s.reference, ...(env.FOURPX_IOSS_NO || env.IOSS_NO ? { ioss_no: env.FOURPX_IOSS_NO || env.IOSS_NO } : {}), business_type: "BDS", duty_type: "U", is_insure: "N",
+        ref_no: s.reference, ...(s.ioss_no || env.FOURPX_IOSS_NO || env.IOSS_NO ? { ioss_no: s.ioss_no || env.FOURPX_IOSS_NO || env.IOSS_NO } : {}), business_type: "BDS", duty_type: "U", is_insure: "N",
         logistics_service_info: { logistics_product_code: s.service || env.FOURPX_PRODUCT_CODE || DEFAULT_PRODUCT },
         sender: { first_name: s.from.name || "Wed.AI", company: s.from.company || "", phone: s.from.phone || "", country: s.from.country, state: s.from.state || "", city: s.from.city || "", street: s.from.address1 || "", post_code: s.from.postal_code || "" },
         recipient_info: { first_name: s.to.first_name, last_name: s.to.last_name, company: s.to.company || "", phone: s.to.phone || "", email: s.to.email || "", post_code: s.to.postal_code, country: s.to.country, state: s.to.state || "", city: s.to.city, street: [s.to.address1, s.to.address2].filter(Boolean).join(" ") },
         parcel_list: [{ weight: Math.round(s.weight_kg * 1000), parcel_value: s.declared_value, currency: s.currency, include_battery: "N",
           declare_product_info: s.items.map(i => ({ declare_product_name_en: i.name_en, declare_product_name_cn: i.name_cn || i.name_en, declare_product_code_qty: i.quantity, declare_unit_price_export: i.unit_value, currency_export: s.currency, declare_unit_price_import: i.unit_value, currency_import: s.currency, brand_export: "none", brand_import: "none", hscode_export: i.hs_code || "", hscode_import: i.hs_code || "" })) }],
         is_return_on_domestic: "U", is_return_on_oversea: "U",
-        deliver_type_info: { deliver_type: "1" }
+        deliver_type_info: { deliver_type: s.handover === "dropoff" ? "3" : "1" } // 1 = 上门揽收 pickup · 3 = 自送到仓 drop-off
       });
       return { carrier_order_id: d["4px_tracking_no"] || d.ds_consignment_no, tracking_number: d.logistics_channel_no || d["4px_tracking_no"], raw_status: "created" };
+    },
+    // Freight estimate (运费试算) ds.xms.estimated_cost.get — read-only. data is a JSON string of [{ logistics_product_code, lump_sum_fee (CNY), charge_weight, estimated_time }].
+    async quote({ country, postal_code = "", weight_kg, dims }) {
+      let d = await call("ds.xms.estimated_cost.get", "1.0.0", { country_code: country, post_code: postal_code || "", weight: String(Math.max(1, Math.round(weight_kg * 1000))), cargo_type: "P",
+        ...(dims ? { length: dims.l, width: dims.w, height: dims.h } : {}) });
+      if (typeof d === "string") { try { d = JSON.parse(d); } catch { d = []; } }
+      return (Array.isArray(d) ? d : []).map(q => ({ product: q.logistics_product_code, amount: Number(q.lump_sum_fee), currency: "CNY", charge_weight_kg: Number(q.charge_weight) || null, days: q.estimated_time || "" })).filter(q => q.product && Number.isFinite(q.amount));
     },
     async listProducts() {
       const d = await call("ds.xms.logistics_product.getlist", "1.0.0", { transport_mode: "1" });

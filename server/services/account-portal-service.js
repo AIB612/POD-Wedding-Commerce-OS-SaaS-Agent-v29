@@ -1,5 +1,6 @@
 // Customer "My account" portal: orders (scoped to the signed-in user — no IDOR), saved addresses (CRUD + default
 // used for checkout prefill), profile, saved studio designs. Every function takes the authenticated user record.
+import { customerTracking } from "../logistics/index.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -27,7 +28,7 @@ export function customerStatus(o) {
   if (/cancel|refund|fail/.test(s) || p === "failed") return "cancelled";
   if (/deliver/.test(s)) return "delivered";
   if (/ship|transit|fulfil/.test(s)) return "shipped";
-  if (/production|approved|printing/.test(s)) return "in_production";
+  if (/production|approved|printing|label created|ready to ship/.test(s)) return "in_production";
   if (/proof|needs approval/.test(s)) return "proof";
   if (p === "paid" || /paid/.test(s)) return "paid";
   return "awaiting_payment";
@@ -80,7 +81,7 @@ export async function orderDetail(user, id) {
   const a = o.shipping_address || {};
   return { order: { ...summary(o), items: (o.items || []).map(lineOut), subtotal: round2(o.subtotal), shipping: round2(o.shipping_charged), tax: round2(o.tax),
     shipping_method: typeof o.shipping_method === "object" ? clean(o.shipping_method?.label || o.shipping_method?.id) : clean(o.shipping_method),
-    payment: { provider: o.payment_provider || "", status: o.payment_status || "pending" }, tracking: o.tracking_number ? { number: o.tracking_number, url: o.tracking_url || "" } : null,
+    payment: { provider: o.payment_provider || "", status: o.payment_status || "pending" }, tracking: await customerTracking(o),
     shipping_address: { name: a.name || "", address1: a.address1 || "", address2: a.address2 || "", postal_code: a.postal_code || "", city: a.city || "", country: a.country || "", phone: a.phone || "" },
     proof: proof ? { status: proof.status, choice: o.proof_choice || "proof", production_blocked: !!o.production_blocked, approval_url: proof.token && proofUploaded ? `/proof.html?token=${proof.token}` : "", ready: proofUploaded } : null,
     proof_choice: o.proof_choice || "proof", delivery_estimate: o.delivery_estimate || null, packaging: round2(o.packaging_amount || 0), discount: round2(o.discount_amount || 0), promo_code: o.promo?.code || "", prices_include_vat: !!o.prices_include_vat, timeline } };

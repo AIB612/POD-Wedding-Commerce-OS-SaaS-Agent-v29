@@ -14,7 +14,7 @@ import { sendEmail, renderTemplate } from "./email-service.js";
 import { hmacHex, timingSafeHexEqual } from "../utils/crypto.js";
 import { baseUrl as publicBaseUrl } from "../config.js";
 import { isProjectId, projectExpired, retention, mockupUrl, hasMockup, ownsProject } from "./studio-service.js";
-import { quoteOverride } from "../logistics/index.js";
+import { quoteOverride, customerTracking, CARRIERS as LOGI_CARRIERS } from "../logistics/index.js";
 import { getFees, effectiveFx, vatRate, shippingAmount, carrierDays, packagingPrice, pricesIncludeVat, addBusinessDays } from "./fees-service.js";
 import { evaluatePromo, redeemPromo } from "./promo-service.js";
 
@@ -138,7 +138,7 @@ export async function quoteStorefront({ tenantId, cart, currency, country, posta
     const amount = carrierFee ? round2(carrierFee.amount_chf * fxc) : managed ? managed.amount : round2(o.amount * rate);
     const days = carrierDays(zoneId, o.id);
     return { ...o, amount, ...(managed ? { free_applied: managed.free } : {}), carrier_days: days,
-      ...(carrierFee ? { carrier: carrierFee.carrier, fee_rule: carrierFee.rule_id } : {}),
+      ...(carrierFee ? { carrier: carrierFee.carrier, carrier_name: LOGI_CARRIERS[carrierFee.carrier]?.name || carrierFee.carrier, fee_rule: carrierFee.rule_id } : {}),
       delivery: { production_days: prodDays, from: addBusinessDays(today, prodDays + days[0]), to: addBusinessDays(today, prodDays + days[1]) } };
   }));
   const selected = options.find(o => o.id === ship.selected_shipping) || options[0];
@@ -468,7 +468,7 @@ const STAGE = o => {
   if (/^cancel/i.test(o.status || "") || o.payment_status === "cancelled") return "cancelled";
   if (o.status === "Delivered") return "delivered";
   if (o.status === "Shipped") return "shipped";
-  if (o.status === "Production") return "in_production";
+  if (["Production", "Ready to ship", "Label created"].includes(o.status)) return "in_production";
   if (o.payment_status !== "paid") return "awaiting_payment";
   if (o.production_blocked || ["Proofing", "AwaitingApproval"].includes(o.status)) return "proof";
   return "paid";
@@ -492,6 +492,6 @@ export async function lookupOrder(orderNo, email) {
     item_count: (o.items || []).reduce((a, l) => a + (Number(l.quantity) || 0), 0),
     delivery_estimate: o.delivery_estimate ? { from: o.delivery_estimate.from, to: o.delivery_estimate.to } : null,
     proof: proofRec ? { status: proofRec.status, ready: !!proofRec.proof_url } : null,
-    tracking: o.tracking_number ? { carrier: o.carrier || "", number: o.tracking_number, url: o.tracking_url || "", ...(o.tracking_status ? { status: o.tracking_status } : {}), ...(o.tracking_last_event ? { last_event: { time: o.tracking_last_event.time || "", text: o.tracking_last_event.text || "" } } : {}) } : null
+    tracking: await customerTracking(o)
   };
 }

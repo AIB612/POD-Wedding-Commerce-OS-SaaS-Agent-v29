@@ -677,7 +677,7 @@ function filteredOrders(){
 }
 function renderOrders(){
   const rows=filteredOrders();
-  document.getElementById('ordersBody').innerHTML=rows.length?rows.map(o=>`<tr><td><span class="link" onclick="openOrder('${esc(o.id)}')">${esc(o.id)}</span></td><td>${esc(o.customer)}</td><td>${esc(o.store)}</td><td>${tag(o.status)}</td><td>${money(o.revenue)}</td><td>${money(o.profit)}</td><td>${esc(o.tracking)}</td><td>${esc(when(o))}</td></tr>`).join(''):empty(8,T('没有符合条件的订单'));
+  document.getElementById('ordersBody').innerHTML=rows.length?rows.map(o=>`<tr><td><span class="link" onclick="openOrder('${esc(o.id)}')">${esc(o.id)}</span></td><td>${esc(o.customer)}</td><td>${esc(o.store)}</td><td>${tag(o.status)}</td><td>${money(o.revenue)}</td><td>${money(o.profit)}</td><td>${esc(o.tracking)}${o.raw?.logistics_status?`<br>${lsTag(o.raw.logistics_status)}`:''}${o.raw?.logistics_flag?` <b style="color:#c0392b" title="${esc(o.raw.logistics_flag)}">⚠</b>`:''}</td><td>${esc(when(o))}</td></tr>`).join(''):empty(8,T('没有符合条件的订单'));
   applyTableView();
 }
 function applyTableView(){
@@ -695,8 +695,28 @@ function openDrawer(t,b,foot){
   document.getElementById('drawerMask').classList.add('open');document.getElementById('drawer').classList.add('open');
 }
 function closeDrawer(){document.getElementById('drawerMask').classList.remove('open');document.getElementById('drawer').classList.remove('open')}
+// Logistics status labels (same mapping as server/logistics LOGISTICS_STATUS and the customer pages).
+const LSTAT={created:['已创建运单','Label created'],label_ready:['面单已生成','Label ready'],info_received:['承运商已接单','Info received'],in_transit:['运输中','In transit'],delivered:['已签收','Delivered'],exception:['物流异常','Delivery issue'],cancelled:['运单已取消','Shipment cancelled'],error:['下单失败','Carrier error']};
+const lsText=s=>{const l=LSTAT[s];return l?(I18N().lang()==='zh'?l[0]:l[1]):(s||'')};
+const lsTag=s=>`<span class="tag ${s==='delivered'?'green':s==='exception'||s==='error'?'red':s==='in_transit'?'blue':'gold'}">${esc(lsText(s))}</span>`;
+async function orderShipmentPanel(id){
+  const el=document.getElementById('orderShipPanel');if(!el)return;
+  try{const rows=await api(`/api/saas/carriers/shipments?order_id=${encodeURIComponent(id)}`);
+    if(!Array.isArray(rows)){el.innerHTML=`<p class="muted">${L('物流模块未开启','Carrier logistics is off','Logistik ist aus')}</p>`;return}
+    const act=rows.find(s=>!['cancelled','error'].includes(s.status));
+    let det=act?await api(`/api/saas/carriers/shipments/${encodeURIComponent(act.id)}`):null;if(det?.error)det=null;
+    el.innerHTML=(det?`<div class="desc"><div>${L('承运商','Carrier','Versand')}</div><div>${esc(det.carrier)} · ${esc(det.product||'')} · ${esc(det.mode)}</div><div>${L('运单号','Tracking no.','Sendungsnr.')}</div><div>${det.tracking_url?`<a href="${esc(det.tracking_url)}" target="_blank" rel="noopener">${esc(det.tracking_number)}</a>`:esc(det.tracking_number||'—')}</div><div>${L('物流状态','Logistics status','Status')}</div><div>${lsTag(det.status)}${det.alert?` <b style="color:#c0392b">${esc(det.alert.text)}</b>`:''}</div></div>
+      <ol style="margin:10px 0 0 18px;font-size:13px">${(det.events||[]).slice(0,12).map(e=>`<li><b>${esc(String(e.time||'').replace('T',' ').slice(0,16))}</b> ${esc(e.location||'')} — ${esc(e.text||'')}</li>`).join('')||`<li class="muted">${L('暂无物流轨迹','No tracking events yet','Noch keine Scans')}</li>`}</ol>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="ant-btn" onclick="shipAct('${esc(det.id)}','refresh','${esc(id)}')">${L('刷新轨迹','Refresh tracking','Aktualisieren')}</button><a class="ant-btn" href="/api/saas/carriers/shipments/${encodeURIComponent(det.id)}/label" target="_blank" rel="noopener">${L('下载面单','Label PDF','Etikett')}</a><button class="ant-btn" onclick="shipAct('${esc(det.id)}','cancel','${esc(id)}')">${L('取消运单','Cancel shipment','Stornieren')}</button></div>`
+      :`<p class="muted">${L('尚未创建运单','No shipment yet','Noch keine Sendung')}</p><button class="ant-btn primary" onclick="closeDrawer();showPage('carriers');setTimeout(()=>window.AdminSections?.prepareShipment?.('${esc(id)}'),80)">${L('创建运单（选择渠道/比价）','Create shipment (compare channels)','Sendung anlegen')}</button>`)
+      +(rows.filter(s=>s!==act).length?`<p class="muted" style="margin-top:8px">${L('历史运单','Earlier shipments','Frühere')}: ${rows.filter(s=>s!==act).map(s=>`${esc(s.tracking_number||s.id)} (${esc(lsText(s.status))})`).join(', ')}</p>`:'');
+  }catch(e){el.innerHTML=`<p class="muted">${esc(e.message)}</p>`}
+}
+async function shipAct(sid,act,orderId){if(act==='cancel'&&!confirm(L('向承运商取消此运单？订单将回到“待发货”。','Cancel this shipment with the carrier? The order goes back to “Ready to ship”.','Sendung stornieren?')))return;
+  const r=await api(`/api/saas/carriers/shipments/${encodeURIComponent(sid)}/${act}`,{method:'POST',headers:{'x-action-approved':'true'}});
+  if(!r||r.error)return notice(r?.error||L('操作失败','Action failed','Fehlgeschlagen'));notice(L('已更新','Updated','Aktualisiert'));await load();openOrder(orderId)}
 function openOrder(id){const o=view.orders.find(x=>x.id===id);if(!o)return;const st=o.status||'';const reached=s=>['Paid','Proofing','Approved','Production','Shipped','Delivered'].indexOf(st)>=['Paid','Proofing','Approved','Production','Shipped','Delivered'].indexOf(s);
-  openDrawer(id,`<div class="desc"><div>Customer</div><div>${esc(o.customer)}</div><div>Store</div><div>${esc(o.store)}</div><div>Status</div><div>${tag(o.status)}</div><div>Revenue</div><div>${esc(o.currency||'USD')} ${money(o.revenue).slice(1)}</div><div>Contribution</div><div>${money(o.profit)}</div><div>Tracking</div><div>${esc(o.tracking)}</div></div><h3 style="font-size:15px;margin-top:24px">Order Timeline</h3><div class="steps">${[['Paid','Payment verified','PayPal / Shopify financial state synchronized'],['Proofing','Proofing','Design job created'],['Production','Production','Waiting / in progress'],['Shipped','Shipment',o.tracking]].map((s,i)=>`<div class="step ${reached(s[0])?'done':''}"><i>${reached(s[0])?'✓':i+1}</i><div><b>${s[1]}</b><span>${esc(s[2])}</span></div></div>`).join('')}</div>`)}
+  openDrawer(id,`<div class="desc"><div>Customer</div><div>${esc(o.customer)}</div><div>Store</div><div>${esc(o.store)}</div><div>Status</div><div>${tag(o.status)}</div><div>Revenue</div><div>${esc(o.currency||'USD')} ${money(o.revenue).slice(1)}</div><div>Contribution</div><div>${money(o.profit)}</div><div>Tracking</div><div>${esc(o.tracking)}</div></div><h3 style="font-size:15px;margin-top:24px">${L('物流 / 运单','Shipment & tracking','Versand')}</h3><div id="orderShipPanel" class="muted">…</div><h3 style="font-size:15px;margin-top:24px">Order Timeline</h3><div class="steps">${[['Paid','Payment verified','PayPal / Shopify financial state synchronized'],['Proofing','Proofing','Design job created'],['Production','Production','Waiting / in progress'],['Shipped','Shipment',o.tracking],['Delivered','Delivered','']].map((s,i)=>`<div class="step ${reached(s[0])?'done':''}"><i>${reached(s[0])?'✓':i+1}</i><div><b>${s[1]}</b><span>${esc(s[2])}</span></div></div>`).join('')}</div>`);orderShipmentPanel(id)}
 function openStore(id){const s=view.stores.find(x=>x.id===id);if(!s)return;openDrawer(s.name,`<div class="desc"><div>Domain</div><div>${esc(s.domain||'—')}</div><div>Country</div><div>${esc(s.country||'—')}</div><div>Status</div><div>${tag(s.status)}</div><div>Health</div><div>${esc(s.health)}%</div></div>`,`<button class="ant-btn" onclick="syncStore('${esc(s.id)}','orders')">Sync orders</button><button class="ant-btn primary" onclick="syncStore('${esc(s.id)}')">Sync products</button>`)}
 function openConversation(id){
   selectedConversation=id;render();

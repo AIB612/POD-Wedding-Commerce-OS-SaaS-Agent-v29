@@ -82,7 +82,10 @@ const WINDOW = 15 * 60_000, MAX_IP = 5, MAX_USER = 10, MAX_GLOBAL = 50;
 function failCount(key) { const e = fails.get(key); return e && e.reset > Date.now() ? e.count : 0; }
 function addFail(key) { const now = Date.now(); let e = fails.get(key); if (!e || e.reset <= now) { e = { count: 0, reset: now + WINDOW }; fails.set(key, e); } e.count++; }
 setInterval(() => { const now = Date.now(); for (const [k, v] of fails) if (v.reset <= now) fails.delete(k); }, 60_000).unref();
-const ipOf = req => String(req.ip || req.socket?.remoteAddress || "");
+// Behind the hosting proxy (no TRUST_PROXY) every peer is local: use the proxy-appended (last) X-Forwarded-For entry.
+const isLocalIp = ip => /^(::1|127\.|::ffff:127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|fc|fd)/.test(ip || "");
+const ipOf = req => { if (req.app?.get("trust proxy")) return String(req.ip || ""); const peer = String(req.socket?.remoteAddress || "");
+  if (!isLocalIp(peer)) return peer; const xff = String(req.headers["x-forwarded-for"] || "").split(",").map(x => x.trim()).filter(Boolean); return xff[xff.length - 1] || peer; };
 function locked(req, user) {
   return failCount("ip:" + ipOf(req)) >= MAX_IP || failCount("user:" + user) >= MAX_USER || failCount("global") >= MAX_GLOBAL;
 }

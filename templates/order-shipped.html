@@ -1,9 +1,16 @@
-<!doctype html><html><body style="margin:0;background:#f6f5f2;font-family:Arial,Helvetica,sans-serif;color:#1f1d1a">
-<div style="max-width:620px;margin:0 auto;padding:28px 18px"><div style="background:#fff;border:1px solid #e7e4de;border-radius:12px;padding:28px">
-  <p style="margin:0;color:#77736d;font-size:12px;letter-spacing:.08em;text-transform:uppercase">Shipped</p>
-  <h1 style="margin:6px 0 10px;font-size:24px">Your order {{order_id}} is on its way</h1>
-  {{#carrier}}<p style="margin:0 0 6px">Carrier: <b>{{carrier}}</b></p>{{/carrier}}
-  {{#tracking_number}}<p style="margin:0 0 16px">Tracking number: <b>{{tracking_number}}</b></p>{{/tracking_number}}
-  {{#tracking_url}}<p><a href="{{tracking_url}}" style="background:#1f1d1a;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;display:inline-block">Track parcel</a></p>{{/tracking_url}}
-  <p style="font-size:13px"><a href="{{order_url}}" style="color:#1f1d1a">Order details</a> · <a href="{{account_url}}" style="color:#1f1d1a">My account</a></p>
+<!doctype html><html><body style="margin:0;background:#f6f5f2;font-family:Arial,Helvetica,'PingFang SC','Microsoft YaHei',sans-serif;color:#1f1d1a">
+<div style="max-width:620px;margin:0 auto;padding:28px 18px">
+  {{#test}}<div style="background:#fff3cd;border:1px solid #f0d58a;color:#7a5a00;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px"><b>TEST EMAIL · 测试邮件</b> — sample order and tracking number, not a real shipment. 示例订单与测试单号，并非真实包裹。</div>{{/test}}
+  <div style="background:#fff;border:1px solid #e7e4de;border-radius:12px;padding:28px">
+  <p style="margin:0;color:#77736d;font-size:12px;letter-spacing:.08em;text-transform:uppercase">Shipped · 已发货</p>
+  <h1 style="margin:6px 0 4px;font-size:24px">Your order {{order_id}} is on its way</h1>
+  <p style="margin:0 0 16px;color:#77736d">您的订单 {{order_id}} 已发货{{#customer_name}} · Hi {{customer_name}}{{/customer_name}}</p>
+  <table style="border-collapse:collapse;margin:0 0 16px;font-size:14px">
+  {{#carrier}}<tr><td style="padding:3px 14px 3px 0;color:#77736d">Carrier · 承运商</td><td><b>{{carrier}}</b></td></tr>{{/carrier}}
+  {{#tracking_number}}<tr><td style="padding:3px 14px 3px 0;color:#77736d">Tracking no. · 运单号</td><td><b>{{tracking_number}}</b></td></tr>{{/tracking_number}}
+  {{#status_label}}<tr><td style="padding:3px 14px 3px 0;color:#77736d">Status · 状态</td><td>{{status_label}}</td></tr>{{/status_label}}
+  </table>
+  {{#tracking_url}}<p><a href="{{tracking_url}}" style="background:#1f1d1a;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;display:inline-block">Track parcel · 查询物流</a></p>{{/tracking_url}}
+  <p style="font-size:13px"><a href="{{order_url}}" style="color:#1f1d1a">Order details · 订单详情</a> · <a href="{{account_url}}" style="color:#1f1d1a">My account · 我的账户</a></p>
+  <p style="font-size:12px;color:#77736d;margin-top:18px">Tracking can take 1–3 days to show the first scan. 物流信息通常在 1–3 天内更新首条记录。</p>
 </div></div></body></html>

@@ -38,26 +38,37 @@ export const CARRIERS = { yunexpress: { name: "YunExpress 云途", env: YUN_ENV,
 export const enabled = () => process.env.LOGISTICS_ENABLED === "true";
 const mock = () => process.env.LOGISTICS_MOCK === "true";
 const now = () => new Date().toISOString();
+function clip(v, n = 120) { return String(v ?? "").trim().slice(0, n); }
+function err(m, status = 400) { return Object.assign(new Error(m), { status }); }
 const r2 = n => Math.round(Number(n) * 100) / 100;
 
 // ---------- settings ----------
-const DEFAULT_SETTINGS = { carriers: { yunexpress: { enabled: true, mode: "sandbox", service: "", products_by_country: {} }, fourpx: { enabled: true, mode: "sandbox", service: "", products_by_country: {} } },
-  default_carrier: "yunexpress", default_by_country: {}, alert_days_no_update: 5, alert_days_undelivered: 25 };
+const DEFAULT_SETTINGS = { carriers: { yunexpress: { enabled: true, mode: "sandbox", service: "", products_by_country: {} }, fourpx: { enabled: true, mode: "sandbox", service: "", products_by_country: {}, handover: "pickup" } },
+  default_carrier: "yunexpress", default_by_country: {}, alert_days_no_update: 5, alert_days_undelivered: 25,
+  // Sender (return) address + IOSS are edited in admin → Carriers → Settings; empty fields fall back to SHIPPING_ORIGIN_* / IOSS_NO in .env.
+  sender: { name: "", company: "", phone: "", email: "", country: "", state: "", city: "", address1: "", address2: "", postal_code: "" }, ioss_no: "",
+  sync_minutes: 60, price_tables: [] };
+const SENDER_KEYS = ["name", "company", "phone", "email", "country", "state", "city", "address1", "address2", "postal_code"];
 export async function getSettings(tenantId) {
   const rec = await findRecord("logistics_settings", `lgs_${tenantId}`);
   const s = structuredClone(DEFAULT_SETTINGS);
-  if (rec) { Object.assign(s, rec.settings || {}); for (const k of Object.keys(CARRIERS)) s.carriers[k] = { ...DEFAULT_SETTINGS.carriers[k], ...(rec.settings?.carriers?.[k] || {}) }; }
+  if (rec) { Object.assign(s, rec.settings || {}); for (const k of Object.keys(CARRIERS)) s.carriers[k] = { ...DEFAULT_SETTINGS.carriers[k], ...(rec.settings?.carriers?.[k] || {}) }; s.sender = { ...DEFAULT_SETTINGS.sender, ...(rec.settings?.sender || {}) }; }
   return s;
 }
 export async function saveSettings(tenantId, input = {}) {
   const cur = await getSettings(tenantId), s = { ...cur };
   if (input.carriers) for (const k of Object.keys(CARRIERS)) { const c = input.carriers[k]; if (!c) continue;
     const pbc = c.products_by_country && typeof c.products_by_country === "object" ? c.products_by_country : cur.carriers[k].products_by_country || {};
-    s.carriers[k] = { enabled: c.enabled !== false, mode: c.mode === "production" ? "production" : "sandbox", service: String(c.service ?? cur.carriers[k].service ?? "").slice(0, 40),
+    s.carriers[k] = { ...(k === "fourpx" ? { handover: ["pickup", "dropoff"].includes(c.handover) ? c.handover : cur.carriers[k].handover || "pickup" } : {}), enabled: c.enabled !== false, mode: c.mode === "production" ? "production" : "sandbox", service: String(c.service ?? cur.carriers[k].service ?? "").slice(0, 40),
       products_by_country: Object.fromEntries(Object.entries(pbc).map(([cc, v]) => [String(cc).toUpperCase(), String(v || "").trim().slice(0, 40)]).filter(([cc, v]) => /^[A-Z]{2}$/.test(cc) && /^[\w.\-]+$/.test(v)).slice(0, 300)) }; }
   if (input.default_carrier && CARRIERS[input.default_carrier]) s.default_carrier = input.default_carrier;
   if (input.default_by_country && typeof input.default_by_country === "object") s.default_by_country = Object.fromEntries(Object.entries(input.default_by_country)
     .filter(([cc, c]) => /^[A-Z]{2}$/.test(cc) && CARRIERS[c]).slice(0, 300));
+  if (input.sender && typeof input.sender === "object") { s.sender = { ...cur.sender }; for (const k of SENDER_KEYS) if (input.sender[k] != null) s.sender[k] = clip(input.sender[k], k === "address1" || k === "address2" ? 120 : 80);
+    s.sender.country = s.sender.country.toUpperCase().slice(0, 2); if (s.sender.country && !/^[A-Z]{2}$/.test(s.sender.country)) throw err("invalid_sender_country"); }
+  if (input.ioss_no != null) { const v = clip(input.ioss_no, 20).toUpperCase().replace(/\s+/g, ""); if (v && !/^IM\d{10}$/.test(v)) throw err("invalid_ioss_no"); s.ioss_no = v; }
+  if (input.price_tables != null) s.price_tables = validatePriceTables(input.price_tables);
+  if (input.sync_minutes != null) s.sync_minutes = [0, 15, 30, 60, 120, 180, 360, 720, 1440].includes(Number(input.sync_minutes)) ? Number(input.sync_minutes) : cur.sync_minutes;
   for (const k of ["alert_days_no_update", "alert_days_undelivered"]) if (input[k] != null) s[k] = Math.max(1, Math.min(120, Number(input[k]) || cur[k]));
   const id = `lgs_${tenantId}`;
   if (await findRecord("logistics_settings", id)) await updateRecord("logistics_settings", id, { settings: s, updated_at: now() });
@@ -128,20 +139,27 @@ const labelDir = () => path.resolve(process.env.LOGISTICS_LABEL_DIR || "./data/l
 // Customs values are declared in USD (YunExpress default; accepted by 4PX). Order currency → CHF → USD via the shop FX table.
 function usd(cur = "CHF") { const fx = effectiveFx(); const toChf = cur === "CHF" ? 1 : 1 / (Number(fx[cur]) || 1); return toChf * (Number(fx.USD) || 1.1); }
 export function orderWeight(order) { const n = (order.items || []).reduce((a, l) => a + (Number(l.quantity) || 0), 0); return Math.max(0.2, n * 0.12); }
+/** Sender address: admin settings first, .env SHIPPING_ORIGIN_* as fallback per field. */
+export function senderFor(settings) {
+  const a = settings?.sender || {}, e = process.env, pick = (k, env, d = "") => String(a[k] || e[env] || d);
+  return { name: pick("name", "SHIPPING_ORIGIN_NAME", "Wed.AI"), company: pick("company", "SHIPPING_ORIGIN_COMPANY"), phone: pick("phone", "SHIPPING_ORIGIN_PHONE"), email: pick("email", "SHIPPING_ORIGIN_EMAIL"),
+    country: pick("country", "SHIPPING_ORIGIN_COUNTRY", "CN").toUpperCase(), state: pick("state", "SHIPPING_ORIGIN_STATE"), city: pick("city", "SHIPPING_ORIGIN_CITY"),
+    address1: pick("address1", "SHIPPING_ORIGIN_ADDRESS1"), address2: pick("address2", "SHIPPING_ORIGIN_ADDRESS2"), postal_code: pick("postal_code", "SHIPPING_ORIGIN_POSTAL") };
+}
 export function shipmentRequest(order, settings, carrier) {
   const a = order.shipping_address || {}; const [first, ...rest] = String(a.name || order.customer_name || "Customer").trim().split(/\s+/);
   const items = (order.items || []).map(l => ({ sku: l.product_id || l.sku || "item", name_en: String(l.name || "Printed wedding stationery").slice(0, 60), name_cn: "印刷品", quantity: Number(l.quantity) || 1,
     unit_value: r2((Number(l.unit_price) || 1) * usd(order.currency)), unit_weight_kg: 0.12, hs_code: process.env.LOGISTICS_DEFAULT_HS_CODE || "4909" }));
   return { reference: order.id, service: settings.carriers[carrier].service, weight_kg: r2(orderWeight(order)), currency: "USD", declared_value: r2(items.reduce((s, i) => s + i.unit_value * i.quantity, 0)),
     to: { first_name: first, last_name: rest.join(" ") || first, company: a.company || "", address1: a.address1, address2: a.address2 || "", city: a.city, state: a.state || a.province || "", postal_code: a.postal_code, country: String(a.country || "").toUpperCase(), phone: a.phone || order.customer_phone || "", email: order.customer_email || "" },
-    from: { name: process.env.SHIPPING_ORIGIN_NAME || "Wed.AI", country: process.env.SHIPPING_ORIGIN_COUNTRY || "CN", city: process.env.SHIPPING_ORIGIN_CITY || "", state: process.env.SHIPPING_ORIGIN_STATE || "", address1: process.env.SHIPPING_ORIGIN_ADDRESS1 || "", postal_code: process.env.SHIPPING_ORIGIN_POSTAL || "", phone: process.env.SHIPPING_ORIGIN_PHONE || "" },
+    from: senderFor(settings), ioss_no: settings?.ioss_no || "", handover: settings?.carriers?.fourpx?.handover || "pickup",
     items };
 }
 // Follow-up calls (label/track/cancel) always go to the environment the shipment was created in, even if the admin toggled the mode since.
 const adapterFor = s => mock() || s.mode === "mock" ? createMock(s.carrier, CARRIERS[s.carrier].name) : CARRIERS[s.carrier].make({ mode: s.mode === "production" ? "production" : "sandbox" });
-const err = (m, status = 400) => Object.assign(new Error(m), { status });
-export async function listShipments(tenantId, { carrier, status, from, to, q, alerts } = {}) {
+export async function listShipments(tenantId, { carrier, status, from, to, q, alerts, order_id } = {}) {
   let rows = await listForTenant("carrier_shipments", tenantId);
+  if (order_id) rows = rows.filter(s => s.order_id === order_id);
   if (carrier) rows = rows.filter(s => s.carrier === carrier);
   if (status) rows = rows.filter(s => s.status === status);
   if (from) rows = rows.filter(s => s.created_at >= from);
@@ -162,7 +180,6 @@ export function alertFor(s, st, t = Date.now()) {
 }
 export async function getShipment(tenantId, id) { const s = await findRecord("carrier_shipments", id); if (!s || s.tenant_id !== tenantId) throw err("shipment_not_found", 404); return { ...s, alert: alertFor(s, await getSettings(tenantId)) }; }
 
-const clip = (v, n = 120) => String(v ?? "").trim().slice(0, n);
 /** Admin edits on top of the prefilled request (address, items, weight, reference). Validated, never trusted blindly. */
 export function applyOverrides(req, o = {}) {
   const out = structuredClone(req);
@@ -197,7 +214,7 @@ async function submit(tenantId, { cid, settings, req, order, labelRetry, manual 
     const r = await a.createShipment(req);
     const row = { ...base, product: req.service || "(carrier default)", status: "created", carrier_order_id: r.carrier_order_id, tracking_number: r.tracking_number, last_mile_number: r.last_mile_number || "", tracking_url: r.tracking_number ? CARRIERS[cid].track_url(r.tracking_number) : "" };
     await addRecord("carrier_shipments", row);
-    if (order) await updateRecord("orders", order.id, { carrier: CARRIERS[cid].name, tracking_number: row.tracking_number, tracking_url: row.tracking_url, tracking_status: "created", shipment_id: id, updated_at: now() });
+    if (order) { await updateRecord("orders", order.id, { carrier: CARRIERS[cid].name, carrier_id: cid, tracking_number: row.tracking_number, tracking_url: row.tracking_url, shipment_id: id, updated_at: now() }); await syncOrder(row, "shipment_created"); }
     if (labelRetry !== false) scheduleLabelFetch(tenantId, id);
     return row;
   } catch (e) {
@@ -213,7 +230,9 @@ export async function createShipment(tenantId, orderId, opts = {}) {
   if (!order.shipping_address?.address1 && !opts.overrides?.to?.address1) throw err("order_has_no_address");
   const active = await findWhere("carrier_shipments", s => s.order_id === order.id && !["cancelled", "error"].includes(s.status));
   if (active) throw err("shipment_exists", 409);
-  const settings = await getSettings(tenantId), cid = opts.carrier || pickCarrier(settings, opts.overrides?.to?.country || order.shipping_address.country);
+  const settings = await getSettings(tenantId);
+  if (opts.carrier === "cheapest") Object.assign(opts, await resolveChannel(tenantId, { carrier: "cheapest", country: opts.overrides?.to?.country || order.shipping_address.country, postal_code: opts.overrides?.to?.postal_code || order.shipping_address.postal_code, weight_kg: Number(opts.overrides?.weight_kg) || orderWeight(order) }));
+  const cid = opts.carrier || pickCarrier(settings, opts.overrides?.to?.country || order.shipping_address.country);
   if (!CARRIERS[cid]) throw err("unknown_carrier");
   let req = shipmentRequest(order, settings, cid);
   req.service = productFor(settings, cid, req.to.country);
@@ -222,11 +241,13 @@ export async function createShipment(tenantId, orderId, opts = {}) {
 }
 /** Manual shipment not tied to an order (samples, replacements). */
 export async function createManualShipment(tenantId, body = {}) {
-  const settings = await getSettings(tenantId), country = clip(body.to?.country, 2).toUpperCase(), cid = body.carrier || pickCarrier(settings, country);
+  const settings = await getSettings(tenantId), country = clip(body.to?.country, 2).toUpperCase();
+  if (body.carrier === "cheapest") { const c = await resolveChannel(tenantId, { carrier: "cheapest", country, postal_code: body.to?.postal_code, weight_kg: Number(body.weight_kg) || 0.2 }); body = { ...body, carrier: c.carrier, product: c.product }; }
+  const cid = body.carrier || pickCarrier(settings, country);
   if (!CARRIERS[cid]) throw err("unknown_carrier");
   const reference = clip(body.reference || `WEDAI-M-${Date.now().toString(36).toUpperCase()}`, 40);
   if (await findWhere("carrier_shipments", s => s.tenant_id === tenantId && s.reference === reference && !["cancelled", "error"].includes(s.status))) throw err("reference_exists", 409);
-  const blank = { reference, service: productFor(settings, cid, country), weight_kg: 0.2, currency: "USD", declared_value: 0, to: { first_name: "", last_name: "", country }, from: shipmentRequest({ items: [] }, settings, cid).from, items: [{ sku: "item", name_en: "Printed paper card", name_cn: "纸质印刷品", quantity: 1, unit_value: 1, unit_weight_kg: 0.1, hs_code: process.env.LOGISTICS_DEFAULT_HS_CODE || "4909" }] };
+  const blank = { reference, service: productFor(settings, cid, country), weight_kg: 0.2, currency: "USD", declared_value: 0, to: { first_name: "", last_name: "", country }, from: senderFor(settings), ioss_no: settings.ioss_no || "", handover: settings.carriers.fourpx?.handover || "pickup", items: [{ sku: "item", name_en: "Printed paper card", name_cn: "纸质印刷品", quantity: 1, unit_value: 1, unit_weight_kg: 0.1, hs_code: process.env.LOGISTICS_DEFAULT_HS_CODE || "4909" }] };
   const req = applyOverrides(blank, { ...body, reference });
   if (!req.to.last_name) req.to.last_name = req.to.first_name;
   return submit(tenantId, { cid, settings, req, order: null, labelRetry: body.labelRetry, manual: true });
@@ -242,8 +263,7 @@ export async function cancelShipment(tenantId, id) {
   if (s.events?.length > 1) throw err("already_in_transit");
   await adapterFor(s).cancel(s.carrier_order_id || s.tracking_number);
   await updateRecord("carrier_shipments", id, { status: "cancelled", updated_at: now() });
-  const o = await findRecord("orders", s.order_id);
-  if (o?.shipment_id === id) await updateRecord("orders", s.order_id, { tracking_number: "", tracking_url: "", tracking_status: "", carrier: "", shipment_id: "", updated_at: now() });
+  await syncOrder({ ...s, status: "cancelled" }, "shipment_cancelled");
   return { id, status: "cancelled" };
 }
 export async function getLabel(tenantId, id, { refresh = false } = {}) {
@@ -257,6 +277,7 @@ export async function getLabel(tenantId, id, { refresh = false } = {}) {
   if (buf.subarray(0, 5).toString() !== "%PDF-" && !/png|zpl/i.test(l.type || "")) throw err("label_not_pdf", 502);
   await fs.mkdir(labelDir(), { recursive: true }); await fs.writeFile(file, buf);
   await updateRecord("carrier_shipments", id, { label_at: now(), status: s.status === "created" ? "label_ready" : s.status, updated_at: now() });
+  if (s.status === "created") await syncOrder({ ...s, status: "label_ready" }, "label_ready");
   return { file, buffer: buf };
 }
 // Carriers (notably 4PX) can need minutes before a label exists ("Changing service number, please try again later").
@@ -283,7 +304,6 @@ export function scheduleLabelFetch(tenantId, id, { intervalMs = Number(process.e
   labelJobs.set(id, job);
   return job;
 }
-const ORDER_STATUS = { in_transit: "Shipped", delivered: "Delivered" };
 export async function refreshTracking(tenantId, id) {
   const s = await getShipment(tenantId, id);
   if (!s.tracking_number || s.status === "cancelled") return s;
@@ -291,24 +311,170 @@ export async function refreshTracking(tenantId, id) {
   const events = [...t.events].sort((a, b) => String(b.time).localeCompare(String(a.time)));
   const patch = { status: t.status, events, ...(t.last_mile_number ? { last_mile_number: t.last_mile_number } : {}), tracked_at: now(), updated_at: now(), ...(t.status === "delivered" && !s.delivered_at ? { delivered_at: now() } : {}) };
   await updateRecord("carrier_shipments", id, patch);
-  const o = await findRecord("orders", s.order_id);
-  if (o && o.shipment_id === id) await updateRecord("orders", o.id, { tracking_status: t.status, tracking_last_event: events[0] ? { time: events[0].time, text: events[0].text, location: events[0].location } : null,
-    ...(ORDER_STATUS[t.status] && o.status !== "Delivered" ? { status: ORDER_STATUS[t.status] } : {}), updated_at: now() });
+  // "label_ready" is ours (label downloaded); the carrier only knows created/info_received until the first scan.
+  const st = t.status === "info_received" && s.status === "label_ready" ? "label_ready" : t.status;
+  if (st !== t.status) { patch.status = st; await updateRecord("carrier_shipments", id, { status: st }); }
+  await syncOrder({ ...s, ...patch }, "tracking_sync");
   return { ...s, ...patch };
 }
-export async function pollAll() {
+// Scheduled tracking sync: every shipment that is still moving is re-tracked once its tenant's sync interval (admin setting) has passed.
+export const pollState = { last_run_at: null, polled: 0, errors: 0, changed: 0, running: false };
+export async function pollAll({ force = false, tenantId = null } = {}) {
   if (!enabled()) return { polled: 0 };
-  const all = await findAll(); let n = 0;
-  for (const s of all) { if (["cancelled", "delivered", "error"].includes(s.status) || !s.tracking_number) continue; try { await refreshTracking(s.tenant_id, s.id); n++; } catch (e) { console.warn("[logistics] poll", s.id, e.message); } }
-  return { polled: n };
+  if (pollState.running) return { ...pollState, skipped: "already_running" };
+  pollState.running = true;
+  const all = await findAll(); let n = 0, errors = 0, changed = 0; const cache = new Map(), t0 = Date.now();
+  try {
+    for (const s of all) {
+      if (TERMINAL.includes(s.status) || !s.tracking_number || (tenantId && s.tenant_id !== tenantId)) continue;
+      if (!cache.has(s.tenant_id)) cache.set(s.tenant_id, await getSettings(s.tenant_id));
+      const min = cache.get(s.tenant_id).sync_minutes;
+      if (!force && (!min || (s.tracked_at && t0 - Date.parse(s.tracked_at) < min * 60_000 - 30_000))) continue;
+      try { const r = await refreshTracking(s.tenant_id, s.id); n++; if (r.status !== s.status) changed++; }
+      catch (e) { errors++; await updateRecord("carrier_shipments", s.id, { tracked_at: now(), sync_error: String(e.message).slice(0, 200) }); console.warn("[logistics] poll", s.id, e.message); }
+    }
+  } finally { Object.assign(pollState, { last_run_at: now(), polled: n, errors, changed, running: false }); }
+  return { polled: n, errors, changed, last_run_at: pollState.last_run_at };
 }
+const TERMINAL = ["cancelled", "delivered", "error"];
 async function findAll() { await hydrate(); const st = await getState(); return [...(st.carrier_shipments || [])]; }
 export function startLogisticsPoll() {
   if (!enabled()) return;
   hydrate();
-  const min = Number(process.env.LOGISTICS_POLL_MINUTES || 180);
-  if (min > 0) setInterval(() => pollAll().catch(e => console.warn("[logistics] poll failed", e.message)), min * 60_000).unref();
+  // Tick every LOGISTICS_POLL_TICK_MINUTES (5); each shipment is only re-tracked when its tenant's sync_minutes have passed.
+  const tick = Number(process.env.LOGISTICS_POLL_TICK_MINUTES || 5);
+  if (tick > 0) setInterval(() => pollAll().catch(e => console.warn("[logistics] poll failed", e.message)), tick * 60_000).unref();
 }
 
 export const tenantShipmentsRaw = t => listForTenant("carrier_shipments", t);
 export const tenantOrders = t => listForTenant("orders", t);
+
+// ---------- order ⇄ shipment status sync ----------
+// One mapping, used by shipment create / label / tracking sync / cancel. Order status never moves backwards except on cancel,
+// and a cancelled or refunded order is never revived. Exceptions only flag the order (admin decides).
+export const LOGISTICS_STATUS = {
+  created: { zh: "已创建运单", en: "Label created", order: "Label created" },
+  label_ready: { zh: "面单已生成", en: "Label ready", order: "Label created" },
+  info_received: { zh: "承运商已接单", en: "Info received", order: "Label created" },
+  in_transit: { zh: "运输中", en: "In transit", order: "Shipped" },
+  delivered: { zh: "已签收", en: "Delivered", order: "Delivered" },
+  exception: { zh: "物流异常", en: "Delivery issue", order: null },
+  cancelled: { zh: "运单已取消", en: "Shipment cancelled", order: "Ready to ship" },
+  error: { zh: "下单失败", en: "Carrier error", order: null }
+};
+const ORDER_RANK = { "Ready to ship": 1, "Label created": 2, Shipped: 3, Delivered: 4 };
+export function orderStatusFor(order, shipmentStatus) {
+  const target = LOGISTICS_STATUS[shipmentStatus]?.order;
+  if (!target || /cancel|refund/i.test(order.status || "")) return order.status;
+  if (shipmentStatus === "cancelled") return /deliver/i.test(order.status || "") ? order.status : "Ready to ship";
+  return (ORDER_RANK[order.status] || 0) >= ORDER_RANK[target] ? order.status : target;
+}
+export async function syncOrder(s, source) {
+  if (!s.order_id) return null;
+  const live = await findRecord("orders", s.order_id);
+  if (!live || (live.shipment_id && live.shipment_id !== s.id)) return null;
+  const o = { ...live }; // snapshot: the store hands out the live object, which updateRecord mutates
+  const status = orderStatusFor(o, s.status), ev = s.events?.[0];
+  const patch = { logistics_status: s.status, tracking_status: s.status, logistics_flag: s.status === "exception" ? "exception" : "", updated_at: now(),
+    tracking_last_event: ev ? { time: ev.time, text: ev.text, location: ev.location || "" } : o.tracking_last_event || null };
+  if (s.status === "cancelled") Object.assign(patch, { tracking_number: "", tracking_url: "", carrier: "", carrier_id: "", shipment_id: "", tracking_last_event: null, logistics_flag: "" });
+  if (status !== o.status) { patch.status = status; if (status === "Shipped" && !o.shipped_at) patch.shipped_at = now(); if (status === "Delivered" && !o.delivered_at) patch.delivered_at = now(); }
+  await updateRecord("orders", o.id, patch);
+  if (status !== o.status || s.status !== o.logistics_status) {
+    await addRecord("order_events", { id: `evt_${crypto.randomBytes(6).toString("hex")}`, tenant_id: o.tenant_id, order_id: o.id, event_type: status === "Shipped" && o.status !== "Shipped" ? "shipped" : status === "Delivered" && o.status !== "Delivered" ? "delivered" : "logistics_status",
+      source: "logistics", payload: { from: o.status, to: status, shipment_status: s.status, shipment_id: s.id, tracking_number: s.tracking_number || "", via: source }, event_time: now() });
+    // Shipped e-mail: kept as a DRAFT for admin review — tracking sync never e-mails customers by itself.
+    if (status === "Shipped" && o.status !== "Shipped" && o.customer_email) await addRecord("notifications", { id: `ntf_${crypto.randomBytes(6).toString("hex")}`, tenant_id: o.tenant_id, type: "order_shipped", channel: "email", status: "draft",
+      related_id: o.id, to_masked: String(o.customer_email).replace(/^(.).*(@.*)$/, "$1***$2"), created_at: now(), note: "Draft only — review in admin; not sent automatically" });
+  }
+  return status;
+}
+/** Customer-safe tracking view (order lookup, My orders): carrier, number, link, status label and the timeline. */
+export async function customerTracking(o) {
+  if (!o?.tracking_number) return null;
+  const s = o.shipment_id ? await findRecord("carrier_shipments", o.shipment_id) : null, st = s?.status || o.tracking_status || "";
+  const lab = LOGISTICS_STATUS[st];
+  return { carrier: o.carrier || (s ? CARRIERS[s.carrier]?.name : "") || "", number: o.tracking_number, url: o.tracking_url || "", status: st, status_label: lab ? { zh: lab.zh, en: lab.en } : null,
+    updated_at: s?.tracked_at || o.updated_at || "", events: (s?.events || []).slice(0, 30).map(e => ({ time: e.time || "", location: e.location || "", text: e.text || "" })),
+    ...(o.tracking_last_event ? { last_event: { time: o.tracking_last_event.time || "", text: o.tracking_last_event.text || "" } } : {}) };
+}
+/** Order cancelled in admin → cancel a not-yet-moving carrier shipment (reverse direction of the sync). */
+export async function onOrderStatusChanged(tenantId, order, status) {
+  if (!enabled() || !order?.shipment_id || !/^cancel/i.test(status)) return null;
+  const s = await findRecord("carrier_shipments", order.shipment_id);
+  if (!s || TERMINAL.includes(s.status)) return null;
+  try { await cancelShipment(tenantId, s.id); return { shipment_id: s.id, cancelled: true }; }
+  catch (e) { await updateRecord("orders", order.id, { logistics_flag: "cancel_failed" }); return { shipment_id: s.id, cancelled: false, error: e.message }; }
+}
+export function shipmentsCsv(rows) {
+  const cols = ["id", "order_id", "reference", "carrier", "mode", "product", "status", "tracking_number", "last_mile_number", "country", "recipient", "weight_kg", "created_at", "tracked_at", "delivered_at", "alert"];
+  const q = v => { const t = String(v ?? "").replace(/^[=+\-@]/, "'$&"); return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
+  return "\ufeff" + [cols.join(","), ...rows.map(r => cols.map(c => q(c === "alert" ? r.alert?.type || "" : c === "status" ? `${r.status}` : r[c])).join(","))].join("\n");
+}
+
+// ---------- channel pricing (carrier + route) ----------
+// Source per channel: "live_api" (YunExpress /v1/price-trial/get, 4PX ds.xms.estimated_cost.get — both read-only)
+// or "price_table" (admin-entered: first weight + each additional weight, per country). Costs are normalised to CHF via the shop FX table.
+export function validatePriceTables(list) {
+  if (!Array.isArray(list)) throw err("invalid_price_tables");
+  return list.slice(0, 200).map(t => {
+    if (!CARRIERS[t.carrier]) throw err("unknown_carrier");
+    const n = (v, d) => { const x = Number(v ?? d); if (!Number.isFinite(x) || x < 0 || x > 1e5) throw err("invalid_number"); return x; };
+    const countries = (Array.isArray(t.countries) ? t.countries : String(t.countries || "*").split(/[\s,]+/)).map(c => String(c).trim().toUpperCase()).filter(c => /^([A-Z]{2}|\*)$/.test(c));
+    const product = clip(t.product, 40); if (!/^[\w.\-]+$/.test(product)) throw err("price_table_needs_product");
+    const cur = clip(t.currency || "CNY", 3).toUpperCase(); if (!/^[A-Z]{3}$/.test(cur)) throw err("invalid_currency");
+    return { carrier: t.carrier, product, name: clip(t.name, 60), countries: countries.length ? countries : ["*"], currency: cur, first_kg: n(t.first_kg, 0.5) || 0.5, first_price: n(t.first_price, 0), add_kg: n(t.add_kg, 0.5) || 0.5, add_price: n(t.add_price, 0), fixed_fee: n(t.fixed_fee, 0), days: clip(t.days, 12) };
+  });
+}
+export function tablePrice(t, weight_kg) {
+  const extra = Math.max(0, weight_kg - t.first_kg), steps = Math.ceil(Math.round(extra * 1000) / Math.round(t.add_kg * 1000));
+  return r2(t.first_price + steps * t.add_price + (t.fixed_fee || 0));
+}
+// Carrier prices are in CNY; market rates (fx-service) normally include CNY — fallback LOGISTICS_CNY_PER_CHF (default 8.9) if not.
+const toChf = (amount, cur) => { const fx = effectiveFx(), c = cur === "RMB" ? "CNY" : cur; if (c === "CHF") return r2(amount);
+  const rate = Number(fx[c]) || (c === "CNY" ? Number(process.env.LOGISTICS_CNY_PER_CHF || 8.9) : 0); return rate > 0 ? r2(amount / rate) : null; };
+const quoteCache = new Map(); // carrier|mode|country|postal|weight → { exp, rows }
+setInterval(() => { const t = Date.now(); for (const [k, v] of quoteCache) if (v.exp < t) quoteCache.delete(k); }, 300_000).unref?.();
+// Routes not suitable for printed paper (battery / Amazon-FBA lines) are shown but never auto-picked.
+export const NOT_AUTO = /带电|battery|AMZ|FBA|亚马逊/i;
+export async function channelQuotes(tenantId, { country, postal_code = "", weight_kg, customer_fee_chf = null, carriers } = {}) {
+  const settings = await getSettings(tenantId), cc = String(country || "").toUpperCase(), w = Math.max(0.01, Number(weight_kg) || 0.2);
+  if (!/^[A-Z]{2}$/.test(cc)) throw err("invalid_country");
+  const out = [], sources = {};
+  for (const cid of Object.keys(CARRIERS)) {
+    if (!settings.carriers[cid].enabled || (carriers && !carriers.includes(cid))) continue;
+    const mode = mock() ? "mock" : settings.carriers[cid].mode, key = [cid, mode, cc, postal_code, w].join("|");
+    let live = null, liveErr = "";
+    try {
+      const c = quoteCache.get(key);
+      if (c && c.exp > Date.now()) live = c.rows;
+      else { const a = adapter(cid, settings); if (a.quote) { live = await a.quote({ country: cc, postal_code, weight_kg: w }); quoteCache.set(key, { exp: Date.now() + 10 * 60_000, rows: live }); } }
+    } catch (e) { liveErr = String(e.message).slice(0, 160); }
+    const table = (settings.price_tables || []).filter(t => t.carrier === cid && (t.countries.includes(cc) || t.countries.includes("*")));
+    const tableByProduct = new Map(); for (const t of table) if (!tableByProduct.has(t.product) || t.countries.includes(cc)) tableByProduct.set(t.product, t);
+    const rows = [];
+    if (live?.length) for (const q of live) rows.push({ carrier: cid, product: q.product, name: q.name || "", cost: q.amount, cost_currency: q.currency === "RMB" ? "CNY" : q.currency, days: q.days || "", source: "live_api" });
+    for (const t of tableByProduct.values()) if (!rows.some(r => r.product === t.product)) rows.push({ carrier: cid, product: t.product, name: t.name, cost: tablePrice(t, w), cost_currency: t.currency, days: t.days, source: "price_table" });
+    sources[cid] = live?.length ? "live_api" : tableByProduct.size ? "price_table" : "none"; if (liveErr) sources[cid + "_error"] = liveErr;
+    const route = productFor(settings, cid, cc);
+    for (const r of rows) { r.carrier_name = CARRIERS[cid].name; r.mode = mode; r.cost_chf = toChf(r.cost, r.cost_currency); r.default_route = r.product === route; r.auto_ok = !NOT_AUTO.test(`${r.product} ${r.name}`);
+      r.customer_fee_chf = customer_fee_chf; r.margin_chf = customer_fee_chf != null && r.cost_chf != null ? r2(customer_fee_chf - r.cost_chf) : null; out.push(r); }
+  }
+  out.sort((a, b) => (a.cost_chf ?? 1e9) - (b.cost_chf ?? 1e9));
+  const cheapest = out.find(r => r.auto_ok && r.cost_chf != null) || null;
+  return { country: cc, weight_kg: w, customer_fee_chf, cheapest: cheapest ? { carrier: cheapest.carrier, product: cheapest.product } : null, sources, channels: out };
+}
+/** Customer-charged shipping of an order in CHF (what the margin is measured against). */
+export function orderShippingChf(order) { const v = Number(order?.shipping_charged ?? order?.shipping_amount); return Number.isFinite(v) ? toChf(v, order.currency || "CHF") : null; }
+export async function orderChannelQuotes(tenantId, orderId, opts = {}) {
+  const order = await findRecord("orders", String(orderId)); if (!order || order.tenant_id !== tenantId) throw err("order_not_found", 404);
+  const a = order.shipping_address || {};
+  return { order_id: order.id, ...(await channelQuotes(tenantId, { country: opts.country || a.country, postal_code: opts.postal_code ?? a.postal_code ?? "", weight_kg: Number(opts.weight_kg) || orderWeight(order), customer_fee_chf: orderShippingChf(order) })) };
+}
+/** carrier "cheapest" (or blank) → resolve to the cheapest auto-pickable channel. */
+export async function resolveChannel(tenantId, { carrier, product, country, postal_code, weight_kg }) {
+  if (carrier && carrier !== "cheapest") return { carrier, product: product || "" };
+  const q = await channelQuotes(tenantId, { country, postal_code, weight_kg });
+  if (!q.cheapest) throw err("no_channel_price_available");
+  return q.cheapest;
+}

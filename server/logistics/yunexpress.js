@@ -65,6 +65,17 @@ export function createYunExpress({ env = process.env, mode = "sandbox" } = {}) {
       // tracking_number (last-mile) is often null at creation; the YT waybill number is trackable on yuntrack.com and via the API.
       return { carrier_order_id: r.waybill_number, tracking_number: r.waybill_number, last_mile_number: r.tracking_number || "", raw_status: "created" };
     },
+    // Price trial (价格试算) GET /v1/price-trial/get — read-only.
+    async quote({ country, postal_code = "", weight_kg, dims }) {
+      const r = await callRaw("GET", "/v1/price-trial/get", { query: { country_code: country, weight: String(weight_kg), weight_unit: "KG", package_type: "C", ...(postal_code ? { postal_code } : {}),
+        ...(dims ? { length: dims.l, width: dims.w, height: dims.h, size_unit: "CM" } : {}) } });
+      // One row per fee line (E1 freight, E2 registration, …) → summed per product. Currency "RMB" = CNY.
+      const by = new Map();
+      for (const q of Array.isArray(r.result) ? r.result : []) { const k = q.product_code; if (!k) continue;
+        const e = by.get(k) || { product: k, name: q.product_name || "", amount: 0, currency: "CNY", days: q.interval_day || "", fees: {} };
+        const v = Number(q.convert_amount ?? q.calculate_amount) || 0; e.amount = Math.round((e.amount + v) * 100) / 100; e.fees[q.fee_name || "fee"] = v; by.set(k, e); }
+      return [...by.values()];
+    },
     async listProducts(country) {
       const r = await callRaw("GET", "/v1/basic-data/products/getlist", { query: { country_code: country } });
       return (r.detail || r.result || []).map(p => ({ code: p.product_code, name: p.product_name }));
