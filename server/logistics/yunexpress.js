@@ -9,7 +9,9 @@ import { httpJson, CarrierError } from "./http.js";
 
 const BASE = { sandbox: "https://openapi-sbx.yunexpress.cn", production: "https://openapi.yunexpress.cn" };
 export const REQUIRED_ENV = ["YUNEXPRESS_APP_ID", "YUNEXPRESS_APP_SECRET"];
-export const DEFAULT_PRODUCT = "BKZXR"; // YunExpress Global Direct Line (tracked) — sandbox-accepted for DE, CH and US
+// Sandbox: BKZXR accepted for DE/CH/US. Production (2026-10-26 product list): THPHR "YunExpress Economy -Unrestricted" is offered for DE, CH and US
+// (BKZXR is "Standard -with Battery" in production and not offered for CH).
+export const DEFAULT_PRODUCT = { sandbox: "BKZXR", production: "THPHR" };
 const tokens = new Map();
 
 export function signYun(secret, { method, path, date, body }) {
@@ -19,9 +21,11 @@ export function signYun(secret, { method, path, date, body }) {
 const lines = (...a) => { const out = []; for (const v of a.filter(Boolean).map(String)) for (let i = 0; i < v.length; i += 50) out.push(v.slice(i, i + 50)); return out.slice(0, 3); };
 export const YUN_STATUS = { N: "info_received", F: "info_received", T: "in_transit", D: "delivered", E: "exception", R: "exception", C: "cancelled" };
 export function createYunExpress({ env = process.env, mode = "sandbox" } = {}) {
+  const prod = mode === "production";
   const base = (mode === "production" ? env.YUNEXPRESS_PROD_BASE_URL || BASE.production : env.YUNEXPRESS_BASE_URL || BASE.sandbox).replace(/\/$/, "");
-  const sourceKey = env.YUNEXPRESS_SOURCE_KEY || env.YUNEXPRESS_SOURCEKEY;
-  const appId = env.YUNEXPRESS_APP_ID, secret = env.YUNEXPRESS_APP_SECRET;
+  const sourceKey = (prod && (env.YUNEXPRESS_PROD_SOURCE_KEY || env.YUNEXPRESS_PROD_SOURCEKEY)) || env.YUNEXPRESS_SOURCE_KEY || env.YUNEXPRESS_SOURCEKEY;
+  // Production keys: YUNEXPRESS_PROD_APP_ID / _PROD_APP_SECRET (fallback to the sandbox names); sourceKey: _PROD_SOURCE_KEY, else the shared one (prod token works without it).
+  const appId = (prod && env.YUNEXPRESS_PROD_APP_ID) || env.YUNEXPRESS_APP_ID, secret = (prod && env.YUNEXPRESS_PROD_APP_SECRET) || env.YUNEXPRESS_APP_SECRET;
   const fail = (m, d) => { throw new CarrierError("yunexpress", m, d); };
   async function token() {
     const k = `${base}|${appId}`, c = tokens.get(k);
@@ -47,7 +51,7 @@ export function createYunExpress({ env = process.env, mode = "sandbox" } = {}) {
     id: "yunexpress", name: "YunExpress 云途", configured: !!(appId && secret), mode,
     async createShipment(s) {
       const body = {
-        product_code: s.service || env.YUNEXPRESS_PRODUCT_CODE || DEFAULT_PRODUCT, customer_order_number: s.reference,
+        product_code: s.service || env.YUNEXPRESS_PRODUCT_CODE || DEFAULT_PRODUCT[prod ? "production" : "sandbox"], customer_order_number: s.reference,
         weight_unit: "KG", size_unit: "CM", sensitive_type: "W", label_type: "PDF",
         packages: [{ weight: s.weight_kg, length: s.dims?.l || 20, width: s.dims?.w || 15, height: s.dims?.h || 3 }],
         receiver: { first_name: s.to.first_name, last_name: s.to.last_name, company: s.to.company || "", country_code: s.to.country, province: s.to.state || "", city: s.to.city,

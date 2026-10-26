@@ -65,7 +65,23 @@ const res = (body, status = 200) => ({ ok: status < 300, status, text: async () 
   assert.equal(create.opt.headers.sign, signYun("ysec", { method: "POST", path: "/v1/order/package/create", date: create.opt.headers.date, body: create.opt.body }));
   const cb = JSON.parse(create.opt.body);
   assert.equal(cb.receiver.country_code, "DE"); assert.equal(cb.product_code, "P1"); assert.equal(cb.label_type, "PDF"); assert.deepEqual(cb.receiver.address_lines, ["Str 1"]); assert.equal(cb.declaration_info[0].unit_price, 10);
-  assert.equal(createYunExpress({ env: { YUNEXPRESS_PROD_BASE_URL: "https://prod.example" }, mode: "production" }).mode, "production");
+  // Production mode: prod base URL + PROD_APP_ID/SECRET, fallback to sandbox names; default product THPHR.
+  {
+    const pc = []; setFetch(async (url, opt) => { pc.push({ url, opt }); return new URL(url).pathname.includes("oauth2") ? res({ accessToken: "PT", expiresIn: 7200 }) : res({ success: true, result: { waybill_number: "YTP" } }); });
+    const yp = createYunExpress({ env: { YUNEXPRESS_APP_ID: "id", YUNEXPRESS_APP_SECRET: "ysec", YUNEXPRESS_PROD_APP_ID: "pid", YUNEXPRESS_PROD_APP_SECRET: "psec", YUNEXPRESS_PROD_BASE_URL: "https://prod.example" }, mode: "production" });
+    await yp.createShipment({ ...ship, service: "" });
+    assert.equal(JSON.parse(pc[0].opt.body).appId, "pid"); assert.equal(JSON.parse(pc[0].opt.body).appSecret, "psec"); assert.ok(pc[1].url.startsWith("https://prod.example/"));
+    assert.equal(JSON.parse(pc[1].opt.body).product_code, "THPHR");
+    assert.equal(pc[1].opt.headers.sign, signYun("psec", { method: "POST", path: "/v1/order/package/create", date: pc[1].opt.headers.date, body: pc[1].opt.body }));
+    const pf = []; setFetch(async (url, opt) => { pf.push(opt); return res({ accessToken: "FT", expiresIn: 7200 }); });
+    await createYunExpress({ env: { YUNEXPRESS_APP_ID: "id2", YUNEXPRESS_APP_SECRET: "s2", YUNEXPRESS_PROD_BASE_URL: "https://prod2.example" }, mode: "production" }).getLabel("x").catch(() => {});
+    assert.equal(JSON.parse(pf[0].body).appId, "id2", "falls back to sandbox names");
+    setFetch(async (url, opt) => { calls.push({ url, opt }); const p = new URL(url).pathname;
+      if (p === "/v1/order/label/get") return res({ t: 1, success: true, result: { order_number: "YT2629921272000063", url: "https://yun/label.pdf", label_type: "PDF", label_string: "" } });
+      if (p === "/v1/track-service/info/get") return res({ success: true, result: [{ order_number: "YT2629921272000063", package_status: "T", track_Info: { tracking_number: "LM123", track_events: [{ process_time: "2026-10-26T08:00:00Z", process_content: "Departed", process_location: "SZ", track_node_code: "FIRST_MILE_DEPART" }] } }] });
+      if (p === "/v1/order/cancel") return JSON.parse(opt.body).waybill_number === "YT2629921272000063" ? res({ t: 1, success: true, result: null }) : res({ success: false, code: "02039001", msg: "nope" }, 400);
+      return res({ success: false, msg: "nope" }, 400); });
+  }
   assert.equal((await y.getLabel("YT2629921272000063")).url, "https://yun/label.pdf");
   const lab = calls.find(c => c.url.includes("/label/get")); assert.ok(lab.url.endsWith("?order_number=YT2629921272000063"));
   assert.equal(lab.opt.headers.sign, signYun("ysec", { method: "GET", path: "/v1/order/label/get", date: lab.opt.headers.date }), "GET signs without body");

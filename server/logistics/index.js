@@ -9,7 +9,7 @@ import { createMock } from "./mock.js";
 import { effectiveFx } from "../services/fees-service.js";
 import { addRecord, findRecord, findWhere, listForTenant, updateRecord } from "../saas-store.js";
 
-export const CARRIERS = { yunexpress: { name: "YunExpress 云途", env: YUN_ENV, make: createYunExpress, track_url: n => `https://www.yuntrack.com/parcelTracking?id=${encodeURIComponent(n)}` },
+export const CARRIERS = { yunexpress: { name: "YunExpress 云途", env: YUN_ENV, prod_env: ["YUNEXPRESS_PROD_APP_ID", "YUNEXPRESS_PROD_APP_SECRET"], make: createYunExpress, track_url: n => `https://www.yuntrack.com/parcelTracking?id=${encodeURIComponent(n)}` },
   fourpx: { name: "4PX 递四方", env: FPX_ENV, make: createFourPx, track_url: n => `https://track.4px.com/#/result/0/${encodeURIComponent(n)}` } };
 export const enabled = () => process.env.LOGISTICS_ENABLED === "true";
 const mock = () => process.env.LOGISTICS_MOCK === "true";
@@ -40,7 +40,7 @@ export async function saveSettings(tenantId, input = {}) {
 }
 export function carrierStatus(settings) {
   return Object.entries(CARRIERS).map(([id, c]) => ({ id, name: c.name, enabled: settings.carriers[id].enabled, mode: settings.carriers[id].mode, service: settings.carriers[id].service,
-    configured: mock() || c.env.every(v => !!process.env[v]), required_env: c.env, mock: mock() }));
+    configured: mock() || c.env.every(v => !!process.env[v]) || (settings.carriers[id].mode === "production" && !!c.prod_env?.every(v => !!process.env[v])), required_env: settings.carriers[id].mode === "production" && c.prod_env ? c.prod_env : c.env, mock: mock() }));
 }
 export function adapter(id, settings) {
   const c = CARRIERS[id]; if (!c) throw Object.assign(new Error("unknown_carrier"), { status: 400 });
