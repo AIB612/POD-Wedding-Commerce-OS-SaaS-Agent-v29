@@ -6610,19 +6610,19 @@
         }
       ],
       "scene_image": {
-        "src": "assets/scenes/corporate-v3.jpg",
+        "src": "assets/scenes/corporate-v4.jpg",
         "hotspots": [
           [
-            19.4,
+            27.3,
             80
           ],
           [
-            54,
+            53.3,
             64
           ],
           [
-            84,
-            68.6
+            80,
+            69.5
           ]
         ]
       },
@@ -6824,7 +6824,7 @@
         }
       ],
       "scene_image": {
-        "src": "assets/scenes/seasonal-v2.jpg",
+        "src": "assets/scenes/seasonal-v4.jpg",
         "hotspots": [
           [
             17.9,
