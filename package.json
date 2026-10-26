@@ -32,7 +32,8 @@
     "test:lookup": "node server/order-lookup-test.js",
     "test:pages": "node server/storefront-pages-test.js",
     "test:shopify": "node server/shopify-test.js",
-    "test:seller": "node server/seller-test.js"
+    "test:seller": "node server/seller-test.js",
+    "test:admin-login": "node server/admin-login-test.js"
   },
   "engines": {
     "node": ">=20"

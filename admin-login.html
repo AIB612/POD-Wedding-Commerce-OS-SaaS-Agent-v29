@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>Wed.AI Admin · Sign in</title>
+<link rel="icon" href="/favicon.svg"/>
+<style>
+:root{--p:#1677ff;--ph:#4096ff;--err:#ff4d4f;--t:rgba(0,0,0,.88);--t2:rgba(0,0,0,.55);--b:#d9d9d9;--r:8px}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#f7f3ee 0%,#f5f5f5 55%,#eef3ff 100%);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+.card{width:min(380px,92vw);background:#fff;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.08);padding:32px 32px 26px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:18px}
+.logo{width:32px;height:32px;border-radius:8px;background:var(--p);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700}
+.lang{display:flex;padding:2px;border-radius:6px;background:#f5f5f5}
+.lang button{height:26px;border:0;background:transparent;border-radius:5px;padding:0 8px;font-size:12px;color:var(--t2);cursor:pointer}
+.lang button.active{background:#fff;color:var(--t);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+h1{font-size:20px;margin:0 0 4px}
+p.sub{margin:0 0 20px;color:var(--t2)}
+label{display:block;margin:0 0 6px;font-weight:500}
+input{width:100%;height:40px;border:1px solid var(--b);border-radius:var(--r);padding:0 12px;font-size:14px;margin-bottom:16px;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus{border-color:var(--ph);box-shadow:0 0 0 2px rgba(5,145,255,.1)}
+button.go{width:100%;height:40px;border:0;border-radius:var(--r);background:var(--p);color:#fff;font-size:15px;cursor:pointer}
+button.go:hover{background:var(--ph)}button.go:disabled{opacity:.6;cursor:default}
+.msg{min-height:20px;margin:-6px 0 12px;color:var(--err);font-size:13px}
+.foot{margin-top:18px;color:var(--t2);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="top"><div class="brand"><div class="logo">W</div>Wed.AI Admin</div>
+    <div class="lang"><button data-l="zh">中文</button><button data-l="en">EN</button><button data-l="de">DE</button></div></div>
+  <h1 data-i="title"></h1><p class="sub" data-i="sub"></p>
+  <form id="f" autocomplete="on">
+    <label for="u" data-i="user"></label><input id="u" name="username" autocomplete="username" required value="admin"/>
+    <label for="pw" data-i="pass"></label><input id="pw" name="password" type="password" autocomplete="current-password" required/>
+    <div class="msg" id="msg" role="alert"></div>
+    <button class="go" id="go" type="submit" data-i="btn"></button>
+  </form>
+  <div class="foot" data-i="foot"></div>
+</main>
+<script>
+const S={zh:{title:'登录后台',sub:'请输入管理员账号和密码',user:'用户名',pass:'密码',btn:'登录',busy:'登录中…',bad:'用户名或密码错误',many:'尝试次数过多，请 15 分钟后再试',err:'登录失败，请稍后再试',foot:'Wedding Commerce OS · 安全会话'},
+en:{title:'Sign in to admin',sub:'Enter your admin username and password',user:'Username',pass:'Password',btn:'Sign in',busy:'Signing in…',bad:'Wrong username or password',many:'Too many attempts. Try again in 15 minutes.',err:'Sign-in failed, please try again',foot:'Wedding Commerce OS · secure session'},
+de:{title:'Admin-Anmeldung',sub:'Benutzername und Passwort eingeben',user:'Benutzername',pass:'Passwort',btn:'Anmelden',busy:'Anmelden…',bad:'Benutzername oder Passwort falsch',many:'Zu viele Versuche. Bitte in 15 Minuten erneut versuchen.',err:'Anmeldung fehlgeschlagen',foot:'Wedding Commerce OS · sichere Sitzung'}};
+const KEY='wedding-commerce-language';
+let lang=(()=>{try{const v=localStorage.getItem(KEY);return S[v]?v:'zh'}catch{return 'zh'}})();
+const t=k=>S[lang][k];
+function apply(){document.documentElement.lang=lang==='zh'?'zh-CN':lang;document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t(e.dataset.i));document.querySelectorAll('[data-l]').forEach(b=>b.classList.toggle('active',b.dataset.l===lang))}
+document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{lang=b.dataset.l;try{localStorage.setItem(KEY,lang)}catch{}apply()});
+apply();
+const next=(()=>{const n=new URLSearchParams(location.search).get('next')||'/admin';return /^\/admin(?:[\/#?]|$)/.test(n)?n:'/admin'})();
+fetch('/api/admin/session',{credentials:'same-origin'}).then(r=>r.json()).then(d=>{if(d.via==='session')location.replace(next)}).catch(()=>{});
+document.getElementById('pw').focus();
+document.getElementById('f').onsubmit=async e=>{
+  e.preventDefault();const go=document.getElementById('go'),msg=document.getElementById('msg');msg.textContent='';go.disabled=true;go.textContent=t('busy');
+  try{const r=await fetch('/api/admin/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('u').value,password:document.getElementById('pw').value})});
+    if(r.ok){try{sessionStorage.removeItem('wedding-commerce-admin-key')}catch{}location.replace(next);return}
+    msg.textContent=r.status===401?t('bad'):r.status===429?t('many'):t('err');document.getElementById('pw').select();
+  }catch{msg.textContent=t('err')}
+  go.disabled=false;go.textContent=t('btn');
+};
+</script>
+</body>
+</html>

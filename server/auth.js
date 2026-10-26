@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { userFromToken } from "./services/account-service.js";
+import { hasAdminSession } from "./admin-auth.js";
 
 const isProd = () => process.env.NODE_ENV === "production";
 
@@ -51,7 +52,13 @@ export function requireUser(req,res,next){
 }
 
 /** True when the request carries a valid admin key (or dev mode with no key configured). */
+export function isAdminApiKey(req) {
+  const configured = process.env.ADMIN_API_KEY;
+  if (!configured) return false;
+  return safeEqual(req.get("x-admin-api-key"), configured);
+}
 export function isAdminRequest(req) {
+  if (hasAdminSession(req)) return true;
   const configured = process.env.ADMIN_API_KEY;
   if (!configured) return !isProd();
   return safeEqual(req.get("x-admin-api-key"), configured);

@@ -18,7 +18,7 @@ const M={
 '搜索订单 / SKU / 客户...':{en:'Search orders / SKU / customers...',de:'Bestellungen / SKU / Kunden suchen...'},
 '连接 Shopify':{en:'Connect Shopify',de:'Shopify verbinden'},'运营总览':{en:'Operations overview',de:'Betriebsübersicht'},
 '收入、订单、利润、营销与 Agent 风险一屏查看':{en:'Revenue, orders, profit, marketing and agent risk in one view',de:'Umsatz, Bestellungen, Gewinn, Marketing und Agent-Risiken auf einen Blick'},
-'刷新':{en:'Refresh',de:'Aktualisieren'},'导出报表':{en:'Export report',de:'Bericht exportieren'},
+'修改密码':{en:'Change password',de:'Passwort ändern'},'退出登录':{en:'Sign out',de:'Abmelden'},'刷新':{en:'Refresh',de:'Aktualisieren'},'导出报表':{en:'Export report',de:'Bericht exportieren'},
 '收入与贡献利润趋势':{en:'Revenue & contribution trend',de:'Umsatz- & Deckungsbeitragstrend'},'渠道健康度':{en:'Channel health',de:'Kanalstatus'},
 '实时同步':{en:'Live sync',de:'Live-Synchronisierung'},'需要关注':{en:'Needs attention',de:'Aufmerksamkeit nötig'},'按影响排序':{en:'Sorted by impact',de:'Nach Auswirkung sortiert'},
 '订单状态分布':{en:'Order status',de:'Bestellstatus'},'Agent 自动化':{en:'Agent automation',de:'Agent-Automatisierung'},'今天':{en:'Today',de:'Heute'},

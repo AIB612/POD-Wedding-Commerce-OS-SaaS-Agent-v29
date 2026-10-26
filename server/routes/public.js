@@ -5,7 +5,8 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import crypto from "node:crypto";
 import { ah, rateLimit } from "../http/middleware.js";
-import { isAdminRequest } from "../auth.js";
+import { isAdminRequest, isAdminApiKey } from "../auth.js";
+import { adminAuthRoutes } from "../admin-auth.js";
 import { baseUrl } from "../config.js";
 import { runAgent } from "../orchestrator.js";
 import { catalogOverview } from "../services/catalog-service.js";
@@ -43,9 +44,13 @@ function ipCountry(req) {
 
 export function publicRouter({ root, generatedDir }) {
   const router = express.Router();
-  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html", "/shipping": "shipping.html", "/shipping.html": "shipping.html", "/returns": "returns.html", "/returns.html": "returns.html", "/imprint": "imprint.html", "/imprint.html": "imprint.html", "/impressum": "imprint.html", "/agent.html": "agent.html", "/agent": "agent.html" };
+  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/admin/login": "admin-login.html", "/admin-login.html": "admin-login.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html", "/shipping": "shipping.html", "/shipping.html": "shipping.html", "/returns": "returns.html", "/returns.html": "returns.html", "/imprint": "imprint.html", "/imprint.html": "imprint.html", "/impressum": "imprint.html", "/agent.html": "agent.html", "/agent": "agent.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
   for (const [route, file] of Object.entries(pages)) router.get(route, (_, res) => res.sendFile(path.join(root, file), noStore));
+
+  const loginLimit = rateLimit({ bucket: "admin-login", windowMs: 60_000, max: 20 });
+  router.use(["/api/admin/login", "/api/admin/password"], loginLimit);
+  adminAuthRoutes(router, { apiKeyOk: isAdminApiKey });
 
   // Price list / Fees & tax / Promo codes are sections inside admin.html; the old standalone URLs redirect there.
   for (const [section, routes] of Object.entries({ prices: ["/admin-prices.html", "/admin/prices"], fees: ["/admin-fees.html", "/admin/fees"], promos: ["/admin-promos.html", "/admin/promos"] }))

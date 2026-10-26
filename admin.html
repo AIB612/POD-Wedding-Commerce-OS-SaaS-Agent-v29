@@ -224,6 +224,8 @@ table.compact th,table.compact td{height:40px;padding:8px 12px}
         <button class="icon-btn" id="notifyBtn" data-action="notifications" aria-label="通知">◌</button>
         <button class="ant-btn shopify" onclick="openShopify()">连接 Shopify</button>
         <button class="ant-btn primary" onclick="showPage('agent')">Ask Agent</button>
+        <button class="ant-btn" data-action="change-password">修改密码</button>
+        <button class="ant-btn" data-action="logout">退出登录</button>
       </div>
     </header>
 
@@ -488,7 +490,8 @@ const adminKey=()=>{try{return sessionStorage.getItem(KEY_STORE)||'change-me'}ca
 // Many requests run in parallel: only the first 401 prompts; the others reuse the key it produced.
 let keyPrompt=null,authDenied=false;
 function askKey(){
-  keyPrompt||=Promise.resolve().then(()=>{const k=prompt('Admin API Key (ADMIN_API_KEY)');if(!k){authDenied=true;return false}try{sessionStorage.setItem(KEY_STORE,k.trim())}catch{}return true}).finally(()=>setTimeout(()=>keyPrompt=null,0));
+  // No valid session: go to the username/password login page (ADMIN_API_KEY still works for scripts via the header).
+  keyPrompt||=Promise.resolve().then(()=>{authDenied=true;try{sessionStorage.removeItem(KEY_STORE)}catch{}location.replace('/admin/login?next='+encodeURIComponent(location.pathname+location.hash));return false});
   return keyPrompt;
 }
 async function api(url,opt={},retry=true){
@@ -752,6 +755,24 @@ async function runAgent(){
 }
 
 const actions={
+  async logout(){try{await fetch('/api/admin/logout',{method:'POST',credentials:'same-origin'})}catch{}try{sessionStorage.removeItem(KEY_STORE)}catch{}location.replace('/admin/login')},
+  'change-password'(){
+    openDrawer(L('修改密码','Change password','Passwort ändern'),`<div style="display:grid;gap:12px;max-width:360px">
+      <label>${L('当前密码','Current password','Aktuelles Passwort')}<input class="ant-input" id="cpCur" type="password" autocomplete="current-password" style="width:100%"></label>
+      <label>${L('新密码（至少 12 位）','New password (min. 12 characters)','Neues Passwort (mind. 12 Zeichen)')}<input class="ant-input" id="cpNew" type="password" autocomplete="new-password" style="width:100%"></label>
+      <label>${L('确认新密码','Confirm new password','Neues Passwort bestätigen')}<input class="ant-input" id="cpNew2" type="password" autocomplete="new-password" style="width:100%"></label>
+      <div id="cpMsg" style="color:var(--ant-error);min-height:20px"></div></div>`,
+      `<button class="ant-btn primary" id="cpSave">${L('保存','Save','Speichern')}</button>`);
+    document.getElementById('cpSave').onclick=async()=>{
+      const m=document.getElementById('cpMsg'),cur=document.getElementById('cpCur').value,n1=document.getElementById('cpNew').value,n2=document.getElementById('cpNew2').value;m.textContent='';
+      if(n1!==n2){m.textContent=L('两次输入的新密码不一致','The new passwords do not match','Die neuen Passwörter stimmen nicht überein');return}
+      if(n1.length<12){m.textContent=L('新密码至少 12 位','New password must be at least 12 characters','Mindestens 12 Zeichen');return}
+      const r=await fetch('/api/admin/password',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({current_password:cur,new_password:n1})});
+      const d=await r.json().catch(()=>({}));
+      if(r.ok){closeDrawer();notice(L('密码已更新，其他会话已退出','Password updated; other sessions signed out','Passwort aktualisiert'));return}
+      m.textContent=r.status===401?L('请先用用户名和密码登录','Sign in with username and password first','Bitte zuerst mit Benutzername und Passwort anmelden'):d.error==='wrong_current_password'?L('当前密码错误','Current password is wrong','Aktuelles Passwort ist falsch'):(d.message||L('保存失败','Save failed','Speichern fehlgeschlagen'));
+    };
+  },
   'toggle-sider'(){if(window.matchMedia('(max-width:820px)').matches)document.body.classList.toggle('sider-open');else{document.body.classList.toggle('sider-collapsed');try{localStorage.setItem('wcos-sider-collapsed',document.body.classList.contains('sider-collapsed')?'1':'')}catch{}}},
   notifications(){openDrawer(T('通知'),document.getElementById('attention').innerHTML)},
   async refresh(){await load();notice(live?T('数据已刷新'):T('演示数据（后端未连接）'))},
