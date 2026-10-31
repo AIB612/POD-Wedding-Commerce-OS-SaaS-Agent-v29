@@ -178,6 +178,9 @@ table.compact th,table.compact td{height:40px;padding:8px 12px}
 .adm-tog{display:flex;gap:8px;align-items:center;font-weight:600}
 .adm-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px 16px;align-items:end}.adm-form h2{grid-column:1/-1;margin:0;font-size:15px}.adm-form [hidden]{display:none}
 @media(max-width:820px){.adm-bar{padding:12px}.adm-bar .ant-input,.adm-bar .ant-select{max-width:none!important;flex:1 1 100%}.adm-msg{margin-left:0;flex-basis:100%}.adm-form{grid-template-columns:1fr 1fr}}
+/* Mobile header + Carriers tabs: keep account buttons on one line, tabs scroll horizontally */
+.hdr-acct{white-space:nowrap}
+@media(max-width:820px){.hdr-agent{display:none}.hdr-acct{padding:0 8px;font-size:12px;height:30px}#carriersSection .adm-bar>.lang-switch{overflow-x:auto;flex-wrap:nowrap;max-width:100%;-webkit-overflow-scrolling:touch}#carriersSection .lang-switch button{white-space:nowrap;flex:0 0 auto}#carriersSection .table-wrap{overflow-x:auto}}
 </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-GED5TST3DP"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-GED5TST3DP");</script>
@@ -223,9 +226,9 @@ table.compact th,table.compact td{height:40px;padding:8px 12px}
         <div class="lang-switch" data-lang-switch><button data-lang="zh">中文</button><button data-lang="en">EN</button><button data-lang="de">DE</button></div>
         <button class="icon-btn" id="notifyBtn" data-action="notifications" aria-label="通知">◌</button>
         <button class="ant-btn shopify" onclick="openShopify()">连接 Shopify</button>
-        <button class="ant-btn primary" onclick="showPage('agent')">Ask Agent</button>
-        <button class="ant-btn" data-action="change-password">修改密码</button>
-        <button class="ant-btn" data-action="logout">退出登录</button>
+        <button class="ant-btn primary hdr-agent" onclick="showPage('agent')">Ask Agent</button>
+        <button class="ant-btn hdr-acct" data-action="change-password">修改密码</button>
+        <button class="ant-btn hdr-acct" data-action="logout">退出登录</button>
       </div>
     </header>
 
