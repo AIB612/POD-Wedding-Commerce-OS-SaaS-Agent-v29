@@ -34,7 +34,8 @@
     "test:shopify": "node server/shopify-test.js",
     "test:seller": "node server/seller-test.js",
     "test:admin-login": "node server/admin-login-test.js",
-    "test:logistics-flow": "node server/logistics-flow-test.js"
+    "test:logistics-flow": "node server/logistics-flow-test.js",
+    "test:smtp": "node server/smtp-test.js"
   },
   "engines": {
     "node": ">=20"

@@ -33,7 +33,7 @@ export function createFourPx({ env = process.env, mode = "sandbox" } = {}) {
     id: "fourpx", name: "4PX 递四方", configured: !!(key && secret), mode,
     async createShipment(s) {
       const d = await call("ds.xms.order.create", "1.1.0", {
-        ref_no: s.reference, ...(s.ioss_no || env.FOURPX_IOSS_NO || env.IOSS_NO ? { ioss_no: s.ioss_no || env.FOURPX_IOSS_NO || env.IOSS_NO } : {}), business_type: "BDS", duty_type: "U", is_insure: "N",
+        ref_no: s.reference, ...(s.ioss_no ? { ioss_no: s.ioss_no } : {}), business_type: "BDS", duty_type: "U", is_insure: "N",
         logistics_service_info: { logistics_product_code: s.service || env.FOURPX_PRODUCT_CODE || DEFAULT_PRODUCT },
         sender: { first_name: s.from.name || "Wed.AI", company: s.from.company || "", phone: s.from.phone || "", country: s.from.country, state: s.from.state || "", city: s.from.city || "", street: s.from.address1 || "", post_code: s.from.postal_code || "" },
         recipient_info: { first_name: s.to.first_name, last_name: s.to.last_name, company: s.to.company || "", phone: s.to.phone || "", email: s.to.email || "", post_code: s.to.postal_code, country: s.to.country, state: s.to.state || "", city: s.to.city, street: [s.to.address1, s.to.address2].filter(Boolean).join(" ") },

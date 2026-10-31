@@ -9,6 +9,7 @@ import { findRecord } from "../saas-store.js";
 import * as Bulk from "../logistics/bulk.js";
 
 
+let lastTestMail = 0;
 export function logisticsRouter() {
   const r = express.Router(), A = requireAdmin, AP = [requireAdmin, requireApproval];
   const gate = (req, res, next) => L.enabled() ? next() : res.status(404).json({ error: "logistics_disabled" });
@@ -51,12 +52,14 @@ export function logisticsRouter() {
     res.json({ draft: true, sent: false, to_masked: String(o.customer_email || "").replace(/^(.).*(@.*)$/, "$1***$2"), subject: `Your order has shipped · 您的订单已发货 · ${o.id}`, text: t.text, html: t.html }); }));
   // One-off TEST of the shipped e-mail: sample order + TEST tracking number, only to LOGISTICS_TEST_EMAIL_TO (never to customers).
   r.post(`${P}/test-shipped-email`, A, requireApproval, wrap(async (req, res) => {
+    if (Date.now() - (lastTestMail || 0) < 60_000) return res.status(429).json({ error: "test_email_cooldown", message: "One test e-mail per minute." });
     const to = String(process.env.LOGISTICS_TEST_EMAIL_TO || "").trim();
     if (!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(to)) return res.status(409).json({ error: "test_recipient_not_configured", message: "Set LOGISTICS_TEST_EMAIL_TO on the server." });
     const base = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, ""), id = "TEST-ORDER-0001", num = "TEST-YT0000000000";
     const t = await renderTemplate("order-shipped", { test: true, order_id: id, customer_name: "Test", carrier: "YunExpress 云途 (TEST)", tracking_number: num, status_label: "In transit · 运输中 (TEST)", tracking_url: `https://www.yuntrack.com/parcelTracking?id=${num}`, order_url: `${base}/account.html`, account_url: `${base}/account.html` });
+    lastTestMail = Date.now();
     const r = await sendEmail({ tenantId: req.tenantId, to, type: "order_shipped_test", related_id: id, subject: `[TEST] Your order has shipped · 您的订单已发货 · ${id}`, text: t.text, html: t.html });
-    res.json({ status: r.status, provider: r.provider, from: process.env.FROM_EMAIL || null, to_masked: to.replace(/^(.).*(@.*)$/, "$1***$2"), notification_id: r.notification_id });
+    res.json({ status: r.status, provider: r.provider, http_status: r.code || null, error: r.error || null, from: process.env.FROM_EMAIL || null, to_masked: to.replace(/^(.).*(@.*)$/, "$1***$2"), notification_id: r.notification_id });
   }));
   // Channel comparison (carrier + route): cost (live API or admin price table), customer fee, margin, cheapest pick.
   r.get(`${P}/quotes`, A, wrap(async (req, res) => res.json(req.query.order_id ? await L.orderChannelQuotes(req.tenantId, req.query.order_id, req.query)

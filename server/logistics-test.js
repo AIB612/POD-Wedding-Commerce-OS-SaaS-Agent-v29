@@ -47,8 +47,8 @@ const res = (body, status = 200) => ({ ok: status < 300, status, text: async () 
   await assert.rejects(createFourPx({ env: {} }).createShipment(ship), /not_configured/);
   assert.equal(q.access_token, undefined, "no token unless configured"); assert.equal(body.sender.state, "");
   // Optional access_token: sent as a query param, excluded from the signature; IOSS passed through when set.
-  const t = createFourPx({ env: { FOURPX_APP_KEY: "key", FOURPX_APP_SECRET: "sec", FOURPX_ACCESS_TOKEN: "tok32", FOURPX_IOSS_NO: "IM123", FOURPX_PROD_BASE_URL: "https://open.4px.com" }, mode: "production" });
-  const n = calls.length; await t.createShipment({ ...ship, from: { ...ship.from, state: "Guangdong" } });
+  const t = createFourPx({ env: { FOURPX_APP_KEY: "key", FOURPX_APP_SECRET: "sec", FOURPX_ACCESS_TOKEN: "tok32", FOURPX_PROD_BASE_URL: "https://open.4px.com" }, mode: "production" });
+  const n = calls.length; await t.createShipment({ ...ship, ioss_no: "IM123", from: { ...ship.from, state: "Guangdong" } });
   const u2 = new URL(calls[n].url), q2 = Object.fromEntries(u2.searchParams), b2 = JSON.parse(calls[n].opt.body);
   assert.equal(u2.origin + u2.pathname, "https://open.4px.com/router/api/service"); assert.equal(q2.access_token, "tok32");
   assert.equal(q2.sign, sign4px({ app_key: "key", method: q2.method, timestamp: q2.timestamp, v: q2.v, body: calls[n].opt.body, secret: "sec" }));
@@ -74,7 +74,9 @@ const res = (body, status = 200) => ({ ok: status < 300, status, text: async () 
   assert.ok(create.url.startsWith("https://openapi-sbx.yunexpress.cn/v1")); assert.equal(create.opt.headers.token, "TOK"); assert.equal(create.opt.headers["accept-language"], "en-US");
   assert.equal(create.opt.headers.sign, signYun("ysec", { method: "POST", path: "/v1/order/package/create", date: create.opt.headers.date, body: create.opt.body }));
   const cb = JSON.parse(create.opt.body);
-  assert.equal(cb.receiver.country_code, "DE"); assert.equal(cb.product_code, "P1"); assert.equal(cb.label_type, "PDF"); assert.deepEqual(cb.receiver.address_lines, ["Str 1"]); assert.equal(cb.declaration_info[0].unit_price, 10);
+  assert.equal(cb.customs_number, undefined, "no IOSS unless given"); assert.equal(cb.receiver.country_code, "DE"); assert.equal(cb.product_code, "P1"); assert.equal(cb.label_type, "PDF"); assert.deepEqual(cb.receiver.address_lines, ["Str 1"]); assert.equal(cb.declaration_info[0].unit_price, 10);
+  { const n0 = calls.length; await y.createShipment({ ...ship, ioss_no: "IM1234567890" }); const c2 = calls.slice(n0).find(c => c.url.endsWith("/v1/order/package/create")); assert.equal(JSON.parse(c2.opt.body).customs_number, "IM1234567890", "YunExpress IOSS"); }
+  assert.equal(L.iossFor({ ioss_no: "IM1234567890" }, "de"), "IM1234567890"); assert.equal(L.iossFor({ ioss_no: "IM1234567890" }, "CH"), "", "IOSS only for EU destinations");
   // Production mode: prod base URL + PROD_APP_ID/SECRET, fallback to sandbox names; default product THPHR.
   {
     const pc = []; setFetch(async (url, opt) => { pc.push({ url, opt }); return new URL(url).pathname.includes("oauth2") ? res({ accessToken: "PT", expiresIn: 7200 }) : res({ success: true, result: { waybill_number: "YTP" } }); });

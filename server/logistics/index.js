@@ -140,6 +140,9 @@ const labelDir = () => path.resolve(process.env.LOGISTICS_LABEL_DIR || "./data/l
 function usd(cur = "CHF") { const fx = effectiveFx(); const toChf = cur === "CHF" ? 1 : 1 / (Number(fx[cur]) || 1); return toChf * (Number(fx.USD) || 1.1); }
 export function orderWeight(order) { const n = (order.items || []).reduce((a, l) => a + (Number(l.quantity) || 0), 0); return Math.max(0.2, n * 0.12); }
 /** Sender address: admin settings first, .env SHIPPING_ORIGIN_* as fallback per field. */
+// EU-27 destinations need IOSS for low-value B2C imports (≤ EUR 150); other countries never get it.
+export const EU = new Set("AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE".split(" "));
+export const iossFor = (settings, country) => EU.has(String(country || "").toUpperCase()) ? (settings?.ioss_no || process.env.IOSS_NO || "") : "";
 export function senderFor(settings) {
   const a = settings?.sender || {}, e = process.env, pick = (k, env, d = "") => String(a[k] || e[env] || d);
   return { name: pick("name", "SHIPPING_ORIGIN_NAME", "Wed.AI"), company: pick("company", "SHIPPING_ORIGIN_COMPANY"), phone: pick("phone", "SHIPPING_ORIGIN_PHONE"), email: pick("email", "SHIPPING_ORIGIN_EMAIL"),
@@ -152,7 +155,7 @@ export function shipmentRequest(order, settings, carrier) {
     unit_value: r2((Number(l.unit_price) || 1) * usd(order.currency)), unit_weight_kg: 0.12, hs_code: process.env.LOGISTICS_DEFAULT_HS_CODE || "4909" }));
   return { reference: order.id, service: settings.carriers[carrier].service, weight_kg: r2(orderWeight(order)), currency: "USD", declared_value: r2(items.reduce((s, i) => s + i.unit_value * i.quantity, 0)),
     to: { first_name: first, last_name: rest.join(" ") || first, company: a.company || "", address1: a.address1, address2: a.address2 || "", city: a.city, state: a.state || a.province || "", postal_code: a.postal_code, country: String(a.country || "").toUpperCase(), phone: a.phone || order.customer_phone || "", email: order.customer_email || "" },
-    from: senderFor(settings), ioss_no: settings?.ioss_no || "", handover: settings?.carriers?.fourpx?.handover || "pickup",
+    from: senderFor(settings), ioss_no: iossFor(settings, a.country), handover: settings?.carriers?.fourpx?.handover || "pickup",
     items };
 }
 // Follow-up calls (label/track/cancel) always go to the environment the shipment was created in, even if the admin toggled the mode since.
@@ -207,6 +210,7 @@ export async function shipmentDraft(tenantId, orderId, carrier) {
   return { order_id: order.id, carrier: cid, product: productFor(settings, cid, req.to.country), mode: settings.carriers[cid].mode, payment_status: order.payment_status, request: req };
 }
 async function submit(tenantId, { cid, settings, req, order, labelRetry, manual }) {
+  req = { ...req, ioss_no: iossFor(settings, req.to?.country) }; // final destination decides (admin may have edited the address)
   const a = adapter(cid, settings);
   const id = `shp_${crypto.randomUUID()}`, base = { id, tenant_id: tenantId, order_id: order?.id || "", manual: !!manual, reference: req.reference, carrier: cid, mode: a.mode, weight_kg: req.weight_kg, country: req.to.country,
     recipient: `${req.to.first_name} ${req.to.last_name}`.trim().slice(0, 80), created_at: now(), updated_at: now(), events: [] };
@@ -247,7 +251,7 @@ export async function createManualShipment(tenantId, body = {}) {
   if (!CARRIERS[cid]) throw err("unknown_carrier");
   const reference = clip(body.reference || `WEDAI-M-${Date.now().toString(36).toUpperCase()}`, 40);
   if (await findWhere("carrier_shipments", s => s.tenant_id === tenantId && s.reference === reference && !["cancelled", "error"].includes(s.status))) throw err("reference_exists", 409);
-  const blank = { reference, service: productFor(settings, cid, country), weight_kg: 0.2, currency: "USD", declared_value: 0, to: { first_name: "", last_name: "", country }, from: senderFor(settings), ioss_no: settings.ioss_no || "", handover: settings.carriers.fourpx?.handover || "pickup", items: [{ sku: "item", name_en: "Printed paper card", name_cn: "纸质印刷品", quantity: 1, unit_value: 1, unit_weight_kg: 0.1, hs_code: process.env.LOGISTICS_DEFAULT_HS_CODE || "4909" }] };
+  const blank = { reference, service: productFor(settings, cid, country), weight_kg: 0.2, currency: "USD", declared_value: 0, to: { first_name: "", last_name: "", country }, from: senderFor(settings), ioss_no: iossFor(settings, country), handover: settings.carriers.fourpx?.handover || "pickup", items: [{ sku: "item", name_en: "Printed paper card", name_cn: "纸质印刷品", quantity: 1, unit_value: 1, unit_weight_kg: 0.1, hs_code: process.env.LOGISTICS_DEFAULT_HS_CODE || "4909" }] };
   const req = applyOverrides(blank, { ...body, reference });
   if (!req.to.last_name) req.to.last_name = req.to.first_name;
   return submit(tenantId, { cid, settings, req, order: null, labelRetry: body.labelRetry, manual: true });
