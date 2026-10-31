@@ -5,7 +5,7 @@
   const CUR = [["EUR", "EU"], ["CHF", "CH"], ["USD", "US"]];
   const STEPS = ["preview", "pricing", "shipping", "publish"];
   const LBL = { preview: "1 · Preview", pricing: "2 · Pricing", shipping: "3 · Shipping", publish: "4 · Publish" };
-  const IMG_PX = 1600, MAX_IMGS = 4;
+  const IMG_PX = 1600, MAX_IMGS = 6;
   let A, st = null;
   const $ = s => document.querySelector(s);
   const r2 = v => Math.round(Number(v) * 100) / 100;
@@ -74,6 +74,20 @@
       go(); if (!p.mockup_photo?.src) setTimeout(fin, 30); setTimeout(fin, 4000);
     });
   }
+  /** Back / side product photo (mockup_photo.views) as a square PNG; "" when the product has no such view. */
+  function viewPhoto(p, view) {
+    const src = p.mockup_photo?.views?.[view];
+    if (!src || src === p.mockup_photo?.src) return Promise.resolve("");
+    return new Promise(res => {
+      const im = new Image(); let done = false; const fin = u => { if (!done) { done = true; res(u); } };
+      im.onload = () => { const cv = document.createElement("canvas"); cv.width = cv.height = IMG_PX; const x = cv.getContext("2d");
+        x.fillStyle = "#efe8df"; x.fillRect(0, 0, IMG_PX, IMG_PX); const f = Math.max(IMG_PX / im.naturalWidth, IMG_PX / im.naturalHeight);
+        x.drawImage(im, (IMG_PX - im.naturalWidth * f) / 2, (IMG_PX - im.naturalHeight * f) / 2, im.naturalWidth * f, im.naturalHeight * f);
+        try { fin(cv.toDataURL("image/png")); } catch { fin(""); } };
+      im.onerror = () => fin(""); setTimeout(() => fin(""), 8000);
+      im.src = window.STUDIO_MOCKUP_ASSETS?.[src] || src;
+    });
+  }
   function designOnly() {
     const c = A.S.design?.canvas; if (!c) return "";
     const px = IMG_PX, cv = document.createElement("canvas"); cv.width = cv.height = px; const x = cv.getContext("2d");
@@ -85,8 +99,11 @@
     const pr = st.products[pid], p = A.prod(pid), it = st.items.find(i => i.product_id === pid) || { placement: {} };
     pr.images = []; pr.uploaded = []; draw(); msg("Rendering mockups…");
     const base = it.placement?.color || p.colors?.[0] || null;
-    const colors = [base, ...(p.colors || []).filter(c => c.toLowerCase() !== String(base || "").toLowerCase()).slice(0, 2)];
-    for (const c of colors) { const u = await renderOne(pid, c); if (u) pr.images.push({ data: u, label: c ? `Colour ${c}` : "Mockup", on: true }); }
+    // Front (with the design), then the catalog back / side product photos, then other colours, then the artwork.
+    const front = await renderOne(pid, base); if (front) pr.images.push({ data: front, label: `Front${base ? ` · ${base}` : ""}`, on: true });
+    for (const v of ["back", "side"]) { const u = await viewPhoto(p, v); if (u) pr.images.push({ data: u, label: v[0].toUpperCase() + v.slice(1), on: true }); }
+    const colors = (p.colors || []).filter(c => c.toLowerCase() !== String(base || "").toLowerCase()).slice(0, 2);
+    for (const c of colors) { const u = await renderOne(pid, c); if (u) pr.images.push({ data: u, label: `Front · ${c}`, on: true }); }
     const d = designOnly(); if (d) pr.images.push({ data: d, label: "Artwork", on: true });
     pr.images = pr.images.slice(0, MAX_IMGS);
     msg(pr.images.length ? `${pr.images.length} images ready (${IMG_PX}×${IMG_PX} PNG).` : "Could not render mockups.", pr.images.length ? "ok" : "bad"); draw();
