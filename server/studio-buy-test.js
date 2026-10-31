@@ -204,6 +204,15 @@ try {
     assert.equal((await admin(`/api/saas/proofs/${pf.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proof_url: "/assets/proof.png" }) })).status, 200);
     assert.equal((await anon(`/api/proofs/public/${pf.token}/approve`, { method: "POST" })).status, 200);
     assert.equal((await findRecord("orders", co.order_id)).production_blocked, false); }
+  // "Notify customers on order status change" is OFF by default → manual status change stores a draft, sends nothing.
+  { const sent0 = captured; captured = null;
+    r = await admin(`/api/saas/orders/${co.order_id}/status`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "Production" }) });
+    assert.equal(r.status, 200); assert.equal((await r.json()).email_status, "draft"); assert.equal(captured, null, "no e-mail while notifications are off");
+    assert.ok((await getState()).notifications.some(n => n.related_id === co.order_id && n.status === "draft" && n.type === "order_status"));
+    captured = sent0;
+    const { saveSettings, getSettings } = await import("./logistics/index.js");
+    assert.equal((await getSettings("tenant_demo")).notify_customer_on_status, false);
+    assert.equal((await saveSettings("tenant_demo", { notify_customer_on_status: true })).notify_customer_on_status, true); }
   r = await admin(`/api/saas/orders/${co.order_id}/status`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "Shipped", carrier: "Swiss Post", tracking_number: "99.00.123456.78901234", tracking_url: "https://service.post.ch/track?n=99" }) });
   assert.equal(r.status, 200); assert.equal((await r.json()).email_status, "sent");
   assert.equal(captured.subject, `Your order has shipped · ${co.order_id}`); assert.match(captured.content[1].value, /99\.00\.123456\.78901234/); assert.match(captured.content[1].value, /https:\/\/service\.post\.ch/);

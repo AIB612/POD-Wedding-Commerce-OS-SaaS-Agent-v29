@@ -28,6 +28,10 @@ try {
     price_tables: [{ carrier: "yunexpress", product: "TABLEONLY", countries: "DE", currency: "CHF", first_kg: 0.5, first_price: 1, add_kg: 0.5, add_price: 1 }] });
   assert.equal(r.status, 200); assert.equal(r.body.settings.sender.country, "CN"); assert.equal(r.body.settings.carriers.fourpx.handover, "dropoff");
   assert.equal((await call("PUT", "/api/saas/carriers/settings", { ioss_no: "bad" })).status, 400);
+  assert.equal(r.body.settings.notify_customer_on_status, false, "customer status e-mails default OFF");
+  assert.equal((await call("PUT", "/api/saas/carriers/settings", { notify_customer_on_status: true })).body.settings.notify_customer_on_status, true);
+  assert.equal((await call("PUT", "/api/saas/carriers/settings", { notify_customer_on_status: false })).body.settings.notify_customer_on_status, false);
+  assert.equal((await call("GET", "/api/saas/carriers/settings")).body.settings.notify_customer_on_status, false);
   const st = await L.getSettings(T), req = L.shipmentRequest({ items: [], shipping_address: addr }, st, "fourpx");
   assert.equal(req.from.name, "Wed.AI Studio"); assert.equal(req.ioss_no, "IM1234567890"); assert.equal(req.handover, "dropoff");
   assert.equal(L.tablePrice({ first_kg: 0.5, first_price: 10, add_kg: 0.5, add_price: 4, fixed_fee: 0 }, 1.2), 18);

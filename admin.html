@@ -608,9 +608,9 @@ async function setStudioUserStatus(id,status){
   if(d&&!d.__error){await load();}else alert(d?.error||'更新失败');
 }
 async function setStudioOrderStatus(id){
-  const el=document.getElementById('status_'+id);if(!el||!confirm(`确认把 ${id} 更新为 ${el.value}？客户会收到状态邮件。`))return;
+  const el=document.getElementById('status_'+id);if(!el||!confirm(`确认把 ${id} 更新为 ${el.value}？（仅当 Carriers → Settings 开启“Notify customers”时才会给客户发邮件）`))return;
   const d=await api('/api/saas/orders/'+encodeURIComponent(id)+'/status',{method:'POST',body:JSON.stringify({status:el.value,approved:true})});
-  if(d&&!d.__error){alert('状态已更新');await load();}else alert(d?.error||'更新失败');
+  if(d&&!d.__error){alert(d.email_status==='draft'?'状态已更新 · 未发送客户邮件（已存为草稿）':`状态已更新 · 邮件：${d.email_status||'—'}`);await load();}else alert(d?.error||'更新失败');
 }
 async function sendStudioProof(orderId,proofId){
   const url=prompt(`填写 ${orderId} 的效果图 URL（https://... 或 /路径）`);if(!url)return;

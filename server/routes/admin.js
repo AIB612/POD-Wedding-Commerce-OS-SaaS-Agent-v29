@@ -1,6 +1,6 @@
 // Authenticated back-office routes (SaaS admin, Shopify, refunds, ops agent, MCP / A2A tools).
 import express from "express";
-import { onOrderStatusChanged } from "../logistics/index.js";
+import { onOrderStatusChanged, getSettings as getLogisticsSettings } from "../logistics/index.js";
 import { ah } from "../http/middleware.js";
 import { requireAdmin, requireApproval } from "../auth.js";
 import { runOpsCommand } from "../services/agent-ops-service.js";
@@ -95,7 +95,11 @@ export function adminRouter({ root } = {}) {
     const row=await updateRecord("orders",req.params.id,{status,updated_at:new Date().toISOString()});if(!row)return res.sendStatus(404);
     const evt=await addRecord("order_events",{id:`evt_${crypto.randomBytes(6).toString("hex")}`,tenant_id:req.tenantId,order_id:row.id,event_type:"status_changed",source:"admin",payload:{status,note:String(req.body?.note||"").slice(0,500)},event_time:new Date().toISOString()});
     let email_status="not_applicable";
-    if(row.customer_email&&status==="Shipped"){const b=req.body||{},clip=v=>String(v||"").slice(0,300);const trk={carrier:clip(b.carrier||row.carrier),tracking_number:clip(b.tracking_number||row.tracking_number),tracking_url:/^https:\/\//.test(String(b.tracking_url||""))?clip(b.tracking_url):""};if(trk.tracking_number)await updateRecord("orders",row.id,trk);const mail=await sendShippedEmail(row,trk);email_status=mail?.status||"not_applicable";}
+    // Admin setting (Carriers → Settings) "Notify customers on order status change" — default OFF: keep a draft, send nothing.
+    const notify=(await getLogisticsSettings(req.tenantId).catch(()=>({})))?.notify_customer_on_status===true;
+    if(row.customer_email&&!notify){if(status==="Shipped"){const b=req.body||{},clip=v=>String(v||"").slice(0,300);const trk={carrier:clip(b.carrier||row.carrier),tracking_number:clip(b.tracking_number||row.tracking_number),tracking_url:/^https:\/\//.test(String(b.tracking_url||""))?clip(b.tracking_url):""};if(trk.tracking_number)await updateRecord("orders",row.id,trk);}
+      await addRecord("notifications",{id:`ntf_${crypto.randomBytes(6).toString("hex")}`,tenant_id:req.tenantId,type:status==="Shipped"?"order_shipped":"order_status",channel:"email",status:"draft",related_id:row.id,to_masked:String(row.customer_email).replace(/^(.).*(@.*)$/,"$1***$2"),created_at:new Date().toISOString(),note:`Draft only — status "${status}" set in admin; customer notifications are OFF (Carriers → Settings)`});email_status="draft";}
+    else if(row.customer_email&&status==="Shipped"){const b=req.body||{},clip=v=>String(v||"").slice(0,300);const trk={carrier:clip(b.carrier||row.carrier),tracking_number:clip(b.tracking_number||row.tracking_number),tracking_url:/^https:\/\//.test(String(b.tracking_url||""))?clip(b.tracking_url):""};if(trk.tracking_number)await updateRecord("orders",row.id,trk);const mail=await sendShippedEmail(row,trk);email_status=mail?.status||"not_applicable";}
     else if(row.customer_email){const mail=await sendEmail({tenantId:req.tenantId,userId:row.user_id||null,to:row.customer_email,type:"order_status",related_id:row.id,subject:`Order update · ${row.id}`,text:`Your order status is now: ${status}. Follow it at ${baseUrl()}/account.html`,html:`<p>Order <b>${row.id}</b></p><p>Status: <b>${String(status).replace(/[<>&]/g,"")}</b></p><p><a href="${baseUrl()}/account.html">View your account</a></p>`});email_status=mail.status;}
     // Orders that came from a Shopify store: mirror "Shipped" as a Shopify fulfillment (fulfillment orders API).
     let shopify_fulfillment;

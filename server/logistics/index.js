@@ -47,6 +47,8 @@ const DEFAULT_SETTINGS = { carriers: { yunexpress: { enabled: true, mode: "sandb
   default_carrier: "yunexpress", default_by_country: {}, alert_days_no_update: 5, alert_days_undelivered: 25,
   // Sender (return) address + IOSS are edited in admin → Carriers → Settings; empty fields fall back to SHIPPING_ORIGIN_* / IOSS_NO in .env.
   sender: { name: "", company: "", phone: "", email: "", country: "", state: "", city: "", address1: "", address2: "", postal_code: "" }, ioss_no: "",
+  // Manual admin order-status changes e-mail the customer only when this is ON (default OFF → stored as a draft notification).
+  notify_customer_on_status: false,
   sync_minutes: 60, price_tables: [] };
 const SENDER_KEYS = ["name", "company", "phone", "email", "country", "state", "city", "address1", "address2", "postal_code"];
 export async function getSettings(tenantId) {
@@ -67,6 +69,7 @@ export async function saveSettings(tenantId, input = {}) {
   if (input.sender && typeof input.sender === "object") { s.sender = { ...cur.sender }; for (const k of SENDER_KEYS) if (input.sender[k] != null) s.sender[k] = clip(input.sender[k], k === "address1" || k === "address2" ? 120 : 80);
     s.sender.country = s.sender.country.toUpperCase().slice(0, 2); if (s.sender.country && !/^[A-Z]{2}$/.test(s.sender.country)) throw err("invalid_sender_country"); }
   if (input.ioss_no != null) { const v = clip(input.ioss_no, 20).toUpperCase().replace(/\s+/g, ""); if (v && !/^IM\d{10}$/.test(v)) throw err("invalid_ioss_no"); s.ioss_no = v; }
+  if (input.notify_customer_on_status != null) s.notify_customer_on_status = input.notify_customer_on_status === true || input.notify_customer_on_status === "true";
   if (input.price_tables != null) s.price_tables = validatePriceTables(input.price_tables);
   if (input.sync_minutes != null) s.sync_minutes = [0, 15, 30, 60, 120, 180, 360, 720, 1440].includes(Number(input.sync_minutes)) ? Number(input.sync_minutes) : cur.sync_minutes;
   for (const k of ["alert_days_no_update", "alert_days_undelivered"]) if (input[k] != null) s[k] = Math.max(1, Math.min(120, Number(input[k]) || cur[k]));
