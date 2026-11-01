@@ -68,6 +68,9 @@ const T = {
   rate: { en: "You have sent a lot of messages. Please wait a moment.", zh: "您发送的消息太多了，请稍等片刻。", de: "Sie haben sehr viele Nachrichten gesendet. Bitte warten Sie einen Moment." },
   disabled: { en: "The chat assistant is currently offline. Please use Find my order (/account#find-order) or try again later.", zh: "AI 助手暂时离线，请使用“查询订单”（/account#find-order）或稍后再试。", de: "Der Chat-Assistent ist gerade offline. Bitte nutzen Sie „Bestellung finden“ oder versuchen Sie es später." }
 };
+/** Languages the chat detects (LANGS) and the languages with full reply templates (REPLY_LANGS; others fall back to English). */
+export const DETECTED_LANGS = LANGS;
+export const REPLY_LANGS = Object.keys(T.greet);
 const L = (key, lang) => { const e = T[key]; return e[lang] || e.en; };
 const CHIPS = {
   en: ["Shipping to Switzerland for 10 invitations", "Recommend wedding favours", "How long does delivery take?", "Track my order"],

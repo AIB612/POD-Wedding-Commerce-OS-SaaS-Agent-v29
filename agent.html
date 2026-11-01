@@ -1,106 +1,452 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Wed.AI POD Agent — AI shop assistant for print-on-demand</title>
-<meta name="description" content="Wed.AI POD Agent answers customers inside your storefront: product questions, recommendations, shipping quotes, order tracking and discount codes, and hands the conversation to your team when a person is needed."/>
+<title>Wed.AI POD Agent — the AI assistant that answers from your real shop data</title>
+<meta name="description" content="Wed.AI POD Agent: product answers, shipping quotes equal to checkout, secure order tracking and human handoff. Local-first, multilingual, built into your storefront."/>
+<meta property="og:title" content="Wed.AI POD Agent"/><meta property="og:description" content="The AI shop assistant that answers from your real shop data."/><meta property="og:image" content="/assets/agent/admin-chat-agent.webp"/>
+<script>document.documentElement.className+=" js"</script>
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#28231f;background:linear-gradient(135deg,#eee7df,#f8f4ef);line-height:1.6}
-a{color:#9a6d57}
-.ag{max-width:1200px;margin:0 auto;padding:18px 22px 0}
-.ag-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:36px;align-items:center;background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-radius:28px;box-shadow:0 14px 34px rgba(41,38,34,.08);padding:56px 48px}
-.ag-eyebrow{margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9a6d57}
-.ag h1{margin:0 0 16px;font:600 46px/1.08 Georgia,"Times New Roman",serif;letter-spacing:-.01em}
-.ag-lead{margin:0 0 26px;font-size:17px;color:#5a4f46;max-width:60ch}
-.ag-btns{display:flex;flex-wrap:wrap;gap:12px}
-.ag-b{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:12px 20px;font-weight:700;font-size:14px;text-decoration:none}
-.ag-b.dark{background:#292622;color:#fff}.ag-b.dark:hover{background:#463f38}
-.ag-b.light{background:#f3ece4;color:#28231f;border:1px solid rgba(45,36,30,.14)}.ag-b.light:hover{background:#ebe1d6}
-.ag-demo{background:#f6f0e8;border:1px solid rgba(45,36,30,.1);border-radius:22px;padding:20px}
-.ag-demo h2{margin:0 0 14px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e64}
-.ag-msg{border-radius:16px;padding:11px 14px;font-size:14px;margin:0 0 10px;max-width:88%}
-.ag-msg.u{background:#292622;color:#fff;margin-left:auto;border-bottom-right-radius:6px}
-.ag-msg.a{background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-bottom-left-radius:6px}
-.ag-q{background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-radius:14px;padding:12px 14px;font-size:13px}
-.ag-q div{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(45,36,30,.08)}.ag-q div:last-child{border:0}
-.ag-note{margin:10px 0 0;font-size:12px;color:#7a6e64}
-.ag-sec{margin:56px 0 0}
-.ag-sec>h2{margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9a6d57}
-.ag-sec>p.h{margin:0 0 24px;font:600 32px/1.2 Georgia,"Times New Roman",serif}
-.ag-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.ag-card{background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-radius:20px;padding:22px 22px 20px}
-.ag-ic{width:34px;height:34px;border-radius:11px;background:#f3ece4;color:#9a6d57;display:grid;place-items:center;font-weight:800;font-size:12px;margin-bottom:12px}
-.ag-card h3{margin:0 0 8px;font-size:17px}.ag-card p{margin:0;font-size:14px;color:#5a4f46}
-.ag-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;counter-reset:f}
-.ag-flow div{background:#292622;color:#e9e2d9;border-radius:20px;padding:22px}
-.ag-flow b{display:block;color:#fff;font-size:16px;margin-bottom:6px}.ag-flow p{margin:0;font-size:14px;color:#cfc5ba}
-.ag-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.ag-step{display:flex;gap:16px;background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-radius:20px;padding:22px}
-.ag-n{flex:none;width:36px;height:36px;border-radius:50%;background:#9a6d57;color:#fff;display:grid;place-items:center;font-weight:800}
-.ag-step h3{margin:4px 0 6px;font-size:17px}.ag-step p{margin:0;font-size:14px;color:#5a4f46}
-code{background:#f3ece4;border-radius:6px;padding:1px 6px;font-size:13px;overflow-wrap:anywhere}
-.ag-cta{margin:56px 0 0;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-radius:24px;padding:30px 34px}
-.ag-cta h2{margin:0 0 4px;font:600 26px/1.2 Georgia,serif}.ag-cta p{margin:0;color:#5a4f46}
-@media(max-width:980px){.ag-hero{grid-template-columns:1fr;padding:40px 30px}.ag-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ag-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){.ag{padding:12px 12px 0}.ag-hero{padding:28px 20px;border-radius:22px}.ag h1{font-size:32px}.ag-lead{font-size:15px}.ag-grid,.ag-flow,.ag-steps{grid-template-columns:1fr}.ag-sec{margin-top:40px}.ag-sec>p.h{font-size:25px}.ag-cta{padding:24px 20px}.ag-b{flex:1 1 auto;justify-content:center}}
+:root{--ink:#241f1b;--ink2:#5d5249;--mut:#8a7e74;--gold:#b8865b;--gold2:#8a5a33;--card:rgba(255,253,249,.72);--line:rgba(45,36,30,.1);--r:24px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:#f6f0e8;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--gold2)}
+.ag{position:relative;overflow:hidden}
+.ag:before{content:"";position:absolute;inset:-200px -10% auto;height:1100px;background:radial-gradient(600px 420px at 18% 22%,rgba(232,196,160,.55),transparent 70%),radial-gradient(520px 420px at 82% 12%,rgba(214,178,214,.35),transparent 70%),radial-gradient(700px 500px at 60% 70%,rgba(255,236,210,.7),transparent 70%);pointer-events:none;z-index:0}
+.w{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 24px}
+.serif{font-family:Georgia,"Times New Roman",serif;font-weight:600;letter-spacing:-.015em}
+.grad{background:linear-gradient(100deg,#8a5a33 0%,#c48a58 45%,#9b6aa0 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.glass{background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.7);box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 18px 50px rgba(70,48,30,.10)}
+.pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:7px 14px 7px 8px;font-size:12.5px;font-weight:600;color:#6b4f3a}
+.pill i{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#2b2520,#6b4f3a);color:#fff;font-style:normal;font-size:11px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:999px;padding:15px 26px;font-weight:700;font-size:15px;text-decoration:none;border:0;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s;font-family:inherit}
+.btn svg{width:18px;height:18px}
+.btn.p{background:linear-gradient(135deg,#2b2520,#5e4533);color:#fff;box-shadow:0 12px 30px rgba(43,37,32,.28)}.btn.p:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(43,37,32,.34)}
+.btn.s{background:rgba(255,255,255,.75);color:var(--ink);border:1px solid rgba(45,36,30,.14)}.btn.s:hover{background:#fff;transform:translateY(-2px)}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:40px;align-items:center;padding:64px 0 40px}
+.hero h1{margin:18px 0 16px;font-size:clamp(38px,5.4vw,66px);line-height:1.02}
+.hero .sub{margin:0 0 30px;font-size:clamp(16px,1.6vw,19px);color:var(--ink2);max-width:34ch}
+.ctas{display:flex;flex-wrap:wrap;gap:12px}
+.ticks{display:flex;flex-wrap:wrap;gap:8px 18px;margin:26px 0 0;padding:0;list-style:none;font-size:13px;color:var(--ink2)}
+.ticks li{display:flex;align-items:center;gap:6px}.ticks svg{width:15px;height:15px;color:#4f775b}
+.dev{position:relative;height:500px}
+.laptop{position:absolute;left:0;top:20px;width:92%}
+.lid{background:#1d1916;border-radius:18px 18px 6px 6px;padding:12px 12px 14px;box-shadow:0 30px 70px rgba(40,28,18,.28)}
+.scr{background:#fbf7f1;border-radius:8px;height:330px;overflow:hidden;display:grid;grid-template-rows:auto 1fr}
+.base{height:16px;margin:0 -5%;background:linear-gradient(#d9d1c8,#b9afa4);border-radius:0 0 16px 16px;box-shadow:0 14px 30px rgba(40,28,18,.2)}
+.bar{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:11px;color:var(--mut);background:#fff}
+.bar b{font:700 13px Georgia,serif;color:var(--ink)}.bar .ask{margin-left:6px;border-radius:999px;padding:3px 9px;background:#292622;color:#fff;font-size:10px;font-weight:600}
+.bar .dots{margin-left:auto;display:flex;gap:4px}.bar .dots span{width:7px;height:7px;border-radius:50%;background:#e2d8cd}
+.chatx{padding:14px;display:flex;flex-direction:column;gap:8px;font-size:12.5px;align-content:start}
+.b{max-width:82%;padding:8px 11px;border-radius:14px;line-height:1.4}
+.b.u{align-self:flex-end;background:#292622;color:#fff;border-bottom-right-radius:4px}
+.b.a{align-self:flex-start;background:#f0e7de;border-bottom-left-radius:4px}
+.qc{align-self:flex-start;width:78%;background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px 12px;box-shadow:0 8px 20px rgba(60,40,25,.07)}
+.qc div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:12px}.qc div+div{border-top:1px dashed var(--line)}.qc small{color:var(--mut)}
+.qc .cta{display:inline-block;margin-top:6px;background:#292622;color:#fff;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:600}
+.typing{display:inline-flex;gap:3px;align-self:flex-start;background:#f0e7de;border-radius:14px;padding:10px 12px}.typing span{width:6px;height:6px;border-radius:50%;background:#a59487;animation:bl 1s infinite}.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,100%{opacity:.3}50%{opacity:1}}
+.phone{position:absolute;right:0;bottom:0;width:210px;background:#1d1916;border-radius:34px;padding:9px;box-shadow:0 30px 60px rgba(40,28,18,.35)}
+.phone .scr{height:390px;border-radius:26px;display:block}
+.phone .notch{width:70px;height:18px;background:#1d1916;border-radius:0 0 12px 12px;margin:0 auto -18px;position:relative;z-index:2}
+.phone .chatx{padding:26px 10px 10px;font-size:11.5px}.phone .b{max-width:88%}
+.oc{align-self:flex-start;width:90%;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:11px}
+.oc .st{display:flex;gap:4px;margin:6px 0 2px}.oc .st span{flex:1;height:4px;border-radius:4px;background:#e9dfd5}.oc .st span.on{background:linear-gradient(90deg,#b8865b,#8a5a33)}
+.tag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.js .seq>*{opacity:0;transform:translateY(8px) scale(.98)}
+.play .seq>*{animation:pop .45s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:var(--d)}
+.play .seq>.typing{animation:pop .3s forwards,out .2s forwards;animation-delay:var(--d),var(--o)}
+@keyframes pop{to{opacity:1;transform:none}}@keyframes out{to{opacity:0;height:0;padding:0;margin:-4px 0}}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-radius:var(--r);margin:10px 0 0;overflow:hidden}
+.stat{padding:22px 20px;position:relative}.stat+.stat:before{content:"";position:absolute;left:0;top:22%;bottom:22%;width:1px;background:var(--line)}
+.stat b{display:block;font:600 30px/1.1 Georgia,serif;margin-top:4px}.stat>span:not(.live){display:block;font-size:12.5px;color:var(--ink2);margin-top:6px}.stat small{display:block;font-size:11px;color:var(--mut);margin-top:2px}
+.live{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4f775b}.live:before{content:"";width:7px;height:7px;border-radius:50%;background:#4fae6b;animation:pu 1.8s infinite}
+@keyframes pu{0%{box-shadow:0 0 0 0 rgba(79,174,107,.6)}70%{box-shadow:0 0 0 7px rgba(79,174,107,0)}100%{box-shadow:0 0 0 0 rgba(79,174,107,0)}}
+.fix{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.sample{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a0742f;background:#f6ead8;border-radius:999px;padding:2px 8px}
+.sec{padding:96px 0 0}
+.kick{display:block;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);margin-bottom:10px}
+.sec h2{margin:0 0 12px;font-size:clamp(30px,3.6vw,46px);line-height:1.08}
+.sec .lede{margin:0 0 36px;color:var(--ink2);font-size:17px;max-width:46ch}
+.center{text-align:center}.center .lede{margin-left:auto;margin-right:auto}.center h2{margin-bottom:32px}.center .lede+*{margin-top:0}
+.flow{border-radius:28px;padding:26px}
+.flow svg{display:block;width:100%;height:auto}
+.flow .v{display:none}
+.nd{fill:#fffdf9;stroke:rgba(45,36,30,.16)}.nd.dk{fill:#292622;stroke:none}.nd.go{fill:url(#gGold);stroke:rgba(184,134,91,.5)}
+.t1{font:700 15px Inter,system-ui,sans-serif;fill:#241f1b}.t2{font:500 12px Inter,system-ui,sans-serif;fill:#7c6f64}.tw{fill:#fff}.tw2{fill:#d9cfc5}
+.ln{fill:none;stroke:#cdb8a2;stroke-width:2}.ln.dash{stroke-dasharray:6 6;animation:da 1.2s linear infinite}
+@keyframes da{to{stroke-dashoffset:-12}}
+.dot{fill:#b8865b}.dot.l{fill:#9b6aa0}
+.chip rect{fill:#f5ece2}.chip text{font:600 11.5px Inter,system-ui,sans-serif;fill:#6b4f3a}
+.ex{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.exc{border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:8px;min-height:300px;font-size:13px}
+.exc h3{margin:0 0 6px;display:flex;align-items:center;gap:10px;font-size:16px}
+.exc>.live,.exc>.tag{margin-top:auto;padding-top:6px}
+.ico{width:38px;height:38px;flex:none;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#fff,#f1e6da);border:1px solid rgba(184,134,91,.25);color:var(--gold2)}.ico svg{width:19px;height:19px}
+.prods{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-self:stretch}.prods div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center;font-size:11px}.prods em{display:block;font-style:normal;font-size:20px}.prods b{display:block;font-size:11px;color:var(--gold2);margin-top:2px;min-height:15px}
+.fg{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.fc{border-radius:20px;padding:20px 18px;transition:transform .25s,box-shadow .25s}.fc:hover{transform:translateY(-4px);box-shadow:0 24px 50px rgba(70,48,30,.14)}
+.fc h3{margin:14px 0 4px;font-size:15px}.fc p{margin:0;font-size:13px;color:var(--ink2)}
+.kg{display:grid;grid-template-columns:340px minmax(0,1fr);gap:22px;align-items:start}
+.kc{border-radius:20px;padding:18px 20px;margin-bottom:14px}
+.kc .top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
+.kc b{display:block;font:600 34px/1.1 Georgia,serif;margin:8px 0 4px}
+.kc svg{display:block;width:100%;height:46px}
+.ring{display:flex;align-items:center;gap:16px}.ring svg{width:74px;height:74px;flex:none}
+.shot{border-radius:20px;overflow:hidden;background:#1d1916;box-shadow:0 30px 70px rgba(40,28,18,.25)}
+.shot .cb{display:flex;gap:6px;align-items:center;padding:10px 14px;background:#2a2420}.shot .cb span{width:10px;height:10px;border-radius:50%;background:#5b4f46}.shot .cb em{margin-left:10px;font-style:normal;font-size:11.5px;color:#cbbfb3;background:#3a322c;border-radius:6px;padding:3px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shot img{display:block;width:100%;height:auto}
+.cap{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:14px;font-size:12.5px;color:var(--mut)}
+.arch{display:grid;grid-template-columns:1fr 70px 1.1fr 70px 1fr;align-items:center;border-radius:28px;padding:28px}
+.col h4,.core h4{margin:0 0 10px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.box{display:flex;align-items:center;gap:10px;background:#fffdf9;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px;font-size:13.5px;font-weight:600}.box small{display:block;font-weight:500;color:var(--mut);font-size:11.5px}
+.box .ico{width:32px;height:32px;border-radius:10px}.box .ico svg{width:16px;height:16px}
+.core{background:linear-gradient(150deg,#2b2520,#4b382b);color:#fff;border-radius:22px;padding:22px;box-shadow:0 24px 50px rgba(43,37,32,.3)}
+.core h4{color:#d9c3ad}.core .k{display:grid;grid-template-columns:1fr 1fr;gap:8px}.core .k span{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:9px 10px;font-size:12.5px;font-weight:600}
+.core .llm{margin-top:10px;border:1px dashed rgba(255,255,255,.35);border-radius:12px;padding:8px 10px;font-size:12px;color:#d9cfc5}
+.core .adm{margin-top:10px;background:#fbf7f1;color:var(--ink);border-radius:12px;padding:9px 10px;font-size:12.5px;font-weight:600}
+.pipe{height:2px;position:relative;background:rgba(184,134,91,.3)}
+.pipe:after{content:"";position:absolute;top:-3px;left:0;width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px rgba(184,134,91,.8);animation:run 2.2s linear infinite}
+.pipe.r:after{animation-direction:reverse;background:#9b6aa0;box-shadow:0 0 12px rgba(155,106,160,.7)}
+@keyframes run{from{left:0}to{left:calc(100% - 8px)}}
+@keyframes runv{from{top:0}to{top:calc(100% - 8px)}}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;padding:6px;border-radius:999px;width:max-content;max-width:100%;margin:0 auto 22px}
+.tabs button{border:0;background:none;border-radius:999px;padding:10px 18px;font:600 14px Inter,system-ui,sans-serif;color:var(--ink2);cursor:pointer;display:inline-flex;gap:8px;align-items:center}.tabs button svg{width:16px;height:16px}
+.tabs button[aria-selected=true]{background:#292622;color:#fff;box-shadow:0 8px 20px rgba(43,37,32,.25)}
+.panel{border-radius:24px;padding:26px;display:none}.panel.on{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:26px;align-items:center;animation:pop .35s forwards}
+.panel h3{margin:0 0 8px;font-size:22px}.panel p{margin:0 0 16px;color:var(--ink2)}
+.code{position:relative;background:#1f1a17;color:#efe6dc;border-radius:16px;padding:18px 18px;font:12.5px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow:auto;white-space:pre;box-shadow:0 18px 40px rgba(31,26,23,.25)}
+.code .k{color:#e7b47e}.code .s{color:#a8d4a2}.code .c{color:#8f8377}
+.copy{position:absolute;top:10px;right:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;border-radius:8px;padding:5px 10px;font:600 11.5px Inter,system-ui,sans-serif;cursor:pointer}
+.mini{list-style:none;margin:0;padding:0;display:grid;gap:10px}.mini li{display:flex;gap:12px;align-items:center;background:#fffdf9;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-weight:600;font-size:14px}
+.mini li i{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#b8865b,#8a5a33);color:#fff;font-style:normal;font-size:12px}
+.tl{list-style:none;margin:44px 0 0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;position:relative}
+.tl:before{content:"";position:absolute;left:8%;right:8%;top:23px;height:2px;background:linear-gradient(90deg,#e3d2bf,#b8865b,#9b6aa0)}
+.tl li{position:relative;text-align:center;padding:0 4px}
+.tl .n{position:relative;z-index:1;width:48px;height:48px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#fffdf9;border:2px solid var(--gold);color:var(--gold2);font:700 16px Georgia,serif;box-shadow:0 8px 20px rgba(184,134,91,.25)}
+.tl b{display:block;font-size:14px}.tl span{display:block;font-size:12px;color:var(--mut);margin-top:3px}
+.faq{max-width:780px;margin:0 auto}
+.faq details{border-radius:16px;margin-bottom:10px;padding:0 20px}
+.faq summary{list-style:none;cursor:pointer;padding:17px 0;font-weight:700;display:flex;justify-content:space-between;gap:12px}.faq summary::-webkit-details-marker{display:none}
+.faq summary:after{content:"+";font:400 22px/1 Inter,sans-serif;color:var(--gold2);transition:transform .2s}.faq details[open] summary:after{transform:rotate(45deg)}
+.faq details p{margin:0 0 17px;color:var(--ink2)}
+.band{margin:96px 0 70px;border-radius:32px;padding:56px 40px;text-align:center;color:#fff;background:radial-gradient(500px 300px at 15% 0%,rgba(196,138,88,.55),transparent 70%),radial-gradient(500px 300px at 90% 100%,rgba(155,106,160,.45),transparent 70%),linear-gradient(140deg,#2b2520,#3d2f25);box-shadow:0 30px 70px rgba(43,37,32,.3)}
+.band h2{margin:0 0 10px;font-size:clamp(28px,3.4vw,42px)}.band p{margin:0 0 26px;color:#e3d8cc}
+.band .btn.p{background:#fbf7f1;color:var(--ink)}.band .btn.s{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)}
+.band .lnk{display:inline-block;margin-top:18px;color:#d9c3ad;font-size:13px}
+.js .rv{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .7s cubic-bezier(.2,.8,.2,1)}
+.js .rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.js .rv,.js .seq>*{opacity:1!important;transform:none!important}.js .seq>.typing,.dot{display:none}}
+@media(max-width:1100px){.fg{grid-template-columns:repeat(3,minmax(0,1fr))}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.stat:nth-child(4):before{display:none}}
+@media(max-width:980px){.hero{grid-template-columns:1fr;padding-top:40px}.dev{height:470px;max-width:620px;width:100%;margin:0 auto}.ex{grid-template-columns:1fr}.exc{min-height:0}.kg{grid-template-columns:1fr}.arch{grid-template-columns:1fr;gap:6px}.pipe{width:2px;height:34px;margin:0 auto}.pipe:after{left:-3px;top:0;animation-name:runv}.panel.on{grid-template-columns:1fr}
+ .tl{grid-template-columns:1fr;gap:0;max-width:440px;margin-left:auto;margin-right:auto}.tl:before{left:23px;right:auto;top:10px;bottom:30px;width:2px;height:auto;background:linear-gradient(#e3d2bf,#b8865b,#9b6aa0)}.tl li{display:grid;grid-template-columns:48px 1fr;gap:14px;text-align:left;padding:0 0 18px}.tl .n{margin:0}.tl b{margin-top:4px}}
+@media(max-width:700px){.w{padding:0 16px}.hero{padding-top:28px;gap:28px}.hero .sub{font-size:16px}.btn{padding:14px 20px;flex:1 1 auto}.dev{height:400px}.laptop{width:100%;top:0}.scr{height:240px}.lid{padding:8px 8px 10px;border-radius:14px 14px 5px 5px}.chatx{font-size:11px;padding:10px;gap:6px}.phone{width:160px;right:-4px}.phone .scr{height:290px}.phone .chatx{font-size:10px;padding-top:22px}
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat:before{display:none}.stat{padding:16px}.stat:last-child{grid-column:1/-1}.stat b{font-size:24px}.sec{padding-top:72px}.sec .lede{font-size:15.5px}.flow{padding:14px}.flow .h{display:none}.flow .v{display:block;max-width:360px;margin:0 auto}.fg{grid-template-columns:1fr 1fr;gap:10px}.fc{padding:16px 14px}.fc p{font-size:12.5px}
+ .tabs{border-radius:20px;width:100%}.tabs button{flex:1 1 40%;justify-content:center;padding:10px}.panel{padding:18px}.code{font-size:11px;padding:44px 14px 14px}.band{padding:40px 20px;border-radius:24px;margin-top:72px}.arch{padding:16px}.faq details{padding:0 16px}}
 </style><link rel="stylesheet" href="mobile.css"><script async src="https://www.googletagmanager.com/gtag/js?id=G-GED5TST3DP"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-GED5TST3DP");</script>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <style id="sh-guard">#site-header>*{visibility:hidden;animation:sh-guard 0s 2.5s forwards}@keyframes sh-guard{to{visibility:visible}}</style>
 </head><body>
 <div id="site-header"></div><script src="/header.js?v=20261101a"></script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+ <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></symbol>
+ <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18.5 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+ <symbol id="i-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></symbol>
+ <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+ <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+ <symbol id="i-gift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="5" rx="1"/><path d="M5 13v8h14v-8M12 8v13M12 8S10.5 3 8 4s.5 4 4 4zm0 0s1.5-5 4-4-.5 4-4 4z"/></symbol>
+ <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.4"/></symbol>
+ <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+ <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+ <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></symbol>
+ <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+ <symbol id="i-calc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h2M14 12h2M8 16h2M14 16h2"/></symbol>
+ <symbol id="i-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></symbol>
+ <symbol id="i-store" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"/></symbol>
+ <symbol id="i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></symbol>
+ <symbol id="i-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-13M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/></symbol>
+ <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+</defs></svg>
 <main class="ag" data-no-translate>
-<section class="ag-hero">
- <div><p class="ag-eyebrow" data-t="eyebrow">Wed.AI POD Agent</p><h1 data-t="h1">An AI shop assistant that knows your products, prices and orders</h1><p class="ag-lead" data-t="lead">Wed.AI POD Agent answers customers inside your storefront: product questions, recommendations, shipping quotes, order tracking and discount codes, and hands the conversation to your team when a person is needed.</p>
-  <div class="ag-btns"><a class="ag-b dark" href="/?ask=1" data-t="try">Try it on the homepage</a><a class="ag-b light" href="#integrate" data-t="how">How to integrate</a></div></div>
- <aside class="ag-demo" aria-label="Example conversation"><h2 data-t="ex">Example conversation</h2>
-  <div class="ag-msg u" data-t="exq">How much is shipping to Switzerland for 10 invitations?</div><div class="ag-msg a" data-t="exa">10 × Cotton paper invitation to Switzerland. Shipping: Standard or Express, with arrival dates. VAT is added at checkout.</div>
-  <div class="ag-q" id="agQuote"><div><span>Standard</span><b>—</b></div><div><span>Express</span><b>—</b></div></div>
-  <p class="ag-note" data-t="exn">Prices in the chat come from the same quote as your checkout.</p></aside>
+<div class="w">
+<section class="hero">
+ <div class="rv">
+  <span class="pill glass"><i>✦</i><span data-t="eyebrow">Wed.AI POD Agent · local-first</span></span>
+  <h1 class="serif"><span data-t="h1a">Your shop's AI assistant.</span><br><span class="grad" data-t="h1b">Answers from real data.</span></h1>
+  <p class="sub" data-t="sub">Quotes, orders and product ideas — instantly, in your customer's language.</p>
+  <div class="ctas">
+   <a class="btn p" id="tryBtn" href="/?ask=1"><svg><use href="#i-spark"/></svg><span data-t="try">Try it now</span></a>
+   <a class="btn s" href="#integrate"><svg><use href="#i-code"/></svg><span data-t="int">Integrate</span></a>
+  </div>
+  <ul class="ticks">
+   <li><svg><use href="#i-check"/></svg><span data-t="tk1">Quote = checkout price</span></li>
+   <li><svg><use href="#i-check"/></svg><span data-t="tk2">Works without an AI key</span></li>
+   <li><svg><use href="#i-check"/></svg><span data-t="tk3">No floating bubble</span></li>
+  </ul>
+ </div>
+ <div class="dev rv" id="dev" role="img" aria-label="Example conversations on laptop and phone">
+  <div class="laptop"><div class="lid"><div class="scr">
+   <div class="bar"><b>Wed.AI</b><span class="ask">✦ <span data-t="askbtn">Ask Wed.AI</span></span><span class="dots"><span></span><span></span><span></span></span></div>
+   <div class="chatx seq">
+    <div class="b u" style="--d:.3s" data-t="d1u">Shipping to Switzerland for 10 invitations?</div>
+    <div class="typing" style="--d:1s;--o:2s"><span></span><span></span><span></span></div>
+    <div class="b a" style="--d:2.1s" data-t="d1a">10 × Invitation to Switzerland — your options:</div>
+    <div class="qc" style="--d:2.7s"><div><small data-t="std">Standard</small><b data-q="standard">CHF 6.34</b></div><div><small data-t="exp">Express</small><b data-q="express">CHF 13.15</b></div><span class="cta" data-t="pers">Personalise &amp; order →</span></div>
+    <div class="b u" style="--d:4s" data-t="d2u">And wedding favours?</div>
+    <div class="b a" style="--d:5s" data-t="d2a">Here are some ideas — tap a card to personalise it.</div>
+   </div>
+  </div></div><div class="base"></div></div>
+  <div class="phone"><div class="notch"></div><div class="scr"><div class="chatx seq">
+   <span class="tag" style="--d:.6s" data-t="example">Example</span>
+   <div class="b u" style="--d:1s">我的订单到哪了？</div>
+   <div class="b a" style="--d:2.2s">请提供订单号和下单邮箱，我来为您查询。</div>
+   <div class="b u" style="--d:3.4s">POD-2026-•••• · a•••@•••</div>
+   <div class="typing" style="--d:4s;--o:4.8s"><span></span><span></span><span></span></div>
+   <div class="oc" style="--d:4.9s"><b>已发货 · YunExpress</b><div class="st"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div><small style="color:#8a7e74">付款 · 生产 · 发货 · 签收</small></div>
+  </div></div></div>
+ </div>
 </section>
-<section class="ag-sec" id="features"><h2 data-t="fe">Features</h2><p class="h" data-t="feh">Everything a POD shop gets asked, answered from your own data</p><div class="ag-grid">
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">01</div><h3 data-t="f_chat_t">Customer chat in your hero</h3><p data-t="f_chat_d">Visitors tap <b>Ask Wed.AI</b> next to the logo and the homepage image turns into a chat. No floating bubble covering your products; one tap brings the scene back.</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">02</div><h3 data-t="f_rec_t">Product answers & recommendations</h3><p data-t="f_rec_d">Answers about every product in your catalog with live unit prices and quantity tiers, and suggests matching items by occasion and budget (e.g. favours under CHF 10), each with a <b>Personalise</b> link into the design studio.</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">03</div><h3 data-t="f_ship_t">Shipping quotes = checkout prices</h3><p data-t="f_ship_d">Quotes use the same engine as the cart and checkout: Standard and Express, the visitor's market and currency, VAT mode, free-shipping thresholds and estimated arrival dates (production + proof + carrier days).</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">04</div><h3 data-t="f_track_t">Order status & tracking</h3><p data-t="f_track_d">Customers ask “where is my order?” with their order number; the agent asks for the order e-mail before showing anything and gives the same answer for every miss, so orders cannot be guessed. Tracking numbers are matched against your carrier shipments.</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">05</div><h3 data-t="f_disc_t">Discount codes</h3><p data-t="f_disc_d">Checks whether a code is valid. Optionally the agent may offer a single-use sales discount, off by default, with your percentage, validity, one per customer per period and a monthly cap.</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">06</div><h3 data-t="f_hand_t">Human handoff</h3><p data-t="f_hand_d">When a customer asks for a person, mentions a refund, is upset, or the agent fails to answer several times, the chat is handed to your team with the full transcript. The customer is told when to expect a reply; nothing is e-mailed automatically.</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">07</div><h3 data-t="f_lang_t">Multilingual</h3><p data-t="f_lang_d">Detects English, Chinese and German and answers in the same language, following the language picked in the site header. Safety and handoff messages also exist in French and Italian.</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">08</div><h3 data-t="f_guard_t">Guardrails</h3><p data-t="f_guard_d">Refuses prompt-injection attempts, never asks for or stores card numbers or passwords, rate-limits each visitor, never invents prices (all numbers come from your shop data) and only uses customer-safe tools.</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">09</div><h3 data-t="f_kb_t">Knowledge base</h3><p data-t="f_kb_d">Built-in answers for proofs, returns, customs, VAT, payment, samples and more, generated from your live shop settings, plus your own Q&amp;A added in Admin with a search tester.</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">10</div><h3 data-t="f_admin_t">Admin tools</h3><p data-t="f_admin_d">Behind your admin login: overview, handoff queue, conversation log, knowledge base, settings and a data check that flags missing prices, shipping zones or policies before customers notice.</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">11</div><h3 data-t="f_kpi_t">KPIs & feedback</h3><p data-t="f_kpi_d">13 KPIs with targets: solved without a human, handoff rate, unanswered replies, positive feedback (👍/👎 on every answer), quotes, recommendations, order lookups, guardrail refusals and more, plus the questions it could not answer.</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">12</div><h3 data-t="f_shopify_t">Shopify integration</h3><p data-t="f_shopify_d">Connect Shopify shops by OAuth from Admin: push products, sync orders into the same order book the agent searches, return tracking on fulfilment, and serve checkout shipping rates from the same quote engine.</p></article>
-<article class="ag-card"><div class="ag-ic" aria-hidden="true">13</div><h3 data-t="f_llm_t">Local first, AI only when needed</h3><p data-t="f_llm_d">Products, prices, shipping quotes, orders, tracking, discount codes and FAQ are answered by our own rule engine from your shop data — fast, free and exact. Only complex or unmatched questions go to an AI model, if you add a key (OpenAI, xAI/Grok or DeepSeek; Anthropic and Gemini for open questions). Without a key the customer gets the best local answer and an offer to talk to a person. Admin shows the share answered locally vs by AI.</p></article>
-</div></section>
-<section class="ag-sec"><h2 data-t="fl">How a message is handled</h2><div class="ag-flow">
- <div><b data-t="f1t">Understand</b><p data-t="f1">Detects language and intent, and picks out product, quantity, country, budget, order or tracking number.</p></div><div><b data-t="f2t">Check</b><p data-t="f2">Guardrails block injection and card data; handoff rules decide whether a person should take over.</p></div>
- <div><b data-t="f3t">Look up</b><p data-t="f3">Calls shop tools: catalog, quote, order lookup, tracking, discount codes, knowledge base.</p></div><div><b data-t="f4t">Answer</b><p data-t="f4">Replies in the customer's language with product, quote and tracking cards; every answer can be rated.</p></div>
-</div></section>
-<section class="ag-sec" id="integrate"><h2 data-t="in">How to integrate quickly</h2><p class="h" data-t="inh">Live in a few minutes, no code needed on Wed.AI</p><ol class="ag-steps">
-<li class="ag-step"><span class="ag-n">1</span><div><h3 data-t="s0_t">Connect your Shopify store (optional)</h3><p data-t="s0_d">In <b>Admin → Shopify</b>, enter your shop domain and approve the app. Products, orders and shipping rates then stay in sync. Selling only on Wed.AI? Skip this step.</p></div></li>
-<li class="ag-step"><span class="ag-n">2</span><div><h3 data-t="s1_t">Configure the agent in Admin</h3><p data-t="s1_d">Open <b>Admin → AI 客服 / Chat agent → Settings</b>: switch the chat on, set your human reply time, the handoff threshold, the greeting and (if you want) the sales-discount rules.</p></div></li>
-<li class="ag-step"><span class="ag-n">3</span><div><h3 data-t="s2_t">Add your knowledge</h3><p data-t="s2_d">Built-in answers come from your shop settings. Add shop-specific Q&amp;A in the <b>Knowledge</b> tab and use the tester to check which answer a question finds. Run <b>Data check</b> to fix gaps.</p></div></li>
-<li class="ag-step"><span class="ag-n">4</span><div><h3 data-t="s3_t">Enable the chat for customers</h3><p data-t="s3_d">On the Wed.AI storefront the <b>Ask Wed.AI</b> button is in the header on every device. Link to it from anywhere with <code>/?ask=1</code> (e.g. in newsletters or product pages).</p></div></li>
-<li class="ag-step"><span class="ag-n">5</span><div><h3 data-t="s4_t">Optional: add an AI model</h3><p data-t="s4_d">Set <code>LLM_PROVIDER</code> and the matching key (e.g. <code>OPENAI_API_KEY</code>, <code>XAI_API_KEY</code>, <code>DEEPSEEK_API_KEY</code>) in the server environment. Without one the rule engine keeps working.</p></div></li>
-<li class="ag-step"><span class="ag-n">6</span><div><h3 data-t="s5_t">Watch the KPIs</h3><p data-t="s5_d">The <b>Overview</b> shows automation rate, handoffs and feedback; answer open handoffs from the <b>Handoffs</b> tab and mark them resolved.</p></div></li>
-</ol></section>
-<section class="ag-cta"><div><h2 data-t="cta">See it in action</h2><p data-t="ctas">Open the homepage and tap Ask Wed.AI next to the logo.</p></div>
- <div class="ag-btns"><a class="ag-b dark" href="/?ask=1" data-t="ctab">Open the chat</a><a class="ag-b light" href="/admin/login" data-t="ctaa">Seller login</a></div></section>
+
+<section class="stats glass rv" aria-label="Facts">
+ <div class="stat"><span class="live" data-t="livel">Live</span><b data-q="standard">CHF 6.34</b><span data-t="s1">quote = checkout</span><small data-t="s1s">10 invitations → CH, standard</small></div>
+ <div class="stat"><span class="live" data-t="livel">Live</span><b id="rt">— ms</b><span data-t="s2">API response</span><small data-t="s2s">measured in your browser</small></div>
+ <div class="stat"><span class="live" data-t="livel">Live</span><b data-fact="local">100%</b><span data-t="s3">answered locally</span><small id="modeTxt" data-t="s3s">rules + shop data, no AI key</small></div>
+ <div class="stat"><span class="fix" data-t="code">From code</span><b data-fact="langs_detected">5</b><span data-t="s4">languages detected</span><small><span data-fact="langs_replies">3</span> <span data-t="s4s">with full replies</span></small></div>
+ <div class="stat"><span class="fix" data-t="code">From code</span><b data-fact="tools">10</b><span data-t="s5">shop tools</span><small><span data-fact="kpis">15</span> <span data-t="s5s">KPIs in Admin</span></small></div>
+</section>
+
+<section class="sec" id="how">
+ <div class="center rv"><span class="kick" data-t="k_how">How it works</span><h2 class="serif" data-t="h_how">Local first. AI only when it helps.</h2></div>
+ <div class="flow glass rv">
+  <svg class="h" viewBox="0 0 1100 370" role="img" aria-label="Routing: message, understand, confidence check, local tools or optional AI model, answer">
+   <defs><linearGradient id="gGold" x1="0" x2="1"><stop offset="0" stop-color="#f6e7d6"/><stop offset="1" stop-color="#efdcf0"/></linearGradient></defs>
+   <path id="p1" class="ln" d="M180 185 H250"/><path id="p2" class="ln" d="M450 185 H510"/>
+   <path id="p3" class="ln" d="M570 125 C570 85,620 85,700 85"/><path id="p4" class="ln" d="M1000 85 C1040 85,1050 120,1050 155"/>
+   <path id="p5" class="ln dash" d="M570 245 C570 290,620 295,700 295"/><path id="p6" class="ln dash" d="M1000 295 C1040 295,1050 250,1050 215"/>
+   <rect class="nd dk" x="30" y="145" width="150" height="80" rx="18"/><text class="t1 tw" x="105" y="181" text-anchor="middle" data-t="fl_msg">Message</text><text class="t2 tw2" x="105" y="202" text-anchor="middle" data-t="fl_msg2">EN · 中文 · DE · FR · IT</text>
+   <rect class="nd" x="250" y="145" width="200" height="80" rx="18"/><text class="t1" x="350" y="179" text-anchor="middle" data-t="fl_und">Understand</text><text class="t2" x="350" y="200" text-anchor="middle" data-t="fl_und2">intent · product · qty · country</text>
+   <path class="nd go" d="M570 125 L630 185 L570 245 L510 185 Z"/><text class="t2" x="570" y="179" text-anchor="middle" data-t="fl_conf">confidence</text><text class="t1" x="570" y="200" text-anchor="middle">≥ <tspan data-fact="threshold">0.6</tspan></text>
+   <text class="t2" x="590" y="78" data-t="fl_yes">yes</text><text class="t2" x="590" y="312" data-t="fl_no">no</text>
+   <rect class="nd" x="700" y="30" width="300" height="112" rx="18"/><text class="t1" x="720" y="58" data-t="fl_loc">Local tools · shop data</text>
+   <g class="chip"><rect x="720" y="72" width="80" height="26" rx="13"/><text x="760" y="89" text-anchor="middle" data-t="c_cat">Catalog</text><rect x="808" y="72" width="70" height="26" rx="13"/><text x="843" y="89" text-anchor="middle" data-t="c_quote">Quote</text><rect x="886" y="72" width="94" height="26" rx="13"/><text x="933" y="89" text-anchor="middle" data-t="c_ord">Orders</text><rect x="720" y="104" width="96" height="26" rx="13"/><text x="768" y="121" text-anchor="middle" data-t="c_trk">Tracking</text><rect x="824" y="104" width="76" height="26" rx="13"/><text x="862" y="121" text-anchor="middle" data-t="c_code">Codes</text><rect x="908" y="104" width="72" height="26" rx="13"/><text x="944" y="121" text-anchor="middle" data-t="c_faq">FAQ</text></g>
+   <rect class="nd" x="700" y="240" width="300" height="104" rx="18" style="stroke-dasharray:6 5"/><text class="t1" x="720" y="270" data-t="fl_llm">AI model · optional</text><text class="t2" x="720" y="293" data-t="fl_llm2">open questions · numbers still from our tools</text><text class="t2" x="720" y="316" data-t="fl_llm3">no key → best local answer + a person</text>
+   <rect class="nd dk" x="1000" y="155" width="96" height="60" rx="18"/><text class="t1 tw" x="1048" y="190" text-anchor="middle" data-t="fl_ans">Answer</text>
+   <circle class="dot" r="6"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#p1"/></animateMotion></circle>
+   <circle class="dot" r="6"><animateMotion dur="1.2s" begin=".4s" repeatCount="indefinite"><mpath href="#p2"/></animateMotion></circle>
+   <circle class="dot" r="6"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#p3"/></animateMotion></circle>
+   <circle class="dot" r="6"><animateMotion dur="1.6s" begin=".8s" repeatCount="indefinite"><mpath href="#p4"/></animateMotion></circle>
+   <circle class="dot l" r="5"><animateMotion dur="3.2s" repeatCount="indefinite"><mpath href="#p5"/></animateMotion></circle>
+   <circle class="dot l" r="5"><animateMotion dur="3.2s" begin="1.6s" repeatCount="indefinite"><mpath href="#p6"/></animateMotion></circle>
+  </svg>
+  <svg class="v" viewBox="0 0 360 660" role="img" aria-label="Routing diagram">
+   <path id="v1" class="ln" d="M180 70 V110"/><path id="v2" class="ln" d="M180 180 V215"/><path id="v3" class="ln" d="M120 265 C90 280,95 320,95 340"/><path id="v4" class="ln dash" d="M240 265 C270 280,270 320,270 340"/><path id="v5" class="ln" d="M95 500 C95 560,150 570,180 585"/><path class="ln dash" d="M270 500 C270 560,210 570,180 585"/>
+   <rect class="nd dk" x="90" y="10" width="180" height="60" rx="16"/><text class="t1 tw" x="180" y="38" text-anchor="middle" data-t="fl_msg">Message</text><text class="t2 tw2" x="180" y="57" text-anchor="middle" data-t="fl_msg2">EN · 中文 · DE · FR · IT</text>
+   <rect class="nd" x="60" y="110" width="240" height="70" rx="16"/><text class="t1" x="180" y="140" text-anchor="middle" data-t="fl_und">Understand</text><text class="t2" x="180" y="161" text-anchor="middle" data-t="fl_und2">intent · product · qty · country</text>
+   <path class="nd go" d="M180 215 L240 265 L180 315 L120 265 Z"/><text class="t2" x="180" y="260" text-anchor="middle" data-t="fl_conf">confidence</text><text class="t1" x="180" y="280" text-anchor="middle">≥ <tspan data-fact="threshold">0.6</tspan></text>
+   <text class="t2" x="60" y="305" data-t="fl_yes">yes</text><text class="t2" x="282" y="305" data-t="fl_no">no</text>
+   <rect class="nd" x="10" y="340" width="170" height="160" rx="16"/><text class="t1" x="95" y="366" text-anchor="middle" data-t="fl_loc_s">Local tools</text>
+   <g class="chip"><rect x="25" y="380" width="140" height="22" rx="11"/><text x="95" y="395" text-anchor="middle" data-t="c_cat">Catalog</text><rect x="25" y="408" width="140" height="22" rx="11"/><text x="95" y="423" text-anchor="middle" data-t="c_quote">Quote</text><rect x="25" y="436" width="140" height="22" rx="11"/><text x="95" y="451" text-anchor="middle" data-t="c_ord">Orders</text><rect x="25" y="464" width="140" height="22" rx="11"/><text x="95" y="479" text-anchor="middle" data-t="c_trk">Tracking</text></g>
+   <rect class="nd" x="190" y="340" width="160" height="160" rx="16" style="stroke-dasharray:6 5"/><text class="t1" x="270" y="372" text-anchor="middle" data-t="fl_llm_s">AI model</text><text class="t2" x="270" y="394" text-anchor="middle" data-t="fl_opt">optional</text><text class="t2" x="270" y="430" text-anchor="middle" data-t="fl_llm_v1">uses our tools</text><text class="t2" x="270" y="458" text-anchor="middle" data-t="fl_llm_v2">no key → local</text><text class="t2" x="270" y="476" text-anchor="middle" data-t="fl_llm_v3">+ a person</text>
+   <rect class="nd dk" x="110" y="585" width="140" height="56" rx="16"/><text class="t1 tw" x="180" y="619" text-anchor="middle" data-t="fl_ans">Answer</text>
+   <circle class="dot" r="5"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#v1"/></animateMotion></circle><circle class="dot" r="5"><animateMotion dur="1.2s" begin=".5s" repeatCount="indefinite"><mpath href="#v2"/></animateMotion></circle><circle class="dot" r="5"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#v3"/></animateMotion></circle><circle class="dot" r="5"><animateMotion dur="1.6s" begin=".6s" repeatCount="indefinite"><mpath href="#v5"/></animateMotion></circle><circle class="dot l" r="4"><animateMotion dur="3s" repeatCount="indefinite"><mpath href="#v4"/></animateMotion></circle>
+  </svg>
+ </div>
+</section>
+<section class="sec">
+ <div class="center rv"><span class="kick" data-t="k_ex">In action</span><h2 class="serif" data-t="h_ex">Real questions. Real numbers.</h2></div>
+ <div class="ex">
+  <div class="exc glass rv"><h3><span class="ico"><svg><use href="#i-calc"/></svg></span><span data-t="ex1">Shipping quote</span></h3>
+   <div class="b u" data-t="d1u">Shipping to Switzerland for 10 invitations?</div>
+   <div class="qc"><div><small data-t="std">Standard</small><b data-q="standard">CHF 6.34</b></div><div><small data-t="exp">Express</small><b data-q="express">CHF 13.15</b></div></div>
+   <span class="live" data-t="ex1l">Live from the quote engine</span></div>
+  <div class="exc glass rv"><h3><span class="ico"><svg><use href="#i-truck"/></svg></span><span data-t="ex2">Order tracking</span></h3>
+   <div class="b u" data-t="ex2u">Where is my order?</div>
+   <div class="b a" data-t="ex2a">Please send your order number and the e-mail you ordered with.</div>
+   <div class="oc"><b data-t="ex2c">Shipped · YunExpress</b><div class="st"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div></div>
+   <span class="tag" data-t="example">Example</span></div>
+  <div class="exc glass rv"><h3><span class="ico"><svg><use href="#i-gift"/></svg></span><span data-t="ex3">Recommendations</span></h3>
+   <div class="b u" data-t="d2u">And wedding favours?</div>
+   <div class="b a" data-t="d2a">Here are some ideas — tap a card to personalise it.</div>
+   <div class="prods"><div><em>🕯️</em><span data-t="pr_candle">Candle</span><b data-p="candle"></b></div><div><em>🎁</em><span data-t="pr_box">Gift box</span><b data-p="gift_box"></b></div><div><em>☕</em><span data-t="pr_coaster">Coaster</span><b data-p="coaster"></b></div></div>
+   <span class="live" data-t="ex3l">Live unit prices</span></div>
+ </div>
+</section>
+
+<section class="sec" id="features">
+ <div class="center rv"><span class="kick" data-t="k_f">Features</span><h2 class="serif" data-t="h_f">Everything shoppers ask.</h2></div>
+ <div class="fg">
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-chat"/></svg></span><h3 data-t="f1">Hero chat</h3><p data-t="f1d">Opens in your homepage image.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-calc"/></svg></span><h3 data-t="f2">Exact quotes</h3><p data-t="f2d">Same engine as checkout.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-lock"/></svg></span><h3 data-t="f3">Secure orders</h3><p data-t="f3d">Order no. + e-mail, or nothing.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-pin"/></svg></span><h3 data-t="f4">Tracking</h3><p data-t="f4d">From our YunExpress · 4PX shipments.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-gift"/></svg></span><h3 data-t="f5">Recommendations</h3><p data-t="f5d">By occasion and budget.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-tag"/></svg></span><h3 data-t="f6">Discount codes</h3><p data-t="f6d">Checks codes. Offers optional.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-user"/></svg></span><h3 data-t="f7">Human handoff</h3><p data-t="f7d">Queued in Admin with transcript.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-shield"/></svg></span><h3 data-t="f8">Guardrails</h3><p data-t="f8d">No injection, card data or spam.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-book"/></svg></span><h3 data-t="f9">Knowledge</h3><p data-t="f9d">Built-in + your own Q&amp;A.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-globe"/></svg></span><h3 data-t="f10">Multilingual</h3><p data-t="f10d">EN · 中文 · DE replies.</p></div>
+ </div>
+</section>
+
+<section class="sec">
+ <div class="center rv"><span class="kick" data-t="k_k">Admin</span><h2 class="serif"><span data-fact="kpis">15</span> <span data-t="h_k">KPIs. Measured, not guessed.</span></h2></div>
+ <div class="kg">
+  <div>
+   <div class="kc glass rv"><div class="top"><span data-t="k1">Answered locally</span><span class="live" data-t="livel">Live</span></div>
+    <div class="ring"><svg viewBox="0 0 80 80" aria-hidden="true"><defs><linearGradient id="gR"><stop offset="0" stop-color="#b8865b"/><stop offset="1" stop-color="#9b6aa0"/></linearGradient></defs><circle cx="40" cy="40" r="32" fill="none" stroke="#efe4d8" stroke-width="9"/><circle id="ringArc" cx="40" cy="40" r="32" fill="none" stroke="url(#gR)" stroke-width="9" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="0" transform="rotate(-90 40 40)"/></svg><div><b data-fact="local">100%</b><small style="color:var(--mut)" data-t="k1s">current answer engine</small></div></div></div>
+   <div class="kc glass rv"><div class="top"><span data-t="k2">API response</span><span class="live" data-t="livel">Live</span></div><b id="rt2">— ms</b>
+    <svg viewBox="0 0 300 46" preserveAspectRatio="none" aria-hidden="true"><polyline id="spark" fill="none" stroke="#b8865b" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="0,40 300,40"/></svg></div>
+   <div class="kc glass rv"><div class="top"><span data-t="k3">Handed to the team</span><span class="sample" data-t="samp">Sample · test data</span></div><b>7.1%</b>
+    <svg viewBox="0 0 300 46" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="300" y1="20" y2="20" stroke="#cdb8a2" stroke-dasharray="4 5"/><polyline fill="none" stroke="#9b6aa0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="0,14 50,18 100,12 150,24 200,22 250,30 300,32"/></svg><small style="color:var(--mut)" data-t="k3s">target ≤ 20%</small></div>
+  </div>
+  <figure class="shot rv" style="margin:0"><div class="cb"><span></span><span></span><span></span><em>Admin → AI 客服 / Chat agent</em></div>
+   <img src="/assets/agent/admin-chat-agent.webp" width="1600" height="1000" loading="lazy" decoding="async" alt="Admin Chat agent overview with KPIs (local test data)"></figure>
+ </div>
+ <p class="cap rv"><span class="sample" data-t="samp">Sample · test data</span><span data-t="capk">Screenshot with local test data. Your numbers: Admin → Overview.</span></p>
+</section>
+
+<section class="sec">
+ <div class="center rv"><span class="kick" data-t="k_a">Architecture</span><h2 class="serif" data-t="h_a">Plugged into your data.</h2></div>
+ <div class="arch glass rv">
+  <div class="col"><h4 data-t="a_in">Channels</h4>
+   <div class="box"><span class="ico"><svg><use href="#i-store"/></svg></span><div><span data-t="a_c1">Wed.AI storefront</span><small data-t="a_c1s">hero chat</small></div></div>
+   <div class="box"><span class="ico"><svg><use href="#i-chat"/></svg></span><div><span data-t="a_c2">Any website</span><small>widget.js</small></div></div>
+   <div class="box"><span class="ico"><svg><use href="#i-code"/></svg></span><div><span>REST API</span><small>/api/pod-agent/chat</small></div></div>
+  </div>
+  <div class="pipe"></div>
+  <div class="core"><h4>Wed.AI Agent</h4><div class="k"><span data-t="a_k1">Router</span><span data-t="a_k2">Rules</span><span data-t="a_k3">Shop tools</span><span data-t="a_k4">Guardrails</span></div>
+   <div class="llm" data-t="a_llm">✦ AI model — optional</div><div class="adm" data-t="a_adm">↓ Admin: KPIs · handoffs · knowledge</div></div>
+  <div class="pipe r"></div>
+  <div class="col"><h4 data-t="a_out">Your data</h4>
+   <div class="box"><span class="ico"><svg><use href="#i-db"/></svg></span><div><span data-t="a_d1">Catalog &amp; prices</span><small data-t="a_d1s">quote engine</small></div></div>
+   <div class="box"><span class="ico"><svg><use href="#i-bag"/></svg></span><div><span data-t="a_d2">Orders</span><small data-t="a_d2s">incl. Shopify sync</small></div></div>
+   <div class="box"><span class="ico"><svg><use href="#i-truck"/></svg></span><div><span data-t="a_d3">Carriers</span><small>YunExpress · 4PX</small></div></div>
+  </div>
+ </div>
+</section>
+
+<section class="sec" id="integrate">
+ <div class="center rv"><span class="kick" data-t="k_i">Integrate</span><h2 class="serif" data-t="h_i">Live in minutes.</h2></div>
+ <div class="tabs glass rv" role="tablist">
+  <button role="tab" aria-selected="true" data-tab="store"><svg><use href="#i-store"/></svg><span data-t="t_store">Wed.AI store</span></button>
+  <button role="tab" aria-selected="false" data-tab="embed"><svg><use href="#i-code"/></svg><span data-t="t_embed">Website embed</span></button>
+  <button role="tab" aria-selected="false" data-tab="shopify"><svg><use href="#i-bag"/></svg><span>Shopify</span></button>
+  <button role="tab" aria-selected="false" data-tab="api"><svg><use href="#i-chart"/></svg><span>REST API</span></button>
+ </div>
+ <div class="panel glass on" data-panel="store"><div><h3 data-t="p1h">Already on.</h3><p data-t="p1p">Ask Wed.AI sits next to the logo. Link to it from anywhere.</p><a class="btn p" href="/?ask=1"><svg><use href="#i-spark"/></svg><span data-t="try">Try it now</span></a></div>
+  <div class="code" id="lnk"><button class="copy" type="button" data-copy="lnk" data-t="copy">Copy</button>&lt;<span class="k">a</span> href=<span class="s">"https://wed.swisspro.site/?ask=1"</span>&gt;Ask Wed.AI&lt;/<span class="k">a</span>&gt;</div></div>
+ <div class="panel glass" data-panel="embed"><div><h3 data-t="p2h">One script tag.</h3><p data-t="p2p">Adds the Wed.AI chat button to any website.</p></div>
+  <div class="code" id="snip"><button class="copy" type="button" data-copy="snip" data-t="copy">Copy</button>&lt;<span class="k">script</span> src=<span class="s">"https://wed.swisspro.site/pod-agent/widget.js"</span>
+        data-lang=<span class="s">"en"</span> async&gt;&lt;/<span class="k">script</span>&gt;</div></div>
+ <div class="panel glass" data-panel="shopify"><div><h3 data-t="p3h">Connect your store.</h3><p data-t="p3p">Orders sync into the book the agent searches.</p></div>
+  <ol class="mini"><li><i>1</i><span data-t="p3a">Admin → Shopify</span></li><li><i>2</i><span data-t="p3b">Enter your shop domain</span></li><li><i>3</i><span data-t="p3c">Approve the app — done</span></li></ol></div>
+ <div class="panel glass" data-panel="api"><div><h3 data-t="p4h">Call it from anything.</h3><p data-t="p4p">Same local-first answers as the homepage.</p></div>
+  <div class="code" id="curl"><button class="copy" type="button" data-copy="curl" data-t="copy">Copy</button>curl -X POST https://wed.swisspro.site/api/pod-agent/chat \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{"message":"Shipping to Switzerland for 10 invitations","lang":"en"}'</span>
+<span class="c"># → { "answer": "…", "ui": [quote card], "answered_by": "local" }</span></div></div>
+ <ol class="tl">
+  <li class="rv"><span class="n">1</span><div><b data-t="s0">Connect Shopify</b><span data-t="opt">optional</span></div></li>
+  <li class="rv"><span class="n">2</span><div><b data-t="s1t">Configure</b><span data-t="s1ts">Admin → Settings</span></div></li>
+  <li class="rv"><span class="n">3</span><div><b data-t="s2t">Add knowledge</b><span data-t="s2ts">+ data check</span></div></li>
+  <li class="rv"><span class="n">4</span><div><b data-t="s3t">Go live</b><span>/?ask=1 · widget.js</span></div></li>
+  <li class="rv"><span class="n">5</span><div><b data-t="s4t">Add an AI key</b><span data-t="opt">optional</span></div></li>
+  <li class="rv"><span class="n">6</span><div><b data-t="s5t">Watch KPIs</b><span data-t="s5ts">Admin → Overview</span></div></li>
+ </ol>
+</section>
+
+<section class="sec">
+ <div class="center rv"><span class="kick">FAQ</span><h2 class="serif" data-t="h_q">Quick answers.</h2></div>
+ <div class="faq">
+  <details class="glass rv"><summary data-t="q1">Do I need an AI key?</summary><p data-t="a1">No. Rules + shop data answer; a key only adds open questions.</p></details>
+  <details class="glass rv"><summary data-t="q2">Are the prices exact?</summary><p data-t="a2">Yes — the same server quote as checkout.</p></details>
+  <details class="glass rv"><summary data-t="q3">Can anyone look up an order?</summary><p data-t="a3">Only with the order number and the matching e-mail.</p></details>
+  <details class="glass rv"><summary data-t="q4">What if it can't help?</summary><p data-t="a4">It hands the chat to your team in Admin.</p></details>
+  <details class="glass rv"><summary data-t="q5">Which languages?</summary><p data-t="a5">Replies in English, 中文 and Deutsch; also detects French and Italian.</p></details>
+ </div>
+</section>
+
+<section class="band rv">
+ <h2 class="serif" data-t="h_c">See it answer in seconds.</h2><p data-t="l_c">Open the homepage chat and ask anything.</p>
+ <div class="ctas" style="justify-content:center"><a class="btn p" href="/?ask=1"><svg><use href="#i-spark"/></svg><span data-t="try">Try it now</span></a><a class="btn s" id="talkBtn" href="/?ask=1&amp;q=Talk%20to%20a%20person"><svg><use href="#i-user"/></svg><span data-t="talk">Talk to our team</span></a></div>
+ <a class="lnk" href="/admin/login" data-t="seller">Seller login →</a>
+</section>
+</div>
 </main>
 <div id="site-footer"></div>
 <script src="i18n.js?v=20261101a"></script>
 <script src="/footer.js?v=20261101a" defer></script>
 <script>
 (function(){
- var D={"title": {"en": "Wed.AI POD Agent — AI shop assistant for print-on-demand", "zh": "Wed.AI POD Agent — 按需印刷店铺 AI 助手"}, "eyebrow": {"en": "Wed.AI POD Agent", "zh": "Wed.AI POD Agent"}, "h1": {"en": "An AI shop assistant that knows your products, prices and orders", "zh": "懂商品、懂价格、懂订单的店铺 AI 助手"}, "lead": {"en": "Wed.AI POD Agent answers customers inside your storefront: product questions, recommendations, shipping quotes, order tracking and discount codes, and hands the conversation to your team when a person is needed.", "zh": "Wed.AI POD Agent 在您的店铺内直接服务客户：商品咨询、推荐、运费报价、订单追踪与优惠码，需要人工时将会话转交团队。"}, "try": {"en": "Try it on the homepage", "zh": "在首页体验"}, "how": {"en": "How to integrate", "zh": "如何快速接入"}, "ex": {"en": "Example conversation", "zh": "对话示例"}, "exq": {"en": "How much is shipping to Switzerland for 10 invitations?", "zh": "10 份邀请卡寄到瑞士运费多少？"}, "exa": {"en": "10 × Cotton paper invitation to Switzerland. Shipping: Standard or Express, with arrival dates. VAT is added at checkout.", "zh": "10 份棉纹艺术纸邀请卡寄往瑞士：显示标准与快递运费及预计送达日期，结账时另加增值税。"}, "exn": {"en": "Prices in the chat come from the same quote as your checkout.", "zh": "对话中的价格与结账使用同一报价。"}, "fe": {"en": "Features", "zh": "功能"}, "feh": {"en": "Everything a POD shop gets asked, answered from your own data", "zh": "POD 店铺的常见问题，全部用您自己的数据回答"}, "fl": {"en": "How a message is handled", "zh": "每条消息如何处理"}, "f1t": {"en": "Understand", "zh": "理解"}, "f1": {"en": "Detects language and intent, and picks out product, quantity, country, budget, order or tracking number.", "zh": "识别语言与意图，提取商品、数量、国家、预算、订单号或运单号。"}, "f2t": {"en": "Check", "zh": "检查"}, "f2": {"en": "Guardrails block injection and card data; handoff rules decide whether a person should take over.", "zh": "护栏拦截注入与卡号信息；转人工规则判断是否需要人工接手。"}, "f3t": {"en": "Look up", "zh": "查询"}, "f3": {"en": "Calls shop tools: catalog, quote, order lookup, tracking, discount codes, knowledge base.", "zh": "调用店铺工具：商品目录、报价、订单查询、物流、优惠码、知识库。"}, "f4t": {"en": "Answer", "zh": "回复"}, "f4": {"en": "Replies in the customer's language with product, quote and tracking cards; every answer can be rated.", "zh": "用客户的语言回复，附商品、报价与物流卡片；每条回复都可评价。"}, "in": {"en": "How to integrate quickly", "zh": "快速接入"}, "inh": {"en": "Live in a few minutes, no code needed on Wed.AI", "zh": "几分钟即可上线，Wed.AI 店铺无需写代码"}, "cta": {"en": "See it in action", "zh": "立即体验"}, "ctas": {"en": "Open the homepage and tap Ask Wed.AI next to the logo.", "zh": "打开首页，点击 Logo 旁的 AI 助手。"}, "ctab": {"en": "Open the chat", "zh": "打开对话"}, "ctaa": {"en": "Seller login", "zh": "商家登录"}, "f_chat_t": {"en": "Customer chat in your hero", "zh": "首页主图区内的客户对话"}, "f_chat_d": {"en": "Visitors tap <b>Ask Wed.AI<\/b> next to the logo and the homepage image turns into a chat. No floating bubble covering your products; one tap brings the scene back.", "zh": "访客点击 Logo 旁的 <b>AI 助手<\/b>，首页主图区即变为对话框。没有遮挡商品的浮窗，一键返回原场景。"}, "f_rec_t": {"en": "Product answers & recommendations", "zh": "商品问答与推荐"}, "f_rec_d": {"en": "Answers about every product in your catalog with live unit prices and quantity tiers, and suggests matching items by occasion and budget (e.g. favours under CHF 10), each with a <b>Personalise<\/b> link into the design studio.", "zh": "基于真实商品目录回答问题，显示实时单价与数量阶梯价；按场合与预算推荐（如 CHF 10 以内的伴手礼），每张卡片都可直接进入设计工作室定制。"}, "f_ship_t": {"en": "Shipping quotes = checkout prices", "zh": "运费报价与结账一致"}, "f_ship_d": {"en": "Quotes use the same engine as the cart and checkout: Standard and Express, the visitor's market and currency, VAT mode, free-shipping thresholds and estimated arrival dates (production + proof + carrier days).", "zh": "报价与购物车、结账使用同一套计算：标准/快递、访客所在市场与币种、含税/不含税、免运费门槛，以及预计送达日期（生产 + 校样 + 承运商时效）。"}, "f_track_t": {"en": "Order status & tracking", "zh": "订单状态与物流追踪"}, "f_track_d": {"en": "Customers ask “where is my order?” with their order number; the agent asks for the order e-mail before showing anything and gives the same answer for every miss, so orders cannot be guessed. Tracking numbers are matched against your carrier shipments.", "zh": "客户提供订单号即可查询；助手会先核对下单邮箱再显示信息，任何不匹配都返回相同提示，无法枚举订单。运单号与您的承运商发货记录匹配。"}, "f_disc_t": {"en": "Discount codes", "zh": "优惠码"}, "f_disc_d": {"en": "Checks whether a code is valid. Optionally the agent may offer a single-use sales discount, off by default, with your percentage, validity, one per customer per period and a monthly cap.", "zh": "可校验优惠码是否有效。可选开启“销售折扣”：默认关闭，由您设置折扣比例、有效期、每位客户周期内限一次以及每月上限，生成一次性优惠码。"}, "f_hand_t": {"en": "Human handoff", "zh": "转人工"}, "f_hand_d": {"en": "When a customer asks for a person, mentions a refund, is upset, or the agent fails to answer several times, the chat is handed to your team with the full transcript. The customer is told when to expect a reply; nothing is e-mailed automatically.", "zh": "客户要求人工、提到退款、情绪不满，或助手多次未能解答时，会话连同完整记录转交团队处理，并告知客户预计回复时间；系统不会自动向客户发邮件。"}, "f_lang_t": {"en": "Multilingual", "zh": "多语言"}, "f_lang_d": {"en": "Detects English, Chinese and German and answers in the same language, following the language picked in the site header. Safety and handoff messages also exist in French and Italian.", "zh": "自动识别英文、中文、德文并用同一语言回复，跟随网站语言切换；安全与转人工提示还支持法语、意大利语。"}, "f_guard_t": {"en": "Guardrails", "zh": "安全护栏"}, "f_guard_d": {"en": "Refuses prompt-injection attempts, never asks for or stores card numbers or passwords, rate-limits each visitor, never invents prices (all numbers come from your shop data) and only uses customer-safe tools.", "zh": "拒绝提示词注入；不索取、不保存银行卡号或密码；按访客限流；绝不编造价格（所有数字来自店铺数据）；只使用面向客户的安全工具。"}, "f_kb_t": {"en": "Knowledge base", "zh": "知识库"}, "f_kb_d": {"en": "Built-in answers for proofs, returns, customs, VAT, payment, samples and more, generated from your live shop settings, plus your own Q&amp;A added in Admin with a search tester.", "zh": "内置校样、退换货、关税、增值税、支付、样品等常见问题，内容由实时店铺设置生成；还可在后台添加自定义问答并测试检索效果。"}, "f_admin_t": {"en": "Admin tools", "zh": "后台工具"}, "f_admin_d": {"en": "Behind your admin login: overview, handoff queue, conversation log, knowledge base, settings and a data check that flags missing prices, shipping zones or policies before customers notice.", "zh": "在管理员登录后可用：总览、转人工队列、会话记录、知识库、设置，以及数据检查（提前发现缺失的价格、运费区域或政策说明）。"}, "f_kpi_t": {"en": "KPIs & feedback", "zh": "KPI 与反馈"}, "f_kpi_d": {"en": "13 KPIs with targets: solved without a human, handoff rate, unanswered replies, positive feedback (👍/👎 on every answer), quotes, recommendations, order lookups, guardrail refusals and more, plus the questions it could not answer.", "zh": "13 项带目标值的 KPI：无需人工解决率、转人工率、未解答率、好评率（每条回复都可 👍/👎）、报价数、推荐数、订单查询、护栏拦截等，并列出未能回答的问题。"}, "f_shopify_t": {"en": "Shopify integration", "zh": "Shopify 集成"}, "f_shopify_d": {"en": "Connect Shopify shops by OAuth from Admin: push products, sync orders into the same order book the agent searches, return tracking on fulfilment, and serve checkout shipping rates from the same quote engine.", "zh": "在后台通过 OAuth 连接 Shopify 店铺：推送商品、将订单同步到助手所查询的同一订单库、发货时回传物流单号，并由同一报价引擎提供结账运费。"}, "f_llm_t": {"en": "Local first, AI only when needed", "zh": "本地优先，复杂问题才用 AI"}, "f_llm_d": {"en": "Products, prices, shipping quotes, orders, tracking, discount codes and FAQ are answered by our own rule engine from your shop data — fast, free and exact. Only complex or unmatched questions go to an AI model, if you add a key (OpenAI, xAI/Grok or DeepSeek; Anthropic and Gemini for open questions). Without a key the customer gets the best local answer and an offer to talk to a person. Admin shows the share answered locally vs by AI.", "zh": "商品、价格、运费报价、订单、物流、优惠码和常见问题均由自有规则引擎基于店铺数据直接回答——快速、免费、准确。只有复杂或无法匹配的问题才会调用 AI 模型（需配置 OpenAI、xAI/Grok 或 DeepSeek 密钥；Anthropic、Gemini 可回答开放性问题）。未配置密钥时，客户会得到最佳本地答案并可转人工。后台可查看本地回答与 AI 回答的占比。"}, "s0_t": {"en": "Connect your Shopify store (optional)", "zh": "连接 Shopify 店铺（可选）"}, "s0_d": {"en": "In <b>Admin → Shopify<\/b>, enter your shop domain and approve the app. Products, orders and shipping rates then stay in sync. Selling only on Wed.AI? Skip this step.", "zh": "在 <b>后台 → Shopify<\/b> 输入店铺域名并授权应用，商品、订单与运费即保持同步。仅在 Wed.AI 销售可跳过此步。"}, "s1_t": {"en": "Configure the agent in Admin", "zh": "在后台配置助手"}, "s1_d": {"en": "Open <b>Admin → AI 客服 / Chat agent → Settings<\/b>: switch the chat on, set your human reply time, the handoff threshold, the greeting and (if you want) the sales-discount rules.", "zh": "打开 <b>后台 → AI 客服 → 设置<\/b>：开启对话，设置人工回复时间、转人工阈值、欢迎语，以及（可选）销售折扣规则。"}, "s2_t": {"en": "Add your knowledge", "zh": "补充知识库"}, "s2_d": {"en": "Built-in answers come from your shop settings. Add shop-specific Q&amp;A in the <b>Knowledge<\/b> tab and use the tester to check which answer a question finds. Run <b>Data check<\/b> to fix gaps.", "zh": "内置答案来自店铺设置。在 <b>知识库<\/b> 标签添加店铺专属问答，并用测试工具查看问题会命中哪条答案；运行 <b>数据检查<\/b> 补齐缺漏。"}, "s3_t": {"en": "Enable the chat for customers", "zh": "为客户启用对话"}, "s3_d": {"en": "On the Wed.AI storefront the <b>Ask Wed.AI<\/b> button is in the header on every device. Link to it from anywhere with <code>/?ask=1<\/code> (e.g. in newsletters or product pages).", "zh": "在 Wed.AI 店铺中，<b>AI 助手<\/b> 按钮位于所有设备的页头。可在任意位置通过 <code>/?ask=1<\/code> 链接直接打开（如邮件或商品页）。"}, "s4_t": {"en": "Optional: add an AI model", "zh": "可选：接入 AI 模型"}, "s4_d": {"en": "Set <code>LLM_PROVIDER<\/code> and the matching key (e.g. <code>OPENAI_API_KEY<\/code>, <code>XAI_API_KEY<\/code>, <code>DEEPSEEK_API_KEY<\/code>) in the server environment. Without one the rule engine keeps working.", "zh": "在服务器环境变量中设置 <code>LLM_PROVIDER<\/code> 及对应密钥（如 <code>OPENAI_API_KEY<\/code>、<code>XAI_API_KEY<\/code>、<code>DEEPSEEK_API_KEY<\/code>）。未配置时规则引擎照常工作。"}, "s5_t": {"en": "Watch the KPIs", "zh": "关注 KPI"}, "s5_d": {"en": "The <b>Overview<\/b> shows automation rate, handoffs and feedback; answer open handoffs from the <b>Handoffs<\/b> tab and mark them resolved.", "zh": "在 <b>总览<\/b> 查看自动化率、转人工与反馈；在 <b>转人工<\/b> 标签处理待回复会话并标记为已解决。"}};
- function L(){var l=window.WeddingI18n&&WeddingI18n.lang?WeddingI18n.lang():'en';return l==='zh'?'zh':'en'}
- function apply(){var l=L();document.querySelectorAll('[data-t]').forEach(function(el){var e=D[el.getAttribute('data-t')];if(e)el.innerHTML=e[l]||e.en});var t=D.title;document.title=t[l]||t.en}
- apply();window.addEventListener('wedding-language-change',function(){apply();if(window.__agQ)draw(window.__agQ)});
- // Live example quote: the same storefront quote the cart and checkout use (no chat conversation is created).
- var box=document.getElementById('agQuote');
- function fmt(c,v){try{return new Intl.NumberFormat('de-CH',{style:'currency',currency:c}).format(v)}catch(e){return c+' '+v}}
- fetch('/api/storefront/shipping/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({country:'CH',currency:'CHF',cart:[{product_id:'invitation',quantity:10}]})})
-  .then(function(r){return r.ok?r.json():null}).then(function(q){if(!q||!q.shipping_options)return;window.__agQ=q;draw(q)}).catch(function(){});
- function draw(q){var rows=q.shipping_options.slice(0,2);box.innerHTML='';rows.forEach(function(o){var d=document.createElement('div'),s=document.createElement('span'),b=document.createElement('b');s.textContent=(({standard:{en:'Standard shipping',zh:'标准配送'},express:{en:'Express shipping',zh:'快递配送'}})[o.id]||{})[L()]||(o.label||o.id);s.textContent+=(o.delivery&&o.delivery.from?' · '+o.delivery.from.slice(5).split('-').reverse().join('.')+'–'+o.delivery.to.slice(5).split('-').reverse().join('.'):'');b.textContent=fmt(q.currency||'CHF',o.amount);d.appendChild(s);d.appendChild(b);box.appendChild(d)})}
+ "use strict";
+ var D={title:{en:"Wed.AI POD Agent — AI shop assistant on real shop data",zh:"Wed.AI POD Agent —— 基于真实店铺数据的 AI 客服"},
+ eyebrow:{en:"Wed.AI POD Agent · local-first",zh:"Wed.AI POD Agent · 本地优先"},h1a:{en:"Your shop's AI assistant.",zh:"您店铺的 AI 客服，"},h1b:{en:"Answers from real data.",zh:"用真实数据作答。"},
+ sub:{en:"Quotes, orders and product ideas — instantly, in your customer's language.",zh:"报价、订单、产品推荐——即时回答，用客户的语言。"},try:{en:"Try it now",zh:"立即试用"},int:{en:"Integrate",zh:"立即对接"},
+ tk1:{en:"Quote = checkout price",zh:"报价 = 结账价"},tk2:{en:"Works without an AI key",zh:"无需 AI 密钥"},tk3:{en:"No floating bubble",zh:"无悬浮气泡"},askbtn:{en:"Ask Wed.AI",zh:"AI 助手"},
+ d1u:{en:"Shipping to Switzerland for 10 invitations?",zh:"10 份邀请卡寄到瑞士运费多少？"},d1a:{en:"10 × Invitation to Switzerland — your options:",zh:"10 份邀请卡寄往瑞士，可选："},std:{en:"Standard",zh:"标准"},exp:{en:"Express",zh:"快递"},pers:{en:"Personalise &amp; order →",zh:"定制下单 →"},
+ d2u:{en:"And wedding favours?",zh:"婚礼伴手礼呢？"},d2a:{en:"Here are some ideas — tap a card to personalise it.",zh:"为您推荐几款，点击卡片即可定制。"},example:{en:"Example",zh:"示例"},
+ livel:{en:"Live",zh:"实时"},code:{en:"From code",zh:"来自代码"},s1:{en:"quote = checkout",zh:"报价 = 结账价"},s1s:{en:"10 invitations → CH, standard",zh:"10 份邀请卡 → 瑞士，标准"},s2:{en:"API response",zh:"接口响应"},s2s:{en:"measured in your browser",zh:"在您的浏览器实测"},
+ s3:{en:"answered locally",zh:"本地回答"},s3s:{en:"rules + shop data, no AI key",zh:"规则 + 店铺数据，未用 AI"},s4:{en:"languages detected",zh:"种语言识别"},s4s:{en:"with full replies",zh:"种完整回复"},s5:{en:"shop tools",zh:"个店铺工具"},s5s:{en:"KPIs in Admin",zh:"项后台 KPI"},
+ k_how:{en:"How it works",zh:"工作原理"},h_how:{en:"Local first. AI only when it helps.",zh:"本地优先，需要时才用 AI。"},
+ fl_msg:{en:"Message",zh:"客户消息"},fl_msg2:{en:"EN · 中文 · DE · FR · IT",zh:"英 · 中 · 德 · 法 · 意"},fl_und:{en:"Understand",zh:"理解"},fl_und2:{en:"intent · product · qty · country",zh:"意图 · 商品 · 数量 · 国家"},fl_conf:{en:"confidence",zh:"置信度"},
+ fl_loc:{en:"Local tools · shop data",zh:"本地工具 · 店铺数据"},fl_loc_s:{en:"Local tools",zh:"本地工具"},c_cat:{en:"Catalog",zh:"商品"},c_quote:{en:"Quote",zh:"报价"},c_ord:{en:"Orders",zh:"订单"},c_trk:{en:"Tracking",zh:"物流"},c_code:{en:"Codes",zh:"优惠码"},c_faq:{en:"FAQ",zh:"知识库"},
+ fl_llm:{en:"AI model · optional",zh:"AI 模型 · 可选"},fl_llm2:{en:"open questions · numbers still from our tools",zh:"开放问题 · 数字仍来自工具"},fl_llm3:{en:"no key → best local answer + a person",zh:"无密钥 → 最佳本地答案 + 转人工"},fl_llm_s:{en:"AI model",zh:"AI 模型"},fl_opt:{en:"optional",zh:"可选"},fl_llm_v1:{en:"uses our tools",zh:"数字来自工具"},fl_llm_v2:{en:"no key → local",zh:"无密钥 → 本地"},fl_llm_v3:{en:"+ a person",zh:"+ 转人工"},
+ fl_ans:{en:"Answer",zh:"回复"},fl_yes:{en:"yes",zh:"是"},fl_no:{en:"no",zh:"否"},
+ k_ex:{en:"In action",zh:"实际效果"},h_ex:{en:"Real questions. Real numbers.",zh:"真实问题，真实数字。"},ex1:{en:"Shipping quote",zh:"运费报价"},ex1l:{en:"Live from the quote engine",zh:"报价引擎实时数据"},ex2:{en:"Order tracking",zh:"订单追踪"},ex2u:{en:"Where is my order?",zh:"我的订单到哪了？"},ex2a:{en:"Please send your order number and the e-mail you ordered with.",zh:"请提供订单号和下单邮箱，我来为您查询。"},ex2c:{en:"Shipped · YunExpress",zh:"已发货 · YunExpress"},
+ ex3:{en:"Recommendations",zh:"商品推荐"},ex3l:{en:"Live unit prices",zh:"实时单价"},pr_candle:{en:"Candle",zh:"蜡烛"},pr_box:{en:"Gift box",zh:"礼盒"},pr_coaster:{en:"Coaster",zh:"杯垫"},
+ k_f:{en:"Features",zh:"功能"},h_f:{en:"Everything shoppers ask.",zh:"顾客会问的，都能答。"},f1:{en:"Hero chat",zh:"主图区对话"},f1d:{en:"Opens in your homepage image.",zh:"在首页主图区展开。"},f2:{en:"Exact quotes",zh:"精准报价"},f2d:{en:"Same engine as checkout.",zh:"与结账同一引擎。"},f3:{en:"Secure orders",zh:"安全查单"},f3d:{en:"Order no. + e-mail, or nothing.",zh:"订单号 + 邮箱才显示。"},
+ f4:{en:"Tracking",zh:"物流追踪"},f4d:{en:"From our YunExpress · 4PX shipments.",zh:"来自自有云途 · 4PX 发货记录。"},f5:{en:"Recommendations",zh:"商品推荐"},f5d:{en:"By occasion and budget.",zh:"按场合与预算推荐。"},f6:{en:"Discount codes",zh:"优惠码"},f6d:{en:"Checks codes. Offers optional.",zh:"校验优惠码，折扣可选。"},
+ f7:{en:"Human handoff",zh:"转人工"},f7d:{en:"Queued in Admin with transcript.",zh:"带记录进入后台队列。"},f8:{en:"Guardrails",zh:"安全护栏"},f8d:{en:"No injection, card data or spam.",zh:"拦截注入、卡号与刷屏。"},f9:{en:"Knowledge",zh:"知识库"},f9d:{en:"Built-in + your own Q&amp;A.",zh:"内置 + 自定义问答。"},f10:{en:"Multilingual",zh:"多语言"},f10d:{en:"EN · 中文 · DE replies.",zh:"英 · 中 · 德回复。"},
+ k_k:{en:"Admin",zh:"后台"},h_k:{en:"KPIs. Measured, not guessed.",zh:"项 KPI，用数据说话。"},k1:{en:"Answered locally",zh:"本地回答"},k1s:{en:"current answer engine",zh:"当前回答引擎"},k2:{en:"API response",zh:"接口响应"},k3:{en:"Handed to the team",zh:"转人工率"},k3s:{en:"target ≤ 20%",zh:"目标 ≤ 20%"},
+ samp:{en:"Sample · test data",zh:"示例 · 测试数据"},capk:{en:"Screenshot with local test data. Your numbers: Admin → Overview.",zh:"截图使用本地测试数据。真实数字见：后台 → 总览。"},
+ k_a:{en:"Architecture",zh:"架构"},h_a:{en:"Plugged into your data.",zh:"直连您的数据。"},a_in:{en:"Channels",zh:"渠道"},a_c1:{en:"Wed.AI storefront",zh:"Wed.AI 店铺"},a_c1s:{en:"hero chat",zh:"主图区对话"},a_c2:{en:"Any website",zh:"任意网站"},
+ a_k1:{en:"Router",zh:"路由"},a_k2:{en:"Rules",zh:"规则"},a_k3:{en:"Shop tools",zh:"店铺工具"},a_k4:{en:"Guardrails",zh:"护栏"},a_llm:{en:"✦ AI model — optional",zh:"✦ AI 模型 —— 可选"},a_adm:{en:"↓ Admin: KPIs · handoffs · knowledge",zh:"↓ 后台：KPI · 转人工 · 知识库"},
+ a_out:{en:"Your data",zh:"您的数据"},a_d1:{en:"Catalog &amp; prices",zh:"商品与价格"},a_d1s:{en:"quote engine",zh:"报价引擎"},a_d2:{en:"Orders",zh:"订单"},a_d2s:{en:"incl. Shopify sync",zh:"含 Shopify 同步"},a_d3:{en:"Carriers",zh:"承运商"},
+ k_i:{en:"Integrate",zh:"立即对接"},h_i:{en:"Live in minutes.",zh:"几分钟即可上线。"},t_store:{en:"Wed.AI store",zh:"Wed.AI 店铺"},t_embed:{en:"Website embed",zh:"网站嵌入"},
+ p1h:{en:"Already on.",zh:"已经上线。"},p1p:{en:"Ask Wed.AI sits next to the logo. Link to it from anywhere.",zh:"AI 助手就在 Logo 旁，可从任意位置链接打开。"},p2h:{en:"One script tag.",zh:"一行代码。"},p2p:{en:"Adds the Wed.AI chat button to any website.",zh:"为任意网站加上 Wed.AI 对话按钮。"},copy:{en:"Copy",zh:"复制"},
+ p3h:{en:"Connect your store.",zh:"连接您的店铺。"},p3p:{en:"Orders sync into the book the agent searches.",zh:"订单同步到助手查询的订单库。"},p3a:{en:"Admin → Shopify",zh:"后台 → Shopify"},p3b:{en:"Enter your shop domain",zh:"输入店铺域名"},p3c:{en:"Approve the app — done",zh:"授权应用——完成"},
+ p4h:{en:"Call it from anything.",zh:"任何系统都能调用。"},p4p:{en:"Same local-first answers as the homepage.",zh:"与首页相同的本地优先回答。"},
+ s0:{en:"Connect Shopify",zh:"连接 Shopify"},opt:{en:"optional",zh:"可选"},s1t:{en:"Configure",zh:"配置"},s1ts:{en:"Admin → Settings",zh:"后台 → 设置"},s2t:{en:"Add knowledge",zh:"补充知识"},s2ts:{en:"+ data check",zh:"+ 数据检查"},s3t:{en:"Go live",zh:"上线"},s4t:{en:"Add an AI key",zh:"接入 AI 密钥"},s5t:{en:"Watch KPIs",zh:"关注 KPI"},s5ts:{en:"Admin → Overview",zh:"后台 → 总览"},
+ h_q:{en:"Quick answers.",zh:"常见问题"},q1:{en:"Do I need an AI key?",zh:"需要 AI 密钥吗？"},a1:{en:"No. Rules + shop data answer; a key only adds open questions.",zh:"不需要。规则 + 店铺数据即可回答；密钥只用于开放性问题。"},q2:{en:"Are the prices exact?",zh:"价格准确吗？"},a2:{en:"Yes — the same server quote as checkout.",zh:"准确——与结账使用同一服务器报价。"},
+ q3:{en:"Can anyone look up an order?",zh:"任何人都能查订单吗？"},a3:{en:"Only with the order number and the matching e-mail.",zh:"必须同时提供订单号和匹配的下单邮箱。"},q4:{en:"What if it can't help?",zh:"答不上来怎么办？"},a4:{en:"It hands the chat to your team in Admin.",zh:"会话转入后台，由您的团队处理。"},
+ q5:{en:"Which languages?",zh:"支持哪些语言？"},a5:{en:"Replies in English, 中文 and Deutsch; also detects French and Italian.",zh:"用英文、中文、德文回复；还可识别法语和意大利语。"},
+ h_c:{en:"See it answer in seconds.",zh:"几秒钟，亲眼看它回答。"},l_c:{en:"Open the homepage chat and ask anything.",zh:"打开首页对话，随便问。"},talk:{en:"Talk to our team",zh:"联系团队"},seller:{en:"Seller login →",zh:"商家登录 →"}};
+ function L(){var l="en";try{l=window.WeddingI18n&&WeddingI18n.lang?WeddingI18n.lang():"en"}catch(e){}return l==="zh"?"zh":"en"}
+ var SVGNS="http://www.w3.org/2000/svg";
+ function apply(){var l=L();document.documentElement.lang=l==="zh"?"zh-CN":"en";
+  document.querySelectorAll("[data-t]").forEach(function(el){var e=D[el.getAttribute("data-t")];if(!e)return;var v=e[l]||e.en;if(el.namespaceURI===SVGNS)el.textContent=v.replace(/&amp;/g,"&");else el.innerHTML=v});
+  document.title=D.title[l];document.getElementById("talkBtn").href="/?ask=1&q="+encodeURIComponent(l==="zh"?"转人工":"Talk to a person");fillQuote();fillFacts()}
+ // Facts from GET /api/pod-agent/status — the numbers come from the code; the HTML holds the same values as fallbacks (checked by server/pod-agent-test.js).
+ var F=null;
+ function fillFacts(){if(!F)return;var set=function(k,v){document.querySelectorAll('[data-fact="'+k+'"]').forEach(function(e){e.textContent=v})};
+  set("kpis",F.kpis);set("tools",F.tools);set("threshold",F.confidence_threshold);if(F.languages){set("langs_detected",F.languages.detected.length);set("langs_replies",F.languages.replies.length)}
+  if(F.mode!=="rules"){set("local",L()==="zh"?"优先":"First");var m=document.getElementById("modeTxt");if(m)m.textContent=L()==="zh"?"规则优先，复杂问题用 AI":"rules first, AI for complex questions";var a=document.getElementById("ringArc");if(a)a.setAttribute("stroke-dashoffset","40")}}
+ // Live quote: the same storefront quote the cart and checkout use (no chat conversation is created).
+ var Q=null,P={};
+ function money(c,v){return c+" "+Number(v).toFixed(2)}
+ function fillQuote(){if(Q)(Q.shipping_options||[]).forEach(function(o){document.querySelectorAll('[data-q="'+o.id+'"]').forEach(function(e){e.textContent=money(Q.currency,o.amount)})});
+  Object.keys(P).forEach(function(id){var e=document.querySelector('[data-p="'+id+'"]');if(e)e.textContent=(L()==="zh"?"":"from ")+P[id]+(L()==="zh"?" 起":"")})}
+ function quote(cart){return fetch("/api/storefront/shipping/quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({country:"CH",currency:"CHF",cart:cart})}).then(function(r){return r.ok?r.json():null})}
+ quote([{product_id:"invitation",quantity:10}]).then(function(q){if(q&&q.shipping_options){Q=q;fillQuote()}}).catch(function(){});
+ ["candle","gift_box","coaster"].forEach(function(id){quote([{product_id:id,quantity:1}]).then(function(q){var it=q&&q.items&&q.items[0];if(it){P[id]=money(q.currency,it.unit_price);fillQuote()}}).catch(function(){})});
+ // Live API response time: GET /api/pod-agent/status round trips from this browser (median shown, all plotted).
+ var times=[];
+ function draw(){var s=times.slice().sort(function(a,b){return a-b}),med=s[Math.floor(s.length/2)];["rt","rt2"].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=med+" ms"});
+  if(times.length>1){var mx=Math.max.apply(null,times)*1.3;document.getElementById("spark").setAttribute("points",times.map(function(v,i){return Math.round(i*300/(times.length-1))+","+Math.round(44-v/mx*40)}).join(" "))}}
+ function ping(n){var t=performance.now();fetch("/api/pod-agent/status",{cache:"no-store"}).then(function(r){return r.json()}).then(function(s){times.push(Math.round(performance.now()-t));if(!F){F=s;fillFacts()}draw();if(n>1)setTimeout(function(){ping(n-1)},400)}).catch(function(){})}
+ ping(8);
+ // Integration tabs
+ var tabs=document.querySelectorAll("[data-tab]");
+ tabs.forEach(function(b){b.addEventListener("click",function(){tabs.forEach(function(x){x.setAttribute("aria-selected",String(x===b))});document.querySelectorAll("[data-panel]").forEach(function(p){p.classList.toggle("on",p.getAttribute("data-panel")===b.getAttribute("data-tab"))})})});
+ // Copy buttons (code text without the button label)
+ document.querySelectorAll("[data-copy]").forEach(function(b){b.addEventListener("click",function(){var box=document.getElementById(b.getAttribute("data-copy")),txt="";box.childNodes.forEach(function(n){if(n!==b)txt+=n.textContent});txt=txt.trim();var o=b.textContent,done=function(){b.textContent="✓";setTimeout(function(){b.textContent=o},1400)};if(navigator.clipboard)navigator.clipboard.writeText(txt).then(done,done);else done()})});
+ // Scroll reveal; the device conversation replays while it is on screen.
+ var dev=document.getElementById("dev"),still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+ function replay(){dev.classList.remove("play");void dev.offsetWidth;dev.classList.add("play")}
+ if("IntersectionObserver" in window&&!still){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.1,rootMargin:"0px 0px -5% 0px"});document.querySelectorAll(".rv").forEach(function(el){io.observe(el)})}
+ else document.querySelectorAll(".rv").forEach(function(el){el.classList.add("in")});
+ dev.classList.add("play");
+ if(!still)setInterval(function(){var r=dev.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight&&!document.hidden)replay()},11000);
+ apply();window.addEventListener("wedding-language-change",apply);
 })();
 </script>
 </body></html>

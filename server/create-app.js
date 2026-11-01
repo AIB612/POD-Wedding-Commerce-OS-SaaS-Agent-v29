@@ -53,7 +53,10 @@ export async function createApp({ root = projectRoot, generatedDir = path.join(p
   app.use(studioRouter({ generatedDir }));
   app.use(sellerRouter({ generatedDir }));
   app.use("/api/pod-agent", podAgentRouter());
-  app.use("/pod-agent", express.static(new URL("./pod-agent", import.meta.url).pathname));
+  // Only the embeddable widget is public; the rest of server/pod-agent (server code, README) is never served.
+  const widgetFile = new URL("./pod-agent/widget.js", import.meta.url).pathname;
+  app.get("/pod-agent/widget.js", (_, res) => { res.setHeader("Access-Control-Allow-Origin", "*"); res.type("application/javascript").sendFile(widgetFile, { maxAge: "1h" }); });
+  app.use("/pod-agent", (_, res) => res.status(404).json({ error: "not_found" }));
   app.use(carrierRates);
   app.use(logisticsRouter());
   app.use(adminRouter({ root }));

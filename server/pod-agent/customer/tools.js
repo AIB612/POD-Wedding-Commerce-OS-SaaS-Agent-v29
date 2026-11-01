@@ -50,6 +50,9 @@ const OCCASIONS = [
   { re: /(wedding|hochzeit|mariage|matrimonio|婚礼|结婚|婚)/i, kit: "gift_wedding" }
 ];
 
+/** Every customer-safe tool the chat can use (issue_discount only when the sales discount is switched on in Admin). */
+export const CUSTOMER_TOOLS = ["search_knowledge", "get_policy", "get_product", "recommend_products", "quote_shipping", "find_order", "get_tracking", "check_discount_code", "issue_discount", "handoff_to_human"];
+
 export function createTools(ctx) {
   const { tenantId, lang, conv, settings } = ctx;
   const ui = ctx.ui;

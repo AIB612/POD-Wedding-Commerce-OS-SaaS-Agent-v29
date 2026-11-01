@@ -112,5 +112,6 @@
   bind();document.addEventListener("DOMContentLoaded",bind);
   window.addEventListener("wedding-language-change",function(){relabel();if(stage.classList.contains("hc-open")&&!S.msgs.length)greet()});
   window.WedAIChat={open:open,close:close,send:send};
-  if(/[?&]ask=1\b/.test(location.search)||location.hash==="#ask")setTimeout(open,0);
+  // /?ask=1 (or #ask) opens the panel; &q=… pre-fills the input (never sent automatically), e.g. from /agent.html "Talk to our team".
+  if(/[?&]ask=1\b/.test(location.search)||location.hash==="#ask")setTimeout(function(){open();try{var q=new URLSearchParams(location.search).get("q");if(q){input.value=String(q).slice(0,200);input.focus()}}catch(e){}},0);
 })();

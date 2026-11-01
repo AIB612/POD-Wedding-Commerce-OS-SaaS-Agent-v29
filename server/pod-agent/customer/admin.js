@@ -12,6 +12,9 @@ import { llmStatus } from "./llm.js";
 import { CONFIDENCE_THRESHOLD } from "./router.js";
 import { HttpError } from "../../http/middleware.js";
 
+/** The Overview KPIs, in display order (agentOverview returns exactly these; /api/pod-agent/status and agent.html show the count). */
+export const KPI_IDS = ["conversations", "answered_local", "answered_llm", "messages", "avg_messages", "automation_rate", "handoff_rate", "unanswered_rate", "satisfaction",
+  "quotes", "recommendations", "order_lookups", "open_handoffs", "guardrail_hits", "discounts_issued"];
 const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : null);
 
 export async function agentOverview(tenantId, { days = 30 } = {}) {

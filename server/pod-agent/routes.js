@@ -7,7 +7,10 @@
 import { Router } from "express";
 import { PODAgent } from "./index.js";
 import { callAIAuto, availableProviders } from "./ai.js";
-import { handleChat } from "./customer/agent.js";
+import { handleChat, DETECTED_LANGS, REPLY_LANGS } from "./customer/agent.js";
+import { CONFIDENCE_THRESHOLD } from "./customer/router.js";
+import { KPI_IDS } from "./customer/admin.js";
+import { CUSTOMER_TOOLS } from "./customer/tools.js";
 import { llmStatus } from "./customer/llm.js";
 import { findRecord, updateRecord } from "../saas-store.js";
 import { rateLimit, ah } from "../http/middleware.js";
@@ -19,7 +22,9 @@ export function podAgentRouter({ store = null, connectors = {} } = {}) {
 
   r.get("/providers", requireAdmin, (_, res) => res.json({ available: availableProviders() }));
   // Public status for the panel: which mode answers (rules / llm), never key names or values.
-  r.get("/status", (_, res) => { const s = llmStatus(); res.json({ ok: true, strategy: "local_first", mode: s.mode }); });
+  // Public facts for the panel and /agent.html (numbers come from the code, never key names or values).
+  r.get("/status", (_, res) => { const s = llmStatus(); res.json({ ok: true, strategy: "local_first", mode: s.mode, confidence_threshold: CONFIDENCE_THRESHOLD,
+    kpis: KPI_IDS.length, tools: CUSTOMER_TOOLS.length, languages: { detected: DETECTED_LANGS, replies: REPLY_LANGS } }); });
 
   // Customer chat (homepage hero panel). Customer-safe tools only; see customer/agent.js.
   r.post("/chat", chatLimit, ah(async (req, res) => {

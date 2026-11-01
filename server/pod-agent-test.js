@@ -104,6 +104,20 @@ try {
   r = await call("/api/pod-agent/feedback", { method: "POST", body: { conversation_id: cid, index: last.json.message_index, rating: 1 } }); assert.equal(r.status, 200);
   assert.equal((await call("/api/pod-agent/feedback", { method: "POST", body: { conversation_id: cid, index: 0, rating: 1 } })).status, 400, "only assistant messages can be rated");
   r = await call("/api/pod-agent/status"); assert.equal(r.status, 200); assert.equal(r.json.mode, "rules"); assert.ok(!JSON.stringify(r.json).includes("missing"), "status shows no key names publicly");
+  // Public facts on /status come from the code; /agent.html shows the same numbers (its static fallbacks must match too).
+  const { KPI_IDS } = await import("./pod-agent/customer/admin.js");
+  const { CUSTOMER_TOOLS } = await import("./pod-agent/customer/tools.js");
+  assert.equal(r.json.strategy, "local_first"); assert.equal(r.json.confidence_threshold, 0.6); assert.equal(r.json.kpis, KPI_IDS.length); assert.equal(r.json.tools, CUSTOMER_TOOLS.length);
+  assert.deepEqual(r.json.languages, { detected: ["en", "zh", "de", "fr", "it"], replies: ["en", "zh", "de"] });
+  const agentPage = fs.readFileSync(new URL("../agent.html", import.meta.url), "utf8");
+  for (const [k, v] of Object.entries({ kpis: KPI_IDS.length, tools: CUSTOMER_TOOLS.length, threshold: 0.6, langs_detected: 5, langs_replies: 3 }))
+    assert.ok(new RegExp(`data-fact="${k}"[^>]*>${String(v).replace(".", "\\.")}<`).test(agentPage), `agent.html fallback for ${k} = ${v}`);
+  assert.ok(!/\b13 (KPIs|项)/.test(agentPage), "no stale KPI count on agent.html");
+  // Only the embeddable widget is served from /pod-agent/; server code and README are not.
+  const w = await realFetch(base + "/pod-agent/widget.js"); assert.equal(w.status, 200); assert.match(w.headers.get("content-type"), /javascript/); assert.match(await w.text(), /api\/pod-agent\/chat/);
+  for (const p of ["/pod-agent/README.md", "/pod-agent/index.js", "/pod-agent/ai.js", "/pod-agent/routes.js", "/pod-agent/customer/agent.js", "/pod-agent/customer/tools.js", "/pod-agent/", "/pod-agent/..%2Fapp.js"])
+    assert.equal((await realFetch(base + p)).status, 404, p);
+  result.public_files = "widget.js only";
   assert.equal((await call("/api/pod-agent/task", { method: "POST", body: { task: "x" } })).status, 401);
   assert.equal((await call("/api/pod-agent/providers")).status, 401);
   assert.equal((await call("/api/pod-agent/chat", { method: "POST", body: {} })).status, 400);
@@ -113,7 +127,7 @@ try {
     assert.equal((await call(p)).status, 401, p); assert.equal((await call(p, { admin: true })).status, 200, p);
   }
   const ov = (await call("/api/saas/agent/overview", { admin: true })).json;
-  assert.equal(ov.kpis.length, 15); assert.equal(ov.kpis.find(k => k.id === "answered_local").value, 100); assert.equal(ov.kpis.find(k => k.id === "answered_llm").value, 0); assert.ok(Object.keys(ov.routes).some(k => k.startsWith("local · shop_data"))); assert.ok(ov.llm.missing.includes("OPENAI_API_KEY"));
+  assert.deepEqual(ov.kpis.map(k => k.id), KPI_IDS); assert.equal(ov.kpis.find(k => k.id === "answered_local").value, 100); assert.equal(ov.kpis.find(k => k.id === "answered_llm").value, 0); assert.ok(Object.keys(ov.routes).some(k => k.startsWith("local · shop_data"))); assert.ok(ov.llm.missing.includes("OPENAI_API_KEY"));
   assert.equal(ov.kpis.find(k => k.id === "satisfaction").value, 100);
   a = await call("/api/saas/agent/knowledge", { method: "POST", body: { question: "Do you print on velvet?", answer: "Not yet — velvet invitations are coming in spring." }, admin: true }); assert.equal(a.status, 200);
   r = await chat("Do you print on velvet?"); assert.match(r.json.answer, /velvet invitations are coming/);
