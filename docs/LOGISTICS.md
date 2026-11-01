@@ -1,5 +1,49 @@
 # Logistics / Shipping Control Center
 
+> Updated 2026-11-01 (main after 620ba20). The first section describes the **live system**. The sections after it
+> (AfterShip/EasyPost/Avalara connector slots, v10/v10.1 notes) describe code paths that exist but are **not configured in production**.
+> The customer chat agent's use of quotes and tracking is specified in [`Wed.AI-Agent-标准文档.txt`](Wed.AI-Agent-标准文档.txt).
+
+## Current live system (https://wed.swisspro.site)
+
+### Storefront shipping price
+
+- `POST /api/storefront/shipping/quote` → `quoteStorefront()` (`server/services/checkout-service.js`). Cart, checkout, PayPal order
+  creation and the chat agent's `quote_shipping` tool all use this one function.
+- Live engine: `rate_engine: "regional_rules"`, `tax_engine: "regional_rules"`. Shipping amounts come from **Admin → 费用与税 / Fees & tax**
+  (per zone and method, CHF/EUR; `server/services/fees-service.js`, collection `fee_settings`), including free-shipping thresholds,
+  VAT per zone/country and carrier day ranges for delivery estimates.
+- Example (2026-11-01): 10 × invitation to CH in CHF → Standard **CHF 6.34**, Express **CHF 13.15**, VAT 8.1 % added at checkout.
+- Carrier fee rules (Admin → Carriers) override the zone price only when `LOGISTICS_ENABLED=true` **and** the rules are switched active;
+  they are currently not active, so no option carries a `carrier` / `fee_rule` field.
+- EasyPost (live rates) and Avalara (live tax) are implemented but not configured.
+
+### Carriers: YunExpress 云途 and 4PX 递四方 (`server/logistics/`)
+
+Enabled in production (`LOGISTICS_ENABLED=true`; `LOGISTICS_MOCK=true` swaps in offline carriers for tests).
+
+- Admin → **承运商 / Carriers** (`/api/saas/carriers/*`, admin login; writes need approval):
+  settings (carrier on/off, sandbox/production, default carrier per country, sender address, IOSS), fee rules + preview,
+  carrier product lists, shippable orders, create shipment (single / batch / manual), cancel, label (PDF, auto-retry while the carrier
+  is still generating it), labels ZIP, CSV export, Excel bulk import (`bulk/template.xlsx` → preview → commit), channel quotes,
+  shipped-email preview / test.
+- Tracking: a poll ticks every `LOGISTICS_POLL_TICK_MINUTES` (5); each shipment is re-tracked after the tenant's `sync_minutes` (default 60).
+  Status mapping: created / label_ready / info_received → order "Label created"; in_transit → "Shipped"; delivered → "Delivered";
+  exception and error raise alerts (also: no update for 5 days, undelivered after 25 days).
+- Customers see tracking through order lookup (order number + e-mail) and the chat agent's `get_tracking` tool (`customerTracking()`),
+  with links to the carrier's tracking page.
+- Persistence: `data/logistics-state.json` (`LOGISTICS_STATE_PATH`, mode 600) for settings, rules and `carrier_shipments`; labels in `data/labels/`.
+- Credentials (server `.env` only): `YUNEXPRESS_APP_ID`, `YUNEXPRESS_APP_SECRET` (+ `YUNEXPRESS_PROD_*`), `FOURPX_APP_KEY`, `FOURPX_APP_SECRET`,
+  sender fallback `SHIPPING_ORIGIN_*`, `IOSS_NO`.
+
+### Admin sections
+
+- **物流管理 / Logistics** — logistics API connector cards and the shipping + tax quote test (same service as the cart); the older module described below.
+- **承运商 / Carriers** — YunExpress / 4PX shipments, labels, tracking (above).
+- **费用与税 / Fees & tax** — the prices the storefront actually charges.
+
+---
+
 ## What this module does
 
 The Logistics module is a standalone first-level Admin section.
@@ -46,8 +90,8 @@ The configuration panel shows:
 
 Secrets are accepted by the server but are never returned in plain text.
 
-Production recommendation:
-store secrets in AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, Vault, or another production credential vault. The local scaffold uses encrypted in-memory metadata for the demo.
+Connector Center values are encrypted with `APP_ENCRYPTION_KEY` and stored per tenant in the `connector_configs` collection (persisted with `STORE_PERSIST_PATH`).
+Production recommendation: move secret material to a dedicated vault (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, Vault).
 
 ## Tracking
 
@@ -85,7 +129,7 @@ The reference data model supports:
 - tax rate
 - active flag
 
-The current project includes demo rules for:
+The seed rules (zone families used by Fees & tax) cover:
 
 - Switzerland / Liechtenstein
 - Germany

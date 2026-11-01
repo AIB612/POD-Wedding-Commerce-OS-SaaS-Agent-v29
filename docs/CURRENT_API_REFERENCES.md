@@ -1,4 +1,24 @@
-# Current API references verified 2026-10-05
+# Current API references
+
+> Updated 2026-11-01 (main after 620ba20). The first list shows which external APIs the **live** site actually calls;
+> the lists below it are references for adapters that exist in code but are not configured in production
+> (see `API_CREDENTIALS_MATRIX.md`). Agent behaviour: [`Wed.AI-Agent-标准文档.txt`](Wed.AI-Agent-标准文档.txt).
+
+## Used by the live site (https://wed.swisspro.site)
+
+| Service | Endpoint used in code | Code |
+|---|---|---|
+| YunExpress 云途 Open API | `https://openapi.yunexpress.cn` (sandbox `https://openapi-sbx.yunexpress.cn`); docs https://open.yunexpress.cn/openApi/doc | `server/logistics/yunexpress.js` |
+| 4PX 递四方 Open Platform | `https://open.4px.com/router/api/service` (test `https://open-test.4px.com/router/api/service`) | `server/logistics/fourpx.js` |
+| SendGrid Mail Send v3 | `https://api.sendgrid.com/v3/mail/send` | `server/services/email-service.js` |
+| Shopify Admin API (app) | OAuth + GraphQL, version `SHOPIFY_ADMIN_API_VERSION` (default `2025-10`) | `server/shopify/app.js` |
+| Google OAuth / OIDC | customer quick login | `server/services/oauth-login-service.js` |
+| FX rates (key-less) | `https://open.er-api.com/v6/latest/CHF`, fallback `https://api.frankfurter.dev/v1/latest?base=CHF`; on startup and daily | `server/services/fx-service.js` |
+
+Not called in production: PayPal (not configured), TWINT (skeleton), LLM providers (no key; chat agent runs in rules mode),
+EasyPost, Avalara, AfterShip, 17TRACK, marketing / social APIs.
+
+## Reference list verified 2026-10-05
 
 - Shopify 2026-10 release: https://shopify.dev/changelog/release-notes/2026-10
 - Shopify Catalog / UCP MCP: https://shopify.dev/docs/agents/catalog

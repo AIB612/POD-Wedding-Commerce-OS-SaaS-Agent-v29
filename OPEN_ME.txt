@@ -1,11 +1,18 @@
-POD Wedding Commerce OS v29
+Wed.AI — POD Wedding Commerce OS (live: https://wed.swisspro.site)
 
+Local development
 1. cp .env.example .env
-2. Set APP_ENCRYPTION_KEY and ADMIN_API_KEY.
+2. Set ADMIN_API_KEY and APP_ENCRYPTION_KEY (random, >= 32 characters).
+   Optional: ADMIN_PASSWORD_HASH for the admin login page (see docs/DEPLOYMENT.md).
 3. npm install
 4. npm start
 5. Open http://localhost:3000/
 
-Customer flow: Start designing → sign in/register → Studio → Request order → account.html.
-Admin flow: http://localhost:3000/admin.html → Studio / 账号.
-Real email delivery requires SendGrid or Postmark credentials; without them development records the email attempt as not_configured.
+Customer flow: homepage → Studio → cart → checkout (server-side quote) → order → proof → account.html.
+Ask Wed.AI: the chat opens inside the homepage hero (no floating bubble); /?ask=1 opens it directly.
+Admin: http://localhost:3000/admin/login (password) → /admin. Scripts may use the x-admin-api-key header.
+E-mail: SendGrid, Postmark or SMTP credentials; without them the attempt is stored as not_configured.
+
+Production is deployed on cPanel / CloudLinux (not Render) — see docs/DEPLOYMENT.md.
+Docs: ARCHITECTURE_AND_OPTIMIZATION.txt, AGENT_FRAMEWORK.txt, docs/ARCHITECTURE.md,
+and docs/Wed.AI-Agent-标准文档.txt (authoritative document for the customer chat agent).

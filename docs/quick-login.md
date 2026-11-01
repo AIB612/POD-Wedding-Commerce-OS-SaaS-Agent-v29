@@ -1,5 +1,9 @@
 # Quick login — "Continue with Google" and "Continue with Shop"
 
+> Updated 2026-11-01 (main after 620ba20). Live status on https://wed.swisspro.site (`GET /api/auth/providers`):
+> **Google configured**, **Shop not configured** (button shown disabled). This page covers customer sign-in only;
+> the admin uses a separate password login at `/admin/login` (see `ADMIN_UX.md`).
+
 Passwordless sign-in with no registration form. The first successful sign-in creates the customer account
 (`customer_accounts`, linked to the CRM `customers` row), and later sign-ins with the same Google `sub`, Shop customer id or e-mail
 reuse that account. Both flows are server-side OAuth 2.0 authorization-code flows with **state + nonce + PKCE (S256)**.

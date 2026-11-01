@@ -1,5 +1,44 @@
 # Admin UX / Interaction Specification
 
+> 更新：2026-11-01（对应 620ba20 之后的 main）。“当前 Admin”一节描述线上实际情况；其余章节是交互 / 视觉规范与早期版本记录。
+
+## 当前 Admin（线上 https://wed.swisspro.site/admin）
+
+- 页面：零构建 `admin.html` + `admin-sections.js`（承运商、价目表、费用与税、优惠码、Shopify、AI 客服等分区）。React 版 `admin-app/` 未构建上线（`/admin-app/` 返回 404）。
+- 登录：`/admin/login` 用户名 + 密码（`server/admin-auth.js`；scrypt 哈希来自 `ADMIN_PASSWORD_HASH`，后台改密码后存 `data/admin-auth.json`），
+  HttpOnly 会话 cookie `wcos_admin`（SameSite=Strict，默认 12 小时）。接口返回 401 时页面跳转到登录页。
+  脚本可继续用请求头 `x-admin-api-key`（`ADMIN_API_KEY`）。登录接口限流。
+- 写操作：后台写接口需要审批标记（请求体 `approved: true` 或头 `x-action-approved: true`），页面在确认后自动带上。
+- 旧地址 `/admin-prices.html`、`/admin-fees.html`、`/admin-promos.html` 等 302 跳转到 `/admin#prices|fees|promos`。
+
+### 分区（21 个，按侧栏顺序）
+
+| 分区 | 说明 / 主要接口 |
+|---|---|
+| 总览 | `/api/saas/overview` |
+| 店铺中心 | `/api/saas/stores`、旧多店 Shopify OAuth |
+| 订单管理 | `/api/saas/orders`、改状态（审批）、重发邮件 |
+| Studio / 账号 | 用户、Studio 方案、Proof、订单事件、邀请函、通知 |
+| 物流管理 | 物流 API 连接器卡片、运费与税费试算（见 `LOGISTICS.md`） |
+| 承运商 / Carriers | YunExpress / 4PX 运单、面单、追踪（`/api/saas/carriers/*`） |
+| 商品 / 采购 | `/api/saas/catalog`、导入（审批） |
+| 价目表 / Price list | `/api/saas/prices` |
+| 费用与税 / Fees & tax | `/api/saas/fees`（店面实际运费、VAT、配送天数、包装价）、汇率同步 |
+| 优惠码 / Promo codes | `/api/saas/promos` |
+| Shopify | Shopify App 连接与商品推送（`/api/shopify/app/*`） |
+| 数据导入 / 导出 | `/api/saas/data/*`（Excel 模板、预览、提交） |
+| 统一 Inbox | `/api/saas/conversations`、回复草稿 |
+| 营销 / 广告 | `/api/saas/marketing`（种子数据；外部广告 API 未接入） |
+| 用户画像 / 推荐 | `/api/saas/customers`、Customer 360 详情、分群、推荐 |
+| 达人 / 联盟 | `/api/saas/influencers`、`/api/saas/affiliates` |
+| 财务 / 利润 | `/api/saas/finance` |
+| Agent 任务中心 | 后台运营 Agent：`POST /api/agent/ops`（见 `../AGENT_FRAMEWORK.txt`） |
+| AI 客服 / Chat agent | 客户聊天 Agent：Overview（15 项 KPI）、Handoffs、Conversations、Knowledge、Settings、Data check（`/api/saas/agent/*`；见 `Wed.AI-Agent-标准文档.txt`） |
+| 审批中心 | `/api/saas/tasks`、`/api/saas/tasks/:id/approve`（只改状态，不自动执行） |
+| API / 协议 | 连接器配置（加密保存，不回显密钥）、测试、协议状态 |
+
+---
+
 ## 目标
 
 Admin 是多卖家 SaaS 的运营工作台，不是 CRUD 页面集合。
@@ -28,7 +67,7 @@ Admin 是多卖家 SaaS 的运营工作台，不是 CRUD 页面集合。
 - 店铺健康度；
 - 营销漏斗和利润桥。
 
-### 正式 React 管理端
+### 正式 React 管理端（未部署）
 `admin-app/`
 
 技术栈：
@@ -308,8 +347,8 @@ backend is unreachable; the header / KPI footers say which one is shown ("Live d
 | "AI …" buttons, Settlement, Outreach | sent as a command to the Agent (`POST /api/agent/ops`) |
 | **Export CSV / P&L / report** | generated in the browser from the data on screen |
 
-Admin key: requests use `x-admin-api-key`. On the first 401 the page asks for the key once
-(parallel requests share that prompt) and keeps it in `sessionStorage` for the tab.
+Admin auth (current): the admin uses the `/admin/login` session cookie; on the first 401 the page redirects to
+`/admin/login?next=…` (parallel requests share that redirect). `x-admin-api-key` still works for scripts.
 
 `admin.html` layout notes: ☰ collapses the sider on desktop and opens it as a drawer on phones
 (< 820px, where the sider is otherwise hidden); orders table supports column visibility and density.

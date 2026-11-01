@@ -1,296 +1,160 @@
 ================================================================================
-Wedding Commerce OS — Agent 框架与底层逻辑
+Wedding Commerce OS（Wed.AI）— Agent 框架与底层逻辑
 ================================================================================
-更新时间：2026-10-23
+更新时间：2026-11-01 · 对应代码：620ba20 之后的 main（线上 https://wed.swisspro.site）
+
+  客户聊天 Agent 的权威文档是 docs/Wed.AI-Agent-标准文档.txt（功能、数据、
+  KPI、验证、文件地图、修订记录）。本文件只说明系统里有哪几个 Agent、
+  它们的入口与边界，细节以标准文档为准。
 
 --------------------------------------------------------------------------------
-一、Agent 架构总览
+一、系统里的 Agent（共三条通道）
 --------------------------------------------------------------------------------
 
-Agent 是系统的智能层，分为两个独立通道：
+  ┌──────────────────────────────┬───────────────────────────┬──────────────┐
+  │ 通道                         │ 入口                      │ 谁用         │
+  ├──────────────────────────────┼───────────────────────────┼──────────────┤
+  │ A. 客户聊天 Agent（主力）    │ POST /api/pod-agent/chat  │ 顾客（公开） │
+  │    本地优先 + 云模型可选     │ 首页“Ask Wed.AI”面板、    │              │
+  │                              │ widget.js 嵌入、REST      │              │
+  │ B. 后台运营 Agent            │ POST /api/agent/ops       │ 管理员       │
+  │    关键词意图 → 读数据/建任务│ Admin “Agent 任务中心”    │              │
+  │ C. 旧版通用入口（遗留）      │ POST /api/agent/chat      │ 无页面调用   │
+  │    orchestrator.js           │                           │              │
+  └──────────────────────────────┴───────────────────────────┴──────────────┘
+  另有：POST /api/pod-agent/task（管理员，PODAgent 任务执行器；create-app.js
+        挂载 podAgentRouter() 时未传入 connectors / store，因此不会真正推送商品
+        或发消息）、
+        GET /api/pod-agent/providers（管理员）、
+        POST /api/pod-agent/generate-design（Studio 设计描述，限流 30/分钟）。
 
-┌─────────────────────────────────────────────────────────────────┐
-│                        /api/agent/chat                          │
-│                              │                                  │
-│                    ┌─────────┴─────────┐                        │
-│                    │   orchestrator    │                        │
-│                    │   (入口路由)       │                        │
-│                    └─────────┬─────────┘                        │
-│                              │                                  │
-│              ┌───────────────┼───────────────┐                  │
-│              │               │               │                  │
-│         isAdmin &&      客户侧通道        后台侧通道             │
-│         isOps(msg)          │               │                  │
-│              │               │               │                  │
-│              ▼               ▼               ▼                  │
-│         runOpsCommand    retrieve()     runOpsCommand           │
-│         (审批门控)        (RAG检索)      (审批门控)              │
-│              │               │               │                  │
-│              │               ▼               │                  │
-│              │          callLLM()            │                  │
-│              │          (多Provider)         │                  │
-│              │               │               │                  │
-│              └───────────────┴───────────────┘                  │
-│                              │                                  │
-│                         { answer, plan, data }                  │
-└─────────────────────────────────────────────────────────────────┘
+  首页没有悬浮聊天气泡：对话在首页主图区展开（home-chat.js）；
+  /?ask=1 或 /#ask 直接打开，&q= 预填输入框（不自动发送）。
 
 --------------------------------------------------------------------------------
-二、核心模块
+二、A. 客户聊天 Agent（server/pod-agent/customer/*）
 --------------------------------------------------------------------------------
 
-【1. orchestrator.js — 入口路由】
-位置：server/orchestrator.js
-
-职责：
-- 接收 /api/agent/chat 请求
-- 判断是否为后台运营意图（isOps）
-- 管理员 + 运营意图 → 走后台通道（runOpsCommand）
-- 其他 → 走客户通道（RAG + LLM）
-
-关键逻辑：
-```
-isOps(message) = /(广告|营销|roas|达人|财务|利润|成本|订单|物流|同步|店铺|任务|客户画像|推荐)/i
-```
-
-安全边界：
-- 客户侧永远不返回租户财务、订单、客户数据
-- 后台写操作必须进入审批，不直接执行
-
-【2. rag.js — 检索增强】
-位置：server/rag.js
-
-职责：
-- 从 knowledge.json 加载知识库
-- 词法检索（Latin 分词 + CJK 双字）
-- 按场景过滤（scene 参数）
-- 返回相关文档片段供 LLM 参考
-
-当前实现：
-- 演示级词法检索
-- 生产环境应替换为向量检索（embedding）
-
-【3. agent-ops-service.js — 后台运营】
-位置：server/services/agent-ops-service.js
-
-职责：
-- 解析运营意图（marketing / inbox / creator / finance / customer / operations / catalog / tasks）
-- 读取对应数据（营销指标、对话、达人、财务、客户、订单、目录、任务）
-- 写操作创建审批任务（createTask），不直接执行
-- 返回 { intent, plan, data, guardrails }
-
-意图映射：
-| 关键词 | 意图 | 数据源 |
-|--------|------|--------|
-| 广告/营销/roas | marketing | marketingSummary |
-| 收件箱/对话 | inbox | conversations |
-| 达人/influencer | creator | discoverInfluencers |
-| 财务/利润/成本 | finance | financeSummary |
-| 客户画像 | customer | customerProfiles |
-| 订单/物流 | operations | orders + shipments |
-| 同步/目录 | catalog | createTask(catalog_sync) |
-| 任务 | tasks | tasks |
-
-护栏（guardrails）：
-- writes_require_approval: true
-- external_messages_require_approval: true
-- budget_increases_require_approval: true
-
-【4. llm.js — 多 Provider LLM】
-位置：server/connectors/llm.js
-
-支持：
-- OpenAI / ChatGPT（OPENAI_API_KEY + OPENAI_MODEL）
-- Anthropic（ANTHROPIC_API_KEY + ANTHROPIC_MODEL）
-- Gemini（GEMINI_API_KEY + GEMINI_MODEL）
-- DeepSeek（DEEPSEEK_API_KEY + DEEPSEEK_MODEL）
-- Grok / xAI（XAI_API_KEY + XAI_MODEL）
-
-降级：
-- 未配置时返回 DEMO_MESSAGE
-- 调用方可通过 fallback: true 使用内置演示回答
+  流程（详见标准文档第 9 章）：
+    消息 → 护栏（guardrails.js）→ 语言/意图/实体识别（nlu.js）
+         → 路由（router.js，置信度 ≥ 0.6 本地回答）
+         → 本地：规则回答 + 店铺工具（tools.js，10 个工具）
+         → 低置信度且配置了模型密钥：LLM（customer/llm.js，只能调工具）
+         → 无密钥：最佳本地答案 + “转人工”
+  工具（CUSTOMER_TOOLS）：search_knowledge、get_policy、get_product、
+    recommend_products、quote_shipping、find_order、get_tracking、
+    check_discount_code、issue_discount、handoff_to_human。
+  报价 = 结账价（quoteStorefront）；查单需订单号 + 下单邮箱。
+  后台：Admin → “AI 客服 / Chat agent”（/api/saas/agent/*，15 项 KPI）。
+  公开状态：GET /api/pod-agent/status →
+    { ok, strategy:"local_first", mode, confidence_threshold:0.6,
+      kpis:15, tools:10, languages:{detected:[en,zh,de,fr,it], replies:[en,zh,de]} }
+  线上 mode = "rules"（生产未配置模型密钥）。
 
 --------------------------------------------------------------------------------
-三、客户侧 Agent 流程
+三、B. 后台运营 Agent（server/services/agent-ops-service.js）
 --------------------------------------------------------------------------------
 
-1. 用户发送消息 → POST /api/agent/chat
-2. orchestrator 判断非运营意图（或非管理员）
-3. retrieve() 从知识库检索相关片段
-4. 构建 system prompt：
-   - 角色：婚礼 POD 定制助手
-   - 场景：当前选中的场景
-   - 购物车：当前购物车内容（截断）
-   - RAG：检索到的知识片段
-5. callLLM() 生成回答
-6. 返回 { answer, tool_summary, fallback? }
+  入口：POST /api/agent/ops（requireAdmin：管理员登录会话或 x-admin-api-key）。
+  Admin 页面里的 “AI …” 按钮、结算、外联等都把一句命令发到这里。
 
-客户侧能力：
-- 产品/材质咨询
-- 设计 Brief 建议
-- 邀请网站说明
-- 订单与物流说明（公开信息）
-- 场景推荐
+  意图（关键词匹配，按顺序）：
+  | 关键词                        | 意图       | 读取 / 动作                         |
+  |-------------------------------|------------|-------------------------------------|
+  | 同步/sync/商品                | catalog    | products；含“上架/push/发布/同步到” |
+  |                               |            | → 建 product_list 任务，否则建      |
+  |                               |            | catalog_sync 任务                   |
+  | 广告/营销/roas/campaign       | marketing  | marketingSummary + optimizationIdeas|
+  |                               |            | 含“创建/投放/预算…” → campaign_publish|
+  | 会话/inbox/消息/客服          | inbox      | conversations + messages；含“回复” |
+  |                               |            | → cs_reply 任务                     |
+  | 达人/influencer/creator       | creator    | discoverInfluencers；含“联系/合作” |
+  |                               |            | → influencer_outreach 任务          |
+  | 财务/利润/成本/margin         | finance    | financeSummary                      |
+  | 客户/画像/segment/推荐        | customer   | customerProfiles                    |
+  | 订单/物流/shipment/order      | operations | orders + shipments（只读）          |
+  | 任务/task                     | tasks      | tasks                               |
+  | 其他                          | overview   | overview                            |
 
-限制：
-- 不透露其他客户数据
-- 不透露订单金额、成本、内部运营数据
-- 真实交易状态必须来自工具/API
+  返回 { intent, plan, data, guardrails:{ writes_require_approval,
+         external_messages_require_approval, budget_increases_require_approval } }。
+  不调用任何 LLM。
 
---------------------------------------------------------------------------------
-四、后台侧 Agent 流程
---------------------------------------------------------------------------------
-
-1. 管理员发送消息 → POST /api/agent/chat（isAdmin=true）
-2. isOps(message) 匹配运营关键词
-3. runOpsCommand() 解析意图
-4. 读取对应数据源
-5. 如涉及写操作（创建/投放/联系/同步），创建审批任务
-6. 返回 { intent, plan, data, guardrails }
-
-后台侧能力：
-- 营销分析与优化建议
-- 收件箱汇总与回复草稿
-- 达人发现与外联准备
-- 财务汇总（收入、成本、利润）
-- 客户画像与推荐
-- 订单与物流状态
-- 目录同步（审批门控）
-- 任务列表
-
-审批机制：
-- 所有写操作创建 task 记录
-- task.risk = "high" 时需人工审批
-- 不自动发送外部消息、不自动增加预算、不自动发布
+  审批：
+    · 写操作只“创建任务”（collection tasks），不直接执行。
+    · POST /api/saas/tasks/:id/approve（需 requireApproval：请求体
+      approved:true 或头 x-action-approved: true）只把任务状态改为 approved。
+    · executeApprovedTask() 在代码里存在（product_list 推送 Shopify、cs_reply、
+      order_fulfill 只记录），但目前没有任何路由或定时任务调用它——
+      审批后不会自动执行。
+    · operations 意图仍按旧状态 “Paid / Production” 统计待发货；网站订单
+      现用 “Needs approval / Proof ready / Approved / Production / Ready to ship /
+      Label created / Shipped / Delivered”，因此该计数可能为 0（已知差异）。
 
 --------------------------------------------------------------------------------
-五、数据流
+四、C. 旧版通用入口 /api/agent/chat（server/orchestrator.js）
 --------------------------------------------------------------------------------
 
-客户侧：
-  message → orchestrator → retrieve(knowledge.json) → callLLM → answer
-
-后台侧：
-  message → orchestrator → intent() → data source → createTask? → { intent, plan, data }
-
-知识库：
-  server/data/knowledge.json
-  - 产品说明
-  - 材质说明
-  - 场景描述
-  - 常见问题
-
+  仍挂载在 server/routes/public.js（限流 30 次/分钟），但网站页面已不调用
+  （首页用 /api/pod-agent/chat）。逻辑：
+    · 管理员且命中运营关键词 → runOpsCommand（同第三节）
+    · 其他 → rag.js 词法检索 server/data/knowledge.json → callLLM
+      （server/connectors/llm.js）；未配置模型时返回 fallback:true
+  保留仅为兼容；新功能不要接在这里。
 
 --------------------------------------------------------------------------------
-十、B 端自主执行能力（新增）
+五、LLM 配置（两套调用，同一组环境变量）
 --------------------------------------------------------------------------------
 
-B 端 Agent 现在可以自主执行以下任务（需审批后执行）：
+  LLM_PROVIDER=openai|chatgpt|anthropic|gemini|deepseek|grok|xai
+  OPENAI_API_KEY / OPENAI_MODEL      ANTHROPIC_API_KEY / ANTHROPIC_MODEL
+  GEMINI_API_KEY / GEMINI_MODEL      DEEPSEEK_API_KEY / DEEPSEEK_MODEL
+  XAI_API_KEY / XAI_MODEL            LLM_TIMEOUT_MS
+  · 客户聊天 Agent（customer/llm.js）：openai / chatgpt / xai / deepseek 支持工具
+    调用；anthropic / gemini 只回答开放问题。
+  · 旧入口 C 用 connectors/llm.js；Studio 设计描述（generate-design）用
+    server/pod-agent/ai.js。
+  · 生产当前未设置任何模型密钥 → 全部规则模式。
 
-【1. 产品上架】
-触发：消息包含「上架」「push」「发布」「同步到」
-流程：
-  1. 读取产品目录
-  2. 识别已连接的 Shopify 店铺
-  3. 创建 product_list 审批任务
-  4. 审批后调用 pushProduct() 推送到 Shopify
-
-【2. 订单处理】
-触发：消息包含「发货」「ship」「fulfill」「标记」
-流程：
-  1. 读取待发货订单（Paid / Production）
-  2. 汇总待处理数量
-  3. 创建发货更新任务
-  4. 审批后更新物流状态
-
-【3. 客服回复】
-触发：消息包含「回复」「reply」「发送」「客服」
-流程：
-  1. 读取未关闭会话
-  2. 关联客户/订单上下文
-  3. 创建 cs_reply 审批任务
-  4. 审批后发送回复
-
-执行入口：
-  executeApprovedTask(tenantId, taskId)
-  - 检查任务状态为 approved
-  - 根据 type 执行对应操作
-  - 更新任务状态为 done
+  Agent Card：GET /.well-known/agent-card.json（ENABLE_A2A_AGENT_CARD=false 关闭）。
 
 --------------------------------------------------------------------------------
-六、优化方向
+六、安全边界（由代码强制）
 --------------------------------------------------------------------------------
 
-【短期】
-1. 向量检索
-   - 替换 rag.js 的词法检索为 embedding 检索
-   - 提升中文与多语言匹配质量
-
-2. 工具调用
-   - 客户侧增加工具：订单查询、物流跟踪、产品推荐
-   - 使用 function calling 而非纯文本
-
-3. 上下文管理
-   - 多轮对话记忆
-   - 场景切换时保留相关上下文
-
-【中期】
-4. 审批流完善
-   - 审批任务 UI
-   - 审批后自动执行
-   - 审计日志
-
-5. 多 Agent 协作
-   - 客户 Agent 与后台 Agent 分离
-   - A2A（Agent-to-Agent）协议支持
-   - /.well-known/agent-card.json 已预留
-
-【长期】
-6. 个性化
-   - 基于客户历史的推荐
-   - 场景偏好学习
-
-7. 可观测
-   - Agent 调用日志
-   - 回答质量评估
-   - 成本追踪
+  1. 客户通道只用客户安全工具；不返回其他客户、成本、利润、密钥名称。
+  2. 订单信息只在订单号 + 下单邮箱一致时显示；15 分钟内同一订单号失败 5 次锁定。
+  3. 后台写操作必须带审批标记；运营 Agent 只建任务。
+  4. 外部消息、预算、发布、退款不由 Agent 自动执行。
+  5. 限流：/api/pod-agent/chat 30 次/分钟；/api/agent/chat 30 次/分钟。
+  6. /pod-agent/ 下只公开 widget.js，其余 404。
 
 --------------------------------------------------------------------------------
 七、关键文件
 --------------------------------------------------------------------------------
 
-server/orchestrator.js              Agent 入口与路由
-server/rag.js                       检索增强
-server/services/agent-ops-service.js 后台运营逻辑
-server/connectors/llm.js            LLM 调用
-server/data/knowledge.json          知识库
-server/routes/public.js             /api/agent/chat 路由
-server/routes/admin.js              /api/agent/ops 路由
+  server/pod-agent/routes.js            /api/pod-agent/*（chat、feedback、status、
+                                        providers、task、generate-design）
+  server/pod-agent/customer/*.js        客户聊天 Agent（见标准文档第 7 章）
+  server/pod-agent/widget.js            第三方网站嵌入组件
+  server/pod-agent/index.js             PODAgent（/task 用）
+  server/pod-agent/ai.js                generate-design（Studio）用的模型调用
+  server/services/agent-ops-service.js  后台运营 Agent
+  server/services/task-service.js       任务与审批
+  server/orchestrator.js, server/rag.js 旧入口 /api/agent/chat
+  server/connectors/llm.js              旧入口的模型调用
+  server/data/knowledge.json            旧入口知识库（客户 Agent 用 customer/knowledge.js
+                                        + 后台自定义知识）
+  home-chat.js                          首页对话面板
+  agent.html                            公开产品页 /agent.html
 
 --------------------------------------------------------------------------------
-八、配置
+八、后续方向（未实现，不要当作现状）
 --------------------------------------------------------------------------------
 
-LLM：
-  LLM_PROVIDER=openai|chatgpt|anthropic|gemini|deepseek|grok|xai
-  OPENAI_API_KEY / OPENAI_MODEL
-  ANTHROPIC_API_KEY / ANTHROPIC_MODEL
-  GEMINI_API_KEY / GEMINI_MODEL
-  DEEPSEEK_API_KEY / DEEPSEEK_MODEL
-  XAI_API_KEY / XAI_MODEL
-  LLM_TIMEOUT_MS=30000
-
-Agent Card：
-  ENABLE_A2A_AGENT_CARD=true|false
-
---------------------------------------------------------------------------------
-九、安全边界
---------------------------------------------------------------------------------
-
-1. 客户侧永不返回租户内部数据
-2. 后台写操作必须审批
-3. 外部消息必须审批
-4. 预算增加必须审批
-5. 速率限制：/api/agent/chat 30 次/分钟
+  · 审批后执行：把 executeApprovedTask 接到审批流程并记录审计日志。
+  · 运营 Agent 订单状态与网站订单状态对齐。
+  · 运营 Agent 接入模型做摘要（当前纯规则）。
+  · 移除或收紧旧入口 /api/agent/chat。
 
 ================================================================================

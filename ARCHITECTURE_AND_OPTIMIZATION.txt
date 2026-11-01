@@ -1,199 +1,138 @@
 ================================================================================
-POD Wedding Commerce OS — 架构说明与优化方案
+POD Wedding Commerce OS（Wed.AI）— 架构说明与优化方案
 ================================================================================
-更新时间：2026-10-23
-版本：v29 + feature/home-en-images 合并
+更新时间：2026-11-01 · 对应代码：620ba20 之后的 main
+线上：https://wed.swisspro.site（分支 feature/home-en-images = main）
+
+  相关文档：
+    docs/Wed.AI-Agent-标准文档.txt   客户聊天 Agent 权威文档
+    AGENT_FRAMEWORK.txt              系统中各 Agent 的入口与边界
+    docs/DEPLOYMENT.md               部署（cPanel / CloudLinux）
+    docs/LOGISTICS.md                运费、承运商（YunExpress / 4PX）
+    docs/DATA_MODEL.md               实际数据存储
+    docs/API_CREDENTIALS_MATRIX.md   环境变量与凭证
 
 --------------------------------------------------------------------------------
 一、系统架构概览
 --------------------------------------------------------------------------------
 
-【前端】
-- index.html          首页（场景选品、产品墙、购物车入口）
-- studio.html/js      设计工作室（场景套装、产品定制、加入购物车）
-- checkout.html/js    4 步结账（联系→配送→支付→确认）
-- account.html        客户账户（订单、设计、地址、个人资料）
-- payment-success.html 支付成功页
-- proof.html          效果图确认页
-- header.js           共享头部（市场/货币、语言、购物车、菜单）
-- cart.js / cart.css  购物车抽屉
-- i18n.js             多语言（中/英/德）
-- mobile.css          手机端适配（仅 ≤720px 生效）
+【前端（静态文件，由 Node 服务直接提供）】
+- index.html / home-chat.js  首页：场景、产品墙、页头“Ask Wed.AI”主图区对话面板
+                             （无悬浮气泡；/?ask=1 打开）
+- studio.html / studio*.js   设计工作室（场景套装、定制、定价、寄送、包装、确认）
+- checkout.html / .js        结账（联系 → 配送 → 支付 → 确认），金额由服务器报价
+- account.html / account-*.js 客户账户（订单、方案、Proof、地址）
+- proof.html                 效果图确认页
+- payment-success.html       支付结果页
+- agent.html                 Agent 产品页（实时数字来自 /api/pod-agent/status）
+- admin.html + admin-sections.js  后台（21 个分区，见 docs/ADMIN_UX.md）
+- admin-login.html           后台登录 /admin/login
+- header.js / footer.js / cart.js / i18n.js（中/英/德）/ mobile.css
+- shipping / returns / terms / privacy / imprint .html  政策与法律页
+- admin-app/                 React 后台源码（生产未构建，/admin-app/ 返回 404）
 
-【后端】
-- server/app.js           入口
-- server/create-app.js    Express 应用组装
-- server/routes/
-  - public.js         公开 API（结账、支付、订单状态）
-  - studio.js         工作室项目 API
-  - account.js        账户认证与数据
-  - admin.js          后台管理
-  - shopify-app.js    Shopify 嵌入式应用
-  - webhooks.js       Webhook 接收
-- server/services/        业务逻辑层
-- server/connectors/      外部 API 连接器
-- server/db/              数据库适配（SQLite/MySQL/内存）
+【后端（server/）】
+- app.js（ESM 入口）/ cpanel-start.cjs（cPanel Passenger 入口）/ create-app.js
+- routes/public.js     页面、结账、PayPal/TWINT、订单查询、Proof、邀请函、
+                       /api/agent/chat（旧）、/.well-known/*
+- routes/account.js    客户登录（Google / Shop / 邮箱码）与账户 API
+- routes/studio.js     Studio 项目、报价、样机
+- routes/seller.js     商家素材与发布到 Shopify
+- routes/admin.js      /api/saas/*（后台，requireAdmin；写操作 requireApproval）
+                       /api/agent/ops（后台运营 Agent）
+- routes/logistics.js  /api/saas/carriers/*（YunExpress / 4PX 运单、面单、追踪）
+- routes/carrier-rates.js  Shopify CarrierService 回调
+- routes/shopify-app.js / webhooks.js  Shopify App OAuth、嵌入页、Webhook
+- pod-agent/           客户聊天 Agent（/api/pod-agent/*）+ widget.js
+- services/            结账报价、费用与税、价目表、优惠码、邮件、Proof、RSVP 等
+- logistics/           承运商适配器（yunexpress.js、fourpx.js、mock.js）、轮询
+- connectors/          PayPal、TWINT（骨架）、LLM、营销/社媒/税务适配位
+- saas-store.js        业务数据（内存 + STORE_PERSIST_PATH JSON 持久化）
+- db/                  SQL 适配（Shopify 集成表；SQLite 文件或 MySQL）
+- jobs/scheduler.js    承运商轮询、汇率同步
 
 【数据流】
-用户 → 首页选品 → 工作室设计 → 加入购物车 → 结账 → 支付 → 订单确认 → 效果图 → 生产 → 发货
+首页 / Studio → 购物车 → 结账（服务器报价）→ PayPal / TWINT → 订单 →
+效果图（Proof）→ 生产 → 承运商运单（YunExpress / 4PX）→ 追踪 → 签收
+订单状态：Needs approval → Proof ready → Approved（或 Changes requested）→
+Production → Ready to ship → Label created → Shipped → Delivered（或 Cancelled）
 
 --------------------------------------------------------------------------------
-二、已对接 API / 外部服务
+二、外部服务与线上状态（2026-11-01 核对）
 --------------------------------------------------------------------------------
 
-【支付】
-- PayPal Orders v2
-  - 创建订单、捕获支付、Webhook
-  - 配置：PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET / PAYPAL_WEBHOOK_ID
-  - 状态：可用（需配置凭证）
+  | 服务                    | 代码                         | 线上状态                 |
+  |-------------------------|------------------------------|--------------------------|
+  | PayPal Orders v2        | connectors/paypal.js         | 未配置（/api/payments/   |
+  |                         |                              | methods configured:false）|
+  | TWINT 直连              | connectors/twint.js（骨架，  | 未配置、未实现           |
+  |                         | 返回 twint_not_implemented） |                          |
+  | Shopify App             | shopify/、routes/shopify-app | 已配置，1 个店铺已连接   |
+  | 邮件 SendGrid / Postmark| services/email-service.js、  | SendGrid 已配置          |
+  | / SMTP                  | services/smtp.js             |                          |
+  | YunExpress 云途 / 4PX   | logistics/*                  | 已启用（LOGISTICS_ENABLED）|
+  | 运费                    | fees-service + quoteStorefront| 后台“费用与税”区域费率  |
+  |                         |                              | （rate_engine regional_rules）|
+  | EasyPost / Avalara      | shipping-service、tax 适配   | 代码支持，未配置         |
+  | AfterShip / Shippo /    | 连接器适配位                 | 未配置                   |
+  | 17TRACK / DHL / UPS …   |                              |                          |
+  | Google 登录             | services/oauth-login-service | 已配置                   |
+  | Shop 登录               | 同上                         | 未配置                   |
+  | LLM（OpenAI 等）        | pod-agent/customer/llm.js 等 | 未配置 → 客户 Agent 规则 |
+  |                         |                              | 模式（mode = rules）     |
 
-- TWINT（瑞士）
-  - SOAP Merchant Service（骨架）
-  - 配置：TWINT_STORE_UUID / TWINT_CASH_REGISTER_ID / 证书
-  - 状态：骨架，未实现实际 SOAP 调用
-
-【电商平台】
-- Shopify
-  - OAuth、产品推送、订单同步、Webhook、嵌入式应用
-  - 配置：SHOPIFY_API_KEY / SHOPIFY_API_SECRET / SHOPIFY_CLIENT_ID
-  - 状态：可用（需配置）
-
-【邮件】
-- SendGrid / Postmark
-  - 订单确认、发货通知、效果图、RSVP
-  - 配置：SENDGRID_API_KEY 或 POSTMARK_API_KEY
-  - 状态：可用
-
-【物流】
-- EasyPost / Shippo / 17Track / AfterShip
-  - 运费试算、物流跟踪
-  - 状态：连接器已就绪
-
-【税务】
-- Avalara
-  - 税费计算
-  - 状态：连接器已就绪
-
-【LLM / Agent】
-- OpenAI / Anthropic / Gemini
-  - 客户侧助手、后台运营分析
-  - 配置：OPENAI_API_KEY / ANTHROPIC_API_KEY / GEMINI_API_KEY
-  - 状态：可用（未配置时降级为演示模式）
-
-【认证】
-- Google OAuth（快捷登录）
-- Shopify OAuth（快捷登录）
-- 邮箱验证码 / 密码（旧流程保留）
+  核对方式：GET /api/payments/methods、/api/auth/providers、
+  /api/shopify/app/public-status、/api/pod-agent/status、/api/saas/carriers/status。
 
 --------------------------------------------------------------------------------
-三、优化方案
+三、优化方案（只列未完成项）
 --------------------------------------------------------------------------------
 
-【P0 — 必须】
-1. 支付流程完善
-   - PayPal：确保沙盒/生产切换正常，Webhook 验签
-   - TWINT：实现 StartOrder / MonitorOrder SOAP 调用
-   - 支付成功后自动发送确认邮件、创建效果图记录
+【P0】
+1. 收款：配置 PayPal（沙盒 → 正式）并做端到端测试；TWINT 实现 SOAP 调用或
+   暂不展示。
+2. 备份：data/store.json、data/logistics-state.json、data/app.db、
+   data/admin-auth.json 定期备份（单文件存储，无数据库复制）。
 
-2. 手机端体验
-   - 已完成基础适配（mobile.css）
-   - 待验证：结账步骤、工作室画布、购物车抽屉在真实设备上的表现
-   - 触控目标、表单字体、安全区已处理
+【P1】
+3. 审批后执行：/api/saas/tasks/:id/approve 只改状态，executeApprovedTask 未接入。
+4. 运营 Agent 的订单状态与网站订单状态对齐（见 AGENT_FRAMEWORK.txt 第三节）。
+5. 移除或收紧旧入口 /api/agent/chat。
+6. 承运商费用规则（后台 → Carriers）目前未启用，店面运费由“费用与税”决定；
+   启用前对照 docs/LOGISTICS.md 核对。
 
-3. 电脑端样式保护
-   - 菜单按钮仅手机端显示（已修复）
-   - 确保后续改动不影响桌面布局
-
-【P1 — 重要】
-4. 购物车与工作室同步
-   - 编辑后重新加入购物车应替换旧行
-   - 显示编辑前后对比（缩略图）
-
-5. 邮件模板统一
-   - 所有通知使用同一风格（深色头部 + 四象限信息）
-   - 覆盖：订单确认、支付成功、效果图就绪、发货、送达、RSVP
-
-6. 账户与订单追踪
-   - 客人可查询订单状态（无需登录）
-   - 登录用户可查看完整订单历史、重新下单
-
-【P2 — 增强】
-7. Agent 能力
-   - 客户侧：产品推荐、设计建议、订单查询
-   - 后台侧：运营分析、审批流（广告、退款、发布）
-   - RAG 检索增强场景推荐
-
-8. 多店铺 / 多租户
-   - Shopify 多店铺同步
-   - 租户隔离与权限
-
-9. 性能与可观测
-   - 图片懒加载、WebP 缩略图
-   - 支付/订单关键路径日志
-   - 健康检查与部署监控
-
-【P3 — 长期】
-10. 法律与合规
-    - 隐私政策、退货政策、Imprint 已有页面
-    - GDPR 数据导出/删除
-    - 支付凭证与发票
-
-11. 国际化
-    - 已支持中/英/德
-    - 可扩展更多语言与货币
+【P2】
+7. 客户 Agent 接入模型密钥（可选；数字仍来自工具）。
+8. 多实例部署时：限流改 Redis，存储改数据库（当前为单实例文件存储）。
+9. React 后台（admin-app）补齐功能后再决定是否构建上线。
 
 --------------------------------------------------------------------------------
 四、关键文件索引
 --------------------------------------------------------------------------------
 
-支付：
-- server/services/checkout-service.js   结账与支付创建
-- server/connectors/paypal.js           PayPal 连接器
-- server/connectors/twint.js            TWINT 连接器（骨架）
-- checkout.js / checkout.html           前端结账流程
-
-工作室：
-- studio.js / studio.html               设计工作室
-- server/routes/studio.js               项目 API
-- server/services/studio-service.js     项目业务
-
-邮件：
-- server/services/email-service.js      邮件发送
-- server/services/proof-service.js      效果图通知
-- server/services/rsvp-service.js       RSVP 通知
-
-Agent：
-- server/orchestrator.js                Agent 入口
-- server/services/agent-ops-service.js  后台运营
-- server/connectors/llm.js              LLM 调用
-- server/rag.js                         检索增强
-
-配置：
-- .env.example                          环境变量模板
-- render.yaml                           Render 部署配置
-- shopify.app.toml                      Shopify 应用配置
+支付：server/services/checkout-service.js（quoteStorefront、PayPal 创建/捕获）、
+      server/connectors/paypal.js、server/connectors/twint.js
+运费/税：server/services/fees-service.js、shipping-service.js、price-list-service.js
+承运商：server/logistics/index.js、yunexpress.js、fourpx.js、bulk.js
+工作室：studio.js、server/routes/studio.js、server/services/studio-service.js
+邮件：server/services/email-service.js、smtp.js、proof-service.js、rsvp-service.js
+Agent：server/pod-agent/*、server/services/agent-ops-service.js（见 AGENT_FRAMEWORK.txt）
+配置：.env.example（模板；真实 .env 不入库）、shopify.app.toml
+其他部署文件：render.yaml、Dockerfile、docker-compose.yml 为备选方案，线上未使用。
 
 --------------------------------------------------------------------------------
-五、部署
+五、部署（摘要，详见 docs/DEPLOYMENT.md）
 --------------------------------------------------------------------------------
 
-- 生产：https://wed-swisspro.onrender.com/
-- 分支：main（已合并 feature/home-en-images）
-- 自动部署：推送 main 后 Render 自动构建
-
-本地开发：
-  npm install
-  cp .env.example .env   # 填写必要凭证
-  npm start              # http://localhost:3000
-
---------------------------------------------------------------------------------
-六、下一步建议
---------------------------------------------------------------------------------
-
-1. 配置 PayPal 沙盒凭证，完成端到端支付测试
-2. 实现 TWINT SOAP 调用（或先用测试环境验证流程）
-3. 在真实手机设备上验证 mobile.css 效果
-4. 统一邮件模板风格并测试送达率
-5. 补充 Agent 客户侧工具（订单查询、产品推荐）
+- 生产：cPanel / CloudLinux Node.js Selector（Passenger，Node 22），
+  应用目录 ~/pod-wedding，启动文件 server/cpanel-start.cjs。
+- 发布：推送 main 后在服务器执行
+    cd ~/pod-wedding && git pull &&
+    cloudlinux-selector restart --json --interpreter nodejs --app-root pod-wedding
+  （不是 Render 自动部署；不要直接 node/npm start 重启生产。）
+- 本地开发：
+    npm install
+    cp .env.example .env   # 至少设置 ADMIN_API_KEY、APP_ENCRYPTION_KEY
+    npm start              # http://localhost:3000
 
 ================================================================================
