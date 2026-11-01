@@ -1,0 +1,950 @@
+======================================================================
+  Wed.AI POD Agent（站内集成版）—— 完整标准文档（本地优先 + 云模型可选）
+  文档版本 1.1 · 2026-11-01 · 对应代码提交 440778f
+  适用：wed.swisspro.site（仓库 AIB612/POD-Wedding-Commerce-OS-SaaS-Agent-v29，
+        分支 feature/home-en-images = main）
+======================================================================
+
+  本文档是 Wed.AI 站内客服 Agent 的“标准”：它是什么、能做什么、不能做什么、
+  怎么用、用什么数据、按什么标准清洗、用什么指标衡量、在哪里验证、
+  每个文件是干什么的。每条标准都有编号，方便引用和检查。
+
+  它由独立版“POD 独立 Agent 标准文档 1.0”改写而来。独立版是一个可单独部署的
+  Agent（适配器 + n8n + Supabase）；本版是已经集成进 Wed.AI 网站的实际实现，
+  所有条款以 440778f 的代码为准，代码里没有的功能不写进来。
+  与独立版的逐项差异见附录 B。
+
+  设计原则：
+    · 集成：Agent 跑在网站自己的 Node.js 进程里，直接调用网站的商品目录、
+      报价、订单、物流、优惠码服务，不另建数据源，不经 n8n / Supabase。
+    · 本地优先：自有规则引擎 + 店铺数据先答；置信度 ≥ 0.6 一律本地回答。
+    · 云模型可选：只有复杂或匹配不上的问题，且服务器配置了模型密钥时才调用
+      LLM；当前生产环境未配置密钥，全部走规则引擎（mode = rules）。
+    · 数字只来自我们的工具：价格、运费、日期、订单数据永远由服务器计算，
+      模型（如启用）只能调用工具，不能自己编。
+    · 不打扰：首页没有悬浮聊天气泡；对话在首页主图区内展开。
+
+  修订规则：系统每次更新（代码、配置、后台功能、部署方式），必须同步更新
+  本文档对应条款，并在最后的“修订记录”登记提交号、日期和改动条款。
+
+  目录
+    1. 这是什么
+    2. 功能列表
+    3. 如何使用 Agent
+    4. 如何准备数据：哪些数据、清洗标准、数据格式
+    5. 用什么指标衡量成功率和输出
+    6. 在哪里验证
+    7. 代码文件地图：每个文件是干什么的、要不要改
+    8. 功能对照表：每项功能由哪些代码、数据负责
+    9. 对话流程与角色（本地优先路径 + 云增强路径）
+    10. 运行模式与部署
+    附录 A  术语
+    附录 B  与独立版 POD Agent 的差异（保留 / 替换 / 跳过）
+    附录 C  修订记录
+
+
+======================================================================
+1. 这是什么
+======================================================================
+
+1.1 定义
+    Wed.AI 网站（wed.swisspro.site）内置的客户服务 Agent。访客在首页点击
+    Wed.AI 标志旁的“Ask Wed.AI / AI 助手”，首页主图区变成对话面板。
+    它用客户的语言（英 / 中 / 德；法、意见 1.2）回答问题、推荐商品、报价
+    （商品价 + 运费 + 预计送达）、查询订单和物流、校验优惠码，并在需要时
+    把对话转入后台的人工队列。
+
+    它不是独立系统：商品、价格、运费、订单、物流、优惠码全部来自网站现有
+    服务；它不创建订单、不发邮件、不收款。下单仍在设计工作室（Studio）和
+    结账页完成。
+
+1.2 核心特性
+    · 本地优先：确定性分类器（nlu.js）+ 路由器（router.js）+ 规则回答
+      （agent.js ruleAnswer）+ 店铺工具（tools.js）。置信度 ≥ 0.6 本地答。
+    · 云模型可选：LLM_PROVIDER + 对应密钥（OPENAI_* / XAI_* / DEEPSEEK_*
+      支持工具调用；ANTHROPIC_* / GEMINI_* 只用于回答开放问题）。
+      未配置时自动只用规则引擎，并在答复后提供“转人工”。
+    · 报价 = 结账价：运费报价与购物车、结账同一个函数（quoteStorefront）。
+    · 订单安全：订单号 + 下单邮箱同时匹配才显示，任何不匹配都返回同一句话，
+      每个订单号 15 分钟内最多失败 5 次。
+    · 语言：中/英/德 回复模板齐全；法语、意大利语可被识别，护栏/转人工/
+      错误提示有法、意版本，其余回复模板回落到英文（见 2.1 F10）。
+    · 后台：Admin “AI 客服 / Chat agent”，管理员登录后可用。
+
+1.3 边界（不做什么）—— 由代码强制，不依赖 AI 自觉
+    1.3.1 不决定退款、补发、取消已付款订单：提到退款即转人工
+          （guardrails.js REFUND_RE）；退换货只给政策说明。
+    1.3.2 不自行发折扣：销售折扣默认关闭；开启后也只能“申请”，由规则决定
+          （每位客户周期内一次、每月上限、需邮箱、一次性码）。
+    1.3.3 不承诺具体送达日期：只给“预计 x–y 日”，并说明付款并确认效果图后
+          才开始生产。
+    1.3.4 订单号 + 下单邮箱一致才透露订单信息；不存在与邮箱错误同一答复。
+    1.3.5 不收集银行卡号 / IBAN / CVV / 密码：含此类内容的消息被拒绝且不保存
+          原文；卡号在存储前被脱敏；付款只在结账页（TWINT / PayPal / 卡）。
+    1.3.6 不向客户透露成本、利润、密钥名称：/api/pod-agent/status 只返回
+          strategy 和 mode，不返回缺少的密钥名。
+    1.3.7 知识库没有答案时不编造：规则模式回复“不确定 + 能帮什么 + 转人工”；
+          LLM 模式被要求只用检索到的知识，不够就说向团队确认。
+    1.3.8 无 LLM 时不假装：直接给最佳规则答案，并附“回复‘转人工’即可”。
+    1.3.9 不修改业务数据：聊天端不暴露下单、开票、退货判定等写入工具
+          （唯一可写的是：转人工队列记录；以及开启后才有的一次性折扣码）。
+    1.3.10 不自动发邮件：转人工只进后台队列，团队从自己的邮箱回复客户。
+    1.3.11 不接受改写规则的指令：提示词注入被拒绝，且不会转给模型。
+
+1.4 与独立版的关系（摘要，详见附录 B）
+    保留：对话主流程、护栏和转人工规则、工具循环、提示词规则、销售折扣规则、
+          指标、数据检查（K/C 项）、👍/👎 评价。
+    替换：数据源（Shopify/本地 JSON 适配器 → 网站自有服务）、存储（Supabase →
+          data/store.json）、运费（Excel 价格表 → quoteStorefront）、物流查询
+          （51Tracking → 自有承运商发货记录）、知识库（faq.md → knowledge.js +
+          后台自定义问答）、网页组件（右下角气泡 → 首页主图区面板）、
+          后台登录（独立账号 → 网站管理员登录）。
+    跳过：n8n、WhatsApp/Instagram/邮件渠道、定时任务（延误致歉、提醒、
+          每周指标邮件）、选项图片卡片 + 邮件账单下单流程、运费校准、
+          AGENT_MODE 三模式开关、owner/editor/viewer 角色、eval.json 评测集。
+
+
+======================================================================
+2. 功能列表
+======================================================================
+
+2.1 对外功能（客户使用）
+
+    ┌─────┬──────────────────────────────┬────────────────────────────────────┐
+    │ 编号│ 功能                         │ 说明（440778f 实际行为）           │
+    ├─────┼──────────────────────────────┼────────────────────────────────────┤
+    │ F1  │ 知识库问答                   │ 内置问答 + 后台自定义问答；词项 +  │
+    │     │                              │ 中文二元组检索；时效/税/付款/包邮  │
+    │     │                              │ 由实时店铺设置生成                 │
+    │ F2  │ 商品问答 + 阶梯价            │ 商品目录 + 价格表；1/10/25/50/100  │
+    │     │                              │ 件单价；材质；“定制”链接进 Studio  │
+    │ F3  │ 商品推荐卡片                 │ 按场合（婚礼/伴手礼/纸品/装饰/周年 │
+    │     │                              │ /宝宝/派对/企业）+ 预算，最多 4 张 │
+    │ F4  │ 报价 + 预计到货              │ 商品小计 + 标准/快递运费 + 预计送达│
+    │     │                              │ 日期 + 增值税说明；报价卡片        │
+    │ F5  │ （无）留邮箱 + 邮件账单      │ 不提供。客户点链接进 Studio 下单   │
+    │ F6  │ 运费报价 = 结账价            │ quoteStorefront：区域规则、免运费  │
+    │     │                              │ 门槛、承运商费用规则（YunExpress / │
+    │     │                              │ 4PX，见 F6 说明）、币种、增值税    │
+    │ F7  │ 订单 + 物流查询              │ 订单号 + 邮箱验证；运单号对自有承运│
+    │     │                              │ 商发货记录；不接 17TRACK/AfterShip/│
+    │     │                              │ 51Tracking                         │
+    │ F8  │ （无）延误主动致歉 + 补偿券  │ 不提供（物流异常提醒在后台承运商区）│
+    │ F9  │ 退换货 / 取消说明            │ 只给政策原文；提到退款 → 转人工    │
+    │ F10 │ 语种自适应                   │ 识别 en/zh/de/fr/it；模板 en/zh/de │
+    │     │                              │ 全，fr/it 护栏与转人工提示有本地化 │
+    │ F11 │ （无）跨渠道统一会话         │ 只有网页渠道；会话 ID 存浏览器标签 │
+    │     │                              │ 页 sessionStorage                  │
+    │ F12 │ 情绪 / 威胁识别 + 转人工     │ 要求人工、辱骂、法律/拒付威胁、愤怒│
+    │     │                              │ 、退款、连续未解决、token 超限     │
+    │ F13 │ 客户评价                     │ 每条 AI 回复下 👍 / 👎             │
+    │ F14 │ 优惠码校验 + 可选销售折扣    │ 校验客户已有的码；销售折扣默认关闭 │
+    │ F15 │ 安全护栏（新增）             │ 提示词注入、卡号/密码、按 IP 限流、│
+    │     │                              │ 每会话限流                         │
+    │ F16 │ 首页内嵌对话面板（新增）     │ 标志旁入口，主图区变对话，无气泡， │
+    │     │                              │ 自适应视口，输入框始终可见         │
+    └─────┴──────────────────────────────┴────────────────────────────────────┘
+
+    F6 说明：报价先按“Fees & tax”中的区域规则和免运费门槛计算；服务器
+    LOGISTICS_ENABLED=true 且后台“Carriers”中的承运商费用规则被设为生效时，
+    按 YunExpress / 4PX 渠道规则计费（免运费门槛仍优先）。生产环境当前
+    LOGISTICS_ENABLED=true。无论哪种，聊天与结账得到同一个数。
+
+2.2 对内功能（团队使用，Admin → AI 客服 / Chat agent，需管理员登录）
+
+    ┌─────┬──────────────────────────────┬────────────────────────────────────┐
+    │ 编号│ 功能（标签页）               │ 说明                               │
+    ├─────┼──────────────────────────────┼────────────────────────────────────┤
+    │ A1  │ 管理员登录                   │ 沿用网站 admin 登录（admin-auth）  │
+    │ A2  │ Overview 总览                │ 15 项 KPI（近 30 天）+ 回答路径表 +│
+    │     │                              │ 意图分布 + 未答问题 + 转人工原因   │
+    │ A3  │ Handoffs 转人工队列          │ Take（处理中）/ Resolve（已解决）；│
+    │     │                              │ 解决后 AI 恢复接待该会话           │
+    │ A4  │ Conversations 会话记录       │ 最近 50 条；Local / LLM 计数；点开 │
+    │     │                              │ 看记录，每条带路径标签（local/LLM、│
+    │     │                              │ 原因、置信度）和 👍/👎             │
+    │ A5  │ Knowledge 知识库             │ 自定义问答增改删（≤ 200 条）；检索 │
+    │     │                              │ 测试；查看内置答案                 │
+    │ A6  │ Settings 设置                │ 开关、人工回复时间、转人工阈值、每 │
+    │     │                              │ 10 分钟消息上限、欢迎语（英中德）、│
+    │     │                              │ 销售折扣规则                       │
+    │ A7  │ Data check 数据检查          │ K1–K6、C1–C4，满分 100             │
+    │ —   │ （无）运费校准               │ 不提供；运费在 Fees & tax / Carriers│
+    │     │                              │ 区维护                             │
+    └─────┴──────────────────────────────┴────────────────────────────────────┘
+
+2.3 运行模式（由服务器环境决定，没有 AGENT_MODE 开关）
+
+    ┌──────────────┬────────────────────────────────────────────────────────┐
+    │ mode         │ 说明                                                   │
+    ├──────────────┼────────────────────────────────────────────────────────┤
+    │ rules        │ 未配置 LLM 密钥（生产当前状态）。全部由规则引擎 + 店铺 │
+    │              │ 工具回答；本该交给 LLM 的问题给最佳本地答案 + 转人工。 │
+    │ llm_tools    │ 配置了 openai/chatgpt、xai/grok、deepseek。本地优先；  │
+    │              │ 复杂/未匹配问题走模型 + 工具循环（每条消息最多 4 次）。│
+    │ llm_answers  │ 配置了 anthropic 或 gemini。本地优先；复杂问题由模型   │
+    │              │ 基于检索到的知识直接作答（不调用工具）。               │
+    │ rules_fallback│ 模型出错或返回空 → 自动回落到规则答案（逐条记录）。   │
+    │ disabled     │ 后台关闭聊天 → 回复“助手暂时离线”。                    │
+    └──────────────┴────────────────────────────────────────────────────────┘
+    无论哪种模式，路由策略都是 local_first（/api/pod-agent/status 可见）。
+
+2.4 数据源（替代独立版的“适配器”）
+
+    ┌──────────────────┬──────────────────────────────────────────────────┐
+    │ 数据             │ 来源（网站自有服务）                             │
+    ├──────────────────┼──────────────────────────────────────────────────┤
+    │ 商品、材质、场景 │ studio-service.js studioCatalog()                │
+    │ 单价、运费、税   │ checkout-service.js quoteStorefront()            │
+    │ 订单             │ checkout-service.js lookupOrder()（同“查询订单”）│
+    │ 物流             │ carrier_shipments + orders（logistics/index.js） │
+    │ 优惠码           │ promo_codes；新码经 promo-service createPromo()  │
+    │ 时效、付款方式   │ fees-service.js、checkout-service paymentMethods │
+    │ Shopify 店铺     │ 不直接读；Shopify 订单经后台 Shopify 区同步到同一 │
+    │                  │ 订单库后，Agent 才能查到                         │
+    └──────────────────┴──────────────────────────────────────────────────┘
+
+
+======================================================================
+3. 如何使用 Agent
+======================================================================
+
+3.1 客户怎么用（无需培训）
+    3.1.1 网页：首页页头 Wed.AI 标志右侧点“Ask Wed.AI”（中文界面“AI 助手”，
+          德文“Wed.AI fragen”）。首页主图区变为对话面板；再点一次、点
+          “Back to the scene”或按 Esc 恢复主图。没有右下角悬浮气泡。
+    3.1.2 直接打开：任何页面链接到 /?ask=1 或 /#ask 即自动打开对话。
+    3.1.3 面板：标题、新对话按钮、消息区（内部滚动）、快捷问题（chips）、
+          输入框（最多 1000 字）、“不要在对话中发送卡号或密码”提示。
+          面板高度 = 视口高度 − 吸顶页头高度，输入框始终可见；
+          ≤ 1000px 宽、≤ 760px / ≤ 620px 高、≤ 720px 宽（手机）各有压缩布局。
+    3.1.4 每条 AI 回复下可点 👍 / 👎；回复中的 /studio.html、/account、
+          /shipping、/returns 等站内路径和 https 链接可点击。
+    3.1.5 会话保存在当前浏览器标签页（sessionStorage，最多 40 条）；
+          “新对话”重新开始。没有跨渠道合并。
+    3.1.6 HTTP：POST /api/pod-agent/chat（见 10.4），仅供本站前端使用。
+
+3.2 团队日常操作（SOP）
+    3.2.1 每天（5 分钟）
+          a. Admin → AI 客服 / Chat agent → Handoffs，看 open 项
+          b. 点 Take；用自己的邮箱回复客户（系统不发邮件）
+          c. 处理完点 Resolve，AI 恢复接待该会话
+          d. 没有自动提醒；超过“人工回复时间”的未解决项会在 Data check
+             显示为 C3 错误
+    3.2.2 每周一（30 分钟）
+          a. Overview：看 15 项 KPI 的 PASS / WARN，本地回答 % 与 LLM %
+          b. 把“Unanswered questions”逐条写进 Knowledge
+          c. Conversations：打开带 👎 的会话，修正知识或商品资料
+          d. Data check：把 error 清零，分数 ≥ 85
+    3.2.3 每月（1 小时）
+          a. 核对 Price list、Fees & tax（区域、免运费门槛、承运商时效）
+          b. 核对 Carriers 区 YunExpress / 4PX 费用规则与真实账单
+          c. 看 Handoff reasons，调整知识库或网站说明
+          d. 季节 / 节日信息写进 Knowledge
+
+3.3 转人工处理标准
+    3.3.1 触发（guardrails.js handoffCheck，按顺序）：
+          要求人工（含“转人工/人工/客服/真人”等）、辱骂、法律/拒付/报警威胁、
+          极度愤怒（如“!!!”“气死”）、退款、连续未解决 ≥ 阈值（默认 3）、
+          单会话 token 超过上限（默认 40000，仅 LLM 模式会累计）。
+          LLM 模式下模型分类器判定的 wants_human / abusive / threat /
+          angry 同样触发。
+    3.3.2 结果：会话状态 handed_off，生成 agent_handoffs 记录（原因、摘要、
+          邮箱、订单号、最近 12 条消息）；客户收到“已转交团队，X 小时内回复”，
+          没有邮箱时请客户留下邮箱。之后客户的消息只追加进该记录，AI 不再回答。
+    3.3.3 时限：按后台“Team reply time”（默认 24 小时，1–168）。
+    3.3.4 处理完毕必须 Resolve，否则该会话一直静音。
+    3.3.5 处理中产生的新知识，当周写进 Knowledge。
+
+3.4 可调整的设置（不改代码）
+    ┌──────────────────────────────┬────────────────────────────────────────┐
+    │ 想调整                       │ 位置                                   │
+    ├──────────────────────────────┼────────────────────────────────────────┤
+    │ 聊天开关                     │ Admin → Chat agent → Settings          │
+    │ 人工回复时间（1–168 h）      │ 同上（默认 24）                        │
+    │ 转人工前未解决次数（1–10）   │ 同上（默认 3）                         │
+    │ 每会话每 10 分钟消息（3–100）│ 同上（默认 20）                        │
+    │ 欢迎语（英 / 中 / 德）       │ 同上（空 = 默认）                      │
+    │ 销售折扣（开关、1–30 %、     │ 同上（默认关闭，5 %、72 h、90 天、     │
+    │ 有效小时、每客户间隔、月上限）│ 每月 20）                              │
+    │ 单会话 token 上限            │ PUT /api/saas/agent/settings（界面无）  │
+    │ 自定义问答                   │ Admin → Chat agent → Knowledge         │
+    │ 商品价格                     │ Admin → Price list                     │
+    │ 运费区域、免运费、时效、税   │ Admin → Fees & tax                     │
+    │ 承运商费用规则（YunExpress/  │ Admin → Carriers（需 LOGISTICS_ENABLED）│
+    │ 4PX）                        │                                        │
+    │ 优惠码                       │ Admin → Promo codes                    │
+    │ 云模型                       │ 服务器 .env：LLM_PROVIDER + 对应       │
+    │                              │ *_API_KEY / *_MODEL；LLM_TIMEOUT_MS    │
+    │ 会话保存上限                 │ .env AGENT_MAX_CONVERSATIONS（默认1000）│
+    │ 本地/LLM 置信度门槛 0.6      │ 不可配置：router.js CONFIDENCE_THRESHOLD│
+    └──────────────────────────────┴────────────────────────────────────────┘
+
+
+======================================================================
+4. 如何准备数据：哪些数据、清洗标准、数据格式
+======================================================================
+
+4.1 “训练”的含义
+    不对模型做微调。“训练”= 持续改进 Agent 使用的数据和规则：
+      · 知识（内置问答、自定义问答、商品资料）→ 决定能答对什么
+      · 店铺设置（价格、运费、时效、税、付款方式）→ 决定报价和事实
+      · 规则（同义词、意图、转人工、折扣）→ 决定能做什么（改规则要改代码）
+      · 自动化测试 → 衡量是否变好
+      · 未答问题、👎、转人工原因 → 告诉你下一步补什么
+    原则：AI 不会自己学习；每周补数据，每周看指标。
+
+4.2 数据清单
+    ┌────┬──────────────────┬──────────────────────────────┬────────┬────────┐
+    │编号│ 数据             │ 位置                         │ 负责人 │ 更新   │
+    ├────┼──────────────────┼──────────────────────────────┼────────┼────────┤
+    │ D1 │ 商品、材质、场景 │ Studio 目录（studio-service）│ 商品   │ 新品时 │
+    │ D2 │ 商品价格         │ Admin → Price list           │ 商品   │ 变更时 │
+    │ D3 │ 自定义问答       │ Admin → Knowledge            │ 运营   │ 每周   │
+    │ D4 │ 内置问答         │ customer/knowledge.js FAQ    │ 技术   │ 政策变 │
+    │ D5 │ 运费区域/门槛/时效│ Admin → Fees & tax          │ 物流   │ 每月   │
+    │ D6 │ 承运商费用规则   │ Admin → Carriers             │ 物流   │ 每月   │
+    │ D7 │ 发货 / 运单      │ carrier_shipments、orders    │ 自动   │ 实时   │
+    │ D8 │ 优惠码           │ Admin → Promo codes          │ 运营   │ 变更时 │
+    │ D9 │ 同义词、意图规则 │ customer/nlu.js              │ 技术   │ 需要时 │
+    │ D10│ 对话、评价、转人工│ data/store.json（agent_*）  │ 自动   │ 实时   │
+    │ D11│ 测试用例         │ server/pod-agent-test.js     │ 技术   │ 每次改 │
+    └────┴──────────────────┴──────────────────────────────┴────────┴────────┘
+
+4.3 数据清洗标准
+    4.3.1 通用
+      Q1  准确：与网站、政策、结账页一致
+      Q2  具体：写数字、单位、条件
+      Q3  绝对日期：写 "10 December 2026"，不写“下周”
+      Q4  无占位符：不能有 TODO、TBD、xxx、[ ]、待定、???（Data check K5）
+      Q5  无内部信息：不能有成本价、利润、毛利、供应商价格（K6）
+      Q6  无个人数据：不能有客户姓名、地址、订单号
+      Q7  无测试链接：不能有 localhost、example.com
+      Q8  时效、税、付款、包邮等店铺事实不写死在问答里：它们由 knowledge.js
+          从实时设置生成，改设置即可
+    4.3.2 自定义问答（Admin → Knowledge）
+      F1  一条只回答一个问题；答案 ≤ 1200 字符（K4，系统上限 1500）
+      F2  标题是客户的问法，以 ? 或 ？ 结尾（K2）；长度 5–200
+      F3  答案至少 30 字符（K3），包含完整条件和例外
+      F4  不重复（K1）
+      F5  关键词（Keywords）写客户会用的词，含中英德同义词，逗号分隔；
+          中文按两字词组匹配
+      F6  选择语言（en/zh/de/fr/it）；同一问题需要多语言就各建一条
+          （系统不自动翻译；未命中当前语言时回落英文）
+    4.3.3 商品数据
+      S1  每个商品有 en（最好也有 zh、de）名称
+      S2  材质名称有多语言
+      S3  每个商品在 CH 市场有价格，否则阶梯价为空、推荐时被跳过
+      S4  新商品如有常见别名（如“喜帖”“Platzkarte”），加进 nlu.js SYN
+    4.3.4 测试用例（server/pod-agent-test.js）
+      E1  每加一类意图或修一个误判，就加一条断言
+      E2  覆盖报价=结账、中文、订单查询防枚举、推荐预算、护栏、转人工、
+          本地路由、后台 KPI、模型工具循环（模拟）
+      E3  优先用客户的真实原话（去除个人信息）
+
+4.4 数据格式规范
+    4.4.1 自定义问答（agent_settings.custom_faq 中的一条）
+          {
+            "id": "kb_1a2b3c4d",
+            "question": "Can I order a printed sample?",
+            "answer": "Yes. Every product can be ordered from 1 piece ...",
+            "tags": "sample, test print, 样品",
+            "lang": "en",
+            "active": true
+          }
+          · 检索打分：关键词命中 2 分，问题文本命中 1 分，自定义条目 +1；
+            规则模式下得分 ≥ 2 才直接作答
+          · 自定义条目排在内置答案之前
+
+    4.4.2 聊天请求 / 响应（POST /api/pod-agent/chat）
+          请求：{ "message": "Shipping to Switzerland for 10 invitations?",
+                  "conversation_id": "c_…", "lang": "en", "country": "CH",
+                  "page": "/" }
+          响应：{ "answer": "...", "reply": "...", "conversation_id": "c_…",
+                  "language": "en", "intent": "shipping_quote",
+                  "ui": [ {"type":"quote", ...}, {"type":"chips", ...} ],
+                  "mode": "rules", "answered_by": "local",
+                  "route": { "path": "local", "confidence": 0.9,
+                             "reason": "shop_data", "complexity": [] },
+                  "handoff": null, "tools_used": ["quote_shipping"],
+                  "message_index": 1 }
+          ui 卡片类型：products、quote、order、tracking、chips
+
+    4.4.3 会话记录（agent_conversations）
+          id、tenant_id、channel "webchat"、status open/handed_off、language、
+          messages（最多 40 条；助手消息带 intent、answered_by、route、
+          confidence、tools、unanswered、feedback）、intents、tools、
+          paths {local, llm}、slots（product、quantity、country、email、
+          order_number、pending）、failed_count、total_tokens、handoff_id、page
+
+    4.4.4 转人工记录（agent_handoffs）
+          id "ho_…"、conversation_id、status open/in_progress/resolved、reason、
+          summary、customer_email、order_number、language、messages（≤ 30）、
+          team_note、created_at、resolved_at
+
+    4.4.5 销售折扣记录（agent_discounts）
+          code "HELLO-XXXXXX"、email_hash（SHA-256 前 24 位，不存明文邮箱）、
+          conversation_id、percent、created_at、expires_at
+
+
+======================================================================
+5. 用什么指标衡量成功率和输出
+======================================================================
+
+5.1 核心指标（Admin → Overview，近 30 天，共 15 项）
+    ┌─────┬──────────────────────────────┬──────────────────────────┬────────┐
+    │ 编号│ 指标（后台标签）             │ 计算方式                 │ 目标   │
+    ├─────┼──────────────────────────────┼──────────────────────────┼────────┤
+    │ M1  │ Conversations                │ 会话数                   │ —      │
+    │ M2  │ Answered locally             │ 本地回答 / 全部回答      │ 越高越好│
+    │ M3  │ Answered by LLM              │ LLM 回答 / 全部回答      │ 参考   │
+    │ M4  │ Customer messages            │ 客户消息数               │ —      │
+    │ M5  │ Messages per conversation    │ 客户消息 / 会话          │ —      │
+    │ M6  │ Solved without a human       │ 未转人工会话 / 会话      │ ≥ 80 % │
+    │ M7  │ Handed to the team           │ 转人工会话 / 会话        │ ≤ 20 % │
+    │ M8  │ Unanswered replies           │ 未答回复 / 全部回复      │ ≤ 10 % │
+    │ M9  │ Positive feedback（CSAT）    │ 👍 / (👍 + 👎)           │ ≥ 85 % │
+    │ M10 │ Shipping quotes given        │ quote_shipping 调用次数  │ —      │
+    │ M11 │ Product recommendations      │ recommend_products 次数  │ —      │
+    │ M12 │ Order lookups                │ find_order + get_tracking│ —      │
+    │ M13 │ Open handoffs                │ 未解决转人工（全部时间） │ 越少越好│
+    │ M14 │ Guardrail refusals           │ 注入 + 支付信息拒绝次数  │ —      │
+    │ M15 │ Chat discount codes          │ 聊天发出的一次性码       │ —      │
+    └─────┴──────────────────────────────┴──────────────────────────┴────────┘
+    状态：有目标的指标显示 PASS / WARN；无目标的显示 INFO；无数据 NO DATA。
+    另有：数据质量分（Data check，满分 100，目标 ≥ 85 且 0 error）。
+    注：公开页 /agent.html 写的是“13 项 KPI”，代码在 440778f 实际为 15 项
+    （新增 M2、M3）。
+
+5.2 回答路径表（Overview → Answer routing）
+    按“路径 · 原因”统计回复数，例如：
+      local · shop_data / local · faq_intent / local · knowledge_match /
+      local · follow_up / local · guardrail / local · handoff / local · with_team /
+      local · complex:open_ended (no_llm_key) / llm · unmatched /
+      local · … (llm_error)
+    用途：看多少问题“本该交给 LLM 但没有密钥”，决定是否配置模型或补知识。
+
+5.3 抽查标准（人工流程，每周抽 10 条，系统不自动打分）
+    每条回复按以下 8 项打分（1–5 分）：
+      1. 事实准确（价格、运费、时效、政策与结账页一致）
+      2. 语言正确（客户的语言）
+      3. 语气合适（您 / Sie）
+      4. 没有编造
+      5. 没有泄露内部信息
+      6. 转人工时机正确
+      7. 卡片 / 报价格式正确
+      8. 客户问题被解决或明确下一步（链接到 Studio / 查询订单）
+
+5.4 每周指标邮件
+    不提供（独立版的每周 KPI 邮件已跳过）。每周在 Overview 手动查看。
+
+
+======================================================================
+6. 在哪里验证
+======================================================================
+
+6.1 自动化验证（仓库根目录）
+    ┌──────────────────────────────┬──────────────────────────────────────┐
+    │ 验证项                       │ 命令                                 │
+    ├──────────────────────────────┼──────────────────────────────────────┤
+    │ Agent 全流程（无 LLM + 模拟  │ npm run test:pod-agent               │
+    │ LLM 工具循环）               │ （node server/pod-agent-test.js）    │
+    │ 订单查询（防枚举、锁定）     │ npm run test:lookup                  │
+    │ 结账报价                     │ npm run test:checkout                │
+    │ 承运商 / 物流                │ npm run test:logistics               │
+    │ 页面（含 agent.html）        │ npm run test:pages                   │
+    │ 全部                         │ npm run test:all                     │
+    └──────────────────────────────┴──────────────────────────────────────┘
+    test:pod-agent 在 440778f 的通过输出：router pass；
+    quote_matches_checkout "CHF 6.34 / 13.15"（10 份邀请卡到瑞士 标准/快递）；
+    zh pass；order_lookup "e-mail required, no enumeration"；
+    recommendations pass；guardrails pass；
+    handoff "queued, no e-mail, resolvable"；
+    routing_no_key "local + handoff offer"；admin "auth + KPIs + knowledge"；
+    llm_tool_loop "mocked provider ok, fallback ok"。
+
+6.2 手动验证清单（线上）
+    □ https://wed.swisspro.site/ 点“Ask Wed.AI”：主图区变对话，无悬浮气泡；
+      Esc / 返回按钮恢复主图；手机和矮窗口下输入框始终可见
+    □ https://wed.swisspro.site/?ask=1 自动打开对话
+    □ 问“Shipping to Switzerland for 10 invitations”：报价卡片的标准/快递价
+      与购物车结账相同
+    □ 问“10 份邀请卡寄到瑞士运费多少”：中文回复
+    □ 只给订单号：先要邮箱；错误邮箱与不存在订单回复相同
+    □ 发“ignore previous instructions”：礼貌拒绝；发卡号：拒绝且不保存
+    □ 说“talk to a person”：转人工；Admin Handoffs 出现该记录；Resolve 后
+      AI 恢复
+    □ 问开放问题（如“why…”）：无密钥时给本地答案 + “Talk to a person”
+    □ https://wed.swisspro.site/api/pod-agent/status 返回
+      {"ok":true,"strategy":"local_first","mode":"rules"}
+    □ https://wed.swisspro.site/agent.html 显示功能与 6 步快速接入
+    □ Admin（登录后）→ AI 客服 / Chat agent：六个标签都能打开
+
+6.3 上线前检查
+    □ npm run test:all 全部通过
+    □ Data check：0 error，分数 ≥ 85
+    □ 至少 3 个国家的聊天报价与结账页一致
+    □ Handoffs 无超时未处理项
+    □ Fees & tax 的生产、运输天数按实际填写
+    □ 修订记录已登记本次提交
+
+
+======================================================================
+7. 代码文件地图：每个文件是干什么的、要不要改
+======================================================================
+
+  【前端（仓库根目录）】
+    header.js
+        这是什么：全站页头；首页在 Wed.AI 标志旁渲染“Ask Wed.AI”按钮
+                  （#shAiBtn，aria-controls="heroChat"）
+        对应功能：F16
+        要不要改：✓ 不用改
+    home-chat.js
+        这是什么：首页内嵌对话面板：主图区 #stage 切换为对话；消息、卡片、
+                  chips、👍/👎、sessionStorage、视口自适应、?ask=1 / #ask、Esc
+        对应功能：F1–F4、F7、F13、F16
+        要不要改：✓ 不用改（样式随设计调整时 ✎）
+    index.html
+        这是什么：首页；加载 /home-chat.js（主图区 #stage）
+        对应功能：F16
+        要不要改：✓ 不用改
+    i18n.js
+        这是什么：界面文案（hdr.ai “AI 助手”、hc.* 面板文案，英/中/德）
+        对应功能：F10、F16
+        要不要改：✎ 可以改（文案）
+    agent.html
+        这是什么：公开介绍页 /agent.html：功能、消息处理四步、6 步快速接入、
+                  实时示例报价（调用 /api/storefront/shipping/quote，不建会话）
+        对应功能：说明
+        要不要改：✎ 功能变化时同步改
+    admin.html / admin-sections.js
+        这是什么：后台页面“AI 客服 / Chat agent”及其六个标签
+        对应功能：A1–A7
+        要不要改：✓ 不用改
+
+  【server/pod-agent】
+    routes.js
+        这是什么：/api/pod-agent/*：chat、feedback、status（公开）；
+                  providers、task（管理员）；generate-design（Studio 用）
+        对应功能：全部
+        要不要改：✓ 不用改
+    customer/agent.js
+        这是什么：聊天主流程 handleChat + 规则回答 ruleAnswer + 回复模板
+                  （英/中/德）+ 快捷问题
+        对应功能：全部
+        要不要改：✎ 可以改（回复文案、chips）
+    customer/router.js
+        这是什么：本地优先路由 decideRoute：意图分组、复杂度、置信度、门槛 0.6
+        对应功能：路由、M2/M3
+        要不要改：✎ 谨慎改（改后必须跑 test:pod-agent）
+    customer/nlu.js
+        这是什么：规则分类：语言、国家、商品同义词、数量（含数字词）、预算、
+                  邮箱、订单号、运单号、意图
+        对应功能：F10 及所有意图
+        要不要改：✎ 可以改（新增同义词、关键词）
+    customer/tools.js
+        这是什么：客户安全工具：search_knowledge、get_policy、get_product、
+                  recommend_products、quote_shipping、find_order、get_tracking、
+                  check_discount_code、issue_discount（仅开启时）、
+                  handoff_to_human；推送 UI 卡片
+        对应功能：F1–F4、F6、F7、F14
+        要不要改：✓ 不用改
+    customer/knowledge.js
+        这是什么：内置问答 + 由实时设置生成的问答（时效、税、付款、包邮）+
+                  自定义问答合并检索
+        对应功能：F1、F9
+        要不要改：✎ 政策文字变化时改 FAQ
+    customer/guardrails.js
+        这是什么：转人工判断、注入与支付信息识别、卡号 Luhn 脱敏、安抚 / 拒绝 /
+                  错误提示（英中德法意）
+        对应功能：F12、F15
+        要不要改：✎ 可以改（关键词、提示语）
+    customer/llm.js
+        这是什么：可选云模型层：状态、工具循环（≤ 4 次）、JSON 分类、开放问题
+        对应功能：云增强
+        要不要改：✓ 不用改
+    customer/prompts.js
+        这是什么：系统提示词（语言、事实、工具优先、禁止编造）+ 分类器提示词
+        对应功能：云增强
+        要不要改：✎ 可以改
+    customer/store.js
+        这是什么：设置默认值、会话、转人工队列、折扣记录（data/store.json）
+        对应功能：A3–A6、F12、F14
+        要不要改：✓ 不用改
+    customer/admin.js
+        这是什么：后台接口实现：KPI、路径统计、会话、转人工、设置、知识库、
+                  数据检查
+        对应功能：A2–A7
+        要不要改：✓ 不用改
+    index.js / ai.js
+        这是什么：后台运营 Agent（/task，仅管理员）与 Studio 设计描述用的模型
+                  调用；不参与客户聊天
+        对应功能：—
+        要不要改：✓ 不用改
+    widget.js / README.md
+        这是什么：独立版遗留的悬浮气泡组件和说明；目录仍由 /pod-agent 静态
+                  提供，但网站页面不加载
+        对应功能：无（未使用）
+        要不要改：✓ 不用改
+
+  【server（被 Agent 调用的网站服务）】
+    routes/admin.js           /api/saas/agent/*（requireAdmin；改设置需确认）
+    services/checkout-service.js  quoteStorefront、lookupOrder、paymentMethods
+    services/studio-service.js    商品目录、场景、生产设施天数
+    services/fees-service.js      区域运费、承运商天数、含税模式
+    services/promo-service.js     创建一次性优惠码
+    logistics/index.js            CARRIERS（YunExpress、4PX）、customerTracking、
+                                  承运商费用规则 quoteOverride
+    saas-store.js                 数据存储；STORE_PERSIST_PATH 持久化
+    create-app.js                 挂载 /api/pod-agent 与 /pod-agent 静态目录
+    pod-agent-test.js             Agent 自动化测试
+
+
+======================================================================
+8. 功能对照表：每项功能由哪些代码、数据负责
+======================================================================
+
+  F1  知识库问答
+      代码：knowledge.js(searchKnowledge, knowledgeEntry) · tools.js(search_knowledge,
+            get_policy) · agent.js(default 分支)
+      数据：内置 FAQ、实时店铺设置、Admin 自定义问答
+      验证：Admin → Knowledge → Test retrieval；聊天问“Do you offer samples?”
+
+  F2  商品问答 + 阶梯价
+      代码：tools.js(get_product) · nlu.js(extractProducts) · checkout-service
+      数据：Studio 目录、Price list
+      验证：问“How much are menu cards?”→ 阶梯价 + 定制链接
+
+  F3  商品推荐卡片
+      代码：tools.js(recommend_products, OCCASIONS) · nlu.js(extractBudget)
+      数据：Studio 场景套装
+      验证：“favours under CHF 10”→ 卡片单价均 ≤ 10（测试 recommendations）
+
+  F4  报价 + 预计到货
+      代码：tools.js(quote_shipping) · agent.js(shipping_quote / delivery_time)
+      数据：Price list、Fees & tax、生产天数、承运商天数
+      验证：卡片 = 商品小计 + 每种运费 + 预计送达；含/不含税说明
+
+  F6  运费报价 = 结账价
+      代码：checkout-service quoteStorefront · logistics quoteOverride
+      数据：Fees & tax、Carriers 费用规则（YunExpress / 4PX）
+      验证：test:pod-agent quote_matches_checkout；线上与购物车对比
+
+  F7  订单 + 物流查询
+      代码：tools.js(find_order, get_tracking) · checkout-service lookupOrder ·
+            logistics customerTracking
+      数据：orders、carrier_shipments（YunExpress / 4PX 轮询结果）
+      验证：只给订单号 → 要邮箱；错邮箱 = 不存在；5 次失败锁 15 分钟
+
+  F9  退换货 / 取消说明
+      代码：knowledge.js(returns, cancel) · guardrails.js(REFUND_RE)
+      数据：内置政策文字（/returns）
+      验证：问“Can I return…”→ 政策；说“refund”→ 转人工
+
+  F10 语种自适应
+      代码：nlu.js(detectLanguage) · agent.js 模板 · guardrails.js 提示 · i18n.js
+      数据：—
+      验证：英、中、德各问一句；短消息沿用界面语言
+
+  F12 情绪 / 威胁识别 + 转人工
+      代码：guardrails.js(handoffCheck) · store.js(createHandoff, appendToHandoff,
+            updateHandoff) · admin-sections.js(Handoffs)
+      数据：Settings（回复时间、未解决阈值、token 上限）
+      验证：骂人 → 转人工、静音 → Resolve 后恢复（测试 handoff）
+
+  F13 客户评价
+      代码：routes.js(/feedback) · home-chat.js · admin.js(satisfaction)
+      数据：会话消息 feedback 字段
+      验证：点 👎 → Conversations 记录中显示 👎
+
+  F14 优惠码校验 + 可选销售折扣
+      代码：tools.js(check_discount_code, issue_discount) · agent.js(discount) ·
+            promo-service
+      数据：Promo codes；Settings 销售折扣规则（默认关闭）
+      验证：发一个有效码 → 显示折扣和有效期；开启折扣后“太贵了”+ 邮箱 →
+            同一客户周期内只得到一个码
+
+  F15 安全护栏
+      代码：guardrails.js(INJECTION_RE, containsPaymentData, redact) ·
+            routes.js(rateLimit 30 次/分钟) · agent.js(每会话 10 分钟上限)
+      数据：Settings 每 10 分钟消息上限
+      验证：测试 guardrails；卡号不出现在 data/store.json
+
+  F16 首页内嵌对话面板
+      代码：header.js(#shAiBtn) · home-chat.js · index.html · i18n.js
+      数据：—
+      验证：6.2 第一项
+
+  路由（本地优先）
+      代码：router.js(decideRoute) · agent.js(handleChat ⑧) · llm.js(llmStatus)
+      数据：.env LLM_PROVIDER + 密钥（当前无）
+      验证：test:pod-agent router / routing_no_key / llm_tool_loop；
+            Overview 的 Answered locally %
+
+  A1–A7 对内功能
+      代码：admin-sections.js(chatagent) · customer/admin.js · routes/admin.js
+      数据：agent_settings、agent_conversations、agent_handoffs、agent_discounts
+      验证：登录后台，逐个标签打开；Data check 显示分数
+
+
+======================================================================
+9. 对话流程与角色（本地优先路径 + 云增强路径）
+======================================================================
+
+9.1 两个路径
+    ┌──────────┬──────────────────────────────┬──────────────────────────────┐
+    │          │ 本地路径（默认）             │ LLM 路径（仅配置密钥时）     │
+    ├──────────┼──────────────────────────────┼──────────────────────────────┤
+    │ 何时走   │ 置信度 ≥ 0.6；或无密钥       │ 置信度 < 0.6（复杂/未匹配）；│
+    │          │                              │ 或本地规则未找到答案         │
+    │ 分类     │ nlu.js 规则分类              │ 规则分类 + 模型 JSON 分类器  │
+    │          │                              │ （补充情绪/人工/威胁等）     │
+    │ 回答     │ 模板 + 工具结果 + 知识原文   │ 模型 + 工具循环（≤ 4 次）或  │
+    │          │                              │ 基于知识的直接回答           │
+    │ 数字     │ 工具计算                     │ 仍只能来自工具               │
+    │ 失败时   │ “不确定 + 转人工”chips       │ 回落本地答案（llm_error）    │
+    │ 成本     │ 0                            │ 按 token 计费                │
+    └──────────┴──────────────────────────────┴──────────────────────────────┘
+
+9.2 角色
+    对外（客户）：
+      R1 访客          匿名，可咨询、看商品、要报价、校验优惠码
+      R2 已验证客户    给出“订单号 + 下单邮箱”→ 可看订单状态、预计送达、物流
+                       （运单号本身也可查询物流状态）
+      R3 转人工中      AI 静音，消息追加到转人工记录，Resolve 后恢复
+    对内（团队）：
+      管理员           网站 admin 登录后可用全部 Chat agent 功能；修改设置需
+                       写操作确认。没有 owner / editor / viewer 分级。
+
+9.3 对外流程 A：咨询与报价（最常见）
+    ① 打开        首页点“Ask Wed.AI” → 面板显示欢迎语 + 4 个快捷问题（前端
+                  i18n 文案，不调用接口）；客户发“你好”时服务器回复后台设置
+                  的欢迎语（空则默认）
+    ② 提问        “Shipping to Switzerland for 10 invitations”
+                  分类：shipping_quote；商品 invitation、数量 10、国家 CH
+    ③ 补槽        缺商品 → 问商品（chips：邀请卡/菜单卡/席位卡/迎宾牌）；
+                  缺国家 → 问国家（chips：瑞士/德国/奥地利/法国）；
+                  下一条只给“Germany”也会接着报价（follow_up）
+    ④ 报价        quote_shipping → 【报价卡片】：数量 × 单价 = 小计；
+                  标准 / 快递运费（或免费）与预计送达；含/不含增值税说明
+    ⑤ 推荐        “Recommend wedding favours under CHF 10”→【商品卡片】
+    ⑥ 下单        客户点卡片或链接进入 Studio 定制 → 购物车 → 结账付款
+                  （Agent 不创建订单、不开账单、不发邮件）
+    保护：价格每次由服务器重新计算；快递/标准与结账同源。
+
+9.4 对外流程 B：查订单和物流
+    ① 客户：“Where is my order?”→ 要订单号（如 POD-2026-…）和下单邮箱
+    ② 只给订单号 → 先要邮箱，此前不显示任何订单信息
+    ③ 两者匹配 → 【订单卡片】：状态（待付款/已付款/待确认效果图/生产中/
+       已发货/已签收/已取消）、预计送达、承运商和运单状态
+    ④ 不匹配或不存在 → 同一句提示 + /account#find-order；5 次失败锁 15 分钟
+    ⑤ 只给运单号 → 在自有承运商发货记录中查 → 【物流卡片】：承运商、
+       状态、最新事件、追踪链接
+    ⑥ 延误：不主动通知（后台 Carriers 区有无更新 / 未签收天数告警）
+
+9.5 对外流程 C：售后 / 退换货 / 取消
+    给出政策原文（个性化商品不支持无理由退货；瑕疵/破损/与效果图不符 14 天内
+    凭订单号和照片联系；生产前可免费修改或取消）。提到退款 → 转人工。
+
+9.6 对外流程 D：转人工
+    触发见 3.3.1 → 生成队列记录 → 告知“X 小时内回复”，没有邮箱则请客户留邮箱
+    → 团队在 Admin 处理并用自己的邮箱回复 → Resolve → AI 恢复。
+
+9.7 本地优先的具体判断（router.js decideRoute，440778f）
+    · 店铺数据意图（shipping_quote、price、order_status、tracking、discount、
+      recommendation、greeting、thanks）：
+        有对应实体 0.9、无实体 0.8，每个复杂度标记 −0.05，最低 0.7 → 本地；
+        含开放式问法（why / compare / 帮我写 / 哪个更好 / 建议…）→ 0.55 及以下
+        → LLM 路径（模型也必须调用工具取数）
+    · 跟进消息（补国家、数量、商品、邮箱、订单号、运单号）：0.8 → 本地
+    · 政策 / FAQ 意图（return_request、cancel_or_change、delivery_time、customs、
+      vat、payment、proof、website、product_question、contact_info）：
+        0.85 / 0.8 − 惩罚（开放式 −0.3，超长 >220 字或 ≥2 个问号各 −0.1）
+    · 未分类但知识库得分 ≥ 2：min(0.85, 0.5 + 0.1 × 得分) − 惩罚
+    · 其余：0.3 − 0.05 × 复杂度标记数 → unmatched
+    · 置信度 ≥ 0.6 → 本地；本地若未找到答案且有密钥 → 交给 LLM
+      （原因加 rules_unanswered）
+    · < 0.6 且无密钥 → 最佳本地答案 + “如未解答可转人工”+ chips
+      （原因加 no_llm_key）
+    · 护栏、转人工、静音中的回复一律记为 local（原因 guardrail / handoff /
+      with_team）
+
+9.8 每条消息的处理顺序（agent.js handleChat）
+    ① 校验（空消息、≤1000 字）、聊天开关  ② 取或建会话  ③ 每会话限流
+    ④ 支付信息拒绝（不存原文）→ 卡号脱敏 → 注入拒绝
+    ⑤ 已转人工 → 追加到队列，AI 静音  ⑥ 规则分类
+    ⑦ 护栏 / 转人工判断  ⑧ 路由：本地 / LLM / 无密钥回落
+    ⑨ 保存（answered_by、route、confidence、tools、unanswered）并返回
+
+
+======================================================================
+10. 运行模式与部署
+======================================================================
+
+10.1 模式切换
+    没有 AGENT_MODE。模式由服务器 .env 自动决定：
+      未设 LLM_PROVIDER 或缺对应密钥     → rules（当前生产）
+      LLM_PROVIDER=openai|chatgpt + OPENAI_API_KEY + OPENAI_MODEL     → llm_tools
+      LLM_PROVIDER=xai|grok + XAI_API_KEY + XAI_MODEL                 → llm_tools
+      LLM_PROVIDER=deepseek + DEEPSEEK_API_KEY（DEEPSEEK_MODEL 可选）  → llm_tools
+      LLM_PROVIDER=anthropic / gemini + 对应 *_API_KEY、*_MODEL       → llm_answers
+    三种情况下策略都是 local_first。改 .env 后需重启应用。
+    密钥只放服务器 .env，不进仓库、不进本文档。
+
+10.2 部署环境
+    · 服务器：rs8-fra（CloudLinux，Node.js 应用 pod-wedding，目录 ~/pod-wedding）
+    · 代码：GitHub 仓库 feature/home-en-images 分支（main 快进到同一提交）
+    · 数据持久化：.env STORE_PERSIST_PATH=./data/store.json；会话、转人工、
+      设置、自定义问答、折扣记录都在其中（agent_* 集合）。data/ 目录不进 git，
+      git pull 不会覆盖；部署前后不要删除 data/。
+    · 相关开关：LOGISTICS_ENABLED=true（承运商规则与物流同步）
+
+10.3 发布步骤（标准）
+    ```bash
+    # 在开发机（仓库目录）
+    git pull --rebase
+    npm run test:pod-agent        # 改动较大时 npm run test:all
+    git commit … && git push      # 不使用 --force
+    # 将 main 快进到 feature/home-en-images
+    git push origin feature/home-en-images:main
+    # 服务器
+    ssh -p 1988 dropking@rs8-fra.serverhostgroup.com \
+      'cd ~/pod-wedding && git pull && cloudlinux-selector restart --json \
+       --interpreter nodejs --app-root pod-wedding'
+    ```
+    发布后：打开 /api/pod-agent/status 与首页“Ask Wed.AI”做 6.2 抽查，
+    并在附录 C 登记。
+
+10.4 接口一览
+    公开（首页面板使用）：
+      POST /api/pod-agent/chat       见 4.4.2；限流 30 次/分钟（与 feedback、
+                                     generate-design 共享桶）；响应 no-store
+      POST /api/pod-agent/feedback   { conversation_id, index, rating: 1|-1 }
+                                     只能评价本会话的助手消息
+      GET  /api/pod-agent/status     { ok, strategy: "local_first", mode }
+    管理员（requireAdmin）：
+      GET  /api/saas/agent/overview?days=30
+      GET  /api/saas/agent/conversations?limit=50
+      GET  /api/saas/agent/handoffs[?status=]
+      PUT  /api/saas/agent/handoffs/:id     { status, note }
+      GET  /api/saas/agent/settings
+      PUT  /api/saas/agent/settings          （需写操作确认）
+      GET/POST /api/saas/agent/knowledge；DELETE /api/saas/agent/knowledge/:id
+      POST /api/saas/agent/knowledge/test    { query }
+      GET  /api/saas/agent/datacheck
+      GET  /api/pod-agent/providers；POST /api/pod-agent/task（后台运营 Agent）
+
+10.5 离线 / 无模型保证
+    以下功能不依赖任何外部模型或第三方追踪服务：
+      · 语言与意图识别、实体提取、路由
+      · 知识检索（内置 + 自定义）
+      · 商品问答、阶梯价、推荐卡片
+      · 运费报价（网站自有报价引擎）
+      · 订单查询（网站订单库）
+      · 物流状态（自有承运商发货记录，由 YunExpress / 4PX 接口同步写入）
+      · 优惠码校验、销售折扣规则
+      · 护栏、转人工、评价、后台 KPI
+    以下功能需要外部服务：
+      · 云模型回答（仅配置密钥时）
+      · 承运商状态更新（YunExpress / 4PX 接口，由物流模块负责，不在聊天中
+        实时调用）
+
+
+======================================================================
+附录 A  术语
+======================================================================
+    本地优先 / local_first  先用规则引擎 + 店铺数据回答；置信度 < 0.6 才考虑模型
+    置信度 confidence       router.js 给每条消息算的 0–1 分，门槛 0.6
+    answered_by             每条回复的回答方：local 或 llm
+    路径原因 route reason   shop_data、faq_intent、knowledge_match、follow_up、
+                            unmatched、complex:…，可附加 |no_llm_key、
+                            |rules_unanswered、|llm_error
+    报价 = 结账价           聊天报价与购物车、结账用同一函数 quoteStorefront
+    转人工 / Resolve        会话交给团队、AI 静音 / 团队处理完毕、AI 恢复
+    独立处理率              Solved without a human：未转人工会话占比
+    CSAT                    Positive feedback：👍 占全部评价的比例
+    未答回复                规则模式下既无意图也无足够知识命中的回复
+    数据质量分              Data check 分数：100 − 10 × error − 2 × warn
+    销售折扣                客户嫌贵时按规则发放的一次性码，默认关闭
+
+
+======================================================================
+附录 B  与独立版 POD Agent 的差异（保留 / 替换 / 跳过）
+======================================================================
+
+B.1 保留（移植进网站代码）
+    ┌──────────────────────────────┬──────────────────────────────────────┐
+    │ 独立版                       │ 本版                                 │
+    ├──────────────────────────────┼──────────────────────────────────────┤
+    │ agent.js handleMessage 流程  │ customer/agent.js handleChat         │
+    │ guardrails.js 转人工规则     │ customer/guardrails.js（+注入、卡号）│
+    │ llm.js runAgent 工具循环     │ customer/llm.js runToolLoop（≤4 次） │
+    │ router.js 分类 JSON 形状     │ prompts.js CLASSIFIER_SYSTEM + nlu.js│
+    │ prompts.js 规则              │ customer/prompts.js                  │
+    │ discounts.js 销售折扣规则    │ tools.js issue_discount（默认关闭）  │
+    │ metrics.js 指标 + 👍/👎      │ customer/admin.js agentOverview      │
+    │ handoff.js 队列 + 释放       │ store.js + Admin Handoffs（Resolve） │
+    │ datacheck.js K/C 检查        │ customer/admin.js dataCheck          │
+    └──────────────────────────────┴──────────────────────────────────────┘
+
+B.2 替换（改用网站已有能力）
+    ┌──────────────────────────────┬──────────────────────────────────────┐
+    │ 独立版                       │ 本版                                 │
+    ├──────────────────────────────┼──────────────────────────────────────┤
+    │ 适配器 local/shopify/custom  │ 直接调用网站服务（见 2.4）           │
+    │ Supabase 表                  │ data/store.json（agent_* 集合）      │
+    │ shipping.js + rates/*.json   │ quoteStorefront（Fees & tax + Carriers│
+    │ （Excel 价格表）             │ YunExpress/4PX 规则）                │
+    │ tracking51.js（51Tracking）  │ carrier_shipments + customerTracking │
+    │ knowledge/faq.md + 向量检索  │ knowledge.js（实时事实）+ 后台问答， │
+    │                              │ 词项 + 中文二元组检索                │
+    │ 右下角网页气泡 widget.js     │ 首页主图区面板 home-chat.js          │
+    │ 独立后台登录 + 角色          │ 网站 admin 登录（单一管理员角色）    │
+    │ AGENT_MODE 三模式            │ 由是否配置密钥自动决定，固定本地优先 │
+    │ FAST/SMART/EU 模型槽位       │ 单一 LLM_PROVIDER                    │
+    │ ROUTER_CONFIDENCE_THRESHOLD  │ router.js 常量 0.6                   │
+    │ 转人工邮件通知               │ 只进 Admin 队列，不发邮件            │
+    └──────────────────────────────┴──────────────────────────────────────┘
+
+B.3 跳过（本版没有）
+    · n8n 工作流（16 个）与 Docker / Caddy 部署
+    · WhatsApp / Instagram / 邮件渠道与跨渠道统一会话（F11）
+    · 定时任务：物流延误主动致歉 + 补偿券（F8）、转人工 12 小时提醒、
+      每周 KPI 邮件、会话自动关闭打标签
+    · 选项图片卡片 → 报价 → 留邮箱 → 邮件账单 / 草稿订单（F3 旧版、F5）
+    · check_return 退货自动判断（改为政策说明 + 退款转人工）
+    · 运费校准脚本 calibrate.js、rag-eval / eval.json 评测集
+    · 每周指标邮件、owner / editor / accountant / viewer 权限表
+    · Shopify 店铺管理（已由网站 Admin → Shopify 区负责，不在 Agent 内）
+
+
+======================================================================
+附录 C  修订记录
+======================================================================
+    修订规则：系统每次更新（代码、配置、后台、部署），必须在同一次提交或紧接
+    的提交中更新本文档的对应条款，并在下面登记：提交号 · 日期 · 改动 ·
+    影响条款。没有登记的改动视为未完成。
+
+    文档 1.0 · 2026-11-01 · 独立版“POD 独立 Agent 标准文档”（参考，不在本仓库）。
+
+    3220bc0 · 2026-11-01 · 集成进 Wed.AI：
+        首页标志旁“Ask Wed.AI”，主图区变对话面板（无悬浮气泡）；
+        客户 Agent API（/api/pod-agent/chat、feedback、status）基于网站报价、
+        订单、物流数据；护栏与转人工队列；Admin “AI 客服 / Chat agent”
+        （Overview 13 项 KPI、Handoffs、Conversations、Knowledge、Settings、
+        Data check）；公开页 /agent.html；/api/pod-agent/status 返回 mode；
+        server/pod-agent-test.js。
+        影响条款：全部（首次发布）。
+
+    440778f · 2026-11-01 · 本地优先 + 自适应：
+        面板高度适配吸顶页头下的可视区域，输入框始终可见、消息区内部滚动
+        （矮窗口与手机）；新增 router.js 本地优先路由（置信度 ≥ 0.6 本地，
+        复杂/未匹配才用 LLM，无密钥时本地答案 + 转人工）；每条回复记录
+        answered_by / route / confidence；Overview 新增“Answered locally %”
+        “Answered by LLM %”（共 15 项）与回答路径表；会话列表显示
+        Local / LLM；数字词数量（ten / zehn …）；Agent 页中文运费标签；
+        /api/pod-agent/status 返回 strategy local_first。
+        影响条款：1.2、2.3、3.1.3、5.1、5.2、8（路由）、9.1、9.7、10.1。
+
+    文档 1.1 · 2026-11-01 · 本文档首次按 440778f 实际代码编写，
+        保存为 docs/Wed.AI-Agent-标准文档.txt。
