@@ -1,6 +1,6 @@
 ======================================================================
   Wed.AI POD Agent（站内集成版）—— 完整标准文档（本地优先 + 云模型可选）
-  文档版本 1.1 · 2026-11-01 · 对应代码提交 440778f
+  文档版本 1.2 · 2026-11-01 · 对应代码提交 21ca881
   适用：wed.swisspro.site（仓库 AIB612/POD-Wedding-Commerce-OS-SaaS-Agent-v29，
         分支 feature/home-en-images = main）
 ======================================================================
@@ -11,7 +11,7 @@
 
   它由独立版“POD 独立 Agent 标准文档 1.0”改写而来。独立版是一个可单独部署的
   Agent（适配器 + n8n + Supabase）；本版是已经集成进 Wed.AI 网站的实际实现，
-  所有条款以 440778f 的代码为准，代码里没有的功能不写进来。
+  所有条款以 21ca881 的代码为准，代码里没有的功能不写进来。
   与独立版的逐项差异见附录 B。
 
   设计原则：
@@ -70,6 +70,8 @@
     · 语言：中/英/德 回复模板齐全；法语、意大利语可被识别，护栏/转人工/
       错误提示有法、意版本，其余回复模板回落到英文（见 2.1 F10）。
     · 后台：Admin “AI 客服 / Chat agent”，管理员登录后可用。
+    · 嵌入：任何网站加一行 <script src="https://wed.swisspro.site/pod-agent/
+      widget.js" async> 即出现 Wed.AI 对话按钮（同一 /api/pod-agent/chat）。
 
 1.3 边界（不做什么）—— 由代码强制，不依赖 AI 自觉
     1.3.1 不决定退款、补发、取消已付款订单：提到退款即转人工
@@ -82,7 +84,8 @@
     1.3.5 不收集银行卡号 / IBAN / CVV / 密码：含此类内容的消息被拒绝且不保存
           原文；卡号在存储前被脱敏；付款只在结账页（TWINT / PayPal / 卡）。
     1.3.6 不向客户透露成本、利润、密钥名称：/api/pod-agent/status 只返回
-          strategy 和 mode，不返回缺少的密钥名。
+          strategy、mode 和代码常量（阈值、KPI 数、工具数、语言），不返回
+          缺少的密钥名，也不返回任何业务统计。
     1.3.7 知识库没有答案时不编造：规则模式回复“不确定 + 能帮什么 + 转人工”；
           LLM 模式被要求只用检索到的知识，不够就说向团队确认。
     1.3.8 无 LLM 时不假装：直接给最佳规则答案，并附“回复‘转人工’即可”。
@@ -213,7 +216,9 @@
     3.1.1 网页：首页页头 Wed.AI 标志右侧点“Ask Wed.AI”（中文界面“AI 助手”，
           德文“Wed.AI fragen”）。首页主图区变为对话面板；再点一次、点
           “Back to the scene”或按 Esc 恢复主图。没有右下角悬浮气泡。
-    3.1.2 直接打开：任何页面链接到 /?ask=1 或 /#ask 即自动打开对话。
+    3.1.2 直接打开：任何页面链接到 /?ask=1 或 /#ask 即自动打开对话；
+          加 &q=文字（最多 200 字）会预填输入框，但不会自动发送
+          （/agent.html“联系团队”用 /?ask=1&q=Talk to a person）。
     3.1.3 面板：标题、新对话按钮、消息区（内部滚动）、快捷问题（chips）、
           输入框（最多 1000 字）、“不要在对话中发送卡号或密码”提示。
           面板高度 = 视口高度 − 吸顶页头高度，输入框始终可见；
@@ -222,7 +227,11 @@
           /shipping、/returns 等站内路径和 https 链接可点击。
     3.1.5 会话保存在当前浏览器标签页（sessionStorage，最多 40 条）；
           “新对话”重新开始。没有跨渠道合并。
-    3.1.6 HTTP：POST /api/pod-agent/chat（见 10.4），仅供本站前端使用。
+    3.1.6 其他网站：嵌入 widget.js（见 7【server/pod-agent】widget.js）。
+          右下角（data-position="bottom-left" 可改左下）出现对话按钮；
+          data-lang en/zh/de，data-country 市场提示，data-api 接口源。
+    3.1.7 HTTP：POST /api/pod-agent/chat（见 10.4）；CORS 开放，可从任何
+          系统调用，限流同 10.4。
 
 3.2 团队日常操作（SOP）
     3.2.1 每天（5 分钟）
@@ -413,8 +422,10 @@
     └─────┴──────────────────────────────┴──────────────────────────┴────────┘
     状态：有目标的指标显示 PASS / WARN；无目标的显示 INFO；无数据 NO DATA。
     另有：数据质量分（Data check，满分 100，目标 ≥ 85 且 0 error）。
-    注：公开页 /agent.html 写的是“13 项 KPI”，代码在 440778f 实际为 15 项
-    （新增 M2、M3）。
+    注：KPI 列表在 admin.js KPI_IDS（15 项）。公开页 /agent.html 的数字
+    （15 项 KPI、10 个工具、阈值 0.6、识别 5 种 / 回复 3 种语言）运行时从
+    /api/pod-agent/status 读取，HTML 里的备用值由 test:pod-agent 校验与代码
+    一致（440778f 及之前页面误写“13 项”，21ca881 已修正）。
 
 5.2 回答路径表（Overview → Answer routing）
     按“路径 · 原因”统计回复数，例如：
@@ -460,7 +471,10 @@
     zh pass；order_lookup "e-mail required, no enumeration"；
     recommendations pass；guardrails pass；
     handoff "queued, no e-mail, resolvable"；
-    routing_no_key "local + handoff offer"；admin "auth + KPIs + knowledge"；
+    routing_no_key "local + handoff offer"；
+    public_files "widget.js only"（/pod-agent/ 下只公开 widget.js，README、
+    服务器源码、目录、路径穿越均 404）；status 字段与 agent.html 数字校验；
+    admin "auth + KPIs + knowledge"；
     llm_tool_loop "mocked provider ok, fallback ok"。
 
 6.2 手动验证清单（线上）
@@ -476,8 +490,15 @@
       AI 恢复
     □ 问开放问题（如“why…”）：无密钥时给本地答案 + “Talk to a person”
     □ https://wed.swisspro.site/api/pod-agent/status 返回
-      {"ok":true,"strategy":"local_first","mode":"rules"}
-    □ https://wed.swisspro.site/agent.html 显示功能与 6 步快速接入
+      {"ok":true,"strategy":"local_first","mode":"rules",
+       "confidence_threshold":0.6,"kpis":15,"tools":10,
+       "languages":{"detected":["en","zh","de","fr","it"],
+                    "replies":["en","zh","de"]}}
+    □ https://wed.swisspro.site/agent.html：数字与 status 一致；“立即试用”
+      跳到首页并打开对话、输入框可见（桌面与手机）；无控制台错误
+    □ /pod-agent/widget.js 200；/pod-agent/README.md、
+      /pod-agent/customer/agent.js 404
+    □ 在其他域名的测试页嵌入 widget.js，问运费能收到报价卡片
     □ Admin（登录后）→ AI 客服 / Chat agent：六个标签都能打开
 
 6.3 上线前检查
@@ -513,10 +534,22 @@
         对应功能：F10、F16
         要不要改：✎ 可以改（文案）
     agent.html
-        这是什么：公开介绍页 /agent.html：功能、消息处理四步、6 步快速接入、
-                  实时示例报价（调用 /api/storefront/shipping/quote，不建会话）
+        这是什么：公开产品页 /agent.html（SaaS 落地页，英/中，视觉为主）：
+                  首屏 + 笔记本/手机动画对话样机；实时数字条（报价、浏览器实测
+                  接口响应、本地回答比例、语言/工具/KPI 数取自 status）；
+                  本地优先路由动画流程图（SVG）；三个示例（报价与推荐单价实时
+                  来自 /api/storefront/shipping/quote，订单追踪标“示例”）；
+                  功能卡；KPI 小图卡（转人工率标“示例 · 测试数据”）+ 后台截图；
+                  架构图；对接标签（店铺链接 / 嵌入代码 / Shopify / REST curl）
+                  + 6 步时间线；5 条 FAQ；“立即试用”= /?ask=1；“联系团队”=
+                  首页对话预填“转人工”；商家登录 /admin/login。滚动渐显，
+                  prefers-reduced-motion 时关闭动画。不建会话、不调用模型。
         对应功能：说明
-        要不要改：✎ 功能变化时同步改
+        要不要改：✎ 功能变化时同步改（详细说明写在本文档，页面只放短句）
+    assets/agent/admin-chat-agent.webp
+        这是什么：agent.html 用的后台截图（本地测试数据，非真实客户数据）
+        对应功能：说明
+        要不要改：后台界面大改时重截
     admin.html / admin-sections.js
         这是什么：后台页面“AI 客服 / Chat agent”及其六个标签
         对应功能：A1–A7
@@ -524,7 +557,8 @@
 
   【server/pod-agent】
     routes.js
-        这是什么：/api/pod-agent/*：chat、feedback、status（公开）；
+        这是什么：/api/pod-agent/*：chat、feedback、status（公开，status 返回
+                  代码常量：阈值、KPI_IDS 数、CUSTOMER_TOOLS 数、语言）；
                   providers、task（管理员）；generate-design（Studio 用）
         对应功能：全部
         要不要改：✓ 不用改
@@ -581,10 +615,19 @@
                   调用；不参与客户聊天
         对应功能：—
         要不要改：✓ 不用改
-    widget.js / README.md
-        这是什么：独立版遗留的悬浮气泡组件和说明；目录仍由 /pod-agent 静态
-                  提供，但网站页面不加载
-        对应功能：无（未使用）
+    widget.js
+        这是什么：第三方网站嵌入组件 WedAIWidget（对话按钮 + 面板）：默认接口
+                  = 脚本所在域名；POST /api/pod-agent/chat（page = "embed:域名"）；
+                  sessionStorage 保存会话；全部 textContent 渲染，链接只允许
+                  https 或本站路径；支持报价卡片与 chips。
+                  create-app.js 只公开此文件（/pod-agent/widget.js，缓存 1 小时，
+                  CORS *），/pod-agent/ 下其他路径一律 404。
+                  网站自己的页面不加载它（首页用 home-chat.js）。
+        对应功能：3.1.6 嵌入
+        要不要改：✎ 嵌入功能变化时改
+    README.md
+        这是什么：独立版遗留说明，不再公开（404）
+        对应功能：无
         要不要改：✓ 不用改
 
   【server（被 Agent 调用的网站服务）】
@@ -596,7 +639,7 @@
     logistics/index.js            CARRIERS（YunExpress、4PX）、customerTracking、
                                   承运商费用规则 quoteOverride
     saas-store.js                 数据存储；STORE_PERSIST_PATH 持久化
-    create-app.js                 挂载 /api/pod-agent 与 /pod-agent 静态目录
+    create-app.js                 挂载 /api/pod-agent；/pod-agent/ 只公开 widget.js
     pod-agent-test.js             Agent 自动化测试
 
 
@@ -821,7 +864,11 @@
                                      generate-design 共享桶）；响应 no-store
       POST /api/pod-agent/feedback   { conversation_id, index, rating: 1|-1 }
                                      只能评价本会话的助手消息
-      GET  /api/pod-agent/status     { ok, strategy: "local_first", mode }
+      GET  /api/pod-agent/status     { ok, strategy: "local_first", mode,
+                                       confidence_threshold, kpis, tools,
+                                       languages: { detected, replies } }
+                                     （只含代码常量，无业务数据；agent.html 用）
+      GET  /pod-agent/widget.js      嵌入组件（其余 /pod-agent/* 404）
     管理员（requireAdmin）：
       GET  /api/saas/agent/overview?days=30
       GET  /api/saas/agent/conversations?limit=50
@@ -948,3 +995,18 @@ B.3 跳过（本版没有）
 
     文档 1.1 · 2026-11-01 · 本文档首次按 440778f 实际代码编写，
         保存为 docs/Wed.AI-Agent-标准文档.txt。
+
+    21ca881 · 2026-11-01 · Agent 页改版 + 公开文件收紧 + 嵌入组件：
+        /agent.html 重做为视觉化 SaaS 落地页（动画样机、路由流程图、KPI 小图、
+        架构图、对接标签 + 时间线、5 条 FAQ；英/中）；“立即试用”跳 /?ask=1；
+        页面数字从 /api/pod-agent/status 读取，修正“13 项 KPI”为 15；
+        status 新增 confidence_threshold、kpis、tools、languages；
+        导出 KPI_IDS（admin.js）、CUSTOMER_TOOLS（tools.js）、
+        DETECTED_LANGS / REPLY_LANGS（agent.js）；
+        /pod-agent/ 只公开 widget.js，其余 404（之前 README 与服务器源码可被
+        直接下载）；widget.js 重写为可用的跨域嵌入组件；
+        home-chat.js 支持 /?ask=1&q= 预填（不自动发送）；
+        test:pod-agent 新增 public_files、status 字段与 agent.html 数字校验。
+        影响条款：1.2、1.3.6、3.1.2、3.1.6–3.1.7、5.1 注、6.1、6.2、7、10.4。
+
+    文档 1.2 · 2026-11-01 · 按 21ca881 更新上述条款。
