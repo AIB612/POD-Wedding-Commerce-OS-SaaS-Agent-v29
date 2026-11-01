@@ -212,6 +212,7 @@ table.compact th,table.compact td{height:40px;padding:8px 12px}
       <button data-page="finance"><span class="ico">$</span><span>财务 / 利润</span></button>
       <div class="menu-title">AI 控制</div>
       <button data-page="agent"><span class="ico">AI</span><span>Agent 任务中心</span><span class="badge" id="badge-agent">4</span></button>
+      <button data-page="chatagent"><span class="ico">✦</span><span>AI 客服 / Chat agent</span></button>
       <button data-page="approvals"><span class="ico">✓</span><span>审批中心</span><span class="badge" id="badge-approvals">3</span></button>
       <button data-page="connectors"><span class="ico">⌘</span><span>API / 协议</span></button>
     </nav>
@@ -341,6 +342,11 @@ table.compact th,table.compact td{height:40px;padding:8px 12px}
       <div class="content adm-sec" id="feesSection"></div>
     </section>
 
+    <section class="page" id="chatagent">
+      <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>AI 客服 / Chat agent</span></div><div class="page-head-row"><div><h1>Customer chat agent</h1><p>Wed.AI POD Agent: KPIs, conversations, handoff queue, knowledge base, settings and data check</p></div></div></div>
+      <div class="content adm-sec" id="chatagentSection"></div>
+    </section>
+
     <section class="page" id="promos">
       <div class="page-header"><div class="breadcrumb">Wedding Commerce OS / <span>优惠码 / Promo codes</span></div><div class="page-head-row"><div><h1>Promo codes</h1><p>One code per order, applied after volume tiers</p></div></div></div>
       <div class="content adm-sec" id="promosSection"></div>
@@ -430,7 +436,7 @@ table.compact th,table.compact td{height:40px;padding:8px 12px}
 <div class="notice" id="notice"></div>
 
 <script src="i18n.js"></script>
-<script src="/admin-sections.js"></script>
+<script src="/admin-sections.js?v=20261101a"></script>
 <script>
 // ===== Wedding Commerce OS — Admin (Ant Design Pro layout) =====
 // Live data from /api/saas/*; falls back to the built-in demo data when the backend is unreachable.

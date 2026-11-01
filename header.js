@@ -38,13 +38,18 @@
   ".sh .brand b{display:block;font-size:13px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;line-height:1.2}"+
   ".sh .brand b.sh-wordmark{font-size:22px;letter-spacing:-.01em;text-transform:none;font-weight:800;font-family:Georgia,'Times New Roman',serif;white-space:nowrap}.sh .brand b.sh-wordmark .sh-dot{font-style:normal;color:#b8865b}"+
   ".sh .brand span{display:block;color:#7c746c;font-size:11px;margin-top:3px;font-weight:400;line-height:1.25}"+
+  ".sh .sh-left{display:flex;align-items:center;gap:12px;min-width:0}"+
+  ".sh .sh-ai{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(184,134,91,.45);background:#f6efe7;color:#6b4f3a;border-radius:999px;padding:7px 13px 7px 11px;font:600 12.5px/1 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}"+
+  ".sh .sh-ai:hover{background:#efe3d6;border-color:#b8865b}.sh .sh-ai:focus-visible{outline:2px solid #b8865b;outline-offset:2px}"+
+  ".sh .sh-ai[aria-expanded=true]{background:#292622;color:#fff;border-color:#292622}"+
   ".sh .actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none}"+
   ".sh .sh-slot{display:inline-flex;align-items:center;gap:8px}"+
   ".sh .topbar-row2{display:contents}"+
   ".sh .btn{border:1px solid rgba(45,36,30,.12);background:#fff;border-radius:999px;padding:9px 13px;cursor:pointer;font-size:12px;color:#28231f;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}"+
   ".sh-market{appearance:none;-webkit-appearance:none;border:1px solid rgba(45,36,30,.14);background:#fff url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M1 1l4 4 4-4%27 stroke=%27%2328231f%27 fill=%27none%27 stroke-width=%271.4%27/%3E%3C/svg%3E\") no-repeat right 11px center;border-radius:999px;padding:7px 28px 7px 12px;font:inherit;font-size:12px;color:#28231f;cursor:pointer}"+
   ".sh-secure{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#4f775b;font-weight:600}"+
-  "@media(max-width:720px){.sh.topbar{padding:8px 12px;min-height:56px;height:auto;flex-wrap:wrap;gap:8px}.sh .brand{gap:8px}.sh .logo{width:30px;height:30px;border-radius:10px;font-size:13px}.sh .brand b{font-size:12px;white-space:nowrap;letter-spacing:.03em}.sh .brand span{display:none}.sh .topbar-row2{grid-column:1/-1;grid-row:2;display:flex;gap:6px;min-width:0}.sh-market{padding:5px 24px 5px 10px;font-size:11px;background-position:right 8px center}}";
+  "@media(max-width:720px){.sh.topbar{padding:8px 12px;min-height:56px;height:auto;flex-wrap:wrap;gap:8px}.sh .brand{gap:8px}.sh .logo{width:30px;height:30px;border-radius:10px;font-size:13px}.sh .brand b{font-size:12px;white-space:nowrap;letter-spacing:.03em}.sh .brand span{display:none}.sh .topbar-row2{grid-column:1/-1;grid-row:2;display:flex;gap:6px;min-width:0}.sh-market{padding:5px 24px 5px 10px;font-size:11px;background-position:right 8px center}.sh .sh-left{gap:8px}.sh .sh-ai{padding:6px 10px 6px 9px;font-size:12px}}";
+  var ICON_AI='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18.5 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg>';
   var ICON_CART='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
   function marketSelect(){return ""}
   function _unusedMarketSelect(){var v=Market.get();return '<select class="sh-market" aria-label="Market and currency">'+Object.keys(MARKETS).map(function(id){var m=MARKETS[id];return '<option value="'+id+'"'+(id===v?' selected':'')+'>'+m.flag+' '+id+' · '+m.currency+'</option>'}).join("")+'</select>'}
@@ -59,7 +64,9 @@
     var cartBtn=cart?'<button class="cart-btn" id="cartBtn" type="button" aria-haspopup="dialog" aria-controls="cartPanel">'+ICON_CART+'<span class="cart-btn-label" data-i18n="cart.button">Cart</span><span class="cart-badge" id="cartCount" data-n="0">0</span></button>':'';
     var h=document.createElement("header");h.className="sh topbar";h.setAttribute("data-variant",variant);
     if(isHome){
-      h.innerHTML='<a class="brand sh-brand" href="/" aria-label="Wed.AI — home"><div><b class="sh-name sh-wordmark">Wed.AI</b>'+sub+'</div></a>'+
+      // "Ask Wed.AI" entry next to the brand: swaps the hero image for the inline chat panel (home-chat.js). No floating bubble.
+      h.innerHTML='<div class="sh-left"><a class="brand sh-brand" href="/" aria-label="Wed.AI — home"><div><b class="sh-name sh-wordmark">Wed.AI</b>'+sub+'</div></a>'+
+        '<button class="sh-ai" id="shAiBtn" type="button" aria-controls="heroChat" aria-expanded="false">'+ICON_AI+'<span data-i18n="hdr.ai">Ask Wed.AI</span></button></div>'+
         '<div class="actions sh-act"><div class="lang-switch" data-lang-switch></div><div class="topbar-row2 sh-slot">'+marketSelect()+'</div>'+cartBtn+'</div>';
     }else{
       h.innerHTML='<a class="brand sh-brand" href="/" aria-label="Wed.AI — home"><div><b class="sh-name sh-wordmark">Wed.AI</b>'+sub+'</div></a>'+

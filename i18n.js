@@ -419,8 +419,8 @@ function translate(root=document,l=lang()){
  try{
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),a=[];
   while(w.nextNode())a.push(w.currentNode);
-  a.forEach(n=>{if(!n.parentElement||['SCRIPT','STYLE','TEXTAREA','OPTION'].includes(n.parentElement.tagName))return;const v=tr(n.nodeValue,l);if(v!==n.nodeValue)n.nodeValue=v});
-  if(root.querySelectorAll)root.querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(el=>['placeholder','title','aria-label','alt'].forEach(a=>{if(el.hasAttribute(a)){const o=el.getAttribute(a),v=tr(o,l);if(v!==o)el.setAttribute(a,v)}}));
+  a.forEach(n=>{if(!n.parentElement||['SCRIPT','STYLE','TEXTAREA','OPTION'].includes(n.parentElement.tagName)||n.parentElement.closest('[data-no-translate]'))return;const v=tr(n.nodeValue,l);if(v!==n.nodeValue)n.nodeValue=v});
+  if(root.querySelectorAll)root.querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(el=>el.closest('[data-no-translate]')||['placeholder','title','aria-label','alt'].forEach(a=>{if(el.hasAttribute(a)){const o=el.getAttribute(a),v=tr(o,l);if(v!==o)el.setAttribute(a,v)}}));
   translateKeys(root);
   document.documentElement.lang=l==='zh'?'zh-CN':l;
   document.querySelectorAll('[data-lang-switch] [data-lang]').forEach(b=>b.classList.toggle('active',b.dataset.lang===l));
@@ -790,6 +790,17 @@ const K={
 'fo.notFound':{zh:'未找到匹配的订单。请检查订单号和邮箱。',en:'We could not find an order with this number and e-mail. Please check both and try again.',de:'Keine Bestellung mit dieser Nummer und E-Mail gefunden. Bitte prüfen.'},
 'fo.limit':{zh:'尝试次数过多，请稍后再试。',en:'Too many attempts. Please wait a few minutes and try again.',de:'Zu viele Versuche. Bitte in ein paar Minuten erneut versuchen.'},
 'fo.status':{zh:'状态',en:'Status',de:'Status'},'fo.placed':{zh:'下单日期',en:'Placed',de:'Bestellt am'},'fo.items':{zh:'件商品',en:'items',de:'Artikel'},'fo.tracking':{zh:'物流跟踪',en:'Tracking',de:'Sendungsverfolgung'},'co.via':{zh:'承运商：{c}',en:'via {c}',de:'mit {c}'},'fo.trk.created':{zh:'已创建运单',en:'Label created',de:'Etikett erstellt'},'fo.trk.label_ready':{zh:'面单已生成',en:'Label ready',de:'Etikett bereit'},'fo.trk.cancelled':{zh:'运单已取消',en:'Shipment cancelled',de:'Sendung storniert'},'fo.trk.error':{zh:'下单失败',en:'Carrier error',de:'Fehler'},'fo.trk.timeline':{zh:'物流轨迹',en:'Tracking history',de:'Sendungsverlauf'},'fo.trk.none':{zh:'承运商尚未扫描包裹，通常 1–3 天内更新。',en:'No carrier scans yet — usually within 1–3 days.',de:'Noch keine Scans – meist innerhalb von 1–3 Tagen.'},'fo.trk.track':{zh:'在承运商网站查询',en:'Track on carrier site',de:'Beim Versender verfolgen'},'fo.trk.number':{zh:'运单号',en:'Tracking number',de:'Sendungsnummer'},'fo.trk.carrier':{zh:'承运商',en:'Carrier',de:'Versanddienst'},'fo.trk.info_received':{zh:'承运商已接单',en:'Info received',de:'Daten übermittelt'},'fo.trk.in_transit':{zh:'运输中',en:'In transit',de:'Unterwegs'},'fo.trk.delivered':{zh:'已签收',en:'Delivered',de:'Zugestellt'},'fo.trk.exception':{zh:'物流异常',en:'Delivery issue',de:'Zustellproblem'},'fo.proof':{zh:'查看效果图',en:'Review proof',de:'Abzug prüfen'},
+'hdr.ai':{zh:'AI 助手',en:'Ask Wed.AI',de:'Wed.AI fragen'},
+'hc.title':{zh:'Wed.AI 助手',en:'Wed.AI assistant',de:'Wed.AI-Assistent'},'hc.sub':{zh:'产品推荐 · 报价与运费 · 订单查询',en:'Product ideas · prices & shipping · order status',de:'Produktideen · Preise & Versand · Bestellstatus'},
+'hc.back':{zh:'返回图片',en:'Back to the scene',de:'Zurück zur Szene'},'hc.placeholder':{zh:'例如：10 份邀请卡寄到瑞士运费多少？',en:'e.g. Shipping to Switzerland for 10 invitations?',de:'z. B. Versand in die Schweiz für 10 Einladungen?'},
+'hc.send':{zh:'发送',en:'Send',de:'Senden'},'hc.new':{zh:'新对话',en:'New chat',de:'Neuer Chat'},'hc.thinking':{zh:'正在查询…',en:'Checking…',de:'Wird geprüft…'},
+'hc.hello':{zh:'您好！我是 Wed.AI 助手。可以为您推荐产品、报价含运费（与结账一致），以及查询订单和物流。',en:'Hi! I\'m the Wed.AI assistant. I can suggest products, quote prices with shipping (same as checkout) and check your order or parcel.',de:'Hallo! Ich bin der Wed.AI-Assistent. Ich schlage Produkte vor, berechne Preise inkl. Versand (wie an der Kasse) und prüfe Bestellung oder Paket.'},
+'hc.error':{zh:'抱歉，暂时无法连接，请稍后再试。',en:'Sorry, the assistant is unreachable right now. Please try again.',de:'Der Assistent ist gerade nicht erreichbar. Bitte erneut versuchen.'},
+'hc.privacy':{zh:'请勿在对话中发送银行卡或密码。',en:'Never share card details or passwords in the chat.',de:'Teilen Sie im Chat keine Karten- oder Passwortdaten.'},
+'hc.helpful':{zh:'有帮助',en:'Helpful',de:'Hilfreich'},'hc.unhelpful':{zh:'没帮助',en:'Not helpful',de:'Nicht hilfreich'},'hc.each':{zh:'/件',en:'each',de:'pro Stück'},'hc.from':{zh:'起',en:'from',de:'ab'},
+'hc.design':{zh:'去定制',en:'Personalise',de:'Gestalten'},'hc.standard':{zh:'标准',en:'Standard',de:'Standard'},'hc.express':{zh:'快递',en:'Express',de:'Express'},'hc.free':{zh:'免费',en:'Free',de:'Kostenlos'},
+'hc.subtotal':{zh:'商品小计',en:'Items',de:'Artikel'},'hc.arrives':{zh:'预计送达',en:'Arrives',de:'Ankunft'},'hc.vatEx':{zh:'不含增值税，结账时添加',en:'excl. VAT, added at checkout',de:'exkl. MwSt., an der Kasse addiert'},'hc.vatIn':{zh:'含增值税',en:'incl. VAT',de:'inkl. MwSt.'},
+'hc.track':{zh:'查看物流',en:'Track parcel',de:'Sendung verfolgen'},'hc.order':{zh:'订单',en:'Order',de:'Bestellung'},
 'pay.delivery':{en:'Estimated delivery'},
 'acct.so.title':{en:'Sign in to your account'},
 'acct.so.text':{en:'See your orders, saved designs and addresses. One tap, no password.'}

@@ -1,4 +1,4 @@
-// In-page admin sections for admin.html: Price list (#prices), Fees & tax (#fees), Promo codes (#promos), Shopify (#shopify).
+// In-page admin sections for admin.html: Price list (#prices), Fees & tax (#fees), Promo codes (#promos), Shopify (#shopify), Carriers (#carriers), Chat agent (#chatagent).
 // Formerly standalone pages (admin-prices.html, admin-fees.html, admin-promos.html); those URLs now redirect
 // to /admin#<section>. Uses the same admin key as the dashboard (passed in via AdminSections.init).
 (function(){
@@ -337,7 +337,83 @@ function carriers(root){
   show();
 }
 
-const mounts={prices,fees,promos,shopify,carriers},mounted=new Set();
+
+// ---------- Customer chat agent (POD Agent back office) ----------
+function chatagent(root){
+  const TABS=[["overview","Overview"],["handoffs","Handoffs"],["conversations","Conversations"],["knowledge","Knowledge"],["settings","Settings"],["check","Data check"]];
+  root.innerHTML=`<div class="query-card adm-bar"><div class="lang-switch" role="group" aria-label="Tabs">${TABS.map(([id,l],i)=>`<button data-tab="${id}"${i?"":' class="active"'}>${l}</button>`).join("")}</div><span class="adm-msg" data-r="msg" aria-live="polite"></span></div><div data-r="body">Loading…</div>`;
+  const $=n=>root.querySelector(`[data-r="${n}"]`),body=()=>$("body");let tab="overview";
+  const card=(title,inner,meta="")=>`<div class="table-card"><div class="table-toolbar"><strong>${title}</strong><span class="adm-meta">${meta}</span></div>${inner}</div>`;
+  const table=(head,rows)=>`<div class="table-wrap"><table class="adm-table"><thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")||`<tr><td colspan="${head.length}" class="adm-meta">Nothing yet.</td></tr>`}</tbody></table></div>`;
+  const when=t=>t?new Date(t).toLocaleString():"—";
+  const tagFor=s=>({PASS:"green",WARN:"gold",FAIL:"red",error:"red",warn:"gold",open:"gold",in_progress:"blue",resolved:"green",handed_off:"gold"}[s]||"");
+  async function overview(){
+    const d=await api("/api/saas/agent/overview?days=30");
+    const llm=d.llm.available?`${esc(d.llm.provider)} · ${d.llm.tool_calling?"tool calling":"answers only"}`:`Rule engine (no LLM key: ${esc(d.llm.missing.join(", "))})`;
+    body().innerHTML=card("KPIs — last 30 days",table(["Metric","Value","Target","Status"],d.kpis.map(k=>`<tr><td>${esc(k.label)}${k.note?` <span class="adm-meta">${esc(k.note)}</span>`:""}</td><td><b>${k.value==null?"—":esc(k.value)}${k.unit&&k.value!=null?k.unit:""}</b></td><td class="adm-meta">${k.target!=null?"≥ "+k.target+"%":k.target_max!=null?"≤ "+k.target_max+"%":""}</td><td><span class="tag ${tagFor(k.status)}">${k.status}</span></td></tr>`)),`Answer engine: ${llm}`)+
+      card("Intents",table(["Intent","Count"],Object.entries(d.intents).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`)))+
+      card("Unanswered questions",table(["Question","When"],d.unanswered.map(u=>`<tr><td>${esc(u.text)}</td><td class="adm-meta">${when(u.at)}</td></tr>`)),"Add answers in Knowledge")+
+      card("Handoff reasons",table(["Reason","Count"],Object.entries(d.handoff_reasons).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v}</td></tr>`)));
+  }
+  async function handoffs(){
+    const {handoffs:list}=await api("/api/saas/agent/handoffs");
+    body().innerHTML=card("Handoff queue",table(["Created","Reason","Customer","Last messages","Status",""],list.map(h=>`<tr><td class="adm-meta">${when(h.created_at)}</td><td>${esc(h.reason)}</td><td>${esc(h.customer_email||"— (no e-mail yet)")}${h.order_number?`<br><span class="adm-meta">${esc(h.order_number)}</span>`:""}</td>
+      <td style="max-width:420px">${(h.messages||[]).slice(-4).map(m=>`<div class="adm-meta"><b>${m.role==="user"?"Customer":"AI"}:</b> ${esc(String(m.text).slice(0,200))}</div>`).join("")}</td>
+      <td><span class="tag ${tagFor(h.status)}">${esc(h.status)}</span></td><td style="white-space:nowrap">${h.status!=="in_progress"&&h.status!=="resolved"?`<button class="ant-btn" data-ho="${esc(h.id)}" data-st="in_progress">Take</button> `:""}${h.status!=="resolved"?`<button class="ant-btn" data-ho="${esc(h.id)}" data-st="resolved">Resolve</button>`:""}</td></tr>`)),"Reply to the customer from your own mailbox; nothing is sent automatically. Resolving lets the AI answer that chat again.");
+    body().onclick=async e=>{const b=e.target.closest("[data-ho]");if(!b)return;try{await api(`/api/saas/agent/handoffs/${b.dataset.ho}`,{method:"PUT",body:JSON.stringify({status:b.dataset.st})});await handoffs()}catch(err){say($("msg"),false,err.message)}};
+  }
+  async function conversations(){
+    const {conversations:list}=await api("/api/saas/agent/conversations?limit=50");
+    body().innerHTML=card("Recent conversations",table(["Last message","Lang","Msgs","Status","Customer said"],list.map(c=>`<tr data-cv="${esc(c.id)}" style="cursor:pointer"><td class="adm-meta">${when(c.last_message_at)}</td><td>${esc(c.language||"")}</td><td>${c.messages}</td><td><span class="tag ${tagFor(c.status)}">${esc(c.status)}</span></td><td>${esc(c.preview)}</td></tr>`)),"Click a row for the transcript (card numbers are redacted)")+`<div data-r="tx"></div>`;
+    body().onclick=e=>{const tr=e.target.closest("[data-cv]");if(!tr)return;const c=list.find(x=>x.id===tr.dataset.cv);$("tx").innerHTML=card("Transcript "+esc(c.id),`<div style="padding:12px 16px">${c.transcript.map(m=>`<p><b>${m.role==="user"?"Customer":"AI"}</b> <span class="adm-meta">${when(m.at)}${m.feedback?(m.feedback>0?" 👍":" 👎"):""}</span><br>${esc(m.text)}</p>`).join("")}</div>`)};
+  }
+  async function knowledge(){
+    const d=await api("/api/saas/agent/knowledge");
+    body().innerHTML=`<form class="query-card adm-form" data-r="kf"><h2>Add / edit an answer</h2><input type="hidden" data-r="kid">
+      <label class="form-item" style="grid-column:span 2"><span>Customer question</span><input class="ant-input" data-r="kq" maxlength="200" placeholder="Can I order a printed sample?"></label>
+      <label class="form-item" style="grid-column:1/-1"><span>Answer</span><textarea class="ant-input" data-r="ka" rows="3" maxlength="1500"></textarea></label>
+      <label class="form-item"><span>Keywords</span><input class="ant-input" data-r="kt" placeholder="sample, test print, 样品"></label>
+      <label class="form-item"><span>Language</span><select class="ant-select" data-r="kl"><option>en</option><option>zh</option><option>de</option><option>fr</option><option>it</option></select></label>
+      <div style="display:flex;gap:8px;align-items:end"><button class="ant-btn primary">Save</button></div></form>`+
+      card("Your answers",table(["Question","Answer","Lang",""],d.custom.map(x=>`<tr><td><b>${esc(x.question)}</b></td><td>${esc(x.answer)}</td><td>${esc(x.lang)}</td><td style="white-space:nowrap"><button class="ant-btn" data-ke="${esc(x.id)}">Edit</button> <button class="ant-btn" data-kd="${esc(x.id)}">Delete</button></td></tr>`)),"Used before the built-in answers")+
+      `<div class="query-card adm-bar"><input class="ant-input" data-r="tq" placeholder="Test a customer question…" style="max-width:420px"><button class="ant-btn" data-r="tb">Test retrieval</button></div><div data-r="tr"></div>`+
+      card("Built-in answers (facts read live from shop settings)",table(["Question","Answer","Languages"],d.builtin.map(x=>`<tr><td><b>${esc(x.question)}</b></td><td class="adm-meta">${esc(x.answer)}</td><td>${esc(x.languages.join(", "))}</td></tr>`)));
+    $("kf").onsubmit=async e=>{e.preventDefault();try{await api("/api/saas/agent/knowledge",{method:"POST",body:JSON.stringify({id:$("kid").value||undefined,question:$("kq").value,answer:$("ka").value,tags:$("kt").value,lang:$("kl").value})});say($("msg"),true,"Saved.");await knowledge()}catch(err){say($("msg"),false,err.message)}};
+    $("tb").onclick=async()=>{const r=await api("/api/saas/agent/knowledge/test",{method:"POST",body:JSON.stringify({query:$("tq").value})});$("tr").innerHTML=card("Top matches",table(["Score","Question","Answer"],r.results.map(x=>`<tr><td>${x.score}</td><td>${esc(x.question)}</td><td class="adm-meta">${esc(x.answer)}</td></tr>`)))};
+    body().onclick=async e=>{const b=e.target.closest("[data-ke],[data-kd]");if(!b)return;const x=d.custom.find(y=>y.id===(b.dataset.ke||b.dataset.kd));
+      if(b.dataset.ke){$("kid").value=x.id;$("kq").value=x.question;$("ka").value=x.answer;$("kt").value=x.tags||"";$("kl").value=x.lang||"en";return}
+      if(confirm("Delete this answer?")){await api(`/api/saas/agent/knowledge/${x.id}`,{method:"DELETE"});await knowledge()}};
+  }
+  async function settings(){
+    const s=await api("/api/saas/agent/settings"),sd=s.sales_discount;
+    body().innerHTML=`<form class="query-card adm-form" data-r="sf"><h2>Chat settings</h2>
+      <label class="adm-tog"><input type="checkbox" data-r="en"${s.enabled?" checked":""}> Chat assistant enabled</label>
+      <label class="form-item"><span>Team reply time (hours)</span><input class="ant-input" data-r="hr" inputmode="numeric" value="${s.human_reply_hours}"></label>
+      <label class="form-item"><span>Unresolved answers before handoff</span><input class="ant-input" data-r="fa" inputmode="numeric" value="${s.failed_answers_before_handoff}"></label>
+      <label class="form-item"><span>Max messages / 10 min</span><input class="ant-input" data-r="mm" inputmode="numeric" value="${s.max_messages_per_10min}"></label>
+      <label class="form-item" style="grid-column:span 2"><span>Greeting (EN, empty = default)</span><input class="ant-input" data-r="ge" value="${esc(s.greeting.en)}"></label>
+      <label class="form-item" style="grid-column:span 2"><span>Greeting (中文)</span><input class="ant-input" data-r="gz" value="${esc(s.greeting.zh)}"></label>
+      <label class="form-item" style="grid-column:span 2"><span>Greeting (DE)</span><input class="ant-input" data-r="gd" value="${esc(s.greeting.de)}"></label>
+      <h2>Sales discount (POD Agent rules)</h2>
+      <label class="adm-tog"><input type="checkbox" data-r="de"${sd.enabled?" checked":""}> Allow the chat to issue one-time codes when a customer hesitates about the price</label>
+      <label class="form-item"><span>Percent</span><input class="ant-input" data-r="dp" inputmode="decimal" value="${sd.percent}"></label>
+      <label class="form-item"><span>Valid (hours)</span><input class="ant-input" data-r="dv" inputmode="numeric" value="${sd.valid_hours}"></label>
+      <label class="form-item"><span>Once per customer every (days)</span><input class="ant-input" data-r="dc" inputmode="numeric" value="${sd.per_customer_days}"></label>
+      <label class="form-item"><span>Max codes / month</span><input class="ant-input" data-r="dm" inputmode="numeric" value="${sd.max_per_month}"></label>
+      <div><button class="ant-btn primary">Save</button></div></form><p class="adm-meta">Codes are created as single-use promo codes (see Promo codes) and need the customer's e-mail. The chat never sends e-mails or creates orders.</p>`;
+    $("sf").onsubmit=async e=>{e.preventDefault();try{await api("/api/saas/agent/settings",{method:"PUT",body:JSON.stringify({enabled:$("en").checked,human_reply_hours:+$("hr").value,failed_answers_before_handoff:+$("fa").value,max_messages_per_10min:+$("mm").value,greeting:{en:$("ge").value,zh:$("gz").value,de:$("gd").value},sales_discount:{enabled:$("de").checked,percent:+$("dp").value,valid_hours:+$("dv").value,per_customer_days:+$("dc").value,max_per_month:+$("dm").value}})});say($("msg"),true,"Saved.")}catch(err){say($("msg"),false,err.message)}};
+  }
+  async function check(){
+    const d=await api("/api/saas/agent/datacheck");
+    body().innerHTML=card(`Data check — score ${d.score}/100`,table(["Level","Code","Where","Finding","Fix"],d.findings.map(x=>`<tr><td><span class="tag ${tagFor(x.level)}">${x.level}</span></td><td>${x.code}</td><td>${esc(x.where)}</td><td>${esc(x.message)}</td><td class="adm-meta">${esc(x.fix)}</td></tr>`)),`${d.errors} errors · ${d.warnings} warnings · target: 0 errors, score ≥ 85`);
+  }
+  const views={overview,handoffs,conversations,knowledge,settings,check};
+  async function show(){body().onclick=null;try{body().innerHTML="Loading…";await views[tab]()}catch(e){body().innerHTML="";say($("msg"),false,e.message)}}
+  root.querySelector(".lang-switch").onclick=e=>{const b=e.target.closest("[data-tab]");if(!b)return;tab=b.dataset.tab;root.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));show()};
+  show();
+}
+
+const mounts={prices,fees,promos,shopify,carriers,chatagent},mounted=new Set();
 window.AdminSections={
   ids:Object.keys(mounts),
   init(o){cfg={...cfg,...o}},

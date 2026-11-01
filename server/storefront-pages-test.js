@@ -14,7 +14,7 @@ const get = async p => { const r = await fetch(base + p); return { status: r.sta
 const CJK = /[\u3400-\u9fff]/;
 const result = {};
 try {
-  const pages = ["/", "/studio.html", "/checkout", "/payment-success.html", "/proof.html", "/account", "/privacy", "/terms", "/shipping", "/returns", "/imprint", "/impressum"];
+  const pages = ["/", "/studio.html", "/checkout", "/payment-success.html", "/proof.html", "/account", "/privacy", "/terms", "/shipping", "/returns", "/imprint", "/impressum", "/agent.html"];
   for (const p of pages) {
     const { status, text } = await get(p);
     assert.equal(status, 200, p);

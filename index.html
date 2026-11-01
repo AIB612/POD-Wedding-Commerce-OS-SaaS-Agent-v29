@@ -297,36 +297,9 @@ button{color:inherit}
 .architecture-card span{font:16px Georgia,serif;color:var(--accent)}.architecture-card b{font-size:10.5px;margin-left:8px}
 .architecture-card p{font-size:9px;line-height:1.5;color:var(--muted);margin:6px 0 0}
 
-/* Floating business agent */
-.agent-launcher{
-  position:fixed;right:22px;bottom:22px;z-index:90;width:58px;height:58px;border:0;border-radius:50%;
-  background:#292622;color:#fff;cursor:pointer;box-shadow:0 16px 40px rgba(38,31,27,.28);
-  display:grid;place-items:center;font:18px Georgia,serif
-}
-.agent-launcher:after{content:"";position:absolute;inset:-5px;border:1px solid rgba(41,38,34,.18);border-radius:50%}
-.agent-panel{
-  position:fixed;right:22px;bottom:92px;z-index:89;width:min(430px,calc(100vw - 30px));height:min(690px,calc(100vh - 120px));
-  border:1px solid var(--line);border-radius:24px;background:rgba(255,253,249,.985);box-shadow:0 26px 80px rgba(47,36,29,.28);
-  display:none;grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden;backdrop-filter:blur(18px)
-}
-.agent-panel.open{display:grid}
-.agent-head{display:flex;align-items:center;justify-content:space-between;padding:14px 15px;border-bottom:1px solid var(--line)}
-.agent-identity{display:flex;gap:10px;align-items:center}.agent-avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#292622;color:#fff;font:13px Georgia,serif}
-.agent-identity b{display:block;font-size:11px}.agent-identity span{display:block;font-size:9px;color:var(--muted);margin-top:2px}
-.agent-quick{display:flex;gap:6px;overflow:auto;padding:9px 12px;border-bottom:1px solid var(--line)}
-.agent-quick button{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 9px;font-size:9px;cursor:pointer}
-.agent-messages{overflow:auto;padding:13px;display:flex;flex-direction:column;gap:9px}
-.msg{max-width:86%;border-radius:15px;padding:10px 11px;font-size:10.5px;line-height:1.6;white-space:pre-wrap}
-.msg.user{align-self:flex-end;background:#292622;color:#fff;border-bottom-right-radius:5px}
-.msg.agent{align-self:flex-start;background:#f2ebe5;border:1px solid rgba(60,45,35,.08);border-bottom-left-radius:5px}
-.msg .tool-result{margin-top:8px;border-top:1px solid rgba(60,45,35,.12);padding-top:7px;font-size:9.5px;color:#675d57}
-.agent-input{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px;border-top:1px solid var(--line);background:#fffdf9}
-.agent-input textarea{border:1px solid var(--line);border-radius:13px;padding:10px;resize:none;outline:none;font-size:10.5px;min-height:42px;max-height:100px}
-.agent-send{border:0;border-radius:13px;background:#292622;color:#fff;padding:0 14px;cursor:pointer;font-size:10px}
 @media(max-width:1000px){
   .continuation{padding:0 10px 10px}.continuation-stage{grid-template-columns:1fr}.continuation-list,.architecture-grid{border-left:0;border-top:1px solid var(--line)}
   .continuation-scene{min-height:520px}.continuation-stage{min-height:auto}
-  .agent-panel{right:10px;bottom:82px}.agent-launcher{right:12px;bottom:14px}
 }
 
 
@@ -585,11 +558,6 @@ button{color:inherit}
   .topbar-row2 .btn{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
   .wedding-site-btn{max-width:none}
   .layout{height:auto;padding:10px}
-  /* AI launcher docks into the compact header's second row instead of floating over prices/content. */
-  .topbar-row2{margin-right:40px}
-  .agent-launcher{width:32px;height:32px;font-size:13px;top:46px;right:12px;bottom:auto;box-shadow:0 4px 12px rgba(38,31,27,.22)}
-  .agent-launcher:after{display:none}
-  .agent-panel{left:10px;right:10px;top:92px;bottom:auto;width:auto;height:min(640px,calc(100vh - 110px))}
 }
 
 /* B5 mobile: hero capped at ~60vh, bigger hotspot tap targets (≥44px), decluttered shared header */
@@ -600,8 +568,6 @@ button{color:inherit}
   .hotspot{width:44px;height:44px}
   .hotspot:before{width:12px;height:12px}
   .hotspot:after{inset:-6px}
-  .agent-launcher{top:auto!important;bottom:16px!important;right:14px!important;width:44px!important;height:44px!important}
-  .agent-panel{top:70px!important}
 }
 .vat-tag{font-size:.72em;font-weight:500;color:var(--muted);margin-left:4px;white-space:nowrap}
 </style>
@@ -614,7 +580,7 @@ button{color:inherit}
 <body>
 <div class="app">
   <!-- Shared header (header.js). "Create wedding website" is a secondary action → lives in the header "Menu". -->
-  <div id="site-header" data-cart><button class="btn wedding-site-btn" id="weddingSiteBtn" type="button" data-header-menu>Create wedding website</button></div><script src="/header.js?v=20261025c"></script>
+  <div id="site-header" data-cart><button class="btn wedding-site-btn" id="weddingSiteBtn" type="button" data-header-menu>Create wedding website</button></div><script src="/header.js?v=20261101a"></script>
 
   <main class="layout">
     <section class="stage" id="stage">
@@ -841,28 +807,6 @@ button{color:inherit}
   </div>
 </div>
 
-<button class="agent-launcher" id="agentLauncher" aria-label="Open the wedding customisation agent">AI</button>
-<aside class="agent-panel" id="agentPanel">
-  <div class="agent-head">
-    <div class="agent-identity">
-      <div class="agent-avatar">AI</div>
-      <div><b>Wedding POD Agent</b><span>定制 · 生成 · 订单 · 物流 · 交付</span></div>
-    </div>
-    <button class="pop-close" id="agentClose">×</button>
-  </div>
-  <div class="agent-quick"><button data-agent-prompt="查看多店铺订单、物流、营销和待办任务">运营任务</button>
-    <button data-agent-prompt="帮我定制这个婚礼产品">定制助手</button>
-    <button data-agent-prompt="帮我生成一套婚礼文案和设计需求">生成需求</button>
-    <button data-agent-prompt="查询订单 POD-2026-1008">订单查询</button>
-    <button data-agent-prompt="查询物流 TRK-DEMO-8821">物流查询</button>
-    
-  </div>
-  <div class="agent-messages" id="agentMessages"></div>
-  <div class="agent-input">
-    <textarea id="agentInput" rows="1" placeholder="例如：我想做50份法式婚礼菜单，用珠光纸；或者查询订单/物流"></textarea>
-    <button class="agent-send" id="agentSend">发送</button>
-  </div>
-</aside>
 
 <div class="material-lightbox" id="materialLightbox">
   <div class="material-lightbox-card">
@@ -894,7 +838,8 @@ button{color:inherit}
 <script src="studio-data.js?v=20261026s7"></script>
 <script src="/price-list.js"></script>
 <script src="studio-pricing.js"></script>
-<script src="i18n.js"></script>
+<script src="i18n.js?v=20261101a"></script>
+<script src="/home-chat.js?v=20261101a" defer></script>
 <script src="cart.js"></script>
 <script src="wedding-qr.js"></script>
 <script>
@@ -994,7 +939,7 @@ function applyHomeMeta(){
   document.title=m.title;
   let d=document.querySelector('meta[name="description"]');if(!d){d=document.createElement("meta");d.name="description";document.head.appendChild(d)}d.content=m.desc;
   const set=(id,attr,v)=>{const el=document.getElementById(id);if(el)el.setAttribute(attr,v)};
-  set("sceneImg","alt",m.alt);set("agentLauncher","aria-label",m.agent);set("materialLightboxImage","alt",m.lightbox);set("customText","placeholder",m.placeholder);
+  set("sceneImg","alt",m.alt);set("materialLightboxImage","alt",m.lightbox);set("customText","placeholder",m.placeholder);
 }
 
 
@@ -1310,106 +1255,6 @@ window.addEventListener("resize",repositionOpenPopover);
 window.addEventListener("scroll",repositionOpenPopover,{passive:true});
 
 
-const agentKB = [
-  {keys:["材质","纸","棉纹","珠光","牛皮纸","硫酸纸"],text:"纸品默认可选棉纹艺术纸、珠光纸、牛皮纸、半透明硫酸纸。不同材质会改变单价，弹窗中的材质卡可以查看纹理大图。"},
-  {keys:["亚克力","迎宾牌","标识","木板"],text:"标识类可选透明亚克力、磨砂亚克力、天然木板和轻质硬板。透明适合现代与海边，磨砂减少反光，木板适合户外和Rustic场景。"},
-  {keys:["数量","价格","折扣"],text:"演示价格规则：1–9件标准价；10–29件95折；30–49件9折；50件以上85折。材质增量先加入基础价，再应用数量折扣。"},
-  {keys:["上传","设计","文件","格式"],text:"设计上传支持 PNG/JPG/JPEG/WEBP/SVG/PDF/AI/PSD/EPS，可多文件上传。生产环境应增加文件病毒扫描、色彩空间/分辨率校验和对象存储。"},
-  {keys:["效果图","支付","交付","14天","2小时"],text:"业务承诺示例：支付后2小时内确认最终效果图和材质，并发送到客户邮箱；确认后进入生产和配送流程，预计14天内送达。"},
-  {keys:["rag","架构","agent","原理"],text:"Agent采用 Router → RAG Retrieval → Planner/Tool Calling → Connector Registry → State Store 的结构。模型只负责理解和生成；产品、价格、订单、物流等事实来自检索和业务API。"},
-  {keys:["场景","garden","studio","工作室"],text:"首页第一屏与 POD 工作室共用同一组 6 个业务场景；切换场景后，场景图、推荐套装和商品列表会同步更新，并把当前场景带入工作室。"}
-];
-
-const demoOrders = {
-  "POD-2026-1008":{status:"Proofing",items:"Acrylic Welcome Sign × 1",material:"磨砂亚克力",next:"预计在支付后2小时内发送最终效果图和材质确认邮件。"},
-  "POD-2026-1009":{status:"Production",items:"Menu Card × 50",material:"珠光纸",next:"效果已确认，当前生产中。"}
-};
-const demoTracking = {
-  "TRK-DEMO-8821":{carrier:"DHL",status:"In transit",eta:"预计 3–5 天内送达",last:"Basel Distribution Center · 已完成分拣"},
-  "TRK-DEMO-9912":{carrier:"UPS",status:"Delivered",eta:"已送达",last:"已签收"}
-};
-
-function agentRetrieve(query){
-  const q=query.toLowerCase();
-  return agentKB
-    .map(d=>({d,score:d.keys.reduce((s,k)=>s+(q.includes(k.toLowerCase())?1:0),0)}))
-    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3).map(x=>x.d.text);
-}
-function agentRoute(query){
-  const q=query.toLowerCase();
-  if(q.includes("订单") || q.includes("pod-")) return "order";
-  if(q.includes("物流") || q.includes("trk-") || q.includes("快递")) return "tracking";
-  if(q.includes("架构") || q.includes("rag") || q.includes("原理")) return "docs";
-  if(q.includes("生成") || q.includes("文案") || q.includes("设计需求")) return "generate";
-  if(q.includes("定制") || q.includes("材质") || q.includes("产品") || q.includes("婚礼")) return "customize";
-  return "rag";
-}
-function addAgentMessage(role,text,toolHtml=""){
-  const box=document.getElementById("agentMessages");
-  const el=document.createElement("div"); el.className="msg "+role;
-  el.textContent=text;
-  if(toolHtml){
-    const tool=document.createElement("div");tool.className="tool-result";tool.innerHTML=toolHtml;el.appendChild(tool);
-  }
-  box.appendChild(el);box.scrollTop=box.scrollHeight;
-}
-function extractToken(query,prefix){
-  const m=query.toUpperCase().match(new RegExp(prefix+"[A-Z0-9\\-]*"));
-  return m?m[0]:null;
-}
-async function runAgent(query){
-  addAgentMessage("user",query);
-  const route=agentRoute(query),rag=agentRetrieve(query);
-  // Production integration point: if /api/agent/chat exists, backend can override local demo.
-  try{
-    const r=await fetch("/api/agent/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:query,scene:sceneKey,cart})});
-    // fallback:true = backend has no LLM configured → use the built-in demo answers below.
-    if(r.ok){const data=await r.json();if(!data.fallback){addAgentMessage("agent",data.answer||"已处理。",escHtml(data.tool_summary||"").replace(/\n/g,"<br>"));return}}
-  }catch(e){}
-  if(route==="order"){
-    const id=extractToken(query,"POD-")||"POD-2026-1008";const o=demoOrders[id];
-    if(o) addAgentMessage("agent","已从订单工具读取到订单状态。",`订单：${id}<br>状态：${o.status}<br>商品：${o.items}<br>材质：${o.material}<br>下一步：${o.next}`);
-    else addAgentMessage("agent","没有找到这个演示订单。接入 Shopify/WooCommerce/ERP 后，这里会调用真实订单 API。");
-    return;
-  }
-  if(route==="tracking"){
-    const id=extractToken(query,"TRK-")||"TRK-DEMO-8821";const t=demoTracking[id];
-    if(t) addAgentMessage("agent","已从物流工具读取最新节点。",`运单：${id}<br>承运商：${t.carrier}<br>状态：${t.status}<br>最新节点：${t.last}<br>${t.eta}`);
-    else addAgentMessage("agent","没有找到这个演示运单。生产环境可通过 AfterShip / Shippo / 17TRACK 或承运商 API 查询。");
-    return;
-  }
-  if(route==="docs"){
-    addAgentMessage("agent","系统架构、前端/后端/数据架构与 Agent 设计已经放在项目 docs/ARCHITECTURE.md 中。对话只处理业务任务，不在会话里展开系统内部架构。");
-    return;
-  }
-  if(route==="generate"){
-    const context=rag.join("\n");
-    addAgentMessage("agent","我先把需求整理成可生产的设计 Brief：\n• 婚礼主题："+sceneData[sceneKey].name+"\n• 建议保持当前场景的字体、色彩和材质语言\n• 输出：主标题 / 新人姓名 / 日期 / 场地 / 可选二维码\n• 文件：印刷版 + 预览图\n• 生产前检查：尺寸、出血、分辨率、字体转曲/嵌入\n\n如果接入图像生成或模板渲染 API，下一步可以直接生成预览，再写回订单 Proofing 状态。"+(context?"\n\n检索到的业务知识：\n"+context:""));
-    return;
-  }
-  if(route==="customize"){
-    const ctx=rag.length?rag.join("\n"):"建议先选场景，再选对应 SKU、材质、数量和定制方式。";
-    addAgentMessage("agent","可以。我会按“场景 → 产品 → 材质 → 数量 → 设计内容 → 效果确认 → 生产/配送”来辅助定制。\n\n"+ctx+"\n\n你也可以直接在当前产品热点弹窗里选材质、上传设计并加入购物车。");
-    return;
-  }
-  addAgentMessage("agent",rag.length?rag.join("\n\n"):"我可以处理婚礼POD定制、材质/价格、设计需求、订单状态、效果确认和物流查询。");
-}
-document.getElementById("agentLauncher").onclick=()=>{
-  const p=document.getElementById("agentPanel");p.classList.toggle("open");
-  if(p.classList.contains("open") && !document.getElementById("agentMessages").children.length){
-    addAgentMessage("agent","我是这个 POD 婚礼业务的会话 Agent。可以帮你选场景和材质、整理定制内容、生成设计需求、查看订单以及查询物流。");
-  }
-};
-document.getElementById("agentClose").onclick=()=>document.getElementById("agentPanel").classList.remove("open");
-document.getElementById("agentSend").onclick=()=>{
-  const input=document.getElementById("agentInput"),q=input.value.trim();if(!q)return;input.value="";runAgent(q);
-};
-document.getElementById("agentInput").addEventListener("keydown",e=>{
-  if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();document.getElementById("agentSend").click();}
-});
-document.querySelectorAll("[data-agent-prompt]").forEach(b=>b.addEventListener("click",()=>{
-  document.getElementById("agentPanel").classList.add("open");runAgent(b.dataset.agentPrompt);
-}));
 document.querySelectorAll("[data-jump-scene]").forEach(b=>b.addEventListener("click",()=>{
   switchScene(b.dataset.jumpScene);window.scrollTo({top:0,behavior:"smooth"});
 }));

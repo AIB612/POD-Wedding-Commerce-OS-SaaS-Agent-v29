@@ -1,191 +1,105 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>POD Agent — Autonomous Commerce Intelligence</title>
-<meta name="description" content="AI agent for Print-on-Demand. Product listing, order fulfillment, customer service. Powered by GPT-4, Gemini, Claude, Deepseek, Grok."/>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Wed.AI POD Agent — AI shop assistant for print-on-demand</title>
+<meta name="description" content="Wed.AI POD Agent answers customers inside your storefront: product questions, recommendations, shipping quotes, order tracking and discount codes, and hands the conversation to your team when a person is needed."/>
 <style>
-:root{--bg:#0a0a0a;--surface:#141414;--border:#262626;--text:#fafafa;--muted:#a1a1aa;--accent:#fff}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font:15px/1.6 Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-a{color:inherit;text-decoration:none}
-
-/* Header */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:rgba(10,10,10,.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
-.nav-brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
-.nav-logo{width:28px;height:28px;background:#fff;color:#000;border-radius:6px;display:grid;place-items:center;font-weight:700;font-size:14px}
-.nav-links{display:flex;gap:24px;font-size:14px;color:var(--muted)}
-.nav-links a:hover{color:var(--text)}
-.nav-cta{background:#fff;color:#000;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600}
-.nav-cta:hover{background:#e5e5e5}
-
-/* Hero */
-.hero{padding:160px 32px 100px;text-align:center;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(120,119,198,.15),transparent)}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:999px;font-size:12px;color:var(--muted);margin-bottom:24px}
-.hero-badge span{width:6px;height:6px;background:#22c55e;border-radius:50%}
-.hero h1{font-size:64px;font-weight:600;letter-spacing:-.03em;line-height:1.1;margin-bottom:20px}
-.hero h1 em{font-style:normal;background:linear-gradient(135deg,#fff,#a1a1aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{font-size:18px;color:var(--muted);max-width:560px;margin:0 auto 32px}
-.hero-actions{display:flex;gap:12px;justify-content:center}
-.btn{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:500;border:none;cursor:pointer}
-.btn-primary{background:#fff;color:#000}
-.btn-primary:hover{background:#e5e5e5}
-.btn-secondary{background:transparent;color:#fff;border:1px solid var(--border)}
-.btn-secondary:hover{background:var(--surface)}
-
-/* Logos */
-.logos{padding:40px 32px;border-bottom:1px solid var(--border);text-align:center}
-.logos p{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px}
-.logos-row{display:flex;justify-content:center;gap:48px;flex-wrap:wrap;opacity:.6}
-.logos-row span{font-size:15px;font-weight:600;color:var(--muted)}
-
-/* Features */
-.features{padding:100px 32px;max-width:1100px;margin:0 auto}
-.features h2{font-size:36px;font-weight:600;letter-spacing:-.02em;text-align:center;margin-bottom:16px}
-.features>p{text-align:center;color:var(--muted);margin-bottom:48px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-.card{background:var(--bg);padding:32px}
-.card:hover{background:var(--surface)}
-.card-icon{width:40px;height:40px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;margin-bottom:16px;font-size:18px}
-.card h3{font-size:16px;font-weight:600;margin-bottom:8px}
-.card p{font-size:14px;color:var(--muted);line-height:1.5}
-
-/* Code */
-.code-section{padding:80px 32px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-.code-section h2{font-size:28px;font-weight:600;text-align:center;margin-bottom:12px}
-.code-section>p{text-align:center;color:var(--muted);margin-bottom:32px}
-.code{max-width:640px;margin:0 auto;background:#0a0a0a;border:1px solid var(--border);border-radius:12px;padding:20px;font:13px/1.6 ui-monospace,monospace;color:#a1a1aa;overflow-x:auto}
-.code .tag{color:#7dd3fc}
-.code .attr{color:#f472b6}
-.code .str{color:#86efac}
-
-/* Steps */
-.steps{padding:100px 32px;max-width:800px;margin:0 auto}
-.steps h2{font-size:32px;font-weight:600;text-align:center;margin-bottom:48px}
-.step{display:flex;gap:24px;margin-bottom:32px}
-.step-num{width:32px;height:32px;background:#fff;color:#000;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:14px;flex-shrink:0}
-.step h3{font-size:16px;font-weight:600;margin-bottom:4px}
-.step p{font-size:14px;color:var(--muted)}
-
-/* CTA */
-.cta{padding:100px 32px;text-align:center;background:radial-gradient(ellipse 60% 40% at 50% 100%,rgba(120,119,198,.1),transparent)}
-.cta h2{font-size:40px;font-weight:600;letter-spacing:-.02em;margin-bottom:16px}
-.cta p{color:var(--muted);margin-bottom:32px}
-.cta .btn{font-size:15px;padding:14px 28px}
-
-/* Footer mini */
-.footer{padding:32px;border-top:1px solid var(--border);text-align:center;font-size:13px;color:var(--muted)}
-.footer a{color:var(--muted)}
-.footer a:hover{color:var(--text)}
-
-@media(max-width:720px){
-  .nav{padding:12px 16px}
-  .nav-links{display:none}
-  .hero{padding:120px 20px 60px}
-  .hero h1{font-size:36px}
-  .grid{grid-template-columns:1fr}
-  .features,.steps,.cta{padding:60px 20px}
-  .code-section{padding:60px 20px}
-}
-</style>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-GED5TST3DP"></script>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#28231f;background:linear-gradient(135deg,#eee7df,#f8f4ef);line-height:1.6}
+a{color:#9a6d57}
+.ag{max-width:1200px;margin:0 auto;padding:18px 22px 0}
+.ag-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:36px;align-items:center;background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-radius:28px;box-shadow:0 14px 34px rgba(41,38,34,.08);padding:56px 48px}
+.ag-eyebrow{margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9a6d57}
+.ag h1{margin:0 0 16px;font:600 46px/1.08 Georgia,"Times New Roman",serif;letter-spacing:-.01em}
+.ag-lead{margin:0 0 26px;font-size:17px;color:#5a4f46;max-width:60ch}
+.ag-btns{display:flex;flex-wrap:wrap;gap:12px}
+.ag-b{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:12px 20px;font-weight:700;font-size:14px;text-decoration:none}
+.ag-b.dark{background:#292622;color:#fff}.ag-b.dark:hover{background:#463f38}
+.ag-b.light{background:#f3ece4;color:#28231f;border:1px solid rgba(45,36,30,.14)}.ag-b.light:hover{background:#ebe1d6}
+.ag-demo{background:#f6f0e8;border:1px solid rgba(45,36,30,.1);border-radius:22px;padding:20px}
+.ag-demo h2{margin:0 0 14px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e64}
+.ag-msg{border-radius:16px;padding:11px 14px;font-size:14px;margin:0 0 10px;max-width:88%}
+.ag-msg.u{background:#292622;color:#fff;margin-left:auto;border-bottom-right-radius:6px}
+.ag-msg.a{background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-bottom-left-radius:6px}
+.ag-q{background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-radius:14px;padding:12px 14px;font-size:13px}
+.ag-q div{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(45,36,30,.08)}.ag-q div:last-child{border:0}
+.ag-note{margin:10px 0 0;font-size:12px;color:#7a6e64}
+.ag-sec{margin:56px 0 0}
+.ag-sec>h2{margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9a6d57}
+.ag-sec>p.h{margin:0 0 24px;font:600 32px/1.2 Georgia,"Times New Roman",serif}
+.ag-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.ag-card{background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-radius:20px;padding:22px 22px 20px}
+.ag-ic{width:34px;height:34px;border-radius:11px;background:#f3ece4;color:#9a6d57;display:grid;place-items:center;font-weight:800;font-size:12px;margin-bottom:12px}
+.ag-card h3{margin:0 0 8px;font-size:17px}.ag-card p{margin:0;font-size:14px;color:#5a4f46}
+.ag-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;counter-reset:f}
+.ag-flow div{background:#292622;color:#e9e2d9;border-radius:20px;padding:22px}
+.ag-flow b{display:block;color:#fff;font-size:16px;margin-bottom:6px}.ag-flow p{margin:0;font-size:14px;color:#cfc5ba}
+.ag-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.ag-step{display:flex;gap:16px;background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-radius:20px;padding:22px}
+.ag-n{flex:none;width:36px;height:36px;border-radius:50%;background:#9a6d57;color:#fff;display:grid;place-items:center;font-weight:800}
+.ag-step h3{margin:4px 0 6px;font-size:17px}.ag-step p{margin:0;font-size:14px;color:#5a4f46}
+code{background:#f3ece4;border-radius:6px;padding:1px 6px;font-size:13px;overflow-wrap:anywhere}
+.ag-cta{margin:56px 0 0;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;background:#fffdf9;border:1px solid rgba(45,36,30,.1);border-radius:24px;padding:30px 34px}
+.ag-cta h2{margin:0 0 4px;font:600 26px/1.2 Georgia,serif}.ag-cta p{margin:0;color:#5a4f46}
+@media(max-width:980px){.ag-hero{grid-template-columns:1fr;padding:40px 30px}.ag-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ag-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.ag{padding:12px 12px 0}.ag-hero{padding:28px 20px;border-radius:22px}.ag h1{font-size:32px}.ag-lead{font-size:15px}.ag-grid,.ag-flow,.ag-steps{grid-template-columns:1fr}.ag-sec{margin-top:40px}.ag-sec>p.h{font-size:25px}.ag-cta{padding:24px 20px}.ag-b{flex:1 1 auto;justify-content:center}}
+</style><link rel="stylesheet" href="mobile.css"><script async src="https://www.googletagmanager.com/gtag/js?id=G-GED5TST3DP"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-GED5TST3DP");</script>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-</head>
-<body>
-<nav class="nav">
-  <a href="/" class="nav-brand"><span class="nav-logo">P</span>POD Agent</a>
-  <div class="nav-links">
-    <a href="#features">Features</a>
-    <a href="#embed">Embed</a>
-    <a href="#how">How it works</a>
-  </div>
-  <a href="/studio.html" class="nav-cta">Open Studio</a>
-</nav>
-
-<section class="hero">
-  <div class="hero-badge"><span></span> Now available</div>
-  <h1>Commerce,<br><em>autonomously.</em></h1>
-  <p>AI agent for Print-on-Demand. List products, fulfill orders, and handle customer service — with approval gates you control.</p>
-  <div class="hero-actions">
-    <a href="/studio.html" class="btn btn-primary">Get started</a>
-    <a href="#embed" class="btn btn-secondary">Embed widget</a>
-  </div>
+<style id="sh-guard">#site-header>*{visibility:hidden;animation:sh-guard 0s 2.5s forwards}@keyframes sh-guard{to{visibility:visible}}</style>
+</head><body>
+<div id="site-header"></div><script src="/header.js?v=20261101a"></script>
+<main class="ag" data-no-translate>
+<section class="ag-hero">
+ <div><p class="ag-eyebrow" data-t="eyebrow">Wed.AI POD Agent</p><h1 data-t="h1">An AI shop assistant that knows your products, prices and orders</h1><p class="ag-lead" data-t="lead">Wed.AI POD Agent answers customers inside your storefront: product questions, recommendations, shipping quotes, order tracking and discount codes, and hands the conversation to your team when a person is needed.</p>
+  <div class="ag-btns"><a class="ag-b dark" href="/?ask=1" data-t="try">Try it on the homepage</a><a class="ag-b light" href="#integrate" data-t="how">How to integrate</a></div></div>
+ <aside class="ag-demo" aria-label="Example conversation"><h2 data-t="ex">Example conversation</h2>
+  <div class="ag-msg u" data-t="exq">How much is shipping to Switzerland for 10 invitations?</div><div class="ag-msg a" data-t="exa">10 × Cotton paper invitation to Switzerland. Shipping: Standard or Express, with arrival dates. VAT is added at checkout.</div>
+  <div class="ag-q" id="agQuote"><div><span>Standard</span><b>—</b></div><div><span>Express</span><b>—</b></div></div>
+  <p class="ag-note" data-t="exn">Prices in the chat come from the same quote as your checkout.</p></aside>
 </section>
-
-<div class="logos">
-  <p>Powered by</p>
-  <div class="logos-row">
-    <span>OpenAI</span>
-    <span>Gemini</span>
-    <span>Claude</span>
-    <span>Deepseek</span>
-    <span>Grok</span>
-  </div>
-</div>
-
-<section class="features" id="features">
-  <h2>Built for POD sellers</h2>
-  <p>Everything you need to run operations. Nothing you don't.</p>
-  <div class="grid">
-    <div class="card">
-      <div class="card-icon">📦</div>
-      <h3>Product Listing</h3>
-      <p>Push products to Shopify in batches. The agent prepares, you approve, listings go live.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">🚚</div>
-      <h3>Order Fulfillment</h3>
-      <p>Mark orders shipped, add tracking numbers, sync status across all connected channels.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">💬</div>
-      <h3>Customer Service</h3>
-      <p>Draft context-aware replies based on order history. Review before sending.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">🔄</div>
-      <h3>Catalog Sync</h3>
-      <p>Import supplier feeds, normalize product data, calculate landed costs automatically.</p>
-    </div>
-  </div>
-</section>
-
-<section class="code-section" id="embed">
-  <h2>Embed anywhere</h2>
-  <p>Add the widget to any website. One line of code.</p>
-  <div class="code"><span class="tag"><script</span> <span class="attr">src</span>=<span class="str">"https://your-domain/pod-agent/widget.js"</span>
-        <span class="attr">data-tenant</span>=<span class="str">"YOUR_TENANT"</span>
-        <span class="attr">data-lang</span>=<span class="str">"en"</span><span class="tag">></script></span></div>
-</section>
-
-<section class="steps" id="how">
-  <h2>How it works</h2>
-  <div class="step">
-    <div class="step-num">1</div>
-    <div><h3>Request</h3><p>Tell the agent what you need. "List these 20 products to my Shopify store."</p></div>
-  </div>
-  <div class="step">
-    <div class="step-num">2</div>
-    <div><h3>Review</h3><p>Agent creates a task with full details. Nothing executes without your approval.</p></div>
-  </div>
-  <div class="step">
-    <div class="step-num">3</div>
-    <div><h3>Execute</h3><p>Approve and the agent handles the rest. Track results in real time.</p></div>
-  </div>
-</section>
-
-<section class="cta">
-  <h2>Ready to automate?</h2>
-  <p>Start with the design studio. Add the agent when you're ready.</p>
-  <a href="/studio.html" class="btn btn-primary">Open Studio</a>
-</section>
-
-<footer class="footer">
-  <a href="/">Home</a> · <a href="/studio.html">Studio</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
-</footer>
-</body>
-</html>
+<section class="ag-sec" id="features"><h2 data-t="fe">Features</h2><p class="h" data-t="feh">Everything a POD shop gets asked, answered from your own data</p><div class="ag-grid">
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">01</div><h3 data-t="f_chat_t">Customer chat in your hero</h3><p data-t="f_chat_d">Visitors tap <b>Ask Wed.AI</b> next to the logo and the homepage image turns into a chat. No floating bubble covering your products; one tap brings the scene back.</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">02</div><h3 data-t="f_rec_t">Product answers & recommendations</h3><p data-t="f_rec_d">Answers about every product in your catalog with live unit prices and quantity tiers, and suggests matching items by occasion and budget (e.g. favours under CHF 10), each with a <b>Personalise</b> link into the design studio.</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">03</div><h3 data-t="f_ship_t">Shipping quotes = checkout prices</h3><p data-t="f_ship_d">Quotes use the same engine as the cart and checkout: Standard and Express, the visitor's market and currency, VAT mode, free-shipping thresholds and estimated arrival dates (production + proof + carrier days).</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">04</div><h3 data-t="f_track_t">Order status & tracking</h3><p data-t="f_track_d">Customers ask “where is my order?” with their order number; the agent asks for the order e-mail before showing anything and gives the same answer for every miss, so orders cannot be guessed. Tracking numbers are matched against your carrier shipments.</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">05</div><h3 data-t="f_disc_t">Discount codes</h3><p data-t="f_disc_d">Checks whether a code is valid. Optionally the agent may offer a single-use sales discount, off by default, with your percentage, validity, one per customer per period and a monthly cap.</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">06</div><h3 data-t="f_hand_t">Human handoff</h3><p data-t="f_hand_d">When a customer asks for a person, mentions a refund, is upset, or the agent fails to answer several times, the chat is handed to your team with the full transcript. The customer is told when to expect a reply; nothing is e-mailed automatically.</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">07</div><h3 data-t="f_lang_t">Multilingual</h3><p data-t="f_lang_d">Detects English, Chinese and German and answers in the same language, following the language picked in the site header. Safety and handoff messages also exist in French and Italian.</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">08</div><h3 data-t="f_guard_t">Guardrails</h3><p data-t="f_guard_d">Refuses prompt-injection attempts, never asks for or stores card numbers or passwords, rate-limits each visitor, never invents prices (all numbers come from your shop data) and only uses customer-safe tools.</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">09</div><h3 data-t="f_kb_t">Knowledge base</h3><p data-t="f_kb_d">Built-in answers for proofs, returns, customs, VAT, payment, samples and more, generated from your live shop settings, plus your own Q&amp;A added in Admin with a search tester.</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">10</div><h3 data-t="f_admin_t">Admin tools</h3><p data-t="f_admin_d">Behind your admin login: overview, handoff queue, conversation log, knowledge base, settings and a data check that flags missing prices, shipping zones or policies before customers notice.</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">11</div><h3 data-t="f_kpi_t">KPIs & feedback</h3><p data-t="f_kpi_d">13 KPIs with targets: solved without a human, handoff rate, unanswered replies, positive feedback (👍/👎 on every answer), quotes, recommendations, order lookups, guardrail refusals and more, plus the questions it could not answer.</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">12</div><h3 data-t="f_shopify_t">Shopify integration</h3><p data-t="f_shopify_d">Connect Shopify shops by OAuth from Admin: push products, sync orders into the same order book the agent searches, return tracking on fulfilment, and serve checkout shipping rates from the same quote engine.</p></article>
+<article class="ag-card"><div class="ag-ic" aria-hidden="true">13</div><h3 data-t="f_llm_t">Works with or without an AI key</h3><p data-t="f_llm_d">Without a model key it runs on a fast rule engine with all tools. Add an OpenAI, xAI (Grok) or DeepSeek key for free-form conversation with tool calling; Anthropic and Gemini can answer open questions.</p></article>
+</div></section>
+<section class="ag-sec"><h2 data-t="fl">How a message is handled</h2><div class="ag-flow">
+ <div><b data-t="f1t">Understand</b><p data-t="f1">Detects language and intent, and picks out product, quantity, country, budget, order or tracking number.</p></div><div><b data-t="f2t">Check</b><p data-t="f2">Guardrails block injection and card data; handoff rules decide whether a person should take over.</p></div>
+ <div><b data-t="f3t">Look up</b><p data-t="f3">Calls shop tools: catalog, quote, order lookup, tracking, discount codes, knowledge base.</p></div><div><b data-t="f4t">Answer</b><p data-t="f4">Replies in the customer's language with product, quote and tracking cards; every answer can be rated.</p></div>
+</div></section>
+<section class="ag-sec" id="integrate"><h2 data-t="in">How to integrate quickly</h2><p class="h" data-t="inh">Live in a few minutes, no code needed on Wed.AI</p><ol class="ag-steps">
+<li class="ag-step"><span class="ag-n">1</span><div><h3 data-t="s0_t">Connect your Shopify store (optional)</h3><p data-t="s0_d">In <b>Admin → Shopify</b>, enter your shop domain and approve the app. Products, orders and shipping rates then stay in sync. Selling only on Wed.AI? Skip this step.</p></div></li>
+<li class="ag-step"><span class="ag-n">2</span><div><h3 data-t="s1_t">Configure the agent in Admin</h3><p data-t="s1_d">Open <b>Admin → AI 客服 / Chat agent → Settings</b>: switch the chat on, set your human reply time, the handoff threshold, the greeting and (if you want) the sales-discount rules.</p></div></li>
+<li class="ag-step"><span class="ag-n">3</span><div><h3 data-t="s2_t">Add your knowledge</h3><p data-t="s2_d">Built-in answers come from your shop settings. Add shop-specific Q&amp;A in the <b>Knowledge</b> tab and use the tester to check which answer a question finds. Run <b>Data check</b> to fix gaps.</p></div></li>
+<li class="ag-step"><span class="ag-n">4</span><div><h3 data-t="s3_t">Enable the chat for customers</h3><p data-t="s3_d">On the Wed.AI storefront the <b>Ask Wed.AI</b> button is in the header on every device. Link to it from anywhere with <code>/?ask=1</code> (e.g. in newsletters or product pages).</p></div></li>
+<li class="ag-step"><span class="ag-n">5</span><div><h3 data-t="s4_t">Optional: add an AI model</h3><p data-t="s4_d">Set <code>LLM_PROVIDER</code> and the matching key (e.g. <code>OPENAI_API_KEY</code>, <code>XAI_API_KEY</code>, <code>DEEPSEEK_API_KEY</code>) in the server environment. Without one the rule engine keeps working.</p></div></li>
+<li class="ag-step"><span class="ag-n">6</span><div><h3 data-t="s5_t">Watch the KPIs</h3><p data-t="s5_d">The <b>Overview</b> shows automation rate, handoffs and feedback; answer open handoffs from the <b>Handoffs</b> tab and mark them resolved.</p></div></li>
+</ol></section>
+<section class="ag-cta"><div><h2 data-t="cta">See it in action</h2><p data-t="ctas">Open the homepage and tap Ask Wed.AI next to the logo.</p></div>
+ <div class="ag-btns"><a class="ag-b dark" href="/?ask=1" data-t="ctab">Open the chat</a><a class="ag-b light" href="/admin/login" data-t="ctaa">Seller login</a></div></section>
+</main>
+<div id="site-footer"></div>
+<script src="i18n.js?v=20261101a"></script>
+<script src="/footer.js?v=20261101a" defer></script>
+<script>
+(function(){
+ var D={"title": {"en": "Wed.AI POD Agent — AI shop assistant for print-on-demand", "zh": "Wed.AI POD Agent — 按需印刷店铺 AI 助手"}, "eyebrow": {"en": "Wed.AI POD Agent", "zh": "Wed.AI POD Agent"}, "h1": {"en": "An AI shop assistant that knows your products, prices and orders", "zh": "懂商品、懂价格、懂订单的店铺 AI 助手"}, "lead": {"en": "Wed.AI POD Agent answers customers inside your storefront: product questions, recommendations, shipping quotes, order tracking and discount codes, and hands the conversation to your team when a person is needed.", "zh": "Wed.AI POD Agent 在您的店铺内直接服务客户：商品咨询、推荐、运费报价、订单追踪与优惠码，需要人工时将会话转交团队。"}, "try": {"en": "Try it on the homepage", "zh": "在首页体验"}, "how": {"en": "How to integrate", "zh": "如何快速接入"}, "ex": {"en": "Example conversation", "zh": "对话示例"}, "exq": {"en": "How much is shipping to Switzerland for 10 invitations?", "zh": "10 份邀请卡寄到瑞士运费多少？"}, "exa": {"en": "10 × Cotton paper invitation to Switzerland. Shipping: Standard or Express, with arrival dates. VAT is added at checkout.", "zh": "10 份棉纹艺术纸邀请卡寄往瑞士：显示标准与快递运费及预计送达日期，结账时另加增值税。"}, "exn": {"en": "Prices in the chat come from the same quote as your checkout.", "zh": "对话中的价格与结账使用同一报价。"}, "fe": {"en": "Features", "zh": "功能"}, "feh": {"en": "Everything a POD shop gets asked, answered from your own data", "zh": "POD 店铺的常见问题，全部用您自己的数据回答"}, "fl": {"en": "How a message is handled", "zh": "每条消息如何处理"}, "f1t": {"en": "Understand", "zh": "理解"}, "f1": {"en": "Detects language and intent, and picks out product, quantity, country, budget, order or tracking number.", "zh": "识别语言与意图，提取商品、数量、国家、预算、订单号或运单号。"}, "f2t": {"en": "Check", "zh": "检查"}, "f2": {"en": "Guardrails block injection and card data; handoff rules decide whether a person should take over.", "zh": "护栏拦截注入与卡号信息；转人工规则判断是否需要人工接手。"}, "f3t": {"en": "Look up", "zh": "查询"}, "f3": {"en": "Calls shop tools: catalog, quote, order lookup, tracking, discount codes, knowledge base.", "zh": "调用店铺工具：商品目录、报价、订单查询、物流、优惠码、知识库。"}, "f4t": {"en": "Answer", "zh": "回复"}, "f4": {"en": "Replies in the customer's language with product, quote and tracking cards; every answer can be rated.", "zh": "用客户的语言回复，附商品、报价与物流卡片；每条回复都可评价。"}, "in": {"en": "How to integrate quickly", "zh": "快速接入"}, "inh": {"en": "Live in a few minutes, no code needed on Wed.AI", "zh": "几分钟即可上线，Wed.AI 店铺无需写代码"}, "cta": {"en": "See it in action", "zh": "立即体验"}, "ctas": {"en": "Open the homepage and tap Ask Wed.AI next to the logo.", "zh": "打开首页，点击 Logo 旁的 AI 助手。"}, "ctab": {"en": "Open the chat", "zh": "打开对话"}, "ctaa": {"en": "Seller login", "zh": "商家登录"}, "f_chat_t": {"en": "Customer chat in your hero", "zh": "首页主图区内的客户对话"}, "f_chat_d": {"en": "Visitors tap <b>Ask Wed.AI<\/b> next to the logo and the homepage image turns into a chat. No floating bubble covering your products; one tap brings the scene back.", "zh": "访客点击 Logo 旁的 <b>AI 助手<\/b>，首页主图区即变为对话框。没有遮挡商品的浮窗，一键返回原场景。"}, "f_rec_t": {"en": "Product answers & recommendations", "zh": "商品问答与推荐"}, "f_rec_d": {"en": "Answers about every product in your catalog with live unit prices and quantity tiers, and suggests matching items by occasion and budget (e.g. favours under CHF 10), each with a <b>Personalise<\/b> link into the design studio.", "zh": "基于真实商品目录回答问题，显示实时单价与数量阶梯价；按场合与预算推荐（如 CHF 10 以内的伴手礼），每张卡片都可直接进入设计工作室定制。"}, "f_ship_t": {"en": "Shipping quotes = checkout prices", "zh": "运费报价与结账一致"}, "f_ship_d": {"en": "Quotes use the same engine as the cart and checkout: Standard and Express, the visitor's market and currency, VAT mode, free-shipping thresholds and estimated arrival dates (production + proof + carrier days).", "zh": "报价与购物车、结账使用同一套计算：标准/快递、访客所在市场与币种、含税/不含税、免运费门槛，以及预计送达日期（生产 + 校样 + 承运商时效）。"}, "f_track_t": {"en": "Order status & tracking", "zh": "订单状态与物流追踪"}, "f_track_d": {"en": "Customers ask “where is my order?” with their order number; the agent asks for the order e-mail before showing anything and gives the same answer for every miss, so orders cannot be guessed. Tracking numbers are matched against your carrier shipments.", "zh": "客户提供订单号即可查询；助手会先核对下单邮箱再显示信息，任何不匹配都返回相同提示，无法枚举订单。运单号与您的承运商发货记录匹配。"}, "f_disc_t": {"en": "Discount codes", "zh": "优惠码"}, "f_disc_d": {"en": "Checks whether a code is valid. Optionally the agent may offer a single-use sales discount, off by default, with your percentage, validity, one per customer per period and a monthly cap.", "zh": "可校验优惠码是否有效。可选开启“销售折扣”：默认关闭，由您设置折扣比例、有效期、每位客户周期内限一次以及每月上限，生成一次性优惠码。"}, "f_hand_t": {"en": "Human handoff", "zh": "转人工"}, "f_hand_d": {"en": "When a customer asks for a person, mentions a refund, is upset, or the agent fails to answer several times, the chat is handed to your team with the full transcript. The customer is told when to expect a reply; nothing is e-mailed automatically.", "zh": "客户要求人工、提到退款、情绪不满，或助手多次未能解答时，会话连同完整记录转交团队处理，并告知客户预计回复时间；系统不会自动向客户发邮件。"}, "f_lang_t": {"en": "Multilingual", "zh": "多语言"}, "f_lang_d": {"en": "Detects English, Chinese and German and answers in the same language, following the language picked in the site header. Safety and handoff messages also exist in French and Italian.", "zh": "自动识别英文、中文、德文并用同一语言回复，跟随网站语言切换；安全与转人工提示还支持法语、意大利语。"}, "f_guard_t": {"en": "Guardrails", "zh": "安全护栏"}, "f_guard_d": {"en": "Refuses prompt-injection attempts, never asks for or stores card numbers or passwords, rate-limits each visitor, never invents prices (all numbers come from your shop data) and only uses customer-safe tools.", "zh": "拒绝提示词注入；不索取、不保存银行卡号或密码；按访客限流；绝不编造价格（所有数字来自店铺数据）；只使用面向客户的安全工具。"}, "f_kb_t": {"en": "Knowledge base", "zh": "知识库"}, "f_kb_d": {"en": "Built-in answers for proofs, returns, customs, VAT, payment, samples and more, generated from your live shop settings, plus your own Q&amp;A added in Admin with a search tester.", "zh": "内置校样、退换货、关税、增值税、支付、样品等常见问题，内容由实时店铺设置生成；还可在后台添加自定义问答并测试检索效果。"}, "f_admin_t": {"en": "Admin tools", "zh": "后台工具"}, "f_admin_d": {"en": "Behind your admin login: overview, handoff queue, conversation log, knowledge base, settings and a data check that flags missing prices, shipping zones or policies before customers notice.", "zh": "在管理员登录后可用：总览、转人工队列、会话记录、知识库、设置，以及数据检查（提前发现缺失的价格、运费区域或政策说明）。"}, "f_kpi_t": {"en": "KPIs & feedback", "zh": "KPI 与反馈"}, "f_kpi_d": {"en": "13 KPIs with targets: solved without a human, handoff rate, unanswered replies, positive feedback (👍/👎 on every answer), quotes, recommendations, order lookups, guardrail refusals and more, plus the questions it could not answer.", "zh": "13 项带目标值的 KPI：无需人工解决率、转人工率、未解答率、好评率（每条回复都可 👍/👎）、报价数、推荐数、订单查询、护栏拦截等，并列出未能回答的问题。"}, "f_shopify_t": {"en": "Shopify integration", "zh": "Shopify 集成"}, "f_shopify_d": {"en": "Connect Shopify shops by OAuth from Admin: push products, sync orders into the same order book the agent searches, return tracking on fulfilment, and serve checkout shipping rates from the same quote engine.", "zh": "在后台通过 OAuth 连接 Shopify 店铺：推送商品、将订单同步到助手所查询的同一订单库、发货时回传物流单号，并由同一报价引擎提供结账运费。"}, "f_llm_t": {"en": "Works with or without an AI key", "zh": "有无 AI 密钥均可运行"}, "f_llm_d": {"en": "Without a model key it runs on a fast rule engine with all tools. Add an OpenAI, xAI (Grok) or DeepSeek key for free-form conversation with tool calling; Anthropic and Gemini can answer open questions.", "zh": "未配置模型密钥时，使用快速规则引擎并保留全部工具；配置 OpenAI、xAI（Grok）或 DeepSeek 密钥后可进行带工具调用的自由对话；Anthropic、Gemini 可用于回答开放性问题。"}, "s0_t": {"en": "Connect your Shopify store (optional)", "zh": "连接 Shopify 店铺（可选）"}, "s0_d": {"en": "In <b>Admin → Shopify<\/b>, enter your shop domain and approve the app. Products, orders and shipping rates then stay in sync. Selling only on Wed.AI? Skip this step.", "zh": "在 <b>后台 → Shopify<\/b> 输入店铺域名并授权应用，商品、订单与运费即保持同步。仅在 Wed.AI 销售可跳过此步。"}, "s1_t": {"en": "Configure the agent in Admin", "zh": "在后台配置助手"}, "s1_d": {"en": "Open <b>Admin → AI 客服 / Chat agent → Settings<\/b>: switch the chat on, set your human reply time, the handoff threshold, the greeting and (if you want) the sales-discount rules.", "zh": "打开 <b>后台 → AI 客服 → 设置<\/b>：开启对话，设置人工回复时间、转人工阈值、欢迎语，以及（可选）销售折扣规则。"}, "s2_t": {"en": "Add your knowledge", "zh": "补充知识库"}, "s2_d": {"en": "Built-in answers come from your shop settings. Add shop-specific Q&amp;A in the <b>Knowledge<\/b> tab and use the tester to check which answer a question finds. Run <b>Data check<\/b> to fix gaps.", "zh": "内置答案来自店铺设置。在 <b>知识库<\/b> 标签添加店铺专属问答，并用测试工具查看问题会命中哪条答案；运行 <b>数据检查<\/b> 补齐缺漏。"}, "s3_t": {"en": "Enable the chat for customers", "zh": "为客户启用对话"}, "s3_d": {"en": "On the Wed.AI storefront the <b>Ask Wed.AI<\/b> button is in the header on every device. Link to it from anywhere with <code>/?ask=1<\/code> (e.g. in newsletters or product pages).", "zh": "在 Wed.AI 店铺中，<b>AI 助手<\/b> 按钮位于所有设备的页头。可在任意位置通过 <code>/?ask=1<\/code> 链接直接打开（如邮件或商品页）。"}, "s4_t": {"en": "Optional: add an AI model", "zh": "可选：接入 AI 模型"}, "s4_d": {"en": "Set <code>LLM_PROVIDER<\/code> and the matching key (e.g. <code>OPENAI_API_KEY<\/code>, <code>XAI_API_KEY<\/code>, <code>DEEPSEEK_API_KEY<\/code>) in the server environment. Without one the rule engine keeps working.", "zh": "在服务器环境变量中设置 <code>LLM_PROVIDER<\/code> 及对应密钥（如 <code>OPENAI_API_KEY<\/code>、<code>XAI_API_KEY<\/code>、<code>DEEPSEEK_API_KEY<\/code>）。未配置时规则引擎照常工作。"}, "s5_t": {"en": "Watch the KPIs", "zh": "关注 KPI"}, "s5_d": {"en": "The <b>Overview<\/b> shows automation rate, handoffs and feedback; answer open handoffs from the <b>Handoffs<\/b> tab and mark them resolved.", "zh": "在 <b>总览<\/b> 查看自动化率、转人工与反馈；在 <b>转人工<\/b> 标签处理待回复会话并标记为已解决。"}};
+ function L(){var l=window.WeddingI18n&&WeddingI18n.lang?WeddingI18n.lang():'en';return l==='zh'?'zh':'en'}
+ function apply(){var l=L();document.querySelectorAll('[data-t]').forEach(function(el){var e=D[el.getAttribute('data-t')];if(e)el.innerHTML=e[l]||e.en});var t=D.title;document.title=t[l]||t.en}
+ apply();window.addEventListener('wedding-language-change',apply);
+ // Live example quote: the same storefront quote the cart and checkout use (no chat conversation is created).
+ var box=document.getElementById('agQuote');
+ function fmt(c,v){try{return new Intl.NumberFormat('de-CH',{style:'currency',currency:c}).format(v)}catch(e){return c+' '+v}}
+ fetch('/api/storefront/shipping/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({country:'CH',currency:'CHF',cart:[{product_id:'invitation',quantity:10}]})})
+  .then(function(r){return r.ok?r.json():null}).then(function(q){if(!q||!q.shipping_options)return;var rows=q.shipping_options.slice(0,2);box.innerHTML='';rows.forEach(function(o){var d=document.createElement('div'),s=document.createElement('span'),b=document.createElement('b');s.textContent=(o.label||o.id)+(o.delivery&&o.delivery.from?' · '+o.delivery.from.slice(5).split('-').reverse().join('.')+'–'+o.delivery.to.slice(5).split('-').reverse().join('.'):'');b.textContent=fmt(q.currency||'CHF',o.amount);d.appendChild(s);d.appendChild(b);box.appendChild(d)})}).catch(function(){});
+})();
+</script>
+</body></html>
