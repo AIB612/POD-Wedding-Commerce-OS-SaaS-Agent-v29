@@ -13,7 +13,7 @@
   var S=rd();S.msgs=S.msgs||[];
   var css=
   "#stage.hc-open>.scene,#stage.hc-open>.popover{visibility:hidden}"+
-  ".hero-chat{position:absolute;inset:0;z-index:40;border-radius:28px;overflow:hidden;display:none;grid-template-rows:auto minmax(0,1fr) auto auto;background:linear-gradient(180deg,#fffdf9 0%,#f8f2ec 100%);color:#28231f;font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}"+
+  ".hero-chat{position:absolute;inset:0;z-index:40;border-radius:28px;overflow:hidden;display:none;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;background:linear-gradient(180deg,#fffdf9 0%,#f8f2ec 100%);color:#28231f;font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}"+
   "#stage.hc-open .hero-chat{display:grid;animation:hcIn .22s ease-out}@keyframes hcIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}"+
   ".hc-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid rgba(45,36,30,.1)}"+
   ".hc-back{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(45,36,30,.14);background:#fff;border-radius:999px;padding:8px 13px;font:600 12.5px/1 inherit;font-family:inherit;color:#28231f;cursor:pointer}.hc-back:hover{border-color:#b8865b}"+
@@ -36,8 +36,14 @@
   ".hc-form textarea{border:1px solid rgba(45,36,30,.16);border-radius:16px;padding:11px 13px;resize:none;outline:none;font:14px/1.4 inherit;font-family:inherit;min-height:46px;max-height:120px;background:#fff;color:#28231f}.hc-form textarea:focus{border-color:#b8865b}"+
   ".hc-send{border:0;border-radius:16px;background:#292622;color:#fff;padding:0 18px;font:600 13px/1 inherit;font-family:inherit;cursor:pointer}.hc-send:disabled{opacity:.5;cursor:default}"+
   ".hc-priv{grid-column:1/-1;font-size:11px;color:#9a9087;padding:0 4px 2px}"+
-  "@media(max-width:720px){.hero-chat{border-radius:22px}.hc-form textarea{min-height:64px}.hc-head{padding:12px 12px;gap:8px}.hc-id b{font-size:16px}.hc-id span{font-size:11px}.hc-back{padding:7px 10px}.hc-back span{display:none}.hc-msgs{padding:12px}.hc-m{max-width:88%;font-size:13.5px}.hc-chips{padding:0 12px 8px;flex-wrap:nowrap;overflow-x:auto}.hc-chips button{white-space:nowrap}.hc-form{padding:10px 10px 6px}.hc-cards{grid-template-columns:repeat(2,1fr)}"+
-  "body.hc-open .layout{grid-template-rows:min(82vh,680px) auto!important}body.hc-open .stage{max-height:82vh!important;min-height:460px!important}}";
+  "@media(max-width:720px){.hero-chat{border-radius:22px}.hc-cards{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}.hc-form textarea{min-height:64px}.hc-head{padding:12px 12px;gap:8px}.hc-id b{font-size:16px}.hc-id span{font-size:11px}.hc-back{padding:7px 10px}.hc-back span{display:none}.hc-msgs{padding:12px}.hc-m{max-width:88%;font-size:13.5px}.hc-chips{padding:0 12px 8px;flex-wrap:nowrap;overflow-x:auto}.hc-chips button{white-space:nowrap}.hc-form{padding:10px 10px 6px}.hc-cards{grid-template-columns:repeat(2,1fr)}"+
+  "}"+
+  /* Fit the open panel into the visible viewport below the sticky header (--hc-hdr is measured in JS): input always visible, messages scroll inside. */
+  "body.hc-open .layout{min-height:0!important;height:calc(100vh - var(--hc-hdr,68px))!important;height:calc(100dvh - var(--hc-hdr,68px))!important}"+
+  "body.hc-open .stage{min-height:0!important}"+
+  "@media(max-width:1000px){body.hc-open .layout{height:auto!important;grid-template-rows:max(360px,calc(100vh - var(--hc-hdr,68px) - 20px)) auto!important;grid-template-rows:max(360px,calc(100dvh - var(--hc-hdr,68px) - 20px)) auto!important}body.hc-open .stage{max-height:none!important;height:100%!important}}"+
+  "@media(max-height:760px){.hc-head{padding:10px 16px}.hc-id b{font-size:17px}.hc-msgs{padding:12px 16px}.hc-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px}.hc-chips button{white-space:nowrap}.hc-form{padding:8px 12px 6px}.hc-form textarea{min-height:42px}}"+
+  "@media(max-height:620px){.hc-id span,.hc-priv{display:none}.hc-form textarea{min-height:40px}}";
   var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
 
   var el=document.createElement("section");el.className="hero-chat";el.id="heroChat";el.setAttribute("role","region");el.setAttribute("aria-label","Wed.AI assistant");el.setAttribute("data-no-translate","");
@@ -85,15 +91,20 @@
       .then(function(d){t.remove();if(d.conversation_id)S.id=d.conversation_id;var ui=(d.ui||[]).filter(function(u){return u.type!=="chips"}),ch=(d.ui||[]).filter(function(u){return u.type==="chips"})[0];
         addMsg({role:"assistant",text:d.answer||K("hc.error","Sorry, please try again."),ui:ui,index:d.message_index,chips:ch?ch.items:[]},true);setChips(ch?ch.items:[])})
       .catch(function(){t.remove();addMsg({role:"assistant",text:K("hc.error","Sorry, the assistant is unreachable right now. Please try again.")},false)})
-      .then(function(){busy=false;$("send").disabled=false;input.focus()});
+      .then(function(){busy=false;$("send").disabled=false;input.focus({preventScroll:true})});
   }
   $("form").onsubmit=function(e){e.preventDefault();send(input.value)};
   input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();send(input.value)}});
   input.addEventListener("input",function(){input.style.height="auto";input.style.height=Math.min(120,input.scrollHeight)+"px"});
-  $("new").onclick=function(){S={msgs:[]};wr();greet();input.focus()};
+  $("new").onclick=function(){S={msgs:[]};wr();greet();input.focus({preventScroll:true})};
   var btn=function(){return document.getElementById("shAiBtn")};
   function open(){if(stage.classList.contains("hc-open"))return;relabel();greet();stage.classList.add("hc-open");document.body.classList.add("hc-open");var b=btn();if(b)b.setAttribute("aria-expanded","true");
-    var pop=document.getElementById("popover");if(pop)pop.classList.remove("open");if(window.innerWidth<=720){var off=0,el=document.elementFromPoint(window.innerWidth/2,2);while(el&&el!==document.body){var ps=getComputedStyle(el).position;if(ps==="sticky"||ps==="fixed"){off=el.getBoundingClientRect().bottom;break}el=el.parentElement}window.scrollTo({top:Math.max(0,stage.getBoundingClientRect().top+window.scrollY-off-8),behavior:"smooth"})}else setTimeout(function(){input.focus({preventScroll:true})},60)}
+    var pop=document.getElementById("popover");if(pop)pop.classList.remove("open");fit(true);if(window.innerWidth>720)setTimeout(function(){input.focus({preventScroll:true})},60)}
+  function hdrBottom(){var el=document.elementFromPoint(window.innerWidth/2,2);while(el&&el!==document.body&&el!==document.documentElement){var ps=getComputedStyle(el).position;if(ps==="sticky"||ps==="fixed")return Math.max(0,Math.round(el.getBoundingClientRect().bottom));el=el.parentElement}return 0}
+  /* Measure the sticky header, size the hero to the remaining viewport and bring the panel fully into view. */
+  function fit(scroll){if(!stage.classList.contains("hc-open"))return;var y=window.scrollY,hb=hdrBottom();document.documentElement.style.setProperty("--hc-hdr",(hb||0)+"px");if(!scroll)return;
+    requestAnimationFrame(function(){var r=stage.getBoundingClientRect(),top=r.top+window.scrollY-hb-(window.innerWidth<=1000?8:14);if(Math.abs(window.scrollY-top)>2)window.scrollTo({top:Math.max(0,top),behavior:"auto"})})}
+  var rz;window.addEventListener("resize",function(){clearTimeout(rz);rz=setTimeout(function(){fit(true)},120)});
   function close(){stage.classList.remove("hc-open");document.body.classList.remove("hc-open");var b=btn();if(b){b.setAttribute("aria-expanded","false");b.focus({preventScroll:true})}}
   $("back").onclick=close;
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&stage.classList.contains("hc-open"))close()});

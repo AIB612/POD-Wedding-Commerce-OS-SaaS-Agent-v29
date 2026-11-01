@@ -1,7 +1,7 @@
 // Customer chat main flow — port of the POD Agent handleMessage (agent.js) onto our store:
 //  ① validate + redact  ② conversation (agent_conversations)  ③ per-chat rate limit  ④ injection / payment-data refusal
-//  ⑤ handed-off chats stay with the team  ⑥ classify (rules + LLM when configured)  ⑦ guardrails → handoff queue
-//  ⑧ answer: LLM tool loop (OpenAI-compatible key) or the deterministic rule engine (no key / LLM error)  ⑨ store + stats
+//  ⑤ handed-off chats stay with the team  ⑥ classify (rules; LLM classifier only on the LLM path)  ⑦ guardrails → handoff queue
+//  ⑧ route (router.js): local rule engine + shop data first; LLM only for complex / unmatched questions when a key exists  ⑨ store + stats (answered_by)
 import { classifyRules, detectLanguage } from "./nlu.js";
 import { handoffCheck, holdingMessage, errorMessage, injectionMessage, paymentDataMessage, INJECTION_RE, containsPaymentData, redact } from "./guardrails.js";
 import { createTools, resolveProduct } from "./tools.js";
@@ -9,6 +9,7 @@ import { shopFacts, knowledgeEntry, searchKnowledge } from "./knowledge.js";
 import { getSettings, findOrCreateConversation, saveConversation, recentUserMessages, createHandoff, appendToHandoff } from "./store.js";
 import { llmStatus, runToolLoop, chatJson, answerOpenQuestion } from "./llm.js";
 import { systemPrompt, CLASSIFIER_SYSTEM } from "./prompts.js";
+import { decideRoute } from "./router.js";
 
 const LANGS = ["en", "zh", "de", "fr", "it"];
 const UNRESOLVED_RE = /(didn'?t help|not helpful|not what i asked|doesn'?t answer|hilft nicht|nicht geholfen|ça n'aide pas|non aiuta|没用|没解决|不是我问的|答非所问)/i;
@@ -60,6 +61,7 @@ const T = {
   codeBad: { en: v => `Sorry, code ${v} is not valid (expired, used up or unknown).`, zh: v => `抱歉，优惠码 ${v} 无效（已过期、已用完或不存在）。`, de: v => `Leider ist der Code ${v} nicht gültig (abgelaufen, aufgebraucht oder unbekannt).` },
   issued: { en: v => `I can offer you a one-time code: ${v.code} (${v.value} off, valid until ${v.exp}). Enter it at checkout.`, zh: v => `可以为您提供一次性优惠码：${v.code}（优惠 ${v.value}，有效期至 ${v.exp}），结账时输入即可。`, de: v => `Ich kann Ihnen einen einmaligen Code anbieten: ${v.code} (${v.value} Rabatt, gültig bis ${v.exp}).` },
   product: { en: v => `${v.name}: ${v.materials ? `materials ${v.materials}; ` : ""}${v.tiers}. ${v.vat} Personalise it: ${v.link}`, zh: v => `${v.name}：${v.materials ? `材质 ${v.materials}；` : ""}${v.tiers}。${v.vat} 定制：${v.link}`, de: v => `${v.name}: ${v.materials ? `Materialien ${v.materials}; ` : ""}${v.tiers}. ${v.vat} Gestalten: ${v.link}` },
+  offerHuman: { en: "If that doesn't fully answer your question, I can pass it to our team — just say \"talk to a person\".", zh: "如果这还没有完全解答您的问题，我可以为您转接人工客服——回复“转人工”即可。", de: "Falls das Ihre Frage nicht ganz beantwortet, gebe ich sie gern an unser Team weiter — schreiben Sie einfach „Mit einem Menschen sprechen“." },
   unknown: { en: "I'm not sure about that one. I can help with products and recommendations, prices and shipping quotes, delivery times and your order status — or pass you to our team.", zh: "这个问题我不太确定。我可以帮您推荐产品、报价和运费、查询送达时间和订单状态，或者为您转接人工。", de: "Da bin ich mir nicht sicher. Ich helfe bei Produkten, Preisen und Versand, Lieferzeiten und Bestellstatus – oder verbinde Sie mit dem Team." },
   muted: { en: "Your request is with our team — they'll reply soon. I've added your message to it.", zh: "您的问题已在人工团队处理中，他们会尽快回复；我已把这条消息补充给他们。", de: "Ihr Anliegen liegt bei unserem Team – es meldet sich bald. Ich habe Ihre Nachricht ergänzt." },
   emailNoted: { en: "Thank you — I've added your e-mail so the team can reply.", zh: "谢谢，已为您记录邮箱，团队会通过邮件回复。", de: "Danke – ich habe Ihre E-Mail ergänzt, damit das Team antworten kann." },
@@ -171,10 +173,6 @@ async function ruleAnswer(ctx, cls, text, tools) {
     default: {
       const hits = await searchKnowledge(ctx.tenantId, text, lang, { custom: settings.custom_faq });
       if (hits.length && hits[0].score >= 2) return hits[0].answer;
-      if (ctx.llm.available) {
-        const sys = `${systemPrompt({ facts: f, conv, lang, countryHint: ctx.countryHint, canIssueDiscount: false })}\n\nKNOWLEDGE (use only this):\n${hits.map(h => `- ${h.question} ${h.answer}`).join("\n") || "- (no match)"}\nIf the knowledge does not answer it, say you will check with the team.`;
-        try { const a = await answerOpenQuestion({ system: sys, user: text }); if (a) return a; } catch { /* fall through */ }
-      }
       ctx.unanswered = true;
       ctx.ui.push(chips(lang, [...(CHIPS[lang] || CHIPS.en).slice(0, 3), lang === "zh" ? "转人工" : lang === "de" ? "Mit einem Menschen sprechen" : "Talk to a person"]));
       return L("unknown", lang);
@@ -200,7 +198,8 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
   ctx.lang = conv.language = lang;
   const out = (answer, extra = {}) => ({ answer, reply: answer, conversation_id: conv.id, language: lang, ui: ctx.ui, mode: extra.mode || llm.mode, handoff: ctx.handoff, tools_used: ctx.toolLog.map(t => t.name), ...extra });
   const finish = async (answer, extra = {}) => {
-    conv.messages.push({ role: "assistant", text: answer, at: new Date().toISOString(), ...(extra.intent ? { intent: extra.intent } : {}), ...(ctx.unanswered ? { unanswered: true } : {}), ...(ctx.toolLog.length ? { tools: ctx.toolLog.map(t => t.name) } : {}) });
+    if (extra.answered_by) { conv.paths = conv.paths || {}; conv.paths[extra.answered_by] = (conv.paths[extra.answered_by] || 0) + 1; }
+    conv.messages.push({ role: "assistant", text: answer, at: new Date().toISOString(), ...(extra.intent ? { intent: extra.intent } : {}), ...(extra.answered_by ? { answered_by: extra.answered_by, route: extra.route?.reason, confidence: extra.route?.confidence } : {}), ...(ctx.unanswered ? { unanswered: true } : {}), ...(ctx.toolLog.length ? { tools: ctx.toolLog.map(t => t.name) } : {}) });
     if (extra.intent) conv.intents[extra.intent] = (conv.intents[extra.intent] || 0) + 1;
     if (ctx.unanswered) conv.unanswered = (conv.unanswered || 0) + 1;
     const message_index = conv.messages.length - 1;
@@ -211,10 +210,10 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
   // ③ per-chat rate limit (POD Agent: web chat max messages per 10 minutes)
   if (recentUserMessages(conv, 10) >= settings.max_messages_per_10min) return out(L("rate", lang), { rate_limited: true });
   // ④ refuse payment data (never stored) and prompt injection
-  if (containsPaymentData(text)) { conv.messages.push({ role: "user", text: "[message with payment data removed]", at: new Date().toISOString() }); return finish(paymentDataMessage(lang), { intent: "payment_data", guardrail: "payment_data" }); }
+  if (containsPaymentData(text)) { conv.messages.push({ role: "user", text: "[message with payment data removed]", at: new Date().toISOString() }); return finish(paymentDataMessage(lang), { intent: "payment_data", guardrail: "payment_data", answered_by: "local", route: { path: "local", reason: "guardrail", confidence: 1 } }); }
   text = redact(text);
   conv.messages.push({ role: "user", text, at: new Date().toISOString() });
-  if (INJECTION_RE.test(text)) return finish(injectionMessage(lang), { intent: "injection", guardrail: "prompt_injection" });
+  if (INJECTION_RE.test(text)) return finish(injectionMessage(lang), { intent: "injection", guardrail: "prompt_injection", answered_by: "local", route: { path: "local", reason: "guardrail", confidence: 1 } });
 
   // ⑤ already with the team → add the message to the handoff, AI stays quiet
   const cls = classifyRules(text, { hint: lang });
@@ -222,45 +221,73 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
     await appendToHandoff(conv, { text, email: cls.email });
     if (cls.email) conv.slots.email = cls.email;
     ctx.handoff = "pending";
-    return finish(cls.email ? L("emailNoted", lang) : L("muted", lang), { intent: "muted", muted: true });
+    return finish(cls.email ? L("emailNoted", lang) : L("muted", lang), { intent: "muted", muted: true, answered_by: "local", route: { path: "local", reason: "with_team", confidence: 1 } });
   }
 
   try {
     ctx.facts = await shopFacts(tenantId);
-    // ⑥ LLM classifier (when configured) merged with the rule classifier; rules keep the extracted entities.
+    const followUp = !!(conv.slots?.pending && (cls.country || cls.quantity || cls.products?.length || cls.email || cls.order_number || (conv.slots.pending === "tracking" && /[A-Z0-9]{6,}/i.test(text))));
     let merged = { ...cls, emotion: "calm", wants_human: false, abusive: false, threat: false, unresolved_followup: UNRESOLVED_RE.test(text), price_hesitation: HESITATION_RE.test(text) };
-    if (llm.tool_calling) {
-      try {
-        const recent = conv.messages.slice(-5, -1).map(m => `${m.role}: ${String(m.text).slice(0, 300)}`).join("\n");
-        const { data, tokens } = await chatJson({ system: CLASSIFIER_SYSTEM, user: `${recent ? `Recent conversation:\n${recent}\n\n` : ""}New customer message:\n${text}` });
-        conv.total_tokens += tokens || 0;
-        if (data) merged = { ...merged, ...Object.fromEntries(Object.entries(data).filter(([k]) => ["emotion", "wants_human", "abusive", "threat", "unresolved_followup", "price_hesitation"].includes(k))), intent: cls.intent === "other" && data.intent ? data.intent : cls.intent };
-      } catch { /* rules only */ }
-    }
     conv.failed_count = merged.unresolved_followup ? (conv.failed_count || 0) + 1 : 0;
 
     // ⑦ guardrails before any answer → handoff queue (Admin), holding message, ask for e-mail when unknown
-    const hand = handoffCheck({ failedAnswersBeforeHandoff: settings.failed_answers_before_handoff, maxTokensPerConversation: settings.max_tokens_per_conversation }, merged, { ...conv, failed_count: conv.failed_count - (merged.unresolved_followup ? 1 : 0) }, text);
-    if (hand) {
+    const handoffIf = async m => {
+      const hand = handoffCheck({ failedAnswersBeforeHandoff: settings.failed_answers_before_handoff, maxTokensPerConversation: settings.max_tokens_per_conversation }, m, { ...conv, failed_count: conv.failed_count - (m.unresolved_followup ? 1 : 0) }, text);
+      if (!hand) return null;
       if (cls.email) conv.slots.email = cls.email;
-      const h = await createHandoff(tenantId, conv, { reason: hand.reason, summary: `Intent: ${merged.intent}, emotion: ${merged.emotion}.`, email: cls.email, order_number: cls.order_number });
+      const h = await createHandoff(tenantId, conv, { reason: hand.reason, summary: `Intent: ${m.intent}, emotion: ${m.emotion}.`, email: cls.email, order_number: cls.order_number });
       ctx.handoff = h.reason;
-      return finish(holdingMessage({ humanReplyHours: settings.human_reply_hours }, lang, { needEmail: !h.customer_email }), { intent: "handoff" });
-    }
+      return finish(holdingMessage({ humanReplyHours: settings.human_reply_hours }, lang, { needEmail: !h.customer_email }), { intent: "handoff", answered_by: "local", route: { path: "local", reason: "handoff", confidence: 1 } });
+    };
+    const early = await handoffIf(merged); if (early) return early;
 
+    // ⑧ route: local (rules + shop data) unless the question is complex / unmatched
+    const kb = cls.intent === "other" && !followUp ? await searchKnowledge(tenantId, text, lang, { custom: settings.custom_faq }) : [];
+    const route = decideRoute({ cls, text, kbScore: kb[0]?.score || 0, followUp });
     const tools = createTools(ctx);
-    // ⑧ answer
-    if (llm.tool_calling) {
-      try {
+    const local = async (extraReason) => {
+      const answer = await ruleAnswer(ctx, merged, text, tools);
+      const r = { ...route, path: "local", ...(extraReason ? { reason: `${route.reason}|${extraReason}` } : {}) };
+      return { answer, route: r };
+    };
+    if (route.path === "local") {
+      const l = await local();
+      if (!(ctx.unanswered && llm.available)) return finish(l.answer, { intent: merged.intent, mode: "rules", answered_by: "local", route: l.route });
+      // rules found nothing → let the model try (knowledge-grounded)
+      ctx.unanswered = false; ctx.ui.length = 0; route.reason = `${route.reason}|rules_unanswered`; route.path = "llm";
+    }
+    if (!llm.available) {
+      // No key: best rule-based answer + offer a person.
+      const l = await local("no_llm_key");
+      if (!ctx.unanswered) { l.answer = `${l.answer}\n\n${L("offerHuman", lang)}`; ctx.ui.push(chips(lang, [lang === "zh" ? "转人工" : lang === "de" ? "Mit einem Menschen sprechen" : "Talk to a person"])); }
+      return finish(l.answer, { intent: merged.intent, mode: "rules", answered_by: "local", route: l.route });
+    }
+    try {
+      if (llm.tool_calling) {
+        const recent = conv.messages.slice(-5, -1).map(m => `${m.role}: ${String(m.text).slice(0, 300)}`).join("\n");
+        try {
+          const { data, tokens } = await chatJson({ system: CLASSIFIER_SYSTEM, user: `${recent ? `Recent conversation:\n${recent}\n\n` : ""}New customer message:\n${text}` });
+          conv.total_tokens += tokens || 0;
+          if (data) merged = { ...merged, ...Object.fromEntries(Object.entries(data).filter(([k]) => ["emotion", "wants_human", "abusive", "threat", "unresolved_followup", "price_hesitation"].includes(k))), intent: cls.intent === "other" && data.intent ? data.intent : cls.intent };
+        } catch { /* classifier optional */ }
+        const late = await handoffIf(merged); if (late) return late;
         const history = conv.messages.slice(-11, -1).map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.text }));
         const r = await runToolLoop({ messages: [{ role: "system", content: systemPrompt({ facts: ctx.facts, conv, lang, countryHint: ctx.countryHint, canIssueDiscount: !!settings.sales_discount?.enabled }) }, ...history, { role: "user", content: text }],
           tools: tools.definitions, executeTool: tools.execute, maxToolCalls: 4 });
         conv.total_tokens += r.tokens || 0;
-        if (r.text) return finish(r.text, { intent: merged.intent, mode: "llm_tools" });
-      } catch (e) { ctx.llmError = e.message; ctx.ui.length = 0; ctx.toolLog.length = 0; }
+        if (r.text) return finish(r.text, { intent: merged.intent, mode: "llm_tools", answered_by: "llm", route: { ...route, path: "llm" } });
+      } else {
+        const hits = kb.length ? kb : await searchKnowledge(tenantId, text, lang, { custom: settings.custom_faq });
+        const sys = `${systemPrompt({ facts: ctx.facts, conv, lang, countryHint: ctx.countryHint, canIssueDiscount: false })}\n\nKNOWLEDGE (use only this):\n${hits.map(h => `- ${h.question} ${h.answer}`).join("\n") || "- (no match)"}\nIf the knowledge does not answer it, say you will check with the team.`;
+        const a = await answerOpenQuestion({ system: sys, user: text });
+        if (a) return finish(a, { intent: merged.intent, mode: "llm_answers", answered_by: "llm", route: { ...route, path: "llm" } });
+      }
+      throw new Error("empty_llm_answer");
+    } catch (e) {
+      ctx.llmError = e.message; ctx.ui.length = 0; ctx.toolLog.length = 0;
+      const l = await local("llm_error");
+      return finish(l.answer, { intent: merged.intent, mode: "rules_fallback", answered_by: "local", route: l.route });
     }
-    const answer = await ruleAnswer(ctx, merged, text, tools);
-    return finish(answer, { intent: merged.intent, mode: ctx.llmError ? "rules_fallback" : (llm.available ? llm.mode : "rules") });
   } catch (e) {
     console.error("[pod-agent] chat failed:", e.message);
     return finish(errorMessage(lang), { intent: "error", error: true });

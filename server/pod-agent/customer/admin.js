@@ -9,6 +9,7 @@ import crypto from "node:crypto";
 import { getSettings, saveSettings, listConversations, listHandoffs, updateHandoff, discountsIssued, DEFAULT_SETTINGS } from "./store.js";
 import { searchKnowledge, allEntries } from "./knowledge.js";
 import { llmStatus } from "./llm.js";
+import { CONFIDENCE_THRESHOLD } from "./router.js";
 import { HttpError } from "../../http/middleware.js";
 
 const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : null);
@@ -25,8 +26,15 @@ export async function agentOverview(tenantId, { days = 30 } = {}) {
   for (const c of convs) (c.messages || []).forEach((m, i, a) => { if (m.role === "assistant" && m.unanswered && a[i - 1]?.role === "user") unanswered.push({ text: a[i - 1].text, at: a[i - 1].at, conversation_id: c.id }); });
   const guard = (intents.injection || 0) + (intents.payment_data || 0);
   const handed = convs.filter(c => c.handoff_id).length;
+  // Answer path (router.js): local rule engine + shop data vs LLM. Older messages without a path count as local (no LLM key until now).
+  const answered = bot.filter(m => m.answered_by || m.intent);
+  const viaLlm = answered.filter(m => m.answered_by === "llm").length, viaLocal = answered.length - viaLlm;
+  const routes = {};
+  for (const m of answered) { const r = String(m.route || "legacy").split("|"); const k = `${m.answered_by || "local"} · ${r[0]}${r.slice(1).length ? ` (${r.slice(1).join(", ")})` : ""}`; routes[k] = (routes[k] || 0) + 1; }
   const kpis = [
     { id: "conversations", label: "Conversations", value: convs.length },
+    { id: "answered_local", label: "Answered locally (rules + shop data)", value: pct(viaLocal, answered.length), unit: "%", note: `${viaLocal} replies` },
+    { id: "answered_llm", label: "Answered by LLM", value: pct(viaLlm, answered.length), unit: "%", note: `${viaLlm} replies${llmStatus().available ? "" : " · no key configured"}` },
     { id: "messages", label: "Customer messages", value: user.length },
     { id: "avg_messages", label: "Messages per conversation", value: convs.length ? Math.round((user.length / convs.length) * 10) / 10 : null },
     { id: "automation_rate", label: "Solved without a human", value: pct(convs.length - handed, convs.length), unit: "%", target: 80 },
@@ -40,12 +48,12 @@ export async function agentOverview(tenantId, { days = 30 } = {}) {
     { id: "guardrail_hits", label: "Guardrail refusals", value: guard },
     { id: "discounts_issued", label: "Chat discount codes", value: (await discountsIssued(tenantId)).filter(d => Date.parse(d.created_at) >= since).length }
   ].map(k => ({ ...k, status: k.value == null ? "NO DATA" : k.target != null ? (k.value >= k.target ? "PASS" : "WARN") : k.target_max != null ? (k.value <= k.target_max ? "PASS" : "WARN") : "INFO" }));
-  return { days, llm: llmStatus(), kpis, intents, tools, handoff_reasons: handoffs.reduce((a, h) => ((a[h.reason] = (a[h.reason] || 0) + 1), a), {}), unanswered: unanswered.slice(-20).reverse() };
+  return { days, llm: llmStatus(), kpis, intents, tools, routes, routing: { strategy: "local_first", threshold: CONFIDENCE_THRESHOLD }, handoff_reasons: handoffs.reduce((a, h) => ((a[h.reason] = (a[h.reason] || 0) + 1), a), {}), unanswered: unanswered.slice(-20).reverse() };
 }
 
 export async function agentConversations(tenantId, { limit = 50 } = {}) {
   return (await listConversations(tenantId, { limit: Math.min(200, limit) })).map(c => ({ id: c.id, created_at: c.created_at, last_message_at: c.last_message_at, language: c.language, status: c.status,
-    messages: (c.messages || []).length, intents: c.intents, handoff_id: c.handoff_id, preview: (c.messages || []).filter(m => m.role === "user").slice(-1)[0]?.text?.slice(0, 140) || "", transcript: (c.messages || []).slice(-20) }));
+    messages: (c.messages || []).length, intents: c.intents, paths: { local: c.paths?.local || 0, llm: c.paths?.llm || 0 }, handoff_id: c.handoff_id, preview: (c.messages || []).filter(m => m.role === "user").slice(-1)[0]?.text?.slice(0, 140) || "", transcript: (c.messages || []).slice(-20) }));
 }
 export const agentHandoffs = (tenantId, q) => listHandoffs(tenantId, q);
 export async function patchHandoff(tenantId, id, body) { const r = await updateHandoff(tenantId, id, body || {}); if (!r) throw new HttpError(404, "handoff_not_found", "Handoff not found"); return r; }

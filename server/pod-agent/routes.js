@@ -19,7 +19,7 @@ export function podAgentRouter({ store = null, connectors = {} } = {}) {
 
   r.get("/providers", requireAdmin, (_, res) => res.json({ available: availableProviders() }));
   // Public status for the panel: which mode answers (rules / llm), never key names or values.
-  r.get("/status", (_, res) => { const s = llmStatus(); res.json({ ok: true, mode: s.mode }); });
+  r.get("/status", (_, res) => { const s = llmStatus(); res.json({ ok: true, strategy: "local_first", mode: s.mode }); });
 
   // Customer chat (homepage hero panel). Customer-safe tools only; see customer/agent.js.
   r.post("/chat", chatLimit, ah(async (req, res) => {

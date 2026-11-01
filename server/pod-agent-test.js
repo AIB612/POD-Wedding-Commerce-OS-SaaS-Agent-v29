@@ -23,6 +23,13 @@ const chat = (message, extra = {}) => call("/api/pod-agent/chat", { method: "POS
 const notifications = async () => ((await getState()).notifications || []).length;
 const result = {};
 try {
+  // Router unit checks: shop data / FAQ local, open-ended or unmatched → LLM candidate.
+  const { decideRoute } = await import("./pod-agent/customer/router.js");
+  const { classifyRules } = await import("./pod-agent/customer/nlu.js");
+  const rt = t => decideRoute({ cls: classifyRules(t), text: t });
+  for (const t of ["How much is shipping to Switzerland for 10 invitations?", "Track TRK-NOPE-0000", "Recommend wedding favours under CHF 10", "What is your return policy?", "10 份邀请卡寄到瑞士运费多少", "Where is my order POD-2026-AB12CD?"]) assert.equal(rt(t).path, "local", t);
+  for (const t of ["Can you help me write a romantic wording for our invitation in a rustic theme?", "为什么棉纸比普通纸好？帮我写一段邀请文案", "Is the moon made of cheese?"]) assert.equal(rt(t).path, "llm", t);
+  result.router = "pass";
   // Quote = the checkout quote (same function the cart and checkout call).
   const q = await quoteStorefront({ tenantId: "tenant_demo", cart: [{ product_id: "invitation", quantity: 10 }], country: "CH" });
   const std = q.shipping_options.find(o => o.id === "standard").amount, exp = q.shipping_options.find(o => o.id === "express").amount;
@@ -83,6 +90,15 @@ try {
   r = await chat("Thanks! How long does delivery take to Switzerland?", { conversation_id: cid }); assert.ok(!r.json.handoff, "AI answers again after resolve");
   result.handoff = "queued, no e-mail, resolvable";
 
+  // Local-first routing without a key: data questions local; complex questions → best local answer + offer a person.
+  r = await chat("How much is shipping to Switzerland for 10 invitations?");
+  assert.equal(r.json.answered_by, "local"); assert.equal(r.json.route.reason, "shop_data"); assert.ok(r.json.route.confidence >= 0.6);
+  r = await chat("Can you help me write a romantic wording for our invitation in a rustic theme?");
+  assert.equal(r.json.answered_by, "local"); assert.match(r.json.route.reason, /^complex:open_ended\|no_llm_key$/); assert.ok(r.json.route.confidence < 0.6);
+  assert.ok(r.json.ui.some(u => u.type === "chips" && u.items.includes("Talk to a person")), "handoff offered");
+  r = await chat("Is the moon made of cheese?"); assert.equal(r.json.answered_by, "local"); assert.match(r.json.route.reason, /^unmatched/);
+  result.routing_no_key = "local + handoff offer";
+
   // Feedback + status (public), task/providers admin-only, bad input.
   const last = r;
   r = await call("/api/pod-agent/feedback", { method: "POST", body: { conversation_id: cid, index: last.json.message_index, rating: 1 } }); assert.equal(r.status, 200);
@@ -97,7 +113,7 @@ try {
     assert.equal((await call(p)).status, 401, p); assert.equal((await call(p, { admin: true })).status, 200, p);
   }
   const ov = (await call("/api/saas/agent/overview", { admin: true })).json;
-  assert.equal(ov.kpis.length, 13); assert.ok(ov.llm.missing.includes("OPENAI_API_KEY"));
+  assert.equal(ov.kpis.length, 15); assert.equal(ov.kpis.find(k => k.id === "answered_local").value, 100); assert.equal(ov.kpis.find(k => k.id === "answered_llm").value, 0); assert.ok(Object.keys(ov.routes).some(k => k.startsWith("local · shop_data"))); assert.ok(ov.llm.missing.includes("OPENAI_API_KEY"));
   assert.equal(ov.kpis.find(k => k.id === "satisfaction").value, 100);
   a = await call("/api/saas/agent/knowledge", { method: "POST", body: { question: "Do you print on velvet?", answer: "Not yet — velvet invitations are coming in spring." }, admin: true }); assert.equal(a.status, 200);
   r = await chat("Do you print on velvet?"); assert.match(r.json.answer, /velvet invitations are coming/);
@@ -119,13 +135,19 @@ try {
     sawTool = JSON.parse(toolMsg.content);
     return reply({ role: "assistant", content: `Standard shipping is CHF ${sawTool.shipping_options?.[0]?.price ?? "?"}.` });
   };
+  // Data question: stays local even with a key — no model call.
   r = await chat("shipping for ten invitations to Switzerland?");
-  assert.equal(r.json.mode, "llm_tools"); assert.ok(calls >= 2); assert.ok(sawTool?.ok, "tool result passed to the model");
+  assert.equal(calls, 0, "no LLM call for a shop-data question"); assert.equal(r.json.answered_by, "local"); assert.ok(r.json.answer.includes(std.toFixed(2)));
+  // Complex question: goes to the model; the model uses our quote tool, so numbers still come from our data.
+  r = await chat("Why is cotton paper nicer than normal paper, and what would shipping to Switzerland for ten invitations be?");
+  assert.equal(r.json.answered_by, "llm"); assert.equal(r.json.mode, "llm_tools"); assert.ok(calls >= 2); assert.ok(sawTool?.ok, "tool result passed to the model");
   assert.match(r.json.answer, new RegExp(std.toFixed(2).replace(".", "\\.") + "|" + String(std).replace(".", "\\.")));
+  const ov2 = (await call("/api/saas/agent/overview", { admin: true })).json; assert.ok(ov2.kpis.find(k => k.id === "answered_llm").value > 0);
+  const cv = (await call("/api/saas/agent/conversations", { admin: true })).json.conversations.find(c => c.id === r.json.conversation_id); assert.equal(cv.paths.llm, 1);
   // Provider down → rule engine answers.
   globalThis.fetch = async (url, opts) => String(url).startsWith("https://api.x.ai/") ? new Response("{}", { status: 500 }) : realFetch(url, opts);
-  r = await chat("How much is shipping to Switzerland for 10 invitations?");
-  assert.ok(r.json.answer.includes(std.toFixed(2))); assert.ok(["rules_fallback", "rules", "llm_tools"].includes(r.json.mode));
+  r = await chat("Is the moon made of cheese?");
+  assert.equal(r.json.mode, "rules_fallback"); assert.equal(r.json.answered_by, "local"); assert.match(r.json.route.reason, /llm_error/);
   result.llm_tool_loop = "mocked provider ok, fallback ok";
   console.log(JSON.stringify({ ok: true, ...result }, null, 2));
 } finally {

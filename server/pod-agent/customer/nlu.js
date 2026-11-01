@@ -108,8 +108,13 @@ export function extractQuantity(text) {
   const m = t.match(/(?<![\w.,-])(\d{1,5})\s*(x\b|×|pcs?\b|pieces?\b|stück\b|stk\b|exemplaires?\b|pezzi\b|units?\b|copies\b)?\s*(?=[\p{L}])/iu);
   if (m) { const n = Number(m[1]); if (n >= 1 && n <= 10000 && !/^(19|20)\d\d$/.test(m[1])) return n; }
   const qty = t.match(/\b(?:quantity|qty|menge|anzahl|quantité|quantità)\s*[:=]?\s*(\d{1,5})\b/i);
-  return qty ? Number(qty[1]) : null;
+  if (qty) return Number(qty[1]);
+  // Number words before a noun: "ten invitations", "zehn Einladungen", "fifty menu cards"
+  const w = t.toLowerCase().match(new RegExp(`\\b(${Object.keys(NUM_WORDS).join("|")})\\s+(?=[\\p{L}])`, "u"));
+  return w && !/^(one|a|ein|eine|un|une|uno|una)$/.test(w[1]) ? NUM_WORDS[w[1]] : null;
 }
+const NUM_WORDS = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, fifteen: 15, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90, hundred: 100,
+  zwei: 2, drei: 3, vier: 4, "fünf": 5, sechs: 6, sieben: 7, acht: 8, neun: 9, zehn: 10, zwanzig: 20, "dreißig": 30, "fünfzig": 50, hundert: 100 };
 export function extractBudget(text) {
   const t = String(text || "");
   const m = t.match(/(?:under|below|less than|max(?:imum)?|budget(?: of)?|bis|unter|maximal|moins de|sotto|预算|以内|以下|不超过)\s*(?:chf|eur|€|fr\.?|usd|\$)?\s*(\d{1,5}(?:[.,]\d{1,2})?)/i)
