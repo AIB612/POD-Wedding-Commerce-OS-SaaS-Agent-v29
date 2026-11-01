@@ -263,7 +263,7 @@ function shade(x, color, light = 0.12) { // soft vertical light
   const assetUrl = src => (g.STUDIO_MOCKUP_ASSETS && g.STUDIO_MOCKUP_ASSETS[src]) || src;
   function img(src, onload) {
     let c = imgCache[src];
-    if (!c) { c = imgCache[src] = new Image(); c.onload = () => (c._cbs || []).forEach(f => f()); c._cbs = []; c.src = assetUrl(src); }
+    if (!c) { c = imgCache[src] = new Image(); c.onload = () => (c._cbs || []).forEach(f => f()); c.onerror = () => { c._err = true; (c._cbs || []).forEach(f => f()); }; c._cbs = []; c.src = assetUrl(src); }
     if (c.complete && c.naturalWidth) return c;
     if (onload && !c._cbs.includes(onload)) c._cbs.push(onload);
     return null;
@@ -277,6 +277,7 @@ function shade(x, color, light = 0.12) { // soft vertical light
       const colorSrc = `assets/mockups/${p.id}_${colorKey}.jpg`;
       const colorImg = img(colorSrc, onload);
       if (colorImg) baseSrc = colorSrc;
+      else if (!imgCache[colorSrc]._err) return null; // colour photo still loading: wait for it (no mask-recolour flash); recolour only if it does not exist
     }
     const base = img(baseSrc, onload); if (!base) return null;
     if (!needLayers) return { base, mask: null, shade: null, area: m.area, usedColorImg: baseSrc !== m.src };
