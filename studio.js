@@ -694,7 +694,7 @@ var TECH_TIPS = { DTG: "Direct-to-garment print", sublimation: "Dye sublimation"
     return `<div><div class="note">${t("material")} · ${t("materialHint")}</div><div class="mats">${m.map(x => { const d = x.delta_eur - base, fx = market().fx_from_eur;
       return `<button ${attr}="${pid}:${x.id}" class="${(current || m[0].id) === x.id ? "active" : ""}">${esc(nm(x.name))}${d ? `<small>${d > 0 ? "+" : "−"}${money(Math.abs(d) * fx)}</small>` : ""}</button>`; }).join("")}</div></div>`;
   }
-  const effMode = i => { const p = prod(i.product_id); if (i.placement?.mode) return i.placement.mode; return S.design?.source === "upload" ? "contain" : p.default_mode; };
+  const effMode = i => { const p = prod(i.product_id); if (i.placement?.mode) return i.placement.mode; return ["upload", "text"].includes(S.design?.source) ? "contain" : p.default_mode; }; // uploaded & text artwork is never cropped by default
   const effPl = i => ({ ...(i.placement || {}), mode: effMode(i) });
   function dpiInfo(i) {
     if (!S.design) return null;

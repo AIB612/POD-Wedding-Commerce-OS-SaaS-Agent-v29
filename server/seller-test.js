@@ -94,5 +94,31 @@ await test("HTTP: media upload -> public URL; publish needs connected + owned sh
     const fp = calls.find(c => c.query?.includes("priceListFixedPricesAdd")); assert.equal(fp.variables.prices[0].price.amount, "29.90");
   } finally { srv.close(); }
 });
+await test("every catalog product has back + side mockup views with the design placement (view_areas), files present", async () => {
+  const root = new URL("..", import.meta.url), cat = JSON.parse(fs.readFileSync(new URL("server/data/studio-catalog.json", root), "utf8"));
+  const inPhoto = ([x, y]) => x >= -1 && x <= 101 && y >= -1 && y <= 101;
+  for (const p of cat.products) {
+    const m = p.mockup_photo; if (!m?.views) continue;
+    for (const v of ["back", "side"]) {
+      const a = m.view_areas?.[v]; assert.ok(a, `${p.id} ${v}: no view_areas`);
+      if (a.quad) { assert.equal(a.quad.length, 4, `${p.id} ${v}`); assert.ok(a.quad.every(inPhoto), `${p.id} ${v} quad`); }
+      else if (a.synth) { assert.equal(a.synth.src.length, 4); assert.equal(a.synth.dst.length, 4); assert.ok([...a.synth.src, ...a.synth.dst].every(inPhoto), `${p.id} ${v} synth`); }
+      else assert.ok(a.plain && v === "back", `${p.id} ${v}: unknown view area`);
+      for (const f of [a.mask, a.synth?.mask, a.synth ? m.src : m.views[v]].filter(Boolean)) assert.ok(fs.existsSync(new URL(f, root)), `${p.id} ${v}: missing ${f}`);
+    }
+  }
+  // seller publish renders back / side with the design (not the blank catalog photo)
+  const js = fs.readFileSync(new URL("studio-seller.js", root), "utf8"), mk = fs.readFileSync(new URL("studio-mockups.js", root), "utf8");
+  assert.match(js, /renderView\(pid, v, base\)/); assert.match(mk, /StudioMockups = \{ render, renderView \}/);
+});
+await test("homepage / cart thumbnails exist for every catalog photo (no 404s in the Studio console)", async () => {
+  const root = new URL("..", import.meta.url), cat = JSON.parse(fs.readFileSync(new URL("server/data/studio-catalog.json", root), "utf8"));
+  for (const p of cat.products) { const s = p.mockup_photo?.src; if (!s) continue; const t = s.replace(/\/([^/]+)\.(jpe?g|png|webp)$/i, "/thumb/$1.webp");
+    assert.ok(fs.existsSync(new URL(t, root)), `${p.id}: missing ${t}`); }
+});
+await test("text designs default to fit (contain) so lettering is never cropped", async () => {
+  const js = fs.readFileSync(new URL("../studio.js", import.meta.url), "utf8");
+  assert.match(js, /\["upload", "text"\]\.includes\(S\.design\?\.source\) \? "contain" : p\.default_mode/);
+});
 console.log(`seller-test: ${pass} passed`);
 process.exit(0);

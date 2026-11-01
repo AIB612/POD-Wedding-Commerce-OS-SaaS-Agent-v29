@@ -359,8 +359,8 @@ function shade(x, color, light = 0.12) { // soft vertical light
     const x = cv.getContext("2d"); x.setTransform(px / 100, 0, 0, px / 100, 0, 0);
     const recolour = !!(pl.color && p.colors && pl.color.toLowerCase() !== p.colors[0].toLowerCase());
     const photo = photoFor(p, onPhotoLoad, !!design || recolour, pl.color);
-    if (p.mockup_photo?.src && !photo) { x.fillStyle = "#efe8df"; x.fillRect(0, 0, 100, 100); return; } // still loading: plain backdrop, no flash of the vector render
-    if (photo) { renderPhoto(x, px, p, pl, photo, showArea, clean); return; }
+    if (p.mockup_photo?.src && !photo) { x.fillStyle = "#efe8df"; x.fillRect(0, 0, 100, 100); return "loading"; } // still loading: plain backdrop, no flash of the vector render
+    if (photo) { renderPhoto(x, px, p, pl, photo, showArea, clean); return true; }
     // v24: one uniform product backdrop across the whole catalog; no artificial ground shadow.
     x.fillStyle = "#f3ece4"; x.fillRect(0, 0, 100, 100);
     const r = (SHAPES[p.shape] || SHAPES.card)(x, p, pl);
@@ -372,5 +372,99 @@ function shade(x, color, light = 0.12) { // soft vertical light
     r.after?.();
     if (!clean && (showArea || !DESIGN)) outline(x, r);
   }
-  g.StudioMockups = { render };
+  // ---- back / side views: the catalog's own back / side photos (mockup_photo.views) with the design applied.
+  // mockup_photo.view_areas[view] (scripts/build_view_areas.py, percent of the photo):
+  //   {quad:[TL,TR,BR,BL], wrap, mask}  design warped in perspective onto that quad (wrap = cylinder: mugs, bottles…)
+  //   {plain:true, mask}               the real back as photographed (no printable face: canvas frame, kraft backing…)
+  //   {synth:{src, dst, mask}}         edge-on photo (artwork would be invisible): the front mockup is shown tilted instead
+  function homography(s, d) { // 3×3 (row-major, h33 = 1) mapping 4 points s → d
+    const A = [], b = [];
+    for (let i = 0; i < 4; i++) { const [x, y] = s[i], [u, v] = d[i];
+      A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u); A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v); }
+    for (let c = 0; c < 8; c++) { // Gauss-Jordan with partial pivoting
+      let m = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[m][c])) m = r;
+      [A[c], A[m]] = [A[m], A[c]]; [b[c], b[m]] = [b[m], b[c]];
+      for (let r = 0; r < 8; r++) if (r !== c) { const f = A[r][c] / A[c][c]; for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; b[r] -= f * b[c]; }
+    }
+    const h = b.map((v, i) => v / A[i][i]); return [...h, 1];
+  }
+  const hmap = (h, x, y) => { const w = h[6] * x + h[7] * y + h[8]; return [(h[0] * x + h[1] * y + h[2]) / w, (h[3] * x + h[4] * y + h[5]) / w]; };
+  /** Draw image `src` (its quad sq, px) onto quad dq (px) of context x: perspective via a mesh of affine triangles. */
+  function warp(x, src, sq, dq, n = 14) {
+    const U = [[0, 0], [1, 0], [1, 1], [0, 1]], hs = homography(U, sq), hd = homography(U, dq);
+    const tri = (s0, s1, s2, d0, d1, d2) => {
+      const den = (s1[0] - s0[0]) * (s2[1] - s0[1]) - (s2[0] - s0[0]) * (s1[1] - s0[1]); if (Math.abs(den) < 1e-9) return;
+      const a = ((d1[0] - d0[0]) * (s2[1] - s0[1]) - (d2[0] - d0[0]) * (s1[1] - s0[1])) / den, c = ((d2[0] - d0[0]) * (s1[0] - s0[0]) - (d1[0] - d0[0]) * (s2[0] - s0[0])) / den;
+      const b2 = ((d1[1] - d0[1]) * (s2[1] - s0[1]) - (d2[1] - d0[1]) * (s1[1] - s0[1])) / den, d = ((d2[1] - d0[1]) * (s1[0] - s0[0]) - (d1[1] - d0[1]) * (s2[0] - s0[0])) / den;
+      const e = d0[0] - a * s0[0] - c * s0[1], f = d0[1] - b2 * s0[0] - d * s0[1];
+      const cx = (d0[0] + d1[0] + d2[0]) / 3, cy = (d0[1] + d1[1] + d2[1]) / 3, grow = p => { const dx = p[0] - cx, dy = p[1] - cy, l = Math.hypot(dx, dy) || 1; return [p[0] + dx / l * 0.7, p[1] + dy / l * 0.7]; }; // hide seams
+      const [g0, g1, g2] = [d0, d1, d2].map(grow);
+      x.save(); x.beginPath(); x.moveTo(g0[0], g0[1]); x.lineTo(g1[0], g1[1]); x.lineTo(g2[0], g2[1]); x.closePath(); x.clip();
+      x.setTransform(a, b2, c, d, e, f); x.drawImage(src, 0, 0); x.restore();
+    };
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      const u0 = i / n, u1 = (i + 1) / n, v0 = j / n, v1 = (j + 1) / n;
+      const S = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]].map(([u, v]) => hmap(hs, u, v)), D = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]].map(([u, v]) => hmap(hd, u, v));
+      tri(S[0], S[1], S[2], D[0], D[1], D[2]); tri(S[0], S[2], S[3], D[0], D[2], D[3]);
+    }
+  }
+  /** The design as it is printed: a canvas with the print-area aspect (front mockup_photo.area), same mode / scale / offset. */
+  function printLayer(p, pl, wrap) {
+    const [, , aw, ah] = p.mockup_photo.area, W = 1200, H = Math.max(8, Math.round(W * ah / aw));
+    const c = document.createElement("canvas"); c.width = W; c.height = H; drawDesign(c.getContext("2d"), { x: 0, y: 0, w: W, h: H }, pl);
+    if (!wrap) return c;
+    // cylinder: centre slightly magnified, sides compressed (as seen on a mug / bottle)
+    const o = document.createElement("canvas"); o.width = W; o.height = H; const ox = o.getContext("2d"), T = 1.05, N = 96;
+    for (let k = 0; k < N; k++) {
+      const x0 = k / N * 2 - 1, x1 = (k + 1) / N * 2 - 1, u0 = (Math.asin(x0 * Math.sin(T)) / T + 1) / 2, u1 = (Math.asin(x1 * Math.sin(T)) / T + 1) / 2;
+      ox.drawImage(c, u0 * W, 0, Math.max(1, (u1 - u0) * W), H, (x0 + 1) / 2 * W, 0, W / N + 0.6, H);
+    }
+    return o;
+  }
+  const px4 = (q, px) => q.map(([a, b]) => [a * px / 100, b * px / 100]);
+  function tintTo(x, px, mask, color) { // recolour the product (not the backdrop) like the front mockup does
+    const [c, cx] = layer(px); cx.fillStyle = color; cx.fillRect(0, 0, 100, 100); cx.globalCompositeOperation = "destination-in"; cx.drawImage(mask, 0, 0, 100, 100);
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = "multiply"; x.drawImage(c, 0, 0); x.restore();
+  }
+  /** renderView(canvas, product, placement, design, "back"|"side", {size, onPhotoLoad}) → true when drawn, false when it
+   *  has no such view, "loading" while images load (onPhotoLoad fires when they are ready). */
+  function renderView(cv, p, pl, design, view, { size, onPhotoLoad } = {}) {
+    const m = p.mockup_photo || {}, va = m.view_areas?.[view], src = m.views?.[view];
+    if (!va || (!va.synth && (!src || src === m.src))) return false;
+    DESIGN = design || null;
+    const px = size || Math.round((cv.clientWidth || 240) * Math.min(2, g.devicePixelRatio || 1)); cv.width = cv.height = px;
+    const x = cv.getContext("2d"); x.setTransform(px / 100, 0, 0, px / 100, 0, 0);
+    const recolour = !!(pl.color && p.colors && pl.color.toLowerCase() !== p.colors[0].toLowerCase());
+    if (va.synth) {
+      const s = va.synth, mk = s.mask ? img(s.mask, onPhotoLoad) : true, base = img(m.src, onPhotoLoad);
+      const fc = document.createElement("canvas"), fr = render(fc, p, pl, design, { size: px, clean: true, onPhotoLoad });
+      if (!mk || !base || fr === "loading") { x.fillStyle = "#efe8df"; x.fillRect(0, 0, 100, 100); return "loading"; }
+      // backdrop: the front photo's own (beige) background colours, as a soft vertical gradient
+      let top = "#f3ebe1", bot = "#eadfd1";
+      try { const [, sx] = layer(8); sx.drawImage(base, 0, 0, 100, 100); const d = sx.getImageData(0, 0, 8, 8).data, at = k => `rgb(${d[k * 4]},${d[k * 4 + 1]},${d[k * 4 + 2]})`; top = at(0); bot = at(56); } catch { /* tainted canvas: keep defaults */ }
+      const gr = x.createLinearGradient(0, 0, 0, 100); gr.addColorStop(0, top); gr.addColorStop(1, bot); x.fillStyle = gr; x.fillRect(0, 0, 100, 100);
+      const D = px4(s.dst, px), [cut, cutx] = layer(px);
+      cutx.setTransform(1, 0, 0, 1, 0, 0); cutx.drawImage(fc, 0, 0);
+      if (s.mask) { cutx.globalCompositeOperation = "destination-in"; cutx.drawImage(mk, 0, 0, px, px); }
+      const [w, wx] = layer(px); wx.setTransform(1, 0, 0, 1, 0, 0); warp(wx, cut, px4(s.src, px), D);
+      x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.shadowColor = "rgba(60,40,20,.28)"; x.shadowBlur = px * 0.025; x.shadowOffsetX = px * 0.012; x.shadowOffsetY = px * 0.018; x.drawImage(w, 0, 0); x.restore();
+      return true;
+    }
+    const photo = img(src, onPhotoLoad), mk = va.mask ? img(va.mask, onPhotoLoad) : true;
+    if (!photo || !mk) { x.fillStyle = "#efe8df"; x.fillRect(0, 0, 100, 100); return "loading"; }
+    x.drawImage(photo, 0, 0, 100, 100);
+    if (recolour && va.mask) tintTo(x, px, mk, pl.color);
+    if (DESIGN && va.quad) {
+      const pr = printLayer(p, pl, va.wrap), [d, dx] = layer(px); dx.setTransform(1, 0, 0, 1, 0, 0);
+      warp(dx, pr, [[0, 0], [pr.width, 0], [pr.width, pr.height], [0, pr.height]], px4(va.quad, px));
+      if (va.mask) { dx.globalCompositeOperation = "destination-in"; dx.drawImage(mk, 0, 0, px, px); }
+      // shading: multiply by the (un-tinted) photo so the print follows the folds, curvature and light of the product
+      const [o, ox] = layer(px); ox.setTransform(1, 0, 0, 1, 0, 0); ox.drawImage(d, 0, 0);
+      ox.globalCompositeOperation = "multiply"; ox.globalAlpha = 0.9; ox.drawImage(photo, 0, 0, px, px); ox.globalAlpha = 1;
+      ox.globalCompositeOperation = "destination-in"; ox.drawImage(d, 0, 0);
+      x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 0.97; x.drawImage(o, 0, 0); x.restore();
+    }
+    return true;
+  }
+  g.StudioMockups = { render, renderView };
 })(typeof window !== "undefined" ? window : globalThis);

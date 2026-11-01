@@ -19,6 +19,7 @@
     "test:studio": "node server/studio-test.js",
     "mockups:generate": "python3 scripts/generate_mockups.py > /dev/null && node server/build-studio-data.js",
     "mockups:import": "python3 scripts/import_mockup.py",
+    "mockups:views": "python3 scripts/build_view_areas.py && node server/build-studio-data.js",
     "scenes:build": "python3 scripts/build_scenes.py && node server/build-studio-data.js",
     "test:v29": "node server/v29-flow-test.js",
     "test:rsvp": "node server/rsvp-test.js",

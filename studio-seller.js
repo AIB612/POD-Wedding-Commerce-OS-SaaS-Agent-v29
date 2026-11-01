@@ -70,22 +70,20 @@
     return new Promise(res => {
       const cv = document.createElement("canvas"), it = st.items.find(i => i.product_id === pid) || { placement: {} }, pl = { ...A.effPl(it), ...(color ? { color } : {}) };
       let done = false; const fin = () => { if (done) return; done = true; let u = ""; try { u = cv.toDataURL("image/png"); } catch { u = ""; } res(u); };
-      const p = A.prod(pid), go = () => A.M.render(cv, p, pl, A.S.design, { size: IMG_PX, clean: true, onPhotoLoad: () => { A.M.render(cv, p, pl, A.S.design, { size: IMG_PX, clean: true }); setTimeout(fin, 30); } });
-      go(); if (!p.mockup_photo?.src) setTimeout(fin, 30); setTimeout(fin, 4000);
+      // finish only once the photo and all its layers (mask, shade) are drawn — not on the first image load
+      const p = A.prod(pid), go = () => { if (done) return; const r = A.M.render(cv, p, pl, A.S.design, { size: IMG_PX, clean: true, onPhotoLoad: () => setTimeout(go, 0) }); if (r !== "loading") setTimeout(fin, 30); };
+      go(); setTimeout(fin, 8000);
     });
   }
-  /** Back / side product photo (mockup_photo.views) as a square PNG; "" when the product has no such view. */
-  function viewPhoto(p, view) {
-    const src = p.mockup_photo?.views?.[view];
-    if (!src || src === p.mockup_photo?.src) return Promise.resolve("");
+  /** Back / side view: the product's own back / side catalog photo with the design applied (StudioMockups.renderView,
+   *  perspective-warped onto the visible print area). "" when the product has no such view. */
+  function renderView(pid, view, color) {
     return new Promise(res => {
-      const im = new Image(); let done = false; const fin = u => { if (!done) { done = true; res(u); } };
-      im.onload = () => { const cv = document.createElement("canvas"); cv.width = cv.height = IMG_PX; const x = cv.getContext("2d");
-        x.fillStyle = "#efe8df"; x.fillRect(0, 0, IMG_PX, IMG_PX); const f = Math.max(IMG_PX / im.naturalWidth, IMG_PX / im.naturalHeight);
-        x.drawImage(im, (IMG_PX - im.naturalWidth * f) / 2, (IMG_PX - im.naturalHeight * f) / 2, im.naturalWidth * f, im.naturalHeight * f);
-        try { fin(cv.toDataURL("image/png")); } catch { fin(""); } };
-      im.onerror = () => fin(""); setTimeout(() => fin(""), 8000);
-      im.src = window.STUDIO_MOCKUP_ASSETS?.[src] || src;
+      const p = A.prod(pid); if (!A.M.renderView) return res("");
+      const cv = document.createElement("canvas"), it = st.items.find(i => i.product_id === pid) || { placement: {} }, pl = { ...A.effPl(it), ...(color ? { color } : {}) };
+      let done = false; const fin = ok => { if (done) return; done = true; let u = ""; if (ok) { try { u = cv.toDataURL("image/png"); } catch { u = ""; } } res(u); };
+      const go = () => { if (done) return; const r = A.M.renderView(cv, p, pl, A.S.design, view, { size: IMG_PX, onPhotoLoad: () => setTimeout(go, 0) }); if (r === true) setTimeout(() => fin(true), 30); else if (r === false) fin(false); };
+      go(); setTimeout(() => fin(false), 8000);
     });
   }
   function designOnly() {
@@ -99,9 +97,9 @@
     const pr = st.products[pid], p = A.prod(pid), it = st.items.find(i => i.product_id === pid) || { placement: {} };
     pr.images = []; pr.uploaded = []; draw(); msg("Rendering mockups…");
     const base = it.placement?.color || p.colors?.[0] || null;
-    // Front (with the design), then the catalog back / side product photos, then other colours, then the artwork.
+    // Front (with the design), then the back / side views (catalog photos with the design applied), then other colours, then the artwork.
     const front = await renderOne(pid, base); if (front) pr.images.push({ data: front, label: `Front${base ? ` · ${base}` : ""}`, on: true });
-    for (const v of ["back", "side"]) { const u = await viewPhoto(p, v); if (u) pr.images.push({ data: u, label: v[0].toUpperCase() + v.slice(1), on: true }); }
+    for (const v of ["back", "side"]) { const u = await renderView(pid, v, base); if (u) pr.images.push({ data: u, label: v[0].toUpperCase() + v.slice(1), on: true }); }
     const colors = (p.colors || []).filter(c => c.toLowerCase() !== String(base || "").toLowerCase()).slice(0, 2);
     for (const c of colors) { const u = await renderOne(pid, c); if (u) pr.images.push({ data: u, label: `Front · ${c}`, on: true }); }
     const d = designOnly(); if (d) pr.images.push({ data: d, label: "Artwork", on: true });
