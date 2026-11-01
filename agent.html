@@ -140,6 +140,10 @@ a{color:var(--gold2)}
 @media(max-width:700px){.w{padding:0 16px}.hero{padding-top:28px;gap:28px}.hero .sub{font-size:16px}.btn{padding:14px 20px;flex:1 1 auto}.dev{height:400px}.laptop{width:100%;top:0}.scr{height:240px}.lid{padding:8px 8px 10px;border-radius:14px 14px 5px 5px}.chatx{font-size:11px;padding:10px;gap:6px}.phone{width:160px;right:-4px}.phone .scr{height:290px}.phone .chatx{font-size:10px;padding-top:22px}
  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat:before{display:none}.stat{padding:16px}.stat:last-child{grid-column:1/-1}.stat b{font-size:24px}.sec{padding-top:72px}.sec .lede{font-size:15.5px}.flow{padding:14px}.flow .h{display:none}.flow .v{display:block;max-width:360px;margin:0 auto}.fg{grid-template-columns:1fr 1fr;gap:10px}.fc{padding:16px 14px}.fc p{font-size:12.5px}
  .tabs{border-radius:20px;width:100%}.tabs button{flex:1 1 40%;justify-content:center;padding:10px}.panel{padding:18px}.code{font-size:11px;padding:44px 14px 14px}.band{padding:40px 20px;border-radius:24px;margin-top:72px}.arch{padding:16px}.faq details{padding:0 16px}}
+/* Hero fixes: headline words stay together; the laptop chat keeps clear of the phone that overlaps its right edge. */
+.hero h1{word-break:keep-all;overflow-wrap:normal;text-wrap:balance}.nw{display:inline-block;white-space:nowrap}
+.dev{container-type:inline-size}.laptop .chatx{padding-right:max(14px,calc(214px - 8cqw))}.laptop .qc{width:auto;align-self:stretch;max-width:320px}
+@media(max-width:700px){.laptop .chatx{padding-right:146px}.phone{width:148px}.phone .scr{height:276px}}
 </style><link rel="stylesheet" href="mobile.css"><script async src="https://www.googletagmanager.com/gtag/js?id=G-GED5TST3DP"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-GED5TST3DP");</script>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -171,7 +175,7 @@ a{color:var(--gold2)}
 <section class="hero">
  <div class="rv">
   <span class="pill glass"><i>✦</i><span data-t="eyebrow">Wed.AI POD Agent · local-first</span></span>
-  <h1 class="serif"><span data-t="h1a">Your shop's AI assistant.</span><br><span class="grad" data-t="h1b">Answers from real data.</span></h1>
+  <h1 class="serif"><span data-t="h1a">Your shop's <span class="nw">AI assistant.</span></span><br><span class="grad" data-t="h1b">Answers from <span class="nw">real data.</span></span></h1>
   <p class="sub" data-t="sub">Quotes, orders and product ideas — instantly, in your customer's language.</p>
   <div class="ctas">
    <a class="btn p" id="tryBtn" href="/?ask=1"><svg><use href="#i-spark"/></svg><span data-t="try">Try it now</span></a>
@@ -379,7 +383,7 @@ a{color:var(--gold2)}
 (function(){
  "use strict";
  var D={title:{en:"Wed.AI POD Agent — AI shop assistant on real shop data",zh:"Wed.AI POD Agent —— 基于真实店铺数据的 AI 客服"},
- eyebrow:{en:"Wed.AI POD Agent · local-first",zh:"Wed.AI POD Agent · 本地优先"},h1a:{en:"Your shop's AI assistant.",zh:"您店铺的 AI 客服，"},h1b:{en:"Answers from real data.",zh:"用真实数据作答。"},
+ eyebrow:{en:"Wed.AI POD Agent · local-first",zh:"Wed.AI POD Agent · 本地优先"},h1a:{en:"Your shop's <span class=\"nw\">AI assistant.</span>",zh:"<span class=\"nw\">您店铺的</span> <span class=\"nw\">AI 客服，</span>"},h1b:{en:"Answers from <span class=\"nw\">real data.</span>",zh:"<span class=\"nw\">用真实数据作答。</span>"},
  sub:{en:"Quotes, orders and product ideas — instantly, in your customer's language.",zh:"报价、订单、产品推荐——即时回答，用客户的语言。"},try:{en:"Try it now",zh:"立即试用"},int:{en:"Integrate",zh:"立即对接"},
  tk1:{en:"Quote = checkout price",zh:"报价 = 结账价"},tk2:{en:"Works without an AI key",zh:"无需 AI 密钥"},tk3:{en:"No floating bubble",zh:"无悬浮气泡"},askbtn:{en:"Ask Wed.AI",zh:"AI 助手"},
  d1u:{en:"Shipping to Switzerland for 10 invitations?",zh:"10 份邀请卡寄到瑞士运费多少？"},d1a:{en:"10 × Invitation to Switzerland — your options:",zh:"10 份邀请卡寄往瑞士，可选："},std:{en:"Standard",zh:"标准"},exp:{en:"Express",zh:"快递"},pers:{en:"Personalise &amp; order →",zh:"定制下单 →"},
