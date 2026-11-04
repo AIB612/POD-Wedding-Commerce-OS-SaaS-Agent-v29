@@ -134,6 +134,11 @@ try {
     r = await proxy(A, q, undefined, lg); assert.match(r.json.answer, head, `${q} → ${r.json.answer}`);
     const pc = r.json.ui.find(u => u.type === "products"); assert.ok(pc && pc.items[0].name === "Mountain Tee" && pc.items[0].image && pc.items[0].link && pc.items[0].unit_price === 19.5, q);
   }
+  for (const [q, lg, btn] of [["Show me some products", "en", "Talk to a person"], ["你们有什么商品", "zh", "转人工"], ["Zeig mir eure Produkte", "de", "Mit einem Menschen sprechen"]]) {
+    r = await proxy(A, q, undefined, lg);
+    assert.doesNotMatch(r.json.answer, /fully answer|完全解答|nicht ganz beantwortet|talk to a person"|转人工”/, `no trailing handoff sentence (${lg}): ${r.json.answer}`);
+    assert.equal(r.json.ui.filter(u => u.type === "chips" && u.items.includes(btn)).length, 1, `one handoff button (${lg})`);
+  }
   assert.ok(gql.some(g => g.v?.q === "status:active" && g.v.sort === "UPDATED_AT"));
   r = await proxy(B, "Show me some products"); assert.match(r.json.answer, /no products in the shop yet/);
   r = await proxy(B, "What is your return policy?");

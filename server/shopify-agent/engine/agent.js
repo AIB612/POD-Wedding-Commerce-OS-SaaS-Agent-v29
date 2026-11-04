@@ -160,7 +160,9 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
     if (!llm.available) {
       // No key: best rule-based answer + offer a person.
       const l = await local("no_llm_key");
-      if (!ctx.unanswered) { l.answer = `${l.answer}\n\n${L("offerHuman", lang)}`; ctx.ui.push(chips(lang, [lang === "zh" ? "转人工" : lang === "de" ? "Mit einem Menschen sprechen" : "Talk to a person"])); }
+      // Pod.AI: no trailing "I can pass it to our team" sentence — the handoff button is enough (Sherry, 2026-11-04)
+      const btn = lang === "zh" ? "转人工" : lang === "de" ? "Mit einem Menschen sprechen" : lang === "fr" ? "Parler à une personne" : "Talk to a person";
+      if (!ctx.unanswered && !ctx.ui.some(u => u.type === "chips" && u.items.includes(btn))) ctx.ui.push(chips(lang, [btn]));
       return finish(l.answer, { intent: merged.intent, mode: "rules", answered_by: "local", route: l.route });
     }
     try {
