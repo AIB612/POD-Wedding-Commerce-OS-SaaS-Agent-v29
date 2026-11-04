@@ -1079,7 +1079,7 @@ B.3 跳过（本版没有）
         后台标题、README、.env.example 注释同步。Wed.AI 网站品牌不变。
         影响条款：附录 D。
 
-    __HASH__ · 2026-11-04 · 查单物流轨迹：新增 server/tracking/index.js，
+    2bb6cdf · 2026-11-04 · 查单物流轨迹：新增 server/tracking/index.js，
         顺序为承运商接口（YunExpress / 4PX）→ 51Tracking v4（TRACKING51_API_KEY）
         → 查询链接，缓存 30 分钟，只读。Pod.AI 查单显示状态、最新节点、时间线；
         Wed.AI 站内 find_order / get_tracking 在没有已同步轨迹时同样调用。
