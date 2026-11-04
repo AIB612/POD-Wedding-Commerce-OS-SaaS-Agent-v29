@@ -7,7 +7,7 @@ const studioCatalog = () => ({ products: [] });
 
 const CJK = /[\u3400-\u9fff]/;
 const WORDS = {
-  de: /\b(ich|wir|sie|und|der|die|das|wie|viel|kostet|kosten|versand|nach|schweiz|bestellung|meine|meiner|lieferung|empfehlen|einladungen|stück|bitte|danke|hallo|grüezi|gibt|kann|könnt|möchte|für|mit|wo|ist)\b/gi,
+  de: /\b(ich|wir|sie|und|der|die|das|wie|viel|kostet|kosten|versand|nach|schweiz|bestellung|meine|meiner|lieferung|empfehlen|einladungen|stück|bitte|danke|hallo|grüezi|gibt|kann|könnt|möchte|für|mit|wo|ist|zeig|zeigen|zeigt|mir|eure|euer|ihre|produkte|artikel|habt|haben|sendung|paket)\b/gi,
   fr: /\b(je|nous|vous|est|combien|livraison|pour|commande|frais|suisse|bonjour|merci|mon|ma|mes|quels?|quelle|où|avec|cartes?|invitations?|montrez|produits|vos|votre|les|des|retour|colis|boutique|livrée?|suivi)\b/gi,
   it: /\b(io|voi|quanto|costa|spedizione|per|ordine|svizzera|ciao|grazie|mio|mia|dove|quali|con|inviti|mostrami|vostri|vostro|vostra|prodotti|negozio|della|sono|reso|pacco|buongiorno|vorrei|il|gli|consegna)\b/gi,
   en: /\b(i|we|you|the|and|how|much|cost|shipping|to|order|my|where|is|what|recommend|please|hello|hi|thanks|for|with|can|do|does|invitations?)\b/gi
@@ -125,7 +125,7 @@ export function extractBudget(text) {
 }
 
 // ---- Identifiers ----
-export const extractEmail = text => (String(text || "").match(/[^\s@<>()"',;:]{1,64}@[^\s@<>()"',;:]{1,255}\.[A-Za-z]{2,}/) || [null])[0]?.toLowerCase() || null;
+export const extractEmail = text => (String(text || "").match(/[A-Za-z0-9._%+'-]{1,64}@[A-Za-z0-9.-]{1,255}\.[A-Za-z]{2,}/) || [null])[0]?.toLowerCase() || null;
 export function extractOrderNumber(text) {
   const t = String(text || "");
   const pod = t.match(/\bPOD-\d{4}-[A-Z0-9]{3,12}\b/i);
