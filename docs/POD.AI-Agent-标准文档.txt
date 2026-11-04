@@ -1159,3 +1159,11 @@ B.3 跳过（本版没有）
         否则按单号规则（YT… → yunexpress，4PX… → 4px）；无法识别时不注册，直接显示物流链接。
         51Tracking API 为付费功能（注册后 7 天试用；免费版需友链申请，200 天）。仅改 server/shopify-agent/tracking.js。
 
+    7d9b387 · 2026-11-04 · Pod.AI 实测修正（dropkingdev E2E）：商品卡片只显示已发布到 Online Store 的商品
+        （onlineStoreUrl，无链接不显示卡片，加购仅限有货规格）；商品引导语改为自然说法（EN/中/德），
+        税费说明改为卡片下方小字；显示订单 / 物流卡片时气泡只给一句话，不再输出链接和单号；
+        转人工时已知邮箱显示“我们会回复到 t***@…”并可更换（handoff 卡片，顾客可更正邮箱）；
+        仪表盘“AI 未回答问题”排除之后已成功回答的问题并去重；组件卡片 / 按钮语言跟随每条回复的语言。
+        仅改 Pod.AI 文件（profile.js、dashboard.js、engine/agent.js、engine/store.js、admin.html、
+        extensions/podai-chat）。影响条款：附录 D。
+
