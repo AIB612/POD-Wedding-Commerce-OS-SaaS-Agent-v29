@@ -6,9 +6,11 @@
   try { conv = sessionStorage.getItem(KEY); } catch (e) {}
   var lg = String(d.lang || navigator.language || "en").toLowerCase(), LANG = ["zh", "de", "fr", "it"].filter(function (x) { return lg.indexOf(x) === 0; })[0] || "en";
   // EN built in; other languages from chat-i18n.js (loaded by the embed block before this file)
-  var TX = Object.assign({ en: { online: "Online · replies instantly", hi: "Hi! Ask me about products, shipping or your order.", open: "Open chat", close: "Close chat", send: "Send", view: "View", add: "Add to cart", track: "Track parcel", email: "Your e-mail", ok: "Send", err: "Sorry, the chat is not available right now.", chips: ["Show products", "Where is my order?", "Shipping costs"], by: "AI assistant · may make mistakes", items: "Items", reply: "We'll reply to {e}.", change: "Change e-mail", thanks: "Thanks — our team will reply by e-mail." } }, window.PodAIChatI18n || {});
+  var EN = { online: "Online · replies instantly", hi: "Hi! Ask me about products, shipping or your order.", open: "Open chat", close: "Close chat", send: "Send", view: "View", add: "Add to cart", track: "Track parcel", email: "Your e-mail", ok: "Send", err: "Sorry, the chat is not available right now.", chips: ["Show products", "Where is my order?", "Shipping costs"], by: "AI assistant · may make mistakes", items: "Items", reply: "We'll reply to {e}.", change: "Change e-mail", thanks: "Thanks — our team will reply by e-mail." };
+  // other languages from chat-i18n.js (deferred; looked up lazily)
+  function tx(l) { var X = window.PodAIChatI18n || {}; return l === "en" ? EN : X[l] || EN; }
 
-  var t = TX[LANG];
+  var t = tx(LANG);
   function el(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; }
   function svg(p) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>"; }
   function post(path, body) { return fetch(P + path, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify(body) }); }
@@ -38,7 +40,7 @@
   document.body.append(btn, win);
   fetch(P + "/config", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (c) {
     cfg = c || {}; if (cfg.enabled === false) { btn.remove(); win.remove(); return; }
-    if (cfg.widget && cfg.widget.language && cfg.widget.language !== "auto" && TX[cfg.widget.language]) { LANG = cfg.widget.language; t = TX[LANG]; sub.textContent = t.online; foot.textContent = t.by; }
+    if (cfg.widget && cfg.widget.language && cfg.widget.language !== "auto" && ["en", "zh", "de", "fr", "it"].indexOf(cfg.widget.language) >= 0) { LANG = cfg.widget.language; t = tx(LANG); sub.textContent = t.online; foot.textContent = t.by; }
     apply();
   }).catch(function () {});
 
@@ -98,7 +100,7 @@
       .then(function (r) { return r.json(); })
       .then(function (r) {
         ty.remove(); if (r.conversation_id) { conv = r.conversation_id; try { sessionStorage.setItem(KEY, conv); } catch (e) {} }
-        if (r.language && TX[r.language]) t = TX[r.language]; // cards + chips follow the language of this reply
+        if (r.language) t = tx(r.language); // cards + chips follow the language of this reply
         msg("pc-a", r.answer || t.err); live.textContent = r.answer || ""; render(r.ui);
         var hasHo = (r.ui || []).some(function (u) { return u.type === "handoff"; });
         if (r.handoff && !hasHo && !isEmail && /e-?mail|邮箱/i.test(r.answer || "")) emailForm();
@@ -109,7 +111,7 @@
   function toggle(on) {
     on = on == null ? !win.classList.contains("pc-on") : on;
     win.classList.toggle("pc-on", on); btn.setAttribute("aria-expanded", String(on)); btn.setAttribute("aria-label", on ? t.close : t.open);
-    if (on && !opened) { opened = true; ev("chat_open");
+    if (on && !opened) { t = tx(LANG); sub.textContent = t.online; foot.textContent = t.by; opened = true; ev("chat_open");
       var g = cfg.greeting && cfg.greeting[LANG]; msg("pc-a", d.greeting || g || t.hi); chips(t.chips); }
     if (on) setTimeout(function () { if (window.innerWidth > 520) ta.focus(); }, 250); else btn.focus();
     if (window.innerWidth <= 520) document.documentElement.style.overflow = on ? "hidden" : "";
