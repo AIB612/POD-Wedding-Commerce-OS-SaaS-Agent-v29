@@ -76,6 +76,7 @@ const CHIPS = {
   zh: ["10 份邀请卡寄到瑞士运费多少", "推荐婚礼伴手礼", "多久能送达？", "查询我的订单"],
   de: ["Versand in die Schweiz für 10 Einladungen", "Gastgeschenke empfehlen", "Wie lange dauert die Lieferung?", "Meine Bestellung verfolgen"]
 };
+const maskEmail = e => { const [u, d] = String(e || "").split("@"); return d ? `${u.slice(0, 1)}***@${d}` : null; };
 const chips = (lang, list) => ({ type: "chips", items: list || CHIPS[lang] || CHIPS.en });
 
 /** Deterministic responder: same tools, rule-based routing. Used without an LLM key and as fallback on LLM errors. */
@@ -123,6 +124,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
     await appendToHandoff(conv, { text, email: cls.email });
     if (cls.email) conv.slots.email = cls.email;
     ctx.handoff = "pending";
+    if (cls.email) ctx.ui.push({ type: "handoff", email: maskEmail(cls.email) });
     return finish(cls.email ? L("emailNoted", lang) : L("muted", lang), { intent: "muted", muted: true, answered_by: "local", route: { path: "local", reason: "with_team", confidence: 1 } });
   }
 
@@ -137,8 +139,9 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
       const hand = handoffCheck({ failedAnswersBeforeHandoff: settings.failed_answers_before_handoff, maxTokensPerConversation: settings.max_tokens_per_conversation }, m, { ...conv, failed_count: conv.failed_count - (m.unresolved_followup ? 1 : 0) }, text);
       if (!hand) return null;
       if (cls.email) conv.slots.email = cls.email;
-      const h = await createHandoff(tenantId, conv, { reason: hand.reason, summary: `Intent: ${m.intent}, emotion: ${m.emotion}.`, email: cls.email, order_number: cls.order_number });
+      const h = await createHandoff(tenantId, conv, { reason: hand.reason, summary: `Intent: ${m.intent}, emotion: ${m.emotion}.`, email: cls.email || conv.slots?.email || null, order_number: cls.order_number || conv.slots?.order_number || null });
       ctx.handoff = h.reason;
+      ctx.ui.push({ type: "handoff", email: maskEmail(h.customer_email) }); // widget: "We'll reply to t***@…" + change, or an e-mail field
       return finish(holdingMessage({ humanReplyHours: settings.human_reply_hours }, lang, { needEmail: !h.customer_email }), { intent: "handoff", answered_by: "local", route: { path: "local", reason: "handoff", confidence: 1 } });
     };
     const early = await handoffIf(merged); if (early) return early;

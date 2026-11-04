@@ -85,11 +85,17 @@ export async function dashboard(tenantId, shop, { days = 30 } = {}) {
     (c.messages || []).forEach((m, i, a) => { if (m.role !== "assistant") return; m.answered_by === "llm" ? llm++ : local++;
       if (m.unanswered && a[i - 1]?.role === "user") unanswered.push({ text: a[i - 1].text, at: a[i - 1].at, conversation_id: c.id }); });
   }
+  // drop questions that were answered later (e.g. after a policy / product fallback was added), dedupe by text
+  const norm = x => String(x || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  const answeredQs = new Set();
+  for (const c of convs) (c.messages || []).forEach((m, i, a) => { if (m.role === "assistant" && !m.unanswered && a[i - 1]?.role === "user" && Date.parse(m.at) > Date.parse(a[i - 1].at || 0) - 1) answeredQs.add(norm(a[i - 1].text)); });
+  const seenQ = new Set();
+  const unansweredOpen = unanswered.filter(u => { const k = norm(u.text); if (!k || answeredQs.has(k) || seenQ.has(k)) return false; seenQ.add(k); return true; });
   const open = handoffs.filter(h => h.status !== "resolved"), done = cur.handoffs.filter(h => h.resolved_at);
   const s = await getSettings(tenantId);
   return { days, generated_at: new Date().toISOString(), empty: cur.conversations === 0, primary,
     intents: Object.entries(intents).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([id, n]) => ({ id, n })),
-    unanswered: unanswered.slice(-20).reverse(),
+    unanswered: unansweredOpen.slice(-20).reverse(),
     sla: { open: open.length, oldest_wait_h: open.length ? Math.round((now - Math.min(...open.map(h => Date.parse(h.created_at)))) / 36e5 * 10) / 10 : null,
       avg_resolve_h: done.length ? Math.round(done.reduce((t, h) => t + (Date.parse(h.resolved_at) - Date.parse(h.created_at)), 0) / done.length / 36e5 * 10) / 10 : null, target_h: s.human_reply_hours },
     heatmap: heat, languages: langs, answer_paths: { local, llm } };

@@ -87,9 +87,11 @@ export async function searchShopProducts(shop, query, { browse = false } = {}) {
   // browse: newest active products first (Shopify's product query has no best-selling sort)
   const q = ts.length ? `(${ts.map(t => `title:*${t.replace(/[^\p{L}\p{N}-]/gu, "")}*`).join(" OR ")}) AND status:active` : "status:active";
   try {
-    const nodes = (await graphql(shop, PRODUCT_Q, { q, first: browse ? 6 : 4, sort: ts.length ? "RELEVANCE" : "UPDATED_AT", rev: !ts.length })).products?.nodes || [];
+    const all = (await graphql(shop, PRODUCT_Q, { q, first: browse ? 18 : 12, sort: ts.length ? "RELEVANCE" : "UPDATED_AT", rev: !ts.length })).products?.nodes || [];
+    // only products published to the Online Store (a storefront URL) — others would 404 from a chat card
+    const nodes = all.filter(p => p.onlineStoreUrl).slice(0, browse ? 6 : 4);
     return { ok: true, products: nodes.map(p => ({ id: p.id, name: p.title, image: p.featuredImage?.url || null, unit_price: Number(p.priceRangeV2?.minVariantPrice?.amount ?? NaN),
-      currency: p.priceRangeV2?.minVariantPrice?.currencyCode || null, max_price: Number(p.priceRangeV2?.maxVariantPrice?.amount ?? NaN), link: p.onlineStoreUrl || `/products/${p.handle}`,
+      currency: p.priceRangeV2?.minVariantPrice?.currencyCode || null, max_price: Number(p.priceRangeV2?.maxVariantPrice?.amount ?? NaN), link: p.onlineStoreUrl,
       type: p.productType || "", collections: (p.collections?.nodes || []).map(c => c.title),
       variants: (p.variants?.nodes || []).map(v => ({ title: v.title, price: Number(v.price), available: !!v.availableForSale })),
       variant_id: String((p.variants?.nodes || []).find(v => v.availableForSale)?.id || "").split("/").pop() || null,
@@ -151,7 +153,7 @@ const TX = {
   orderErr: { en: "Order lookup is not available right now. I can pass you to the team.", de: "Die Bestellabfrage ist gerade nicht verfügbar. Ich kann Sie an das Team weiterleiten.", fr: "La recherche de commande est indisponible. Je peux vous passer l'équipe.", zh: "暂时无法查询订单，我可以帮你转人工。" },
   shipCheckout: { en: "Exact shipping costs are calculated at checkout from your address.", de: "Die genauen Versandkosten werden im Checkout anhand Ihrer Adresse berechnet.", fr: "Les frais exacts sont calculés au paiement selon votre adresse.", zh: "具体运费会在结账时按收货地址计算。" },
   noPolicy: { en: "I don't have that policy yet. I can pass your question to the team.", de: "Dazu habe ich noch keine Angaben. Ich kann Ihre Frage an das Team weitergeben.", fr: "Je n'ai pas encore cette information. Je peux transmettre à l'équipe.", zh: "暂时没有这方面的说明，我可以帮你转给团队。" },
-  products: { en: "Here is what I found:", de: "Das habe ich gefunden:", fr: "Voici ce que j'ai trouvé :", zh: "为你找到这些商品：" },
+  products: { en: "Here's what I found.", de: "Das habe ich gefunden.", fr: "Voici ce que j'ai trouvé.", zh: "为你找到这些商品。" },
   noProducts: { en: "I couldn't find a matching product. Try another word, or browse the shop.", de: "Kein passendes Produkt gefunden. Versuchen Sie ein anderes Wort.", fr: "Aucun produit correspondant. Essayez un autre mot.", zh: "没有找到匹配的商品，换个关键词试试。" },
   unknown: { en: "I'm not sure about that one. Shall I pass it to the team?", de: "Da bin ich nicht sicher. Soll ich es an das Team weitergeben?", fr: "Je ne suis pas sûr. Voulez-vous que je transmette à l'équipe ?", zh: "这个问题我不确定，要帮你转人工吗？" },
   ship: { en: (z, l) => `Shipping to ${z}: ${l}.`, de: (z, l) => `Versand nach ${z}: ${l}.`, fr: (z, l) => `Livraison vers ${z} : ${l}.`, zh: (z, l) => `寄往 ${z}：${l}。` },
@@ -162,7 +164,7 @@ const TX = {
   askCode: { en: "Do you have a discount code? Send it and I'll check it.", de: "Haben Sie einen Rabattcode? Senden Sie ihn, ich prüfe ihn.", fr: "Vous avez un code ? Envoyez-le, je le vérifie.", zh: "有优惠码吗？发给我帮你查。" },
   taxIncl: { en: "Prices include tax.", de: "Preise inkl. Steuern.", fr: "Prix TTC.", zh: "价格含税。" },
   taxExcl: { en: "Taxes are added at checkout.", de: "Steuern werden im Checkout berechnet.", fr: "Taxes calculées au paiement.", zh: "税费在结账时计算。" },
-  browse: { en: "Here are some of our products:", de: "Hier sind einige unserer Produkte:", fr: "Voici quelques-uns de nos produits :", zh: "这是我们的部分商品：" },
+  browse: { en: "Here are a few picks from our shop.", de: "Hier ein paar Produkte aus unserem Shop.", fr: "Voici quelques produits de notre boutique.", zh: "为你挑了几件店里的商品。" },
   noCatalog: { en: "There are no products in the shop yet. I can pass your question to the team.", de: "Im Shop sind noch keine Produkte. Ich kann Ihre Frage an das Team weitergeben.", fr: "La boutique n'a pas encore de produits. Je peux transmettre à l'équipe.", zh: "店铺暂时还没有商品，我可以帮你转给团队。" },
   productErr: { en: "I can't load the products right now. I can pass your question to the team.", de: "Ich kann die Produkte gerade nicht laden. Ich kann Ihre Frage an das Team weitergeben.", fr: "Je ne peux pas charger les produits. Je peux transmettre à l'équipe.", zh: "暂时无法加载商品，我可以帮你转给团队。" },
   noPolicyFor: { en: n => `This shop hasn't published a ${n} yet.`, de: n => `Dieser Shop hat noch keine ${n} veröffentlicht.`, fr: n => `Cette boutique n'a pas encore publié de ${n}.`, zh: n => `本店暂未发布${n}。` },
@@ -174,6 +176,19 @@ const TX = {
 };
 const t = (k, lang) => TX[k][lang] ?? TX[k].en;
 const cut = (s, n = 700) => s.length > n ? `${s.slice(0, n).replace(/\s+\S*$/, "")} …` : s;
+
+// tax hint as a small footnote on the product card instead of in the bubble
+function taxNote(ctx, f, lang) { const c = [...ctx.ui].reverse().find(u => u.type === "products"); if (c) c.note = t(f.taxes_included ? "taxIncl" : "taxExcl", lang); }
+
+/** Short bubble when the order / tracking cards carry the details. */
+function orderShort(o, lang) {
+  const st = o.cancelled ? "cancelled" : String(o.fulfillment || "").toLowerCase().replace(/_/g, " ");
+  const tr = o.tracking.find(x => x.number), car = tr?.company && !/^other$/i.test(tr.company) ? tr.company : "";
+  if (tr?.status === "delivered") return lang === "zh" ? `订单 ${o.name} 已签收，详情见下方。` : lang === "de" ? `Bestellung ${o.name} wurde zugestellt – Details unten.` : `Order ${o.name} has been delivered — details below.`;
+  if (lang === "zh") return tr ? `订单 ${o.name} 已发货${car ? `（${car}）` : ""}，物流详情见下方。` : `订单 ${o.name}：${st}，暂无物流单号。`;
+  if (lang === "de") return tr ? `Bestellung ${o.name} ist unterwegs${car ? ` mit ${car}` : ""} – Details unten.` : `Bestellung ${o.name}: ${st}. Noch keine Sendungsnummer.`;
+  return tr ? `Order ${o.name} is on its way${car ? ` with ${car}` : ""} — details below.` : `Order ${o.name}: ${st}. No tracking number yet.`;
+}
 
 function orderText(o, lang) {
   const items = o.items.map(i => `${i.quantity}× ${i.title}`).join(", ");
@@ -264,7 +279,7 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
           if (!email) { conv.slots.pending = "order"; return t("askEmail", lang); }
           const r = await tools.execute("find_order", { order_number: n, email });
           conv.slots.pending = null;
-          if (r.ok) return orderText(r.order, lang);
+          if (r.ok) return orderShort(r.order, lang); // details are in the order + tracking cards
           if (r.error !== "not_found") { conv.slots.order_number = null; }
           else { conv.slots.order_number = null; conv.slots.email = null; }
           ctx.ui.push(human);
@@ -295,12 +310,12 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
         }
         case "browse": {
           const r = await tools.execute("search_products", { query: text, browse: true });
-          if (r.ok && r.products.length) return `${t("browse", lang)} ${t(f.taxes_included ? "taxIncl" : "taxExcl", lang)}`;
+          if (r.ok && r.products.length) return (taxNote(ctx, f, lang), t("browse", lang));
           ctx.ui.push(human); return t(r.ok ? "noCatalog" : "productErr", lang);
         }
         case "price": case "product_question": case "recommendation": {
           const r = await tools.execute("search_products", { query: text });
-          if (r.ok && r.products.length) return `${t("products", lang)} ${t(f.taxes_included ? "taxIncl" : "taxExcl", lang)}`;
+          if (r.ok && r.products.length) return (taxNote(ctx, f, lang), t("products", lang));
           const kb = rankKnowledge(f, settings.custom_faq, text, lang, 1)[0];
           if (kb) return cut(kb.answer);
           return t("noProducts", lang);
@@ -325,7 +340,7 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
       }
       // nothing matched: maybe the customer named a product of this shop (the engine has no catalog of its own)
       const pr = await tools.execute("search_products", { query: text });
-      if (pr.ok && pr.products.length) return `${t("products", lang)} ${t(f.taxes_included ? "taxIncl" : "taxExcl", lang)}`;
+      if (pr.ok && pr.products.length) return (taxNote(ctx, f, lang), t("products", lang));
       ctx.unanswered = true; ctx.ui.push(human); return t("unknown", lang);
     }
   };

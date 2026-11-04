@@ -27,7 +27,7 @@ const SHOPS = {
     { type: "SHIPPING_POLICY", title: "Shipping policy", body: "<p>We ship within 2 business days from Zurich.</p>", url: "https://shop-a.example/policies/shipping-policy" }],
     orders: { "1001": { name: "#1001", createdAt: "2026-10-01T10:00:00Z", email: "Buyer@Example.com", cancelledAt: null, displayFinancialStatus: "PAID", displayFulfillmentStatus: "FULFILLED",
       totalPriceSet: { shopMoney: { amount: "39.0", currencyCode: "CHF" } }, lineItems: { nodes: [{ title: "Mountain Tee", quantity: 2 }] }, fulfillments: [{ status: "SUCCESS", trackingInfo: [{ company: "Swiss Post", number: "99.00.123456.78901234", url: "https://post.ch/t" }] }] } },
-    products: [{ id: "gid://shopify/Product/1", title: "Mountain Tee", handle: "mountain-tee", onlineStoreUrl: null, status: "ACTIVE", productType: "T-Shirt", featuredImage: { url: "https://cdn.example/tee.jpg" }, priceRangeV2: { minVariantPrice: { amount: "19.5", currencyCode: "CHF" }, maxVariantPrice: { amount: "24.0", currencyCode: "CHF" } }, collections: { nodes: [{ title: "Summer" }] }, variants: { nodes: [{ title: "S", price: "19.50", availableForSale: true }, { title: "XL", price: "24.00", availableForSale: false }] }, metafields: { nodes: [{ namespace: "custom", key: "material", value: "Organic cotton", type: "single_line_text_field" }] } }] },
+    products: [{ id: "gid://shopify/Product/1", title: "Mountain Tee", handle: "mountain-tee", onlineStoreUrl: "https://a.example/products/mountain-tee", status: "ACTIVE", productType: "T-Shirt", featuredImage: { url: "https://cdn.example/tee.jpg" }, priceRangeV2: { minVariantPrice: { amount: "19.5", currencyCode: "CHF" }, maxVariantPrice: { amount: "24.0", currencyCode: "CHF" } }, collections: { nodes: [{ title: "Summer" }] }, variants: { nodes: [{ title: "S", price: "19.50", availableForSale: true }, { title: "XL", price: "24.00", availableForSale: false }] }, metafields: { nodes: [{ namespace: "custom", key: "material", value: "Organic cotton", type: "single_line_text_field" }] } }] },
   [B]: { name: "Bern Mugs", policies: [], orders: {}, products: [] }
 };
 globalThis.fetch = async (url, init = {}) => {
@@ -104,21 +104,25 @@ try {
   r = await proxy(A, "promo code OLD5"); assert.match(r.json.answer, /OLD5 isn't active/);
   r = await proxy(A, "do you have any discount?"); assert.match(r.json.answer, /Send it and I'll check/); assert.doesNotMatch(r.json.answer, /ALPS10/);
   r = await proxy(A, "Do you have a mountain tee?", conv); const cards = r.json.ui.find(u => u.type === "products");
-  assert.ok(cards && cards.items[0].name === "Mountain Tee" && cards.items[0].unit_price === 19.5 && cards.items[0].link === "/products/mountain-tee", JSON.stringify(r.json));
-  assert.match(r.json.answer, /Prices include tax/); const it = cards.items[0];
+  assert.ok(cards && cards.items[0].name === "Mountain Tee" && cards.items[0].unit_price === 19.5 && cards.items[0].link === "https://a.example/products/mountain-tee", JSON.stringify(r.json));
+  assert.doesNotMatch(r.json.answer, /tax/i); assert.equal(cards.note, "Prices include tax.", "tax hint as card footnote"); const it = cards.items[0];
   assert.deepEqual(it.variants, [{ title: "S", price: 19.5, available: true }, { title: "XL", price: 24, available: false }]); assert.deepEqual(it.collections, ["Summer"]);
   assert.deepEqual(it.details, [{ key: "material", value: "Organic cotton" }]); assert.equal(it.max_price, 24);
   r = await proxy(A, "Where is my order #1001?", conv); assert.match(r.json.answer, /e-mail/i);
   r = await proxy(A, "wrong@example.com", conv); assert.match(r.json.answer, /couldn't find/);
   r = await proxy(A, "Where is my order #1001? buyer@example.com", conv);
-  assert.match(r.json.answer, /#1001/); assert.match(r.json.answer, /Swiss Post 99\.00\.123456\.78901234/); assert.match(r.json.answer, /fulfilled/);
+  assert.match(r.json.answer, /#1001/); assert.match(r.json.answer, /Swiss Post/); assert.doesNotMatch(r.json.answer, /https?:\/\/|99\.00\.123456/, "no raw URL / number in the bubble");
+  { const tc = r.json.ui.find(u => u.type === "tracking"); assert.equal(tc.number, "99.00.123456.78901234"); assert.match(tc.url, /post\.ch/); assert.ok(r.json.ui.some(u => u.type === "order")); }
   assert.doesNotMatch(JSON.stringify(r.json), /Buyer@Example\.com/, "order e-mail not echoed");
-  assert.match(r.json.answer, /https:\/\/post\.ch\/t/, "no tracking source configured → Shopify tracking link");
+  assert.equal(r.json.ui.find(u => u.type === "tracking").source, "link", "no tracking source configured → Shopify tracking link");
   // with 51Tracking configured: Swiss Post (not integrated) → 51Tracking status, latest event, timeline
   process.env.TRACKING51_API_KEY = "k51"; (await import("../tracking.js")).clearTrackingCache();
   r = await proxy(A, "Where is my order #1001? buyer@example.com", conv);
-  assert.match(r.json.answer, /Delivered \(2026-11-03 14:05, 8001 Zürich, Delivered\)/, r.json.answer);
+  assert.match(r.json.answer, /has been delivered/, r.json.answer);
   const tl = r.json.ui.find(u => u.type === "tracking"); assert.equal(tl.source, "51tracking"); assert.equal(tl.events.length, 2);
+  { const h = await proxy(A, "I want to talk to a real person please", conv); const hu = h.json.ui.find(u => u.type === "handoff");
+    assert.ok(h.json.handoff && hu && hu.email === "b***@example.com", "known e-mail → 'We'll reply to b***@…' " + JSON.stringify(h.json));
+    const c2 = await proxy(A, "new@example.org", conv); assert.equal(c2.json.ui.find(u => u.type === "handoff")?.email, "n***@example.org", "change e-mail"); }
   delete process.env.TRACKING51_API_KEY;
   // lockout after 5 failures
   for (let i = 0; i < 5; i++) await proxy(A, `order #1001 x${i}@example.com`);
@@ -130,7 +134,7 @@ try {
   result.storefront_chat = "pass";
 
   // 3b. Generic product browsing (EN / DE / ZH) lists the shop's products; no refund policy → fallback, not a dead end
-  for (const [q, head, lg] of [["Show me some products", /Here are some of our products/], ["What do you sell?", /Here are some/], ["Bestsellers?", /Here are some/], ["Zeig mir eure Produkte", /Hier sind einige/, "de"], ["你们有什么商品", /部分商品/, "zh"]]) {
+  for (const [q, head, lg] of [["Show me some products", /^Here are a few picks from our shop\.$/], ["What do you sell?", /a few picks/], ["Bestsellers?", /a few picks/], ["Zeig mir eure Produkte", /ein paar Produkte/, "de"], ["你们有什么商品", /几件店里的商品/, "zh"]]) {
     r = await proxy(A, q, undefined, lg); assert.match(r.json.answer, head, `${q} → ${r.json.answer}`);
     const pc = r.json.ui.find(u => u.type === "products"); assert.ok(pc && pc.items[0].name === "Mountain Tee" && pc.items[0].image && pc.items[0].link && pc.items[0].unit_price === 19.5, q);
   }
@@ -150,10 +154,10 @@ try {
   r = await proxy(B, "hello", conv); assert.notEqual(r.json.conversation_id, conv, "conversation of shop A not reused by B");
   assert.ok(gql.some(g => g.shop === B), "shop B queried with its own token (mock asserts token per shop)");
   const ovA = (await adm(A, "/overview")).json, ovB = (await adm(B, "/overview")).json, kv = (o, id) => o.kpis.find(k => k.id === id)?.value;
-  assert.ok(kv(ovA, "conversations") >= 2); assert.equal(kv(ovA, "open_handoffs"), 1); assert.ok(kv(ovA, "order_lookups") >= 2); assert.equal(kv(ovB, "open_handoffs"), 0);
+  assert.ok(kv(ovA, "conversations") >= 2); assert.equal(kv(ovA, "open_handoffs"), 2); assert.ok(kv(ovA, "order_lookups") >= 2); assert.equal(kv(ovB, "open_handoffs"), 0);
   assert.ok(!ovA.kpis.some(k => k.id === "quotes" || k.id === "discounts_issued"));
   assert.equal((await adm(B, "/handoffs")).json.length, 0);
-  const hoA = (await adm(A, "/handoffs")).json; assert.equal(hoA.length, 1);
+  const hoA = (await adm(A, "/handoffs")).json; assert.equal(hoA.length, 2);
   assert.equal((await adm(B, `/handoffs/${hoA[0].id}`, { method: "PATCH", body: { status: "resolved" } })).status, 404, "B cannot touch A's handoff");
   const leak = await call("/api/pod-agent/chat", { method: "POST", body: { message: "hi" }, headers: { "x-tenant-id": `shopagent_${A}` } });
   assert.equal(leak.status, 200);

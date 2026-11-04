@@ -6,9 +6,9 @@
   try { conv = sessionStorage.getItem(KEY); } catch (e) {}
   var lg = String(d.lang || navigator.language || "en").toLowerCase(), LANG = lg.indexOf("zh") === 0 ? "zh" : lg.indexOf("de") === 0 ? "de" : "en";
   var TX = {
-    en: { online: "Online · replies instantly", hi: "Hi! Ask me about products, shipping or your order.", open: "Open chat", close: "Close chat", send: "Send", view: "View", add: "Add to cart", track: "Track parcel", email: "Your e-mail", ok: "Send", err: "Sorry, the chat is not available right now.", chips: ["Show products", "Where is my order?", "Shipping costs"], by: "AI assistant · may make mistakes", items: "Items", thanks: "Thanks — our team will reply by e-mail." },
-    zh: { online: "在线 · 即时回复", hi: "你好！可以问我商品、运费或订单。", open: "打开聊天", close: "关闭聊天", send: "发送", view: "查看", add: "加入购物车", track: "查看物流", email: "您的邮箱", ok: "提交", err: "抱歉，聊天暂时不可用。", chips: ["看看商品", "我的订单到哪了？", "运费多少？"], by: "AI 助手 · 可能出错", items: "商品", thanks: "谢谢，我们的团队会通过邮件回复。" },
-    de: { online: "Online · antwortet sofort", hi: "Hallo! Fragen Sie mich zu Produkten, Versand oder Ihrer Bestellung.", open: "Chat öffnen", close: "Chat schließen", send: "Senden", view: "Ansehen", add: "In den Warenkorb", track: "Sendung verfolgen", email: "Ihre E-Mail", ok: "Senden", err: "Der Chat ist gerade nicht verfügbar.", chips: ["Produkte zeigen", "Wo ist meine Bestellung?", "Versandkosten"], by: "KI-Assistent · kann Fehler machen", items: "Artikel", thanks: "Danke – unser Team antwortet per E-Mail." }
+    en: { online: "Online · replies instantly", hi: "Hi! Ask me about products, shipping or your order.", open: "Open chat", close: "Close chat", send: "Send", view: "View", add: "Add to cart", track: "Track parcel", email: "Your e-mail", ok: "Send", err: "Sorry, the chat is not available right now.", chips: ["Show products", "Where is my order?", "Shipping costs"], by: "AI assistant · may make mistakes", items: "Items", reply: "We'll reply to {e}.", change: "Change e-mail", thanks: "Thanks — our team will reply by e-mail." },
+    zh: { online: "在线 · 即时回复", hi: "你好！可以问我商品、运费或订单。", open: "打开聊天", close: "关闭聊天", send: "发送", view: "查看", add: "加入购物车", track: "查看物流", email: "您的邮箱", ok: "提交", err: "抱歉，聊天暂时不可用。", chips: ["看看商品", "我的订单到哪了？", "运费多少？"], by: "AI 助手 · 可能出错", items: "商品", reply: "我们会回复到 {e}。", change: "更换邮箱", thanks: "谢谢，我们的团队会通过邮件回复。" },
+    de: { online: "Online · antwortet sofort", hi: "Hallo! Fragen Sie mich zu Produkten, Versand oder Ihrer Bestellung.", open: "Chat öffnen", close: "Chat schließen", send: "Senden", view: "Ansehen", add: "In den Warenkorb", track: "Sendung verfolgen", email: "Ihre E-Mail", ok: "Senden", err: "Der Chat ist gerade nicht verfügbar.", chips: ["Produkte zeigen", "Wo ist meine Bestellung?", "Versandkosten"], by: "KI-Assistent · kann Fehler machen", items: "Artikel", reply: "Wir antworten an {e}.", change: "E-Mail ändern", thanks: "Danke – unser Team antwortet per E-Mail." }
   };
   var t = TX[LANG];
   function el(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; }
@@ -55,6 +55,7 @@
       if (u.type === "products") {
         var w = el("div", "pc-car"); w.setAttribute("role", "list");
         u.items.forEach(function (p) {
+          if (!p.link) return; // not on the Online Store → no card
           var c = el("div", "pc-pc"); c.setAttribute("role", "listitem");
           var im = el("a", "pc-img"); im.href = link(p.link); im.tabIndex = -1; im.onclick = function () { ev("product_click", { product_id: p.id }); };
           if (p.image) { var i = el("img"); i.src = p.image + (p.image.indexOf("?") < 0 ? "?width=320" : ""); i.alt = p.name; i.loading = "lazy"; i.width = 156; i.height = 156; im.append(i); }
@@ -64,6 +65,12 @@
           b.append(bt); c.append(im, b); w.append(c);
         });
         log.append(w);
+        if (u.note) log.append(el("div", "pc-note", u.note));
+      }
+      if (u.type === "handoff") {
+        if (u.email) { var hr = el("div", "pc-hf pc-hr"), sp = el("span", null, t.reply.replace("{e}", u.email)), ch = el("button", "pc-sm", t.change); ch.type = "button"; ch.style.flex = "0 0 auto";
+          ch.onclick = function () { hr.remove(); emailForm(); }; hr.append(sp, ch); log.append(hr); }
+        else emailForm();
       }
       if (u.type === "order" && u.order) {
         var o = u.order, oc = el("div", "pc-oc"), r1 = el("div", "pc-r1"), f = String(o.cancelled ? "cancelled" : o.fulfillment || "").toLowerCase().replace(/_/g, " ");
@@ -93,8 +100,10 @@
       .then(function (r) { return r.json(); })
       .then(function (r) {
         ty.remove(); if (r.conversation_id) { conv = r.conversation_id; try { sessionStorage.setItem(KEY, conv); } catch (e) {} }
+        if (r.language && TX[r.language]) t = TX[r.language]; // cards + chips follow the language of this reply
         msg("pc-a", r.answer || t.err); live.textContent = r.answer || ""; render(r.ui);
-        if (r.handoff && !isEmail && /e-?mail|邮箱/i.test(r.answer || "")) emailForm();
+        var hasHo = (r.ui || []).some(function (u) { return u.type === "handoff"; });
+        if (r.handoff && !hasHo && !isEmail && /e-?mail|邮箱/i.test(r.answer || "")) emailForm();
       })
       .catch(function () { ty.remove(); msg("pc-a", t.err); })
       .then(function () { busy = false; send.disabled = false; });

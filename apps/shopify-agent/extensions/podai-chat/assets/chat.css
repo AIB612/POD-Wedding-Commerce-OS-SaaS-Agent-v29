@@ -40,6 +40,7 @@ box-shadow:0 30px 80px rgba(40,28,18,.28),0 0 0 1px rgba(45,36,30,.06);transform
 .pc-tl{list-style:none;margin:10px 0 4px;padding:0 0 0 16px;border-left:2px solid #eee4da}.pc-tl li{position:relative;margin:0 0 10px}.pc-tl li:before{content:"";position:absolute;left:-21px;top:4px;width:8px;height:8px;border-radius:50%;background:#d5c8bb;box-shadow:0 0 0 3px #fff}
 .pc-tl li:first-child:before{background:var(--g);box-shadow:0 0 0 3px #fff,0 0 0 5px rgba(184,134,91,.25)}.pc-tl b{display:block;font-weight:600;font-size:12.5px}
 .pc-oc a.pc-sm{display:inline-block;margin-top:6px}
+.pc-note{font-size:11.5px;color:var(--mut);margin:-2px 2px 0}.pc-hr{align-items:center;font-size:13px}.pc-hr span{flex:1;padding:0 6px}
 .pc-hf{display:flex;gap:6px;background:#fff;border:1px solid var(--ln);border-radius:16px;padding:8px;animation:pcin .3s}.pc-hf input{flex:1;min-width:0;border:0;outline:0;font:inherit;padding:4px 6px;background:none;color:var(--ink)}
 .pc-f{display:flex;gap:8px;align-items:flex-end;padding:10px 12px 12px;background:#faf7f3;border-top:1px solid var(--ln)}
 .pc-f textarea{flex:1;resize:none;border:1px solid rgba(45,36,30,.16);border-radius:20px;padding:10px 14px;font:inherit;font-size:14px;max-height:110px;outline:0;background:#fff;color:var(--ink);line-height:1.4;margin:0}

@@ -82,7 +82,7 @@ export async function appendToHandoff(conv, { text, email }) {
   const h = await findRecord("podai_handoffs", conv.handoff_id);
   if (!h) return null;
   const messages = [...(h.messages || []), { role: "user", text, at: now() }].slice(-30);
-  return updateRecord("podai_handoffs", h.id, { messages, ...(email && !h.customer_email ? { customer_email: email } : {}), updated_at: now() });
+  return updateRecord("podai_handoffs", h.id, { messages, ...(email ? { customer_email: email } : {}) /* the customer may correct the reply address */, updated_at: now() });
 }
 export async function listHandoffs(tenantId, { status } = {}) {
   return (await listForTenant("podai_handoffs", tenantId)).filter(h => !status || h.status === status).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
