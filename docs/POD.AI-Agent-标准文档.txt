@@ -1006,6 +1006,24 @@ B.3 跳过（本版没有）
       POD.AI 结账 CHF 6.34 / 13.15 不变）。
   D.6 需要 Partner 账号的步骤与上架清单：见 apps/shopify-agent/README.md。
 
+
+    D.x  界面 v2（2026-11-04，POD.AI 视觉体系：暖墨色 #241f1b / 金色 #b8865b、玻璃卡片、Inter + Georgia、胶囊按钮）
+        后台（嵌入 Shopify Admin，App Bridge）：概览 / 转人工 / 知识库 / 设置 / 试用；EN 默认 + 中文切换。
+        概览主指标（7/30/90 天，环比 + 迷你图）：对话数；AI 解决率（未转人工）；节省客服工时（解决数 × 4 分钟，
+        PODAI_MIN_SAVED_PER_CHAT 可调）；自助查单（WISMO）；聊天带来的销售额（订单访问 UTM utm_source=podai，
+        需受保护客户数据权限，否则显示商品卡片点击 / 点击率 / 加购，明确标注）；首次响应中位数。
+        次要：常见问题意图、AI 未回答问题（一键“加入知识库”）、转人工队列 SLA、高峰时段热力图（UTC）、
+        语言、规则 / LLM 占比。无数据时显示“示例数据”横幅。上线清单：应用嵌入（深链）、政策、订单数据权限、
+        物流追踪、LLM。设置：欢迎语（EN/中/德）、品牌色、按钮位置、标题、头像、语言、LLM 开关
+        （settings.llm_enabled=false → 仅规则 + 店铺数据）、团队回复时间。
+        店铺聊天组件（主题应用嵌入，无脚本注入，约 20 KB）：品牌色启动按钮、开合动画、店名 / 头像 / 在线状态、
+        气泡、输入中动画、快捷回复、商品卡片横向轮播（图 / 价 / 查看 / 加入购物车）、订单 + 物流时间线卡片、
+        转人工时内联邮箱表单、手机全屏、Esc 关闭、ARIA、减少动画偏好、仅 fixed 定位（无布局偏移）。
+        主题嵌入设置为空时使用后台设置（GET /apps/podai/config）。
+        新接口（仅 Pod.AI）：GET /shopify-agent/proxy/config、POST /shopify-agent/proxy/event（product_click /
+        add_to_cart / chat_open，存 podai_events，无个人数据，shop/redact 时删除）、GET /shopify-agent/api/dashboard、
+        GET /shopify-agent/api/checklist；/settings 增加 widget、llm_enabled。
+        物流卡片：Shopify 承运商为“Other”时显示按单号识别的承运商（如 YunExpress）。
 附录 C  修订记录
 ======================================================================
     修订规则：系统每次更新（代码、配置、后台、部署），必须在同一次提交或紧接
@@ -1131,4 +1149,9 @@ B.3 跳过（本版没有）
         不变：域名 wed.swisspro.site、路由、API 路径、环境变量名、数据键 / ID
         （如 WEDAI- 订单前缀、WedAIWidget、wedai-* 文件名 / 缓存键）、
         data/logistics-state.json 发件人名称。影响条款：全文品牌名称。
+
+    1266b87 · 2026-11-04 · Pod.AI 界面 v2：嵌入后台按 POD.AI 视觉体系重做（商家指标仪表盘、上线清单、
+        转人工索引表、知识库表格 + 弹窗编辑、设置表单 + 预览、试用聊天）；店铺聊天组件重做（品牌色、轮播、
+        物流时间线、内联邮箱表单、手机全屏、无障碍）；新增 proxy/config、proxy/event、api/dashboard、
+        api/checklist；LLM 开关；“Other”承运商显示识别结果。仅改 Pod.AI 文件。影响条款：附录 D（D.x）。
 
