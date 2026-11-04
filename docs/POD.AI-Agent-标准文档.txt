@@ -1155,3 +1155,7 @@ B.3 跳过（本版没有）
         物流时间线、内联邮箱表单、手机全屏、无障碍）；新增 proxy/config、proxy/event、api/dashboard、
         api/checklist；LLM 开关；“Other”承运商显示识别结果。仅改 Pod.AI 文件。影响条款：附录 D（D.x）。
 
+    1b385e6 · 2026-11-04 · Pod.AI 51Tracking：v4 无 /couriers/detect 接口，删除该调用；承运商简码按名称，
+        否则按单号规则（YT… → yunexpress，4PX… → 4px）；无法识别时不注册，直接显示物流链接。
+        51Tracking API 为付费功能（注册后 7 天试用；免费版需友链申请，200 天）。仅改 server/shopify-agent/tracking.js。
+
