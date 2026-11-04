@@ -19,9 +19,27 @@ Answers (local first, LLM only when a key is configured on the server):
 - policies (shipping / refund / contact …) from the shop's own Shopify policies + the merchant's FAQ (admin → Knowledge)
 - products from Admin API search (price, image, link)
 - order status + tracking: order number **and** order e-mail must match; 5 wrong tries → 15 min lock.
-  Tracking: our carrier APIs (YunExpress, 4PX) → 51Tracking v4 (`TRACKING51_API_KEY`) → Shopify tracking link; status, latest event and timeline in chat; cached 30 min; read-only
-- shipping cost: Shopify has no generic rate API outside checkout → shipping policy + "calculated at checkout"
+  Tracking: our carrier APIs (YunExpress sandbox, 4PX production; PODAI_YUNEXPRESS_MODE / PODAI_FOURPX_MODE) → 51Tracking v4 (`TRACKING51_API_KEY`) → Shopify tracking link; status, latest event and timeline in chat; cached 30 min; read-only
+- shipping cost: the shop's delivery-profile rates for the customer's country; calculated rates / no zones → policy + "calculated at checkout"
 - "talk to a person", anger, repeated failures → Handoffs queue in the embedded admin (no e-mail sent)
+
+## Data sources (all from the shop, Admin GraphQL, per-shop offline token)
+| Chat needs | Shopify data | Scope |
+|---|---|---|
+| Catalog | products, variants (title, price, availability), collections, metafields (text/number) | read_products |
+| Pricing | variant price, shop `currencyCode`, `taxesIncluded` | read_products |
+| Shipping | delivery profiles → zones → active method rates (+ conditions); calculated rates → "at checkout" | read_shipping |
+| Orders & tracking | order by name + e-mail check; `fulfillments.trackingInfo` → carrier API (YunExpress / 4PX) → 51Tracking → Shopify tracking URL | read_orders |
+| Promos | check one code the customer has (`codeDiscountNodes`, active?) — codes are never listed | read_discounts |
+| Returns / payment info | shop policies (refund, shipping, contact, terms) | read_legal_policies |
+| Merchant FAQ | Pod.AI admin → Knowledge | — |
+
+Nothing is read from the Wed.AI site (catalog, prices, fees, orders, promo codes, site agent). Pod.AI has its own engine copy
+(`server/shopify-agent/engine`, from the site agent) and its own collections (`podai_*`). Boundary is enforced by `test/audit.test.js`.
+Shared infrastructure used unchanged: `saas-store.js` (storage file), `utils/crypto.js` (token encryption), carrier API clients
+`logistics/{yunexpress,fourpx,http}.js` (tracking calls only). Site hook: one mount line in `server/create-app.js`.
+
+Tests: `node server/shopify-agent/test/app.test.js && node server/shopify-agent/test/tracking.test.js && node server/shopify-agent/test/audit.test.js`
 
 ## Steps that need the Partner account (Sherry)
 1. Dev Dashboard / Partner Dashboard (org DropkingAI) → **Create app** → "Pod.AI" (Create app manually).

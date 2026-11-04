@@ -1,12 +1,23 @@
-// Parcel tracking for the customer chat (Wed.AI POD Agent + Pod.AI Shopify app). Read-only: never creates carrier orders.
+// Parcel tracking for Pod.AI order lookup. Read-only: never creates carrier orders.
 // Order of sources (Sherry's rule):
 //   1. the logistics platform itself when it is one we integrate and its keys are set
 //      (YunExpress: YUNEXPRESS_APP_ID/SECRET, sandbox · 4PX: FOURPX_APP_KEY/SECRET; mode from admin → Carriers)
 //   2. otherwise, or when the platform returns nothing: 51Tracking v4 (TRACKING51_API_KEY) — register the number if needed, then fetch
 //   3. otherwise: the carrier's tracking link (e.g. the Shopify fulfillment tracking URL)
 // Results are cached (TRACKING_CACHE_MINUTES, default 30). Keys are read by name only and never logged or returned.
-import { CARRIERS, adapter, carrierStatus, getSettings as logisticsSettings } from "../logistics/index.js";
+// Pod.AI-only module. Uses the carrier API clients read-only (track); never the site's shipment/settings logic.
+import { createYunExpress, REQUIRED_ENV as YUN_ENV } from "../logistics/yunexpress.js";
+import { createFourPx, REQUIRED_ENV as FPX_ENV } from "../logistics/fourpx.js";
 import { httpJson } from "../logistics/http.js";
+
+// Mode per carrier (Sherry: YunExpress sandbox, 4PX production). Keys by name only.
+const CARRIERS = {
+  yunexpress: { name: "YunExpress", env: YUN_ENV, mode: () => process.env.PODAI_YUNEXPRESS_MODE || "sandbox", make: createYunExpress, track_url: n => `https://www.yuntrack.com/parcelTracking?id=${encodeURIComponent(n)}` },
+  fourpx: { name: "4PX", env: FPX_ENV, mode: () => process.env.PODAI_FOURPX_MODE || "production", make: createFourPx, track_url: n => `https://track.4px.com/#/result/0/${encodeURIComponent(n)}` }
+};
+const prodEnv = { yunexpress: ["YUNEXPRESS_PROD_APP_ID", "YUNEXPRESS_PROD_APP_SECRET"] };
+const envFor = id => CARRIERS[id].mode() === "production" && prodEnv[id] && prodEnv[id].every(v => process.env[v]) ? prodEnv[id] : CARRIERS[id].env;
+const carrierConfigured = id => envFor(id).every(v => !!process.env[v]);
 
 const API51 = "https://api.51tracking.com/v4";
 const ttl = () => Math.max(1, Number(process.env.TRACKING_CACHE_MINUTES || 30)) * 60_000;
@@ -38,20 +49,18 @@ export const statusText = (st, lang = "en") => (STATUS_TEXT[st] || STATUS_TEXT.u
 const norm = e => ({ time: String(e.time || ""), location: String(e.location || ""), text: String(e.text || "") });
 const sortEvents = evs => evs.map(norm).filter(e => e.text || e.time).sort((a, b) => String(b.time).localeCompare(String(a.time))).slice(0, 30);
 
-/** Configured sources (names only) — shown in admin. */
-export async function trackingSources(tenantId = process.env.DEFAULT_TENANT_ID || "tenant_demo") {
-  let carriers = [];
-  try { carriers = carrierStatus(await logisticsSettings(tenantId)).map(c => ({ id: c.id, name: c.name, enabled: c.enabled, mode: c.mode, configured: !!c.configured && c.enabled, env: c.required_env })); } catch { carriers = []; }
-  return { order: ["carrier_api", "51tracking", "tracking_link"], carriers, tracking51: { configured: !!process.env.TRACKING51_API_KEY, env: "TRACKING51_API_KEY" }, cache_minutes: ttl() / 60_000 };
+/** Configured sources (names only) — shown in the Pod.AI admin. */
+export async function trackingSources() {
+  return { order: ["carrier_api", "51tracking", "shopify_tracking_url"],
+    carriers: Object.entries(CARRIERS).map(([id, c]) => ({ id, name: c.name, mode: c.mode(), configured: carrierConfigured(id), env: envFor(id) })),
+    tracking51: { configured: !!process.env.TRACKING51_API_KEY, env: "TRACKING51_API_KEY" }, cache_minutes: ttl() / 60_000 };
 }
 
-async function viaCarrier(id, number, tenantId) {
-  const settings = await logisticsSettings(tenantId);
-  const st = carrierStatus(settings).find(c => c.id === id);
-  if (!st?.enabled || !st.configured) return null;
-  const t = await adapter(id, settings).track(number); // read-only tracking call
+async function viaCarrier(id, number) {
+  if (!carrierConfigured(id)) return null;
+  const t = await CARRIERS[id].make({ mode: CARRIERS[id].mode() }).track(number); // read-only tracking call
   const events = sortEvents(t.events || []);
-  if (!events.length && (!t.status || t.status === "info_received")) return null; // platform knows nothing yet → try 51Tracking
+  if (!events.length && (!t.status || t.status === "info_received")) return null; // platform knows nothing yet → 51Tracking
   return { source: id, status: t.status || (events.length ? "in_transit" : "info_received"), events };
 }
 
@@ -86,16 +95,16 @@ async function via51(number, company) {
 
 /**
  * Track one parcel. { number, company, url } come from the verified order (Shopify fulfillment / our shipment).
- * Returns { number, carrier, source: "yunexpress"|"fourpx"|"51tracking"|"link", status, status_text, last_event, events[], url, cached }.
+ * Returns { number, carrier, source: "yunexpress"|"fourpx"|"51tracking"|"link" (Shopify tracking URL), status, status_text, last_event, events[], url, cached }.
  */
-export async function trackParcel({ number, company = "", url = "", lang = "en", tenantId = process.env.DEFAULT_TENANT_ID || "tenant_demo" } = {}) {
+export async function trackParcel({ number, company = "", url = "", lang = "en" } = {}) {
   const n = String(number || "").trim().slice(0, 60);
   if (!n) return null;
   const key = `${n.toUpperCase()}|${String(company).toLowerCase()}`, hit = cache.get(key);
   let r = hit && Date.now() - hit.at < ttl() ? { ...hit.r, cached: true } : null;
   if (!r) {
     const ours = detectCarrier(company, n), errors = [];
-    if (ours) { try { r = await viaCarrier(ours, n, tenantId); } catch (e) { errors.push(`${ours}:${String(e.message).slice(0, 80)}`); } }
+    if (ours) { try { r = await viaCarrier(ours, n); } catch (e) { errors.push(`${ours}:${String(e.message).slice(0, 80)}`); } }
     if (!r || r.pending) { try { const t = await via51(n, company); if (t && (!r || t.events.length)) r = t; } catch (e) { errors.push(`51tracking:${String(e.message).slice(0, 80)}`); } }
     if (!r) r = { source: "link", status: "unknown", events: [] };
     if (errors.length) r.errors = errors;

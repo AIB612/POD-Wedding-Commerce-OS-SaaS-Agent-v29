@@ -15,7 +15,6 @@ import { findWhere, listForTenant } from "../../saas-store.js";
 import { LOGISTICS_STATUS, CARRIERS } from "../../logistics/index.js";
 import { searchKnowledge, knowledgeEntry, POLICY_TOPICS } from "./knowledge.js";
 import { createHandoff, discountsIssued, recordDiscount } from "./store.js";
-import { trackParcel, statusText } from "../../tracking/index.js";
 
 const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
 const catalog = () => studioCatalog();
@@ -121,11 +120,6 @@ export function createTools(ctx) {
       try {
         const o = await lookupOrder(no, em);
         conv.slots.verified_order = o.id;
-        // No synced events yet (or a carrier we don't integrate): live tracking via carrier API → 51Tracking (verified order only)
-        if (o.tracking?.number && !o.tracking.events?.length && !o.tracking.last_event) {
-          const t = await trackParcel({ number: o.tracking.number, company: o.tracking.carrier, url: o.tracking.url, lang, tenantId }).catch(() => null);
-          if (t && t.source !== "link") o.tracking = { ...o.tracking, status: t.status, status_label: { en: statusText(t.status, "en"), zh: statusText(t.status, "zh") }, last_event: t.last_event, events: t.events, url: o.tracking.url || t.url, source: t.source };
-        }
         ui.push({ type: "order", id: o.id, stage: o.stage, placed_at: o.placed_at, item_count: o.item_count, delivery_estimate: o.delivery_estimate,
           tracking: o.tracking ? { carrier: o.tracking.carrier, number: o.tracking.number, url: o.tracking.url, status: o.tracking.status_label?.[lang === "zh" ? "zh" : "en"] || o.tracking.status } : null });
         return { ok: true, order: o };
@@ -140,12 +134,8 @@ export function createTools(ctx) {
       const ship = (await listForTenant("carrier_shipments", tenantId)).find(s => [s.tracking_number, s.last_mile_number].some(x => String(x || "").toUpperCase() === n));
       const order = ship?.order_id ? await findWhere("orders", o => o.id === ship.order_id) : await findWhere("orders", o => o.tenant_id === tenantId && String(o.tracking_number || "").toUpperCase() === n);
       if (!ship && !order) return { ok: false, error: "tracking_not_found", hint: "Check the number, or look up the order with order number + e-mail." };
-      let st = ship?.status || order?.tracking_status || "", lab = LOGISTICS_STATUS[st];
-      let last = (ship?.events || [])[0] || order?.tracking_last_event || null;
-      if (!last) { // nothing synced yet → carrier API / 51Tracking (number belongs to one of our orders)
-        const t = await trackParcel({ number: n, company: order?.carrier || (ship ? CARRIERS[ship.carrier]?.name : ""), url: order?.tracking_url || "", lang, tenantId }).catch(() => null);
-        if (t && t.source !== "link") { st = t.status; lab = { en: statusText(t.status, "en"), zh: statusText(t.status, "zh") }; last = t.last_event; }
-      }
+      const st = ship?.status || order?.tracking_status || "", lab = LOGISTICS_STATUS[st];
+      const last = (ship?.events || [])[0] || order?.tracking_last_event || null;
       const res = { ok: true, tracking_number: n, carrier: order?.carrier || (ship ? CARRIERS[ship.carrier]?.name : "") || "", status: lab ? (lab[lang === "zh" ? "zh" : "en"]) : (st || "unknown"),
         last_event: last ? { time: last.time || "", text: last.text || "", location: last.location || "" } : null, url: order?.tracking_url || (ship && CARRIERS[ship.carrier]?.track_url ? CARRIERS[ship.carrier].track_url(n) : "") };
       ui.push({ type: "tracking", ...res });

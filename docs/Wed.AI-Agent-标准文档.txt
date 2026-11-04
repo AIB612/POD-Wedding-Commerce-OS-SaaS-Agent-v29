@@ -981,22 +981,29 @@ B.3 跳过（本版没有）
         知识库、设置、试聊、安装说明。
       · Webhook：/shopify-agent/webhooks —— app/uninstalled 与三个 GDPR 主题，
         HMAC 错误返回 401，其余返回 200。
-  D.3 数据隔离：每个店铺一个租户 shopagent_<店铺域名>，只来自已校验的
+  D.3 数据隔离：每个店铺一个租户（数据在 podai_* 集合） shopagent_<店铺域名>，只来自已校验的
       session token / App Proxy 签名 / webhook HMAC；店铺之间、与 Wed.AI 之间
       不共享会话、转人工、知识库；Wed.AI 内置 FAQ、商品、价格不会出现在店铺里。
-  D.4 回答来源：店铺自己的政策（运费 / 退货 / 联系方式）+ 商家知识库；
-      商品来自 Admin API 搜索；订单需订单号 + 下单邮箱一致（5 次失败锁 15 分钟）；
-      运费不能在结账外通用计算 → 回答运费政策 +“结账时按地址计算”。
-  D.4a 物流轨迹（Pod.AI 与 Wed.AI 站内查单共用 server/tracking/index.js）：
-      订单号 + 邮箱验证通过后，取发货单的运单号与承运商：
-      ① 我们对接的平台（YunExpress、4PX，密钥已配置时）直接查询；
-      ② 不是我们对接的承运商，或平台没有返回轨迹 → 51Tracking v4
-         （TRACKING51_API_KEY；单号未登记时先登记再查询）；
-      ③ 都不行 → 显示承运商 / Shopify 的查询链接。
-      聊天显示状态、最新节点和时间线；结果缓存 30 分钟（TRACKING_CACHE_MINUTES）。
-      只读：不创建承运商订单。后台设置页显示哪些来源已配置（只显示变量名）。
-  D.5 验证：npm run test:shopify-agent（签名、安装、店面聊天、隔离、后台、
-      webhook、Wed.AI 结账 CHF 6.34 / 13.15 不变）。
+  D.4 数据来源（全部来自该店铺，Admin GraphQL + 该店的离线令牌；不读 Wed.AI 网站任何数据）：
+      · 商品目录：products / variants / collections / metafields（read_products）
+      · 价格：variant price、店铺币种、taxesIncluded（read_products）
+      · 运费：delivery profiles → zones → rates；计算型运费或无区域 → 运费政策 +
+        “结账时计算”（read_shipping）
+      · 订单与物流：订单号 + 邮箱；fulfillments.trackingInfo → 承运商接口
+        （YunExpress sandbox / 4PX production）→ 51Tracking v4（TRACKING51_API_KEY，
+        未登记先登记）→ Shopify 查询链接；显示状态、最新节点、时间线；缓存 30 分钟；
+        只读，不创建承运商订单（read_orders）
+      · 优惠码：只校验客户给出的码是否有效，不列出任何码（read_discounts）
+      · 退货 / 付款说明：店铺政策 shopPolicies（read_legal_policies）
+      · 商家问答：Pod.AI 后台 → Knowledge（优先于自动答案）
+  D.4b 边界：Pod.AI 使用自己的引擎副本（server/shopify-agent/engine，由站内 Agent 复制）
+      和自己的数据集合（podai_*）；不修改、不调用站内 Agent（server/pod-agent）及其
+      后台、网站服务。仅共用：存储 saas-store.js、加密 utils/crypto.js、承运商查询客户端
+      logistics/{yunexpress,fourpx,http}.js（只调用查询）；站点唯一挂载点是 create-app.js
+      的一行。test/audit.test.js 检查边界。
+  D.5 验证：node server/shopify-agent/test/app.test.js、tracking.test.js、audit.test.js
+      （签名、安装、店面聊天、店铺数据、隔离、后台、webhook、物流、边界；
+      Wed.AI 结账 CHF 6.34 / 13.15 不变）。
   D.6 需要 Partner 账号的步骤与上架清单：见 apps/shopify-agent/README.md。
 
 附录 C  修订记录
@@ -1086,3 +1093,15 @@ B.3 跳过（本版没有）
         后台（Wed.AI Admin → AI 客服 → Settings、Pod.AI 设置页）显示已配置的来源。
         .env.example 新增 TRACKING51_API_KEY；新测试 test:tracking（已加入 test:all）。
         影响条款：9.4、附录 D（D.4a）。
+
+    __HASH__ · 2026-11-04 · Pod.AI 与网站完全分开（Sherry 规定：不改网站与站内 Agent）：
+        撤回 bb38b89 / 2bb6cdf 对站内文件的修改（server/pod-agent/customer/*、
+        server/auth.js、server/routes/admin.js、admin-sections.js、package.json）；
+        Pod.AI 改用自己的引擎副本 server/shopify-agent/engine 与 podai_* 集合；
+        物流模块移到 server/shopify-agent/tracking.js（只服务 Pod.AI）。
+        Pod.AI 数据全部来自店铺：新增运费（delivery profiles）、优惠码校验（只读）、
+        商品变体 / 系列 / metafields、含税标记；权限增加 read_shipping、read_discounts。
+        新增测试 test/app.test.js、tracking.test.js、audit.test.js。
+        2bb6cdf 中“Wed.AI 站内 find_order / get_tracking 同样调用”和站内后台显示来源
+        已撤回，网站行为与 954e976 相同。
+        影响条款：附录 D（D.4、D.4b、D.5）。

@@ -50,7 +50,6 @@ import { fxRates } from "../shopify/app.js";
 import { listPromos, createPromo, updatePromo, deletePromo } from "../services/promo-service.js";
 import { sendShippedEmail } from "../services/checkout-service.js";
 import { fulfillLocalOrder } from "../shopify/app.js";
-import { trackingSources } from "../tracking/index.js";
 import { agentOverview, agentConversations, agentHandoffs, patchHandoff, getSettings as getAgentSettings, putAgentSettings, listKnowledge, upsertKnowledge, deleteKnowledge, testKnowledge, dataCheck as agentDataCheck } from "../pod-agent/customer/admin.js";
 
 export function adminRouter({ root } = {}) {
@@ -128,7 +127,7 @@ export function adminRouter({ root } = {}) {
   r.get("/api/saas/agent/conversations", A, ah(async (req, res) => res.json({ conversations: await agentConversations(req.tenantId, { limit: Number(req.query.limit) || 50 }) })));
   r.get("/api/saas/agent/handoffs", A, ah(async (req, res) => res.json({ handoffs: await agentHandoffs(req.tenantId, { status: req.query.status || undefined }) })));
   r.put("/api/saas/agent/handoffs/:id", A, ah(async (req, res) => res.json(await patchHandoff(req.tenantId, req.params.id, req.body))));
-  r.get("/api/saas/agent/settings", A, ah(async (req, res) => { const { custom_faq, ...s } = await getAgentSettings(req.tenantId); res.json({ ...s, tracking_sources: await trackingSources(req.tenantId) }); }));
+  r.get("/api/saas/agent/settings", A, ah(async (req, res) => { const { custom_faq, ...s } = await getAgentSettings(req.tenantId); res.json(s); }));
   r.put("/api/saas/agent/settings", AP, ah(async (req, res) => { const { custom_faq, ...s } = await putAgentSettings(req.tenantId, req.body || {}); res.json(s); }));
   r.get("/api/saas/agent/knowledge", A, ah(async (req, res) => res.json(await listKnowledge(req.tenantId))));
   r.post("/api/saas/agent/knowledge", A, ah(async (req, res) => res.json(await upsertKnowledge(req.tenantId, req.body || {}))));

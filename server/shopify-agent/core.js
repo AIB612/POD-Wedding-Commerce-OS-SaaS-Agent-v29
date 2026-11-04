@@ -6,11 +6,10 @@
 //   - a webhook HMAC (X-Shopify-Shop-Domain).
 // Never from x-tenant-id / tenant_id (auth.js ignores those for the shopagent_ prefix).
 import crypto from "node:crypto";
-import { normalizeShop, verifySessionToken as verifyJwt, signSessionToken as signJwt, verifyWebhookHmac } from "../shopify/app.js";
 import { addRecord, findRecord, updateRecord } from "../saas-store.js";
 import { encrypt, decrypt } from "../utils/crypto.js";
 
-export const SCOPES = "read_products,read_orders,read_legal_policies";
+export const SCOPES = "read_products,read_orders,read_shipping,read_discounts,read_legal_policies";
 export const TENANT_PREFIX = "shopagent_";
 export const config = () => ({
   apiKey: process.env.AGENT_SHOPIFY_API_KEY || "",
@@ -20,9 +19,46 @@ export const config = () => ({
 });
 export const isConfigured = () => { const c = config(); return !!(c.apiKey && c.apiSecret); };
 export const tenantFor = shop => `${TENANT_PREFIX}${normalizeShop(shop)}`;
-export { normalizeShop };
 
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
+
+// ---- Shopify request helpers (Pod.AI-only copies; the site's server/shopify/app.js is not used) ----
+export function normalizeShop(shop = "") { const s = String(shop || "").trim().toLowerCase(); return /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(s) ? s : null; }
+function verifyWebhookHmac(rawBody, header, secret) {
+  if (!secret || !header || !Buffer.isBuffer(rawBody)) return false;
+  return safeEq(crypto.createHmac("sha256", secret).update(rawBody).digest("base64"), header);
+}
+function verifyJwt(token, { secret, apiKey, now = Date.now(), leewaySec = 10 } = {}) {
+  const fail = m => { throw Object.assign(new Error(`invalid_session_token:${m}`), { status: 401 }); };
+  if (!secret || !apiKey) fail("app_not_configured");
+  const parts = String(token || "").split(".");
+  if (parts.length !== 3) fail("format");
+  let header, payload;
+  try { header = JSON.parse(Buffer.from(parts[0], "base64url")); payload = JSON.parse(Buffer.from(parts[1], "base64url")); } catch { fail("decode"); }
+  if (header.alg !== "HS256") fail("alg");
+  if (!safeEq(crypto.createHmac("sha256", secret).update(`${parts[0]}.${parts[1]}`).digest("base64url"), parts[2])) fail("signature");
+  const t = Math.floor(now / 1000);
+  if (typeof payload.exp !== "number" || payload.exp + leewaySec < t) fail("expired");
+  if (typeof payload.nbf === "number" && payload.nbf - leewaySec > t) fail("not_yet_valid");
+  if (!(Array.isArray(payload.aud) ? payload.aud : [payload.aud]).includes(apiKey)) fail("aud");
+  const shop = normalizeShop(String(payload.dest || "").replace(/^https:\/\//, ""));
+  if (!shop || !/^https:\/\//.test(String(payload.dest))) fail("dest");
+  const iss = String(payload.iss || "");
+  if (iss && normalizeShop(iss.replace(/^https:\/\//, "").replace(/\/admin\/?$/, "")) !== shop) fail("iss");
+  return { shop, payload };
+}
+/** Test / local simulation: a session token like App Bridge issues it. */
+export function signJwt({ shop, apiKey, secret, ttlSec = 60, now = Date.now(), sub = "1" }) {
+  const b = x => Buffer.from(JSON.stringify(x)).toString("base64url"), t = Math.floor(now / 1000);
+  const h = b({ alg: "HS256", typ: "JWT" }), p = b({ iss: `https://${shop}/admin`, dest: `https://${shop}`, aud: apiKey, sub, exp: t + ttlSec, nbf: t - 1, iat: t - 1, jti: crypto.randomUUID() });
+  return `${h}.${p}.${crypto.createHmac("sha256", secret).update(`${h}.${p}`).digest("base64url")}`;
+}
+/** Allow framing by this shop's admin only. */
+export function setEmbeddedFrameHeaders(res, shop) {
+  const s = normalizeShop(shop); if (!s) throw new Error("invalid_shop_domain");
+  res.removeHeader("X-Frame-Options");
+  res.setHeader("Content-Security-Policy", `frame-ancestors https://${s} https://admin.shopify.com;`);
+}
 
 /** App Proxy: signature = hex HMAC-SHA256 over sorted `key=value` pairs (arrays joined by ","), no separator. */
 export function proxySignature(query, secret = config().apiSecret) {
@@ -44,7 +80,7 @@ export const signSession = (shop, o = {}) => signJwt({ shop, apiKey: config().ap
 export const verifyWebhook = (raw, hmac) => !!config().apiSecret && verifyWebhookHmac(raw, hmac, config().apiSecret);
 
 // ---- install rows (collection agent_app_shops; token encrypted at rest) ----
-const COL = "agent_app_shops";
+const COL = "podai_shops";
 export async function getShop(shop) { return findRecord(COL, normalizeShop(shop)); }
 export async function saveToken(shop, accessToken, scopes = "") {
   const id = normalizeShop(shop), prev = await findRecord(COL, id), at = new Date().toISOString();

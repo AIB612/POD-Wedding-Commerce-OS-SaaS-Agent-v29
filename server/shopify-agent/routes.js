@@ -5,15 +5,14 @@
 //   POST /shopify-agent/webhooks           app/uninstalled + GDPR topics (HMAC on the raw body)
 import express from "express";
 import fs from "node:fs";
-import { ah } from "../http/middleware.js";
-import { setEmbeddedFrameHeaders } from "../shopify/app.js";
+const ah = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 import * as core from "./core.js";
 import * as gdpr from "./gdpr.js";
 import { makeProfile, clearFactsCache } from "./profile.js";
-import { handleChat } from "../pod-agent/customer/agent.js";
-import { agentOverview, agentConversations, agentHandoffs, patchHandoff, getSettings, putAgentSettings, upsertKnowledge, deleteKnowledge } from "../pod-agent/customer/admin.js";
+import { handleChat } from "./engine/agent.js";
+import { agentOverview, agentConversations, agentHandoffs, patchHandoff, getSettings, putAgentSettings, upsertKnowledge, deleteKnowledge } from "./engine/kpis.js";
 import { listForTenant } from "../saas-store.js";
-import { trackingSources } from "../tracking/index.js";
+import { trackingSources } from "./tracking.js";
 
 const PAGE = new URL("./admin.html", import.meta.url);
 const attr = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -55,7 +54,7 @@ export function shopifyAgentRouter() {
   r.get("/shopify-agent", notConfigured, (req, res) => {
     const shop = core.normalizeShop(req.query.shop);
     if (!shop) return res.status(400).type("text/plain").send("Open this app from your Shopify admin.");
-    setEmbeddedFrameHeaders(res, shop);
+    core.setEmbeddedFrameHeaders(res, shop);
     res.set("Cache-Control", "no-store").type("html").send(fs.readFileSync(PAGE, "utf8").replace("__API_KEY__", attr(core.config().apiKey)));
   });
 
@@ -80,7 +79,7 @@ export function shopifyAgentRouter() {
   api.delete("/knowledge/:id", ah(async (req, res) => res.json(await deleteKnowledge(req.agentTenant, req.params.id))));
   api.get("/settings", ah(async (req, res) => { const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours, tracking_sources: await trackingSources() }); }));
   api.put("/settings", ah(async (req, res) => { const b = req.body || {}; await putAgentSettings(req.agentTenant, { enabled: b.enabled, greeting: b.greeting, human_reply_hours: b.human_reply_hours }); clearFactsCache(req.agentShop); const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours }); }));
-  api.get("/privacy", ah(async (req, res) => res.json((await listForTenant("agent_app_gdpr", req.agentTenant)).slice(-50))));
+  api.get("/privacy", ah(async (req, res) => res.json((await listForTenant("podai_gdpr", req.agentTenant)).slice(-50))));
   api.post("/preview", ah(async (req, res) => { const b = req.body || {}; const out = await handleChat({ tenantId: req.agentTenant, profile: makeProfile(req.agentShop), message: b.message, conversation_id: b.conversation_id, lang: b.lang });
     res.json({ answer: out.answer, conversation_id: out.conversation_id, ui: out.ui, handoff: out.handoff || null, answered_by: out.answered_by || null }); }));
   r.use("/shopify-agent/api", api);

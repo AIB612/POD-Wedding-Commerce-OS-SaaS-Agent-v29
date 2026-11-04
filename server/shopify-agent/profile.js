@@ -1,4 +1,5 @@
-// Chat profile for one Shopify shop: plugs into handleChat({ profile }) of the POD Agent customer chat.
+// Chat profile for one Shopify shop: plugs into the Pod.AI engine (server/shopify-agent/engine, a copy of the site agent).
+// ALL shop data comes from that shop's Admin GraphQL API with its own offline token — never from Wed.AI site services.
 // Same pipeline (guardrails, local-first routing, LLM fallback, handoff queue, KPIs); shop-specific data:
 //   knowledge   = the merchant's own FAQ (embedded admin) + the shop's legal policies (shipping / refund / contact …)
 //   products    = Admin API product search (read_products)
@@ -7,9 +8,14 @@
 // No Wed.AI catalog, prices or FAQ ever leak into a shop tenant.
 import crypto from "node:crypto";
 import { graphql } from "./core.js";
-import { normaliseCustom } from "../pod-agent/customer/knowledge.js";
-import { createHandoff } from "../pod-agent/customer/store.js";
-import { trackParcel } from "../tracking/index.js";
+import { createHandoff } from "./engine/store.js";
+import { trackParcel } from "./tracking.js";
+
+/** Merchant FAQ rows (embedded admin → Knowledge) → search shape. */
+function normaliseCustom(list = []) {
+  return (list || []).filter(x => x && x.question && x.answer && x.active !== false).map(x => ({ id: x.id, custom: true,
+    tags: String(x.tags || "").toLowerCase().split(/[,;\s]+/).filter(Boolean), q: { [x.lang || "en"]: x.question, en: x.question }, a: { [x.lang || "en"]: x.answer, en: x.answer } }));
+}
 
 const strip = h => String(h || "").replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
 const POLICY_TAGS = { SHIPPING_POLICY: "shipping delivery versand livraison 运费 配送 发货 customs", REFUND_POLICY: "return returns refund exchange rückgabe retoure umtausch retour 退货 退款 换货",
@@ -23,9 +29,9 @@ export async function shopFactsFor(shop) {
   if (hit && Date.now() - hit.at < FACTS_TTL) return hit.facts;
   let facts = { shop_name: shop.replace(/\.myshopify\.com$/, ""), email: null, currency: null, url: `https://${shop}`, policies: [] };
   try {
-    const d = await graphql(shop, `{ shop { name contactEmail currencyCode primaryDomain { url } shopPolicies { type title body url } } }`);
+    const d = await graphql(shop, `{ shop { name contactEmail currencyCode taxesIncluded primaryDomain { url } shopPolicies { type title body url } } }`);
     const s = d.shop || {};
-    facts = { shop_name: s.name || facts.shop_name, email: s.contactEmail || null, currency: s.currencyCode || null, url: s.primaryDomain?.url || facts.url,
+    facts = { shop_name: s.name || facts.shop_name, email: s.contactEmail || null, currency: s.currencyCode || null, taxes_included: !!s.taxesIncluded, url: s.primaryDomain?.url || facts.url,
       policies: (s.shopPolicies || []).map(p => ({ type: p.type, title: p.title, text: strip(p.body).slice(0, 1500), url: p.url })).filter(p => p.text) };
   } catch (e) { facts.error = e.message; }
   factsCache.set(shop, { at: Date.now(), facts });
@@ -65,7 +71,9 @@ export async function findShopOrder(shop, { order_number, email }) {
     total: o.totalPriceSet?.shopMoney?.amount, currency: o.totalPriceSet?.shopMoney?.currencyCode, items: (o.lineItems?.nodes || []).map(i => ({ title: i.title, quantity: i.quantity })), tracking } };
 }
 
-const PRODUCT_Q = `query($q: String!) { products(first: 4, query: $q) { nodes { id title handle onlineStoreUrl status featuredImage { url } priceRangeV2 { minVariantPrice { amount currencyCode } } } } }`;
+const PRODUCT_Q = `query($q: String!) { products(first: 4, query: $q) { nodes { id title handle onlineStoreUrl status productType featuredImage { url }
+  priceRangeV2 { minVariantPrice { amount currencyCode } maxVariantPrice { amount currencyCode } } collections(first: 3) { nodes { title } }
+  variants(first: 5) { nodes { title price availableForSale } } metafields(first: 5) { nodes { namespace key value type } } } } }`;
 export async function searchShopProducts(shop, query) {
   const ts = terms(query).filter(t => !/^(do|have|sell|buy|price|cost|kostet|preis|any|some|product|products|item|items|shop|store|you|recommend|looking|need|want|show)$/.test(t)).slice(0, 4);
   if (!ts.length) return { ok: true, products: [] };
@@ -73,8 +81,53 @@ export async function searchShopProducts(shop, query) {
   try {
     const nodes = (await graphql(shop, PRODUCT_Q, { q })).products?.nodes || [];
     return { ok: true, products: nodes.map(p => ({ id: p.id, name: p.title, image: p.featuredImage?.url || null, unit_price: Number(p.priceRangeV2?.minVariantPrice?.amount ?? NaN),
-      currency: p.priceRangeV2?.minVariantPrice?.currencyCode || null, link: p.onlineStoreUrl || `/products/${p.handle}` })) };
+      currency: p.priceRangeV2?.minVariantPrice?.currencyCode || null, max_price: Number(p.priceRangeV2?.maxVariantPrice?.amount ?? NaN), link: p.onlineStoreUrl || `/products/${p.handle}`,
+      type: p.productType || "", collections: (p.collections?.nodes || []).map(c => c.title),
+      variants: (p.variants?.nodes || []).map(v => ({ title: v.title, price: Number(v.price), available: !!v.availableForSale })),
+      details: (p.metafields?.nodes || []).filter(m => /^(single_line_text_field|multi_line_text_field|number_integer|number_decimal|boolean|dimension|weight|volume)$/.test(m.type)).map(m => ({ key: m.key, value: String(m.value).slice(0, 200) })) })) };
   } catch (e) { return { ok: false, error: "product_search_failed" }; }
+}
+
+// ---- shipping: delivery profiles → zones → rates (read_shipping). Calculated (carrier-service) rates → "at checkout". ----
+const SHIP_Q = `{ deliveryProfiles(first: 5) { nodes { name default profileLocationGroups { locationGroupZones(first: 40) { nodes {
+  zone { name countries { name code { countryCode restOfWorld } } }
+  methodDefinitions(first: 10) { nodes { name active rateProvider { __typename ... on DeliveryRateDefinition { price { amount currencyCode } } }
+    methodConditions { field operator conditionCriteria { __typename ... on MoneyV2 { amount currencyCode } ... on Weight { value unit } } } } } } } } } } }`;
+const shipCache = new Map();
+export async function shippingRates(shop, country) {
+  const cc = String(country || "").toUpperCase();
+  let profiles = shipCache.get(shop);
+  if (!profiles || Date.now() - profiles.at > FACTS_TTL) {
+    try { profiles = { at: Date.now(), list: (await graphql(shop, SHIP_Q)).deliveryProfiles?.nodes || [] }; } catch (e) { return { ok: false, error: "shipping_unavailable" }; }
+    shipCache.set(shop, profiles);
+  }
+  const prof = profiles.list.find(p => p.default) || profiles.list[0];
+  const zones = (prof?.profileLocationGroups || []).flatMap(g => g.locationGroupZones?.nodes || []);
+  const hasCc = z => (z.zone?.countries || []).some(c => c.code?.countryCode === cc);
+  const zone = zones.find(hasCc) || zones.find(z => (z.zone?.countries || []).some(c => c.code?.restOfWorld));
+  if (!zones.length) return { ok: true, country: cc, ships: null, rates: [] }; // no readable delivery setup → policy text
+  if (!zone) return { ok: true, country: cc, ships: false, rates: [] };
+  const rates = (zone.methodDefinitions?.nodes || []).filter(m => m.active).map(m => {
+    const fixed = m.rateProvider?.__typename === "DeliveryRateDefinition";
+    const cond = (m.methodConditions || []).map(c => { const v = c.conditionCriteria; const val = v?.__typename === "MoneyV2" ? `${v.amount} ${v.currencyCode}` : v ? `${v.value} ${String(v.unit).toLowerCase()}` : "";
+      return `${c.field === "TOTAL_PRICE" ? "order" : "weight"} ${c.operator === "GREATER_THAN_OR_EQUAL_TO" ? "≥" : "≤"} ${val}`; });
+    return { name: m.name, price: fixed ? Number(m.rateProvider.price.amount) : null, currency: fixed ? m.rateProvider.price.currencyCode : null, calculated: !fixed, conditions: cond };
+  });
+  return { ok: true, country: cc, zone: zone.zone?.name || "", ships: true, rates };
+}
+export const clearShippingCache = () => shipCache.clear();
+
+// ---- discount codes: read-only check of a code the customer already has (read_discounts). Codes are never listed to customers. ----
+const DISC_Q = `query($q: String!) { codeDiscountNodes(first: 1, query: $q) { nodes { codeDiscount { __typename
+  ... on DiscountCodeBasic { title status summary endsAt } ... on DiscountCodeFreeShipping { title status summary endsAt } ... on DiscountCodeBxgy { title status summary endsAt } } } } }`;
+export async function checkDiscount(shop, code) {
+  const c = String(code || "").trim().toUpperCase().slice(0, 40);
+  if (!/^[A-Z0-9][A-Z0-9_-]{2,39}$/.test(c)) return { ok: false, error: "invalid_code_format" };
+  try {
+    const d = (await graphql(shop, DISC_Q, { q: `code:${c}` })).codeDiscountNodes?.nodes?.[0]?.codeDiscount;
+    if (!d || d.status !== "ACTIVE") return { ok: true, code: c, valid: false };
+    return { ok: true, code: c, valid: true, summary: d.summary || d.title || "", ends_at: d.endsAt || null };
+  } catch { return { ok: false, error: "discount_check_failed" }; }
 }
 
 // ---- reply templates (en/de/fr/zh; other languages fall back to en) ----
@@ -92,6 +145,14 @@ const TX = {
   products: { en: "Here is what I found:", de: "Das habe ich gefunden:", fr: "Voici ce que j'ai trouvé :", zh: "为你找到这些商品：" },
   noProducts: { en: "I couldn't find a matching product. Try another word, or browse the shop.", de: "Kein passendes Produkt gefunden. Versuchen Sie ein anderes Wort.", fr: "Aucun produit correspondant. Essayez un autre mot.", zh: "没有找到匹配的商品，换个关键词试试。" },
   unknown: { en: "I'm not sure about that one. Shall I pass it to the team?", de: "Da bin ich nicht sicher. Soll ich es an das Team weitergeben?", fr: "Je ne suis pas sûr. Voulez-vous que je transmette à l'équipe ?", zh: "这个问题我不确定，要帮你转人工吗？" },
+  ship: { en: (z, l) => `Shipping to ${z}: ${l}.`, de: (z, l) => `Versand nach ${z}: ${l}.`, fr: (z, l) => `Livraison vers ${z} : ${l}.`, zh: (z, l) => `寄往 ${z}：${l}。` },
+  noShip: { en: c => `Sorry, we don't ship to ${c} at the moment.`, de: c => `Leider liefern wir derzeit nicht nach ${c}.`, fr: c => `Désolé, nous ne livrons pas vers ${c} pour le moment.`, zh: c => `抱歉，目前不发货到 ${c}。` },
+  askCountry: { en: "Which country should we ship to?", de: "In welches Land sollen wir liefern?", fr: "Vers quel pays ?", zh: "请问寄往哪个国家？" },
+  codeOk: { en: (c, s) => `The code ${c} is valid${s ? `: ${s}` : ""}. Enter it at checkout.`, de: (c, s) => `Der Code ${c} ist gültig${s ? `: ${s}` : ""}. Im Checkout eingeben.`, fr: (c, s) => `Le code ${c} est valide${s ? ` : ${s}` : ""}. Saisissez-le au paiement.`, zh: (c, s) => `优惠码 ${c} 有效${s ? `：${s}` : ""}，结账时输入即可。` },
+  codeBad: { en: c => `The code ${c} isn't active.`, de: c => `Der Code ${c} ist nicht aktiv.`, fr: c => `Le code ${c} n'est pas actif.`, zh: c => `优惠码 ${c} 无效或已过期。` },
+  askCode: { en: "Do you have a discount code? Send it and I'll check it.", de: "Haben Sie einen Rabattcode? Senden Sie ihn, ich prüfe ihn.", fr: "Vous avez un code ? Envoyez-le, je le vérifie.", zh: "有优惠码吗？发给我帮你查。" },
+  taxIncl: { en: "Prices include tax.", de: "Preise inkl. Steuern.", fr: "Prix TTC.", zh: "价格含税。" },
+  taxExcl: { en: "Taxes are added at checkout.", de: "Steuern werden im Checkout berechnet.", fr: "Taxes calculées au paiement.", zh: "税费在结账时计算。" },
   human: { en: "Talk to a person", de: "Mit einem Menschen sprechen", fr: "Parler à une personne", zh: "转人工" },
   chips: { en: ["Where is my order?", "Shipping", "Returns"], de: ["Wo ist meine Bestellung?", "Versand", "Rückgabe"], fr: ["Où est ma commande ?", "Livraison", "Retours"], zh: ["我的订单在哪", "运费", "退货"] }
 };
@@ -146,6 +207,8 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
           }
           return r;
         },
+        async quote_shipping({ country }) { const r = await shippingRates(shop, country || conv.slots?.country || ctx.countryHint); if (r.ok && r.ships) ctx.ui.push({ type: "shipping", country: r.country, rates: r.rates }); return r; },
+        async check_discount_code({ code }) { return checkDiscount(shop, code); },
         async handoff_to_human({ reason = "customer_request", summary = "" }) { const h = await createHandoff(tenantId, conv, { reason, summary }); ctx.handoff = h.reason; return { ok: true, handoff_id: h.id }; }
       };
       const fn = (name, description, properties = {}, required = []) => ({ type: "function", function: { name, description, parameters: { type: "object", properties, required } } });
@@ -154,6 +217,8 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
         fn("get_policy", "Get a shop policy: shipping, returns, contact, privacy, terms.", { topic: { type: "string" } }, ["topic"]),
         fn("search_products", "Search active products by keywords.", { query: { type: "string" } }, ["query"]),
         fn("find_order", "Order status + tracking. Needs order number and the order e-mail.", { order_number: { type: "string" }, email: { type: "string" } }, ["order_number", "email"]),
+        fn("quote_shipping", "Shipping methods and rates of the shop for a destination country (ISO-2).", { country: { type: "string" } }, ["country"]),
+        fn("check_discount_code", "Check whether a discount code the customer has is active (read-only).", { code: { type: "string" } }, ["code"]),
         fn("handoff_to_human", "Pass the conversation to the shop team.", { reason: { type: "string" }, summary: { type: "string" } })
       ];
       const execute = async (name, args = {}) => {
@@ -171,6 +236,7 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
       if (m.email) conv.slots.email = m.email;
       let intent = m.intent;
       if (conv.slots.pending === "order" && (m.order_number || m.email) && !["greeting", "thanks"].includes(intent)) intent = "order_status";
+      if (conv.slots.pending === "shipping" && m.country && !["greeting", "thanks"].includes(intent)) intent = "shipping_quote";
       switch (intent) {
         case "greeting": ctx.ui.push({ type: "chips", items: t("chips", lang) }); return settings.greeting?.[lang] || settings.greeting?.en || t("greet", lang)(f.shop_name);
         case "thanks": return t("thanks", lang);
@@ -187,9 +253,32 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
           ctx.ui.push(human);
           return t(r.error === "locked" ? "locked" : r.error === "not_found" ? "notFound" : "orderErr", lang);
         }
+        case "shipping_quote": {
+          const own = rankKnowledge(f, settings.custom_faq, text, lang, 1)[0];
+          if (own?.custom) return cut(own.answer); // the merchant's own answer wins
+          if (m.country) conv.slots.country = m.country;
+          const cc = conv.slots.country || ctx.countryHint;
+          if (!cc) { conv.slots.pending = "shipping"; return t("askCountry", lang); }
+          conv.slots.pending = null;
+          const r = await tools.execute("quote_shipping", { country: cc });
+          if (r.ok && r.ships === false) return t("noShip", lang)(cc);
+          if (r.ok && r.rates.length) {
+            const list = r.rates.map(x => `${x.name} ${x.calculated ? `(${t("shipCheckout", lang).replace(/\.$/, "")})` : x.price === 0 ? (lang === "de" ? "gratis" : lang === "zh" ? "免运费" : "free") : `${x.currency} ${x.price.toFixed(2)}`}${x.conditions.length ? ` [${x.conditions.join(", ")}]` : ""}`).join("; ");
+            return t("ship", lang)(r.zone || cc, list);
+          }
+          break; // no rates readable → shipping policy below
+        }
+        case "discount": {
+          // a code is a token the customer wrote in capitals or with digits (e.g. ALPS10, summer25)
+          const code = (text.match(/[A-Za-z0-9][A-Za-z0-9_-]{3,39}/g) || []).find(w => /\d/.test(w) || (w === w.toUpperCase() && /[A-Z]/.test(w)));
+          if (!code) return t("askCode", lang);
+          const r = await tools.execute("check_discount_code", { code });
+          if (!r.ok) break;
+          return r.valid ? t("codeOk", lang)(r.code, r.summary) : t("codeBad", lang)(r.code);
+        }
         case "price": case "product_question": case "recommendation": {
           const r = await tools.execute("search_products", { query: text });
-          if (r.ok && r.products.length) return t("products", lang);
+          if (r.ok && r.products.length) return `${t("products", lang)} ${t(f.taxes_included ? "taxIncl" : "taxExcl", lang)}`;
           const kb = rankKnowledge(f, settings.custom_faq, text, lang, 1)[0];
           if (kb) return cut(kb.answer);
           return t("noProducts", lang);
@@ -205,6 +294,9 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
         if (intent === "contact_info" && f.email) return f.email;
         ctx.unanswered = true; ctx.ui.push(human); return t("noPolicy", lang);
       }
+      // nothing matched: maybe the customer named a product of this shop (the engine has no catalog of its own)
+      const pr = await tools.execute("search_products", { query: text });
+      if (pr.ok && pr.products.length) return `${t("products", lang)} ${t(f.taxes_included ? "taxIncl" : "taxExcl", lang)}`;
       ctx.unanswered = true; ctx.ui.push(human); return t("unknown", lang);
     }
   };

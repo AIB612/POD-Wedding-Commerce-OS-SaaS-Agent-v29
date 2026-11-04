@@ -10,10 +10,10 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wcos-shopagent-"));
 for (const k of ["LLM_PROVIDER", "OPENAI_API_KEY", "XAI_API_KEY", "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"]) delete process.env[k];
 Object.assign(process.env, { NODE_ENV: "test", ADMIN_API_KEY: "k", RATE_LIMIT_DISABLED: "true", STORE_PERSIST_PATH: path.join(tmp, "state.json"), APP_ENCRYPTION_KEY: "z".repeat(40),
   AGENT_SHOPIFY_API_KEY: "agentkey", AGENT_SHOPIFY_API_SECRET: "agentsecret", AGENT_APP_URL: "https://app.test" });
-const { createApp } = await import("./create-app.js");
-const core = await import("./shopify-agent/core.js");
-const { quoteStorefront } = await import("./services/checkout-service.js");
-const { getState } = await import("./saas-store.js");
+const { createApp } = await import("../../create-app.js");
+const core = await import("../core.js");
+const { quoteStorefront } = await import("../../services/checkout-service.js");
+const { getState } = await import("../../saas-store.js");
 const app = await createApp({ generatedDir: tmp });
 const server = app.listen(0);
 const base = `http://127.0.0.1:${server.address().port}`;
@@ -27,7 +27,7 @@ const SHOPS = {
     { type: "SHIPPING_POLICY", title: "Shipping policy", body: "<p>We ship within 2 business days from Zurich.</p>", url: "https://shop-a.example/policies/shipping-policy" }],
     orders: { "1001": { name: "#1001", createdAt: "2026-10-01T10:00:00Z", email: "Buyer@Example.com", cancelledAt: null, displayFinancialStatus: "PAID", displayFulfillmentStatus: "FULFILLED",
       totalPriceSet: { shopMoney: { amount: "39.0", currencyCode: "CHF" } }, lineItems: { nodes: [{ title: "Mountain Tee", quantity: 2 }] }, fulfillments: [{ status: "SUCCESS", trackingInfo: [{ company: "Swiss Post", number: "99.00.123456.78901234", url: "https://post.ch/t" }] }] } },
-    products: [{ id: "gid://shopify/Product/1", title: "Mountain Tee", handle: "mountain-tee", onlineStoreUrl: null, status: "ACTIVE", featuredImage: { url: "https://cdn.example/tee.jpg" }, priceRangeV2: { minVariantPrice: { amount: "19.5", currencyCode: "CHF" } } }] },
+    products: [{ id: "gid://shopify/Product/1", title: "Mountain Tee", handle: "mountain-tee", onlineStoreUrl: null, status: "ACTIVE", productType: "T-Shirt", featuredImage: { url: "https://cdn.example/tee.jpg" }, priceRangeV2: { minVariantPrice: { amount: "19.5", currencyCode: "CHF" }, maxVariantPrice: { amount: "24.0", currencyCode: "CHF" } }, collections: { nodes: [{ title: "Summer" }] }, variants: { nodes: [{ title: "S", price: "19.50", availableForSale: true }, { title: "XL", price: "24.00", availableForSale: false }] }, metafields: { nodes: [{ namespace: "custom", key: "material", value: "Organic cotton", type: "single_line_text_field" }] } }] },
   [B]: { name: "Bern Mugs", policies: [], orders: {}, products: [] }
 };
 globalThis.fetch = async (url, init = {}) => {
@@ -41,7 +41,13 @@ globalThis.fetch = async (url, init = {}) => {
   assert.equal(init.headers["X-Shopify-Access-Token"], `tok_${shop}`, "token of the same shop");
   gql.push({ shop, q: body.query.slice(0, 30), v: body.variables });
   const s = SHOPS[shop];
-  if (/shopPolicies/.test(body.query)) return json({ data: { shop: { name: s.name, contactEmail: "team@" + shop, currencyCode: "CHF", primaryDomain: { url: `https://${shop}` }, shopPolicies: s.policies } } });
+  if (/shopPolicies/.test(body.query)) return json({ data: { shop: { name: s.name, contactEmail: "team@" + shop, currencyCode: "CHF", taxesIncluded: true, primaryDomain: { url: `https://${shop}` }, shopPolicies: s.policies } } });
+  if (/deliveryProfiles/.test(body.query)) return json({ data: { deliveryProfiles: { nodes: shop === A ? [{ name: "General", default: true, profileLocationGroups: [{ locationGroupZones: { nodes: [
+    { zone: { name: "Europe", countries: [{ name: "Germany", code: { countryCode: "DE", restOfWorld: false } }, { name: "Switzerland", code: { countryCode: "CH", restOfWorld: false } }] },
+      methodDefinitions: { nodes: [{ name: "Standard", active: true, rateProvider: { __typename: "DeliveryRateDefinition", price: { amount: "7.9", currencyCode: "CHF" } }, methodConditions: [] },
+        { name: "Free shipping", active: true, rateProvider: { __typename: "DeliveryRateDefinition", price: { amount: "0.0", currencyCode: "CHF" } }, methodConditions: [{ field: "TOTAL_PRICE", operator: "GREATER_THAN_OR_EQUAL_TO", conditionCriteria: { __typename: "MoneyV2", amount: "80.0", currencyCode: "CHF" } }] },
+        { name: "Old", active: false, rateProvider: { __typename: "DeliveryRateDefinition", price: { amount: "1.0", currencyCode: "CHF" } }, methodConditions: [] }] } }] } }] }] : [] } } });
+  if (/codeDiscountNodes/.test(body.query)) { const c = body.variables.q.replace("code:", ""); return json({ data: { codeDiscountNodes: { nodes: shop === A && c === "ALPS10" ? [{ codeDiscount: { __typename: "DiscountCodeBasic", title: "Alps", status: "ACTIVE", summary: "10% off entire order", endsAt: null } }] : shop === A && c === "OLD5" ? [{ codeDiscount: { __typename: "DiscountCodeBasic", title: "Old", status: "EXPIRED", summary: "5% off" } }] : [] } } }); }
   if (/orders\(/.test(body.query)) { const n = body.variables.q.replace("name:#", ""); return json({ data: { orders: { nodes: s.orders[n] ? [s.orders[n]] : [] } } }); }
   if (/products\(/.test(body.query)) return json({ data: { products: { nodes: /tee/i.test(body.variables.q) ? s.products : [] } } });
   return json({ errors: [{ message: "unexpected" }] });
@@ -67,7 +73,7 @@ try {
   assert.equal((await call(`/shopify-agent/proxy/chat?${forged}`, { method: "POST", body: { message: "hi" } })).status, 401);
   assert.equal((await call(`/shopify-agent/proxy/chat?${signedQuery(A, { timestamp: "1000" })}`, { method: "POST", body: { message: "hi" } })).status, 401, "stale");
   assert.equal((await call("/shopify-agent/api/overview")).status, 401);
-  const wrongKey = (await import("./shopify/app.js")).signSessionToken({ shop: A, apiKey: "agentkey", secret: "other" });
+  const wrongKey = core.signJwt({ shop: A, apiKey: "agentkey", secret: "other" });
   assert.equal((await call("/shopify-agent/api/overview", { headers: { Authorization: `Bearer ${wrongKey}` } })).status, 401);
   assert.equal((await proxy(A, "hi")).status, 404, "not installed yet");
   result.auth = "pass";
@@ -79,7 +85,7 @@ try {
   assert.equal(page.headers.get("x-frame-options"), null);
   for (const s of [A, B]) { const b = await adm(s, "/bootstrap", { method: "POST" }); assert.equal(b.status, 200); assert.equal(b.json.shop, s); assert.equal(b.json.exchanged, true); }
   assert.equal((await adm(A, "/bootstrap", { method: "POST" })).json.exchanged, false, "idempotent");
-  const row = (await getState()).agent_app_shops.find(r => r.id === A);
+  const row = (await getState()).podai_shops.find(r => r.id === A);
   assert.ok(row.access_token_enc && !JSON.stringify(row).includes(`tok_${A}`), "token encrypted at rest");
   result.install = "pass";
 
@@ -88,9 +94,20 @@ try {
   assert.equal(r.status, 200); assert.match(r.json.answer, /Alpine Tees/);
   const conv = r.json.conversation_id;
   r = await proxy(A, "What is your return policy?", conv); assert.match(r.json.answer, /30 days/); assert.doesNotMatch(r.json.answer, /Wed\.AI|invitation/i);
-  r = await proxy(A, "How much is shipping to Germany?", conv); assert.match(r.json.answer, /2 business days/); assert.match(r.json.answer, /calculated at checkout/);
+  // shipping from the shop's delivery profiles (zones / rates), inactive methods hidden, conditions shown
+  r = await proxy(A, "How much is shipping to Germany?", conv);
+  assert.match(r.json.answer, /Europe: Standard CHF 7\.90; Free shipping free \[order ≥ 80\.0 CHF\]/, r.json.answer); assert.doesNotMatch(r.json.answer, /Old/);
+  r = await proxy(A, "How much is shipping to Japan?"); assert.match(r.json.answer, /don't ship to JP/, r.json.answer);
+  r = await proxy(B, "How much is shipping to Germany?"); assert.match(r.json.answer, /calculated at checkout/, "no zones → policy / checkout note");
+  // discount codes: read-only check, never listed
+  r = await proxy(A, "Is the discount code ALPS10 valid?"); assert.match(r.json.answer, /ALPS10 is valid: 10% off entire order/, r.json.answer);
+  r = await proxy(A, "promo code OLD5"); assert.match(r.json.answer, /OLD5 isn't active/);
+  r = await proxy(A, "do you have any discount?"); assert.match(r.json.answer, /Send it and I'll check/); assert.doesNotMatch(r.json.answer, /ALPS10/);
   r = await proxy(A, "Do you have a mountain tee?", conv); const cards = r.json.ui.find(u => u.type === "products");
   assert.ok(cards && cards.items[0].name === "Mountain Tee" && cards.items[0].unit_price === 19.5 && cards.items[0].link === "/products/mountain-tee", JSON.stringify(r.json));
+  assert.match(r.json.answer, /Prices include tax/); const it = cards.items[0];
+  assert.deepEqual(it.variants, [{ title: "S", price: 19.5, available: true }, { title: "XL", price: 24, available: false }]); assert.deepEqual(it.collections, ["Summer"]);
+  assert.deepEqual(it.details, [{ key: "material", value: "Organic cotton" }]); assert.equal(it.max_price, 24);
   r = await proxy(A, "Where is my order #1001?", conv); assert.match(r.json.answer, /e-mail/i);
   r = await proxy(A, "wrong@example.com", conv); assert.match(r.json.answer, /couldn't find/);
   r = await proxy(A, "Where is my order #1001? buyer@example.com", conv);
@@ -98,7 +115,7 @@ try {
   assert.doesNotMatch(JSON.stringify(r.json), /Buyer@Example\.com/, "order e-mail not echoed");
   assert.match(r.json.answer, /https:\/\/post\.ch\/t/, "no tracking source configured → Shopify tracking link");
   // with 51Tracking configured: Swiss Post (not integrated) → 51Tracking status, latest event, timeline
-  process.env.TRACKING51_API_KEY = "k51"; (await import("./tracking/index.js")).clearTrackingCache();
+  process.env.TRACKING51_API_KEY = "k51"; (await import("../tracking.js")).clearTrackingCache();
   r = await proxy(A, "Where is my order #1001? buyer@example.com", conv);
   assert.match(r.json.answer, /Delivered \(2026-11-03 14:05, 8001 Zürich, Delivered\)/, r.json.answer);
   const tl = r.json.ui.find(u => u.type === "tracking"); assert.equal(tl.source, "51tracking"); assert.equal(tl.events.length, 2);
@@ -106,7 +123,7 @@ try {
   // lockout after 5 failures
   for (let i = 0; i < 5; i++) await proxy(A, `order #1001 x${i}@example.com`);
   r = await proxy(A, "order #1001 buyer@example.com"); assert.match(r.json.answer, /Too many attempts/);
-  (await import("./shopify-agent/profile.js")).resetOrderLocks();
+  (await import("../profile.js")).resetOrderLocks();
   // handoff
   const hc = (await proxy(A, "Hi")).json.conversation_id;
   r = await proxy(A, "I want to talk to a person please, my email is anna@example.com", hc); assert.ok(r.json.handoff, JSON.stringify(r.json));
@@ -125,7 +142,7 @@ try {
   assert.equal((await adm(B, `/handoffs/${hoA[0].id}`, { method: "PATCH", body: { status: "resolved" } })).status, 404, "B cannot touch A's handoff");
   const leak = await call("/api/pod-agent/chat", { method: "POST", body: { message: "hi" }, headers: { "x-tenant-id": `shopagent_${A}` } });
   assert.equal(leak.status, 200);
-  assert.ok(!(await getState()).agent_conversations.some(c => c.tenant_id === `shopagent_${A}` && c.id === leak.json.conversation_id), "x-tenant-id ignored for shop tenants");
+  assert.ok(!((await getState()).podai_conversations || []).some(c => c.id === leak.json.conversation_id), "site chat (any x-tenant-id) never writes Pod.AI data");
   result.isolation = "pass";
 
   // 5. Embedded admin: knowledge (no Wed.AI built-ins), settings, handoff resolve, preview
@@ -140,20 +157,20 @@ try {
 
   // 6. Webhooks: HMAC required; GDPR topics + uninstall return 200 and act
   assert.equal((await hook("customers/redact", A, {}, { bad: true })).status, 401);
-  const st = await getState(), before = st.agent_conversations.filter(c => c.tenant_id === `shopagent_${A}`).length;
+  const st = await getState(), before = st.podai_conversations.filter(c => c.tenant_id === `shopagent_${A}`).length;
   assert.equal((await hook("customers/data_request", A, { shop_domain: A, customer: { email: "anna@example.com" }, data_request: { id: 9 } })).status, 200);
   const log = (await adm(A, "/privacy")).json; assert.equal(log[0].type, "customers/data_request"); assert.equal(log[0].handoffs.length, 1); assert.ok(!JSON.stringify(log).includes("anna@"));
   assert.equal((await hook("customers/redact", A, { shop_domain: A, customer: { email: "anna@example.com" } })).status, 200);
-  const after = (await getState()).agent_conversations.filter(c => c.tenant_id === `shopagent_${A}`);
-  assert.ok(after.length < before && !JSON.stringify(after).includes("anna@example.com")); assert.ok(!(await getState()).agent_handoffs.some(h => h.customer_email === "anna@example.com"));
+  const after = (await getState()).podai_conversations.filter(c => c.tenant_id === `shopagent_${A}`);
+  assert.ok(after.length < before && !JSON.stringify(after).includes("anna@example.com")); assert.ok(!(await getState()).podai_handoffs.some(h => h.customer_email === "anna@example.com"));
   assert.equal((await hook("app/uninstalled", A, { domain: A })).status, 200);
   assert.equal((await proxy(A, "hi")).status, 404, "chat off after uninstall");
   const id = crypto.randomUUID();
   assert.equal((await hook("shop/redact", A, { shop_domain: A }, { id })).status, 200);
   assert.equal((await hook("shop/redact", A, { shop_domain: A }, { id })).status, 200, "duplicate delivery ok");
   const s2 = await getState();
-  for (const col of ["agent_conversations", "agent_handoffs", "agent_settings", "agent_app_shops", "agent_app_gdpr"]) assert.ok(!(s2[col] || []).some(x => x.tenant_id === `shopagent_${A}` || x.id === A), col);
-  assert.ok(s2.agent_app_shops.some(x => x.id === B), "other shop untouched");
+  for (const col of ["podai_conversations", "podai_handoffs", "podai_settings", "podai_shops", "podai_gdpr"]) assert.ok(!(s2[col] || []).some(x => x.tenant_id === `shopagent_${A}` || x.id === A), col);
+  assert.ok(s2.podai_shops.some(x => x.id === B), "other shop untouched");
   result.webhooks = "pass";
 
   // 7. Wed.AI storefront + checkout unchanged

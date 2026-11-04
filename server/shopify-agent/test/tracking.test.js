@@ -1,4 +1,4 @@
-// Parcel tracking for chat order lookup: carrier API first (YunExpress / 4PX), then 51Tracking v4, then the tracking link; cache; read-only.
+// Pod.AI parcel tracking: carrier API first (YunExpress / 4PX), then 51Tracking v4, then the tracking link; cache; read-only.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -7,8 +7,8 @@ import path from "node:path";
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wcos-tracking-"));
 for (const k of ["TRACKING51_API_KEY", "FOURPX_APP_KEY", "FOURPX_APP_SECRET", "LOGISTICS_MOCK", "YUNEXPRESS_PROD_APP_ID"]) delete process.env[k];
 Object.assign(process.env, { NODE_ENV: "test", STORE_PERSIST_PATH: path.join(tmp, "state.json"), LOGISTICS_STATE_PATH: path.join(tmp, "logi.json"), YUNEXPRESS_APP_ID: "yid", YUNEXPRESS_APP_SECRET: "ysec" });
-const { setFetch } = await import("./logistics/http.js");
-const T = await import("./tracking/index.js");
+const { setFetch } = await import("../../logistics/http.js");
+const T = await import("../tracking.js");
 
 const calls = [];
 let yunEvents = [{ process_time: "2026-11-02 08:00:00", process_location: "Shenzhen", process_content: "Departed facility" }, { process_time: "2026-11-03 09:30:00", process_location: "Zurich", process_content: "Arrived in destination country" }];
