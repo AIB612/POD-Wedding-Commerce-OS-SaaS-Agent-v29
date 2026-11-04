@@ -1176,3 +1176,6 @@ B.3 跳过（本版没有）
     1cfee29 · 2026-11-04 · Pod.AI 组件脚本：chat-i18n.js 改为 defer 加载（消除 Shopify ParserBlockingScript 警告），
         chat.js 惰性读取 window.PodAIChatI18n（首次打开及每条回复按 language 刷新界面文字）。仅改 Pod.AI 文件。影响条款：附录 D。
 
+    dd02d3d · 2026-11-04 · Pod.AI 识别修复（上线验证发现）：邮箱提取只接受 ASCII 本地部分（中文消息“到哪了？邮箱”
+        不再把汉字并入邮箱，#1011 中文查询可查到订单）；德语识别新增 zeig/mir/eure/produkte 等词。仅改 Pod.AI 文件。影响条款：附录 D。
+
