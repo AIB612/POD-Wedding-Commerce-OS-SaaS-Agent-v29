@@ -5,7 +5,7 @@
 //  ⑧ route (router.js): local rule engine + shop data first; LLM only for complex / unmatched questions when a key exists  ⑨ store + stats (answered_by)
 import { classifyRules, detectLanguage } from "./nlu.js";
 import { handoffCheck, holdingMessage, errorMessage, injectionMessage, paymentDataMessage, INJECTION_RE, containsPaymentData, redact } from "./guardrails.js";
-import { getSettings, findOrCreateConversation, saveConversation, recentUserMessages, createHandoff, appendToHandoff } from "./store.js";
+import { getSettings, findOrCreateConversation, saveConversation, recentUserMessages, createHandoff, appendToHandoff, handoffStillOpen } from "./store.js";
 import { llmStatus, runToolLoop, chatJson, answerOpenQuestion } from "./llm.js";
 import { CLASSIFIER_SYSTEM } from "./prompts.js";
 import { decideRoute } from "./router.js";
@@ -76,6 +76,11 @@ Object.assign(T.emailNoted, { fr: "Merci — j'ai ajouté votre e-mail pour que 
 Object.assign(T.rate, { fr: "Vous avez envoyé beaucoup de messages. Patientez un instant.", it: "Ha inviato molti messaggi. Attenda un momento." });
 Object.assign(T.disabled, { fr: "L'assistant est hors ligne pour le moment. Réessayez plus tard.", it: "L'assistente è offline al momento. Riprovi più tardi." });
 Object.assign(T.thanks, { fr: "Avec plaisir ! Autre chose ?", it: "Prego! Posso aiutarla in altro?" });
+// Pod.AI: open handoff — the AI keeps answering what it can; "Back to AI" ends the handoff for the bot
+T.mutedShort = { en: "I can't answer that one myself — I've added it to your request for our team.", zh: "这个问题我无法直接回答，已补充到您给团队的请求中。", de: "Das kann ich nicht selbst beantworten – ich habe es Ihrer Anfrage an unser Team hinzugefügt.", fr: "Je ne peux pas répondre moi-même — je l'ai ajouté à votre demande pour l'équipe.", it: "Non posso rispondere io — l'ho aggiunto alla sua richiesta per il team." };
+T.backToAi = { en: "Back to AI", zh: "返回 AI 助手", de: "Zurück zur KI", fr: "Retour à l'IA", it: "Torna all'IA" };
+T.aiBack = { en: "Sure — I'm back. What can I help you with?", zh: "好的，AI 助手回来了。有什么可以帮您？", de: "Gerne – ich bin wieder da. Wie kann ich helfen?", fr: "Très bien — je suis de retour. Comment puis-je vous aider ?", it: "Certo — sono tornato. Come posso aiutarla?" };
+const BACK_RE = /^\s*(back to (the )?(ai|bot|assistant)|end (the )?handoff|zurück zur ki|retour à l'ia|torna all'ia|返回\s*ai(\s*助手)?|回到\s*ai|继续\s*ai)\s*[.!。！]?\s*$/i;
 const L = (key, lang) => { const e = T[key]; return e[lang] || e.en; };
 const CHIPS = {
   en: ["Shipping to Switzerland for 10 invitations", "Recommend wedding favours", "How long does delivery take?", "Track my order"],
@@ -103,7 +108,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
   if (!settings.enabled) return { answer: L("disabled", hint), reply: L("disabled", hint), ui: [], mode: "disabled" };
   const conv = await findOrCreateConversation(tenantId, conversation_id, { lang: hint, page: page ? String(page).slice(0, 200) : null });
   const ctx = { tenantId, settings, conv, ui: [], toolLog: [], llm, countryHint: /^[A-Z]{2}$/.test(String(country || "")) ? String(country) : null, handoff: null, unanswered: false, profile };
-  const lang = /^[\s\S]{0,6}$/.test(text) && !/[\u3400-\u9fff]/.test(text) ? (conv.language || hint) : detectLanguage(text, conv.language || hint);
+  const lang = /^[\s\S]{0,6}$/.test(text) && !/[\u3400-\u9fff]/.test(text) ? (conv.language || hint) : detectLanguage(text, hint);
   ctx.lang = conv.language = lang;
   const out = (answer, extra = {}) => ({ answer, reply: answer, conversation_id: conv.id, language: lang, ui: ctx.ui, mode: extra.mode || llm.mode, handoff: ctx.handoff, tools_used: ctx.toolLog.map(t => t.name), ...extra });
   const finish = async (answer, extra = {}) => {
@@ -126,13 +131,21 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
 
   // ⑤ already with the team → add the message to the handoff, AI stays quiet
   const cls = classifyRules(text, { hint: lang });
-  if (conv.status === "handed_off") {
-    await appendToHandoff(conv, { text, email: cls.email });
-    if (cls.email) conv.slots.email = cls.email;
-    ctx.handoff = "pending";
-    if (cls.email) ctx.ui.push({ type: "handoff", email: maskEmail(cls.email) });
-    return finish(cls.email ? L("emailNoted", lang) : L("muted", lang), { intent: "muted", muted: true, answered_by: "local", route: { path: "local", reason: "with_team", confidence: 1 } });
+  const withTeam = await handoffStillOpen(conv);
+  if (withTeam && BACK_RE.test(text)) { conv.status = "open"; return finish(L("aiBack", lang), { intent: "back_to_ai", answered_by: "local", route: { path: "local", reason: "back_to_ai", confidence: 1 } }); }
+  // an e-mail only message while with the team → reply address for the handoff
+  if (withTeam && cls.email && cls.intent === "contact_info") {
+    await appendToHandoff(conv, { text, email: cls.email }); conv.slots.email = cls.email; ctx.handoff = "pending";
+    ctx.ui.push({ type: "handoff", email: maskEmail(cls.email) });
+    return finish(L("emailNoted", lang), { intent: "muted", muted: true, answered_by: "local", route: { path: "local", reason: "with_team", confidence: 1 } });
   }
+  // with the team, but the AI still answers what it can; only unanswerable messages go to the handoff
+  const toTeam = async () => {
+    ctx.ui.length = 0; ctx.unanswered = false;
+    await appendToHandoff(conv, { text, email: cls.email }); if (cls.email) conv.slots.email = cls.email; ctx.handoff = "pending";
+    ctx.ui.push(chips(lang, [L("backToAi", lang)]));
+    return finish(L("mutedShort", lang), { intent: "muted", muted: true, answered_by: "local", route: { path: "local", reason: "with_team", confidence: 1 } });
+  };
 
   try {
     ctx.facts = await profile.facts(ctx);
@@ -144,6 +157,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
     const handoffIf = async m => {
       const hand = handoffCheck({ failedAnswersBeforeHandoff: settings.failed_answers_before_handoff, maxTokensPerConversation: settings.max_tokens_per_conversation }, m, { ...conv, failed_count: conv.failed_count - (m.unresolved_followup ? 1 : 0) }, text);
       if (!hand) return null;
+      if (withTeam) return toTeam();
       if (cls.email) conv.slots.email = cls.email;
       const h = await createHandoff(tenantId, conv, { reason: hand.reason, summary: `Intent: ${m.intent}, emotion: ${m.emotion}.`, email: cls.email || conv.slots?.email || null, order_number: cls.order_number || conv.slots?.order_number || null });
       ctx.handoff = h.reason;
@@ -163,6 +177,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
     };
     if (route.path === "local") {
       const l = await local();
+      if (withTeam && ctx.unanswered && !llm.available) return toTeam();
       if (!(ctx.unanswered && llm.available)) return finish(l.answer, { intent: merged.intent, mode: "rules", answered_by: "local", route: l.route });
       // rules found nothing → let the model try (knowledge-grounded)
       ctx.unanswered = false; ctx.ui.length = 0; route.reason = `${route.reason}|rules_unanswered`; route.path = "llm";
@@ -170,6 +185,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
     if (!llm.available) {
       // No key: best rule-based answer + offer a person.
       const l = await local("no_llm_key");
+      if (withTeam && ctx.unanswered) return toTeam();
       // Pod.AI: no trailing "I can pass it to our team" sentence — the handoff button is enough (Sherry, 2026-11-04)
       const btn = lang === "zh" ? "转人工" : lang === "de" ? "Mit einem Menschen sprechen" : lang === "fr" ? "Parler à une personne" : lang === "it" ? "Parlare con una persona" : "Talk to a person";
       if (!ctx.unanswered && !ctx.ui.some(u => u.type === "chips" && u.items.includes(btn))) ctx.ui.push(chips(lang, [btn]));

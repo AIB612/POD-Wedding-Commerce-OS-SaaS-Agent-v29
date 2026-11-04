@@ -77,6 +77,15 @@ export async function createHandoff(tenantId, conv, { reason, summary = "", emai
   conv.status = "handed_off"; conv.handoff_id = row.id;
   return row;
 }
+/** Pod.AI: handoff state for the bot — resolved by the team or idle > 24 h → the AI is back (conversation re-opened). */
+export const HANDOFF_IDLE_MS = 24 * 3600e3;
+export async function handoffStillOpen(conv, nowMs = Date.now()) {
+  if (conv.status !== "handed_off") return false;
+  const h = conv.handoff_id ? await findRecord("podai_handoffs", conv.handoff_id) : null;
+  const last = Math.max(Date.parse(h?.updated_at || h?.created_at || 0) || 0, ...conv.messages.filter(m => m.role === "user").slice(-2, -1).map(m => Date.parse(m.at) || 0));
+  if (!h || h.status === "resolved" || nowMs - last > HANDOFF_IDLE_MS) { conv.status = "open"; return false; }
+  return true;
+}
 export async function appendToHandoff(conv, { text, email }) {
   if (!conv.handoff_id) return null;
   const h = await findRecord("podai_handoffs", conv.handoff_id);

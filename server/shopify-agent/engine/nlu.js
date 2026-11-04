@@ -10,7 +10,7 @@ const WORDS = {
   de: /\b(ich|wir|sie|und|der|die|das|wie|viel|kostet|kosten|versand|nach|schweiz|bestellung|meine|meiner|lieferung|empfehlen|einladungen|stück|bitte|danke|hallo|grüezi|gibt|kann|könnt|möchte|für|mit|wo|ist|zeig|zeigen|zeigt|mir|eure|euer|ihre|produkte|artikel|habt|haben|sendung|paket)\b/gi,
   fr: /\b(je|nous|vous|est|combien|livraison|pour|commande|frais|suisse|bonjour|merci|mon|ma|mes|quels?|quelle|où|avec|cartes?|invitations?|montrez|produits|vos|votre|les|des|retour|colis|boutique|livrée?|suivi)\b/gi,
   it: /\b(io|voi|quanto|costa|spedizione|per|ordine|svizzera|ciao|grazie|mio|mia|dove|quali|con|inviti|mostrami|vostri|vostro|vostra|prodotti|negozio|della|sono|reso|pacco|buongiorno|vorrei|il|gli|consegna)\b/gi,
-  en: /\b(i|we|you|the|and|how|much|cost|shipping|to|order|my|where|is|what|recommend|please|hello|hi|thanks|for|with|can|do|does|invitations?)\b/gi
+  en: /\b(i|we|you|the|and|how|much|cost|shipping|to|order|my|where|is|what|recommend|please|hello|hi|thanks|for|with|can|do|does|invitations?|show|me|some|products?|your|any|have|sell|items?|shipping|return|refund)\b/gi
 };
 /** ISO 639-1 language of the message; `hint` (UI language) wins for very short / ambiguous messages. */
 export function detectLanguage(text, hint = "en") {
