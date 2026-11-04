@@ -1,6 +1,6 @@
 # Pod.AI — Shopify App Store listing kit (draft)
 
-Status: draft, prepared on 4 Nov 2026 for review by Sherry. Nothing has been submitted to Shopify and no billing is configured.
+Status: draft (decisions of 4 Nov 2026 19:22 applied), prepared on 4 Nov 2026 for review by Sherry. Nothing has been submitted to Shopify and no billing is configured.
 Scope: Pod.AI (the `apps/shopify-agent` app with server `server/shopify-agent`) only. The site and the site POD Agent are unchanged.
 Everything below describes features that are implemented and deployed today (Shopify app version pod-ai-8 plus the server at commit 9496d8f and later). There are no invented metrics, ratings or reviews.
 
@@ -12,7 +12,7 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 
 ### English (primary)
 
-**App name:** Pod.AI — AI Customer Chat  [25]
+**App name (approved):** Pod.AI — AI Customer Chat  [25]
 
 **Tagline (subtitle):** AI chat that answers product, shipping and order questions  [58]
 
@@ -57,12 +57,12 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 
 **Category suggestion:** Customer support → Chat (secondary: Order tracking)
 
-**Support info (placeholders — open decision):**
-- Support e-mail: `support@<pod.ai domain>` — **placeholder, to be created** (no personal address).
-- Support URL / FAQ: `https://<pod.ai domain>/support` — placeholder.
+**Support info (approved):**
+- Support e-mail: support@swisspro.site (forwards to Gmail; mailbox to be created by Sherry).
+- Support URL: https://wed.swisspro.site/agent.html (Agent intro page).
 - Privacy policy: https://wed.swisspro.site/shopify-agent/privacy (live).
-- Response time promise: e.g. "within 1 business day" — confirm.
-- Developer name on the listing: "POD.AI".
+- Developer / data controller: Dropking AI (no postal address published).
+- Response time promise: "within 1 business day" (suggested).
 
 ### German (Deutsch)
 - Tagline: KI-Chat für Produkt-, Versand- und Bestellfragen [48]
@@ -119,8 +119,7 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
     - Test: `test/privacy.test.js`.
 - **To confirm:**
   - Server location: Frankfurt, Germany (rs8-fra host).
-  - Legal entity name and address for "POD.AI" (not published; add it if your lawyer requires it).
-  - Support contact.
+- **Applied:** data controller Dropking AI (no postal address published); contact support@swisspro.site.
 
 ---
 
@@ -172,7 +171,15 @@ So conversations, and optionally tracking lookups, are the fair unit.
 - **Price:** $0.25 per AI-resolved conversation (no handoff), with a $0 minimum and a $99 cap.
 - **Rationale:** it matches the dashboard's "AI resolution rate" metric and is an attractive story. It needs stable resolution measurement first.
 
-### Open decisions for pricing
+### Decision (approved 4 Nov 2026): Option A, USD
+| Plan | Monthly | Annual (20% off) | Conversations / mo |
+|---|---|---|---|
+| Free | $0 | $0 | 50 |
+| Growth | $19/mo | $182.40/yr ($15.20/mo) | 500 |
+| Pro | $49/mo | $470.40/yr ($39.20/mo) | 2,500 |
+14-day free trial on Growth and Pro. Overage $1.50 per extra 100 conversations (capped). **Billing is NOT configured** — set up via Shopify Billing API / managed pricing only after the listing is approved.
+
+### Former open decisions for pricing (resolved above)
 - Which option to use.
 - USD or CHF on the listing (Shopify bills in USD).
 - Annual discount (17% is the market norm).
@@ -243,12 +250,33 @@ Files in `/workspace/wedai/report/podai-listing/`:
 
 ---
 
-## 6. Open decisions
-1. Support e-mail and support URL (generic POD.AI addresses still need to be created).
-2. Legal entity and address shown in the privacy policy and the Partner profile.
-3. Pricing option (A/B/C), currency and annual discount; billing stays off until decided.
+## 6. 51Tracking free API application (draft — not submitted)
+Backlink: the wed.swisspro.site footer has a small dofollow link to https://www.51tracking.com with the anchor text 国际小包查询.
+- It is in the bottom legal bar of `footer.js`.
+- It is also in the static HTML of the home page, so it can be seen without JavaScript.
+
+Form https://www.51tracking.com/apply-api — suggested values. Check the actual form labels; fields may differ.
+| Field | Value |
+|---|---|
+| Account / registered e-mail | the e-mail of the existing 51Tracking account (Sherry's login; not written here) |
+| Website URL | https://wed.swisspro.site |
+| Backlink page URL | https://wed.swisspro.site/ (footer, anchor "国际小包查询") |
+| Company / site name | Dropking AI — POD.AI |
+| Contact e-mail | support@swisspro.site |
+| Use case | Pod.AI, a Shopify customer-chat app: when a shopper asks "where is my order?", we query the tracking status of that single shipment and show it in the chat. |
+| Expected volume | < 1,000 tracking numbers / month (small Shopify merchants, launch phase) |
+| Carriers | YunExpress, 4PX, China Post / EMS, Swiss Post, DHL, other international small-parcel carriers |
+| API version | v4 (`/v4/trackings/create` + `/v4/trackings/get`) |
+| Server IP (if asked) | 57.129.90.15 |
+| Description (CN, optional) | 我们是 Shopify 应用 Pod.AI（Dropking AI 开发），在店铺客服聊天中为顾客查询其订单的物流状态。每次仅查询顾客本人订单的单号，预计每月少于 1000 个单号。网站页脚已添加 51Tracking 友情链接（国际小包查询）。 |
+
+Review takes about 4 working days, and free access lasts 200 days (based on earlier research). Once approved, the existing TRACKING51_API_KEY on rs8 should work with v4; re-test with order #1011.
+
+## 7. Open decisions
+1. Create the support@swisspro.site mailbox / forward (Sherry).
+2. Submit the 51Tracking application (§6) once the footer link is live.
+3. Billing setup after listing approval (Plan A recorded).
 4. Protected data: confirm disk and backup encryption on the rs8 host. Write the incident-response policy and a DPA.
 5. Whether to keep the "chat-influenced revenue" metric. It needs the Analytics purpose in the questionnaire.
 6. Real screenshots on dropkingdev (store password, product images) and the app icon.
 7. 51Tracking: the paid plan or the free API application decides whether "live tracking events" is promised on the listing. Without it, carriers YunExpress/4PX plus a tracking link.
-8. App name on the listing: "Pod.AI — AI Customer Chat", or plain "Pod.AI".
