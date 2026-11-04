@@ -24,6 +24,7 @@ function widgetOf(s) { const w = s.widget || {};
     language: ["auto", "en", "zh", "de", "fr", "it"].includes(w.language) ? w.language : "auto" }; }
 
 const PAGE = new URL("./admin.html", import.meta.url);
+const PRIVACY_PAGE = new URL("./privacy.html", import.meta.url);
 const attr = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const raw = express.raw({ type: () => true, limit: "1mb" });
 const json = express.json({ limit: "64kb" });
@@ -39,6 +40,9 @@ function session(req, res, next) {
 
 export function shopifyAgentRouter() {
   const r = express.Router();
+  if (process.env.NODE_ENV !== "test") { const run = () => gdpr.purgeExpired().catch(e => console.error("[pod.ai] retention purge failed:", e.message)); setTimeout(run, 60e3).unref?.(); setInterval(run, 864e5).unref?.(); }
+  // public privacy policy (App Store listing link)
+  r.get(["/shopify-agent/privacy", "/shopify-agent/privacy.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(PRIVACY_PAGE, "utf8")));
   r.use("/shopify-agent", (req, res, next) => { req.tenantId = undefined; next(); }); // never trust x-tenant-id here
 
   r.post("/shopify-agent/webhooks", raw, ah(async (req, res) => {

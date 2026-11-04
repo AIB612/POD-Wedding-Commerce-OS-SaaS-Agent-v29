@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy — Pod.AI by POD.AI</title><meta name="description" content="How the Pod.AI Shopify app handles merchant and customer data.">
+<style>
+:root{--ink:#2b2520;--mut:#6f655c;--bg:#f6f1ea;--card:#fffdf9;--line:#e7ded3;--acc:#b07a4f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif}
+header{max-width:860px;margin:0 auto;padding:40px 24px 8px;display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:12px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:700}
+.brand{font-family:Georgia,"Times New Roman",serif;font-size:22px}.brand small{display:block;font:13px/1.2 inherit;color:var(--mut);font-family:inherit}
+main{max-width:860px;margin:16px auto 40px;padding:32px 36px;background:var(--card);border:1px solid var(--line);border-radius:20px}
+h1{font-family:Georgia,serif;font-weight:500;font-size:34px;margin:0 0 4px}h2{font-size:19px;margin:30px 0 8px}
+.mut{color:var(--mut)}table{width:100%;border-collapse:collapse;font-size:14.5px;margin:8px 0}th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}th{background:#f3ece3}
+code{background:#f3ece3;padding:1px 5px;border-radius:5px;font-size:13.5px}footer{text-align:center;color:var(--mut);font-size:13px;padding:0 0 40px}a{color:var(--acc)}
+@media(max-width:600px){main{padding:22px 18px;border-radius:0}h1{font-size:27px}}
+</style></head><body>
+<header><div class="logo">P</div><div class="brand">Pod.AI<small>by POD.AI</small></div></header>
+<main>
+<h1>Privacy Policy</h1>
+<p class="mut">Pod.AI — AI customer chat for Shopify stores · Last updated: 4 November 2026</p>
+
+<p>Pod.AI ("the App") is a Shopify app operated by POD.AI ("we", "us"). It adds a customer chat to a merchant's online store that answers questions about products, shipping, policies and orders, and passes questions it cannot answer to the merchant's team. This policy explains what data the App accesses, why, where it is stored, how long it is kept and how it is deleted.</p>
+<p>For data about their customers, the merchant is the data controller and POD.AI acts as a processor on the merchant's behalf.</p>
+
+<h2>1. Data the App reads from Shopify</h2>
+<table><tr><th>Access scope</th><th>What we read</th><th>Why</th></tr>
+<tr><td><code>read_products</code></td><td>Products: title, handle, price, images, variants and availability, product type, collections, selected metafields</td><td>Showing product answers and product cards in the chat</td></tr>
+<tr><td><code>read_orders</code></td><td>One order at a time: order number, status, line items, totals, fulfilment and tracking numbers / carrier</td><td>"Where is my order?" answers. An order is only shown when the customer gives <b>both</b> the order number and the matching e-mail address. Orders are fetched live and not copied into our database.</td></tr>
+<tr><td><code>read_shipping</code></td><td>Delivery profiles, zones and rates</td><td>Shipping cost and destination answers</td></tr>
+<tr><td><code>read_discounts</code></td><td>Discount codes and their validity</td><td>Answering whether a code is valid</td></tr>
+<tr><td><code>read_legal_policies</code></td><td>Shipping, refund, privacy and terms policies; shop name, contact e-mail, currency, tax setting, primary domain</td><td>Policy answers; shop facts are cached in memory for a short time only</td></tr></table>
+<p>Protected customer data (the order's e-mail address, and the customer name / shipping country on an order) is only used to verify and answer the customer's own order question. Chat-influenced revenue in the merchant dashboard is computed from order attribution data (UTM tags) without storing customer details.</p>
+
+<h2>2. Data collected in the chat</h2>
+<ul>
+<li><b>Chat messages</b> customers type, the App's replies, detected language and intent, and the store page the chat was opened on. Card numbers and similar payment data are detected and never stored.</li>
+<li><b>E-mail address and order number</b> when a customer provides them (order lookup or "talk to a person").</li>
+<li><b>Handoffs</b>: when the App passes a conversation to the merchant's team, the handoff record holds the reason, a short summary, the customer's messages and their e-mail for the reply.</li>
+<li><b>Anonymous storefront events</b>: chat opened, product card clicked, add to cart via a card, and a daily "chat installed" heartbeat. These contain no personal data.</li>
+</ul>
+<p>The App does not use cookies for tracking. It stores a random chat ID and the time of the last heartbeat in the visitor's browser storage so the conversation can continue across pages. We do not sell data, use it for advertising, or combine it across stores.</p>
+
+<h2>3. Where data is stored</h2>
+<p>Data is stored on our application server in Germany (Frankfurt), separated per shop. Collections used: <code>podai_conversations</code>, <code>podai_handoffs</code>, <code>podai_events</code>, <code>podai_settings</code>, <code>podai_shops</code> (the shop's access token, encrypted at rest) and <code>podai_gdpr</code> (a log of privacy requests with hashed customer identifiers). All traffic uses HTTPS. Requests from the storefront are verified with Shopify's app-proxy signature; admin requests use Shopify session tokens.</p>
+
+<h2>4. Third parties (sub-processors)</h2>
+<table><tr><th>Service</th><th>Data sent</th><th>When</th></tr>
+<tr><td>Shopify</td><td>API requests for the data above</td><td>Always</td></tr>
+<tr><td>Carrier tracking APIs (e.g. YunExpress, 4PX)</td><td>Tracking number only</td><td>When a customer asks about a shipped order and the carrier is supported</td></tr>
+<tr><td>51Tracking</td><td>Tracking number and carrier code only</td><td>Fallback parcel tracking, if enabled</td></tr>
+<tr><td>Large language model provider (optional; e.g. OpenAI, xAI or DeepSeek, as configured)</td><td>The customer's message, recent chat context and the store's public product / policy facts needed to answer</td><td>Only if an LLM is configured and the merchant has "LLM answers" switched on. Otherwise answers come from built-in rules and the store's own data.</td></tr></table>
+<p>No customer e-mail addresses or names are sent to carriers or 51Tracking. The App does not send e-mails to customers.</p>
+
+<h2>5. Retention</h2>
+<ul>
+<li>Conversations and handoffs: deleted automatically 12 months after the last activity (and each shop keeps at most its 1,000 most recent conversations).</li>
+<li>Anonymous storefront events: deleted after 13 months.</li>
+<li>Privacy-request log (hashed identifiers only): 3 years, as proof of compliance.</li>
+<li>When the App is uninstalled, all data of the shop is deleted when Shopify sends the <code>shop/redact</code> request (48 hours after uninstall).</li>
+</ul>
+
+<h2>6. Data subject rights and GDPR requests</h2>
+<p>The App implements Shopify's mandatory privacy webhooks:</p>
+<ul>
+<li><code>customers/data_request</code>: we record which conversations and handoffs relate to the customer so the merchant can provide them (shown in the App's admin).</li>
+<li><code>customers/redact</code>: we delete that customer's conversations, handoffs and related chat events.</li>
+<li><code>shop/redact</code>: we delete all data of the shop.</li>
+</ul>
+<p>Customers should send access, correction or deletion requests to the store they shopped with. The merchant can also delete individual conversations through these requests. Under the GDPR and the Swiss FADP you have the right to access, rectify, erase, restrict and object to processing, and to complain to a supervisory authority.</p>
+
+<h2>7. Security</h2>
+<p>Encrypted access tokens, HMAC-verified webhooks, signed storefront requests, per-shop data separation, rate limiting, and payment-data and prompt-injection filtering in the chat.</p>
+
+<h2>8. Changes and contact</h2>
+<p>We will post changes on this page and update the date above. For privacy questions about the App, contact POD.AI via the support link on the Pod.AI listing in the Shopify App Store.</p>
+</main>
+<footer>© 2026 POD.AI</footer>
+</body></html>

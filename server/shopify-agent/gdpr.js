@@ -20,7 +20,10 @@ export async function dataRequest(shop, p = {}) {
 export async function customerRedact(shop, p = {}) {
   const email = String(p.customer?.email || "").toLowerCase(), tenant = tenantFor(shop);
   let removed = 0;
-  for (const col of ["podai_conversations", "podai_handoffs"]) removed += (await removeWhere(col, r => r.tenant_id === tenant && mentions(r, email))).length;
+  const convs = await removeWhere("podai_conversations", r => r.tenant_id === tenant && mentions(r, email)); removed += convs.length;
+  removed += (await removeWhere("podai_handoffs", r => r.tenant_id === tenant && (mentions(r, email) || convs.some(c => c.id === r.conversation_id)))).length;
+  const ids = new Set(convs.map(c => c.id)); // storefront events of those chats (no personal data, but linked by chat id)
+  if (ids.size) await removeWhere("podai_events", r => r.tenant_id === tenant && ids.has(r.conversation_id));
   await log(shop, "customers/redact", { customer: hash(email) });
   return { removed };
 }
@@ -32,6 +35,17 @@ export async function shopRedact(shop) {
   await removeWhere("podai_shops", r => r.id === normalizeShop(shop));
   clearFactsCache(shop);
   return { ok: true };
+}
+/** Retention (privacy policy): chats + handoffs 12 months after the last activity, storefront events 13 months, GDPR log 3 years. */
+export const RETENTION_DAYS = { podai_conversations: 365, podai_handoffs: 365, podai_events: 400, podai_gdpr: 1095 };
+export async function purgeExpired(nowMs = Date.now()) {
+  const out = {};
+  const at = { podai_conversations: r => r.last_message_at || r.created_at, podai_handoffs: r => r.updated_at || r.created_at, podai_events: r => r.at, podai_gdpr: r => r.at };
+  for (const [col, days] of Object.entries(RETENTION_DAYS)) {
+    const cut = nowMs - days * 864e5;
+    out[col] = (await removeWhere(col, r => String(r.tenant_id || "").startsWith("shopagent_") && (Date.parse(at[col](r)) || nowMs) < cut)).length;
+  }
+  return out;
 }
 export async function uninstalled(shop) { await markUninstalled(shop); clearFactsCache(shop); return { ok: true }; }
 
