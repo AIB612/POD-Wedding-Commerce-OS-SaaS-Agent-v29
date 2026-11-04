@@ -1,4 +1,4 @@
-// Shopify "Wed.AI Chat Agent" app (standalone, App Store candidate) — core: config, per-shop install rows, request verification,
+// Shopify "Pod.AI" app (standalone, App Store candidate) — core: config, per-shop install rows, request verification,
 // Admin GraphQL. Separate Partner app from "POD Wedding Studio": own credentials (AGENT_SHOPIFY_API_KEY / AGENT_SHOPIFY_API_SECRET).
 // Isolation: every shop is its own tenant `shopagent_<shop>.myshopify.com`. The tenant is derived ONLY from
 //   - an App Bridge session token signed with the agent app secret (embedded admin), or

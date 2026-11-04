@@ -1,7 +1,7 @@
 // Routes of the Shopify Chat Agent app (mounted before express.json; each route parses its own body).
 //   GET  /shopify-agent                    embedded admin (App Bridge; KPIs, knowledge, handoffs, settings)
 //   GET|POST /shopify-agent/api/*          admin JSON API — Authorization: Bearer <session token> (shop from the token only)
-//   POST /shopify-agent/proxy/chat         storefront chat via App Proxy (/apps/wedai-agent/chat), Shopify signature required
+//   POST /shopify-agent/proxy/chat         storefront chat via App Proxy (/apps/podai/chat), Shopify signature required
 //   POST /shopify-agent/webhooks           app/uninstalled + GDPR topics (HMAC on the raw body)
 import express from "express";
 import fs from "node:fs";

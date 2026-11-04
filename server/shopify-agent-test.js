@@ -50,7 +50,7 @@ const call = async (p, { method = "GET", body, headers = {} } = {}) => {
   let json = null; const text = await r.text(); try { json = JSON.parse(text); } catch { /* text */ }
   return { status: r.status, json, text, headers: r.headers };
 };
-const signedQuery = (shop, extra = {}) => { const q = { shop, logged_in_customer_id: "", path_prefix: "/apps/wedai-agent", timestamp: String(Math.floor(Date.now() / 1000)), ...extra }; q.signature = core.proxySignature(q, "agentsecret"); return new URLSearchParams(q).toString(); };
+const signedQuery = (shop, extra = {}) => { const q = { shop, logged_in_customer_id: "", path_prefix: "/apps/podai", timestamp: String(Math.floor(Date.now() / 1000)), ...extra }; q.signature = core.proxySignature(q, "agentsecret"); return new URLSearchParams(q).toString(); };
 const proxy = (shop, message, conversation_id) => call(`/shopify-agent/proxy/chat?${signedQuery(shop)}`, { method: "POST", body: { message, conversation_id, lang: "en" } });
 const adm = (shop, p, opt = {}) => call(`/shopify-agent/api${p}`, { ...opt, headers: { Authorization: `Bearer ${core.signSession(shop)}` } });
 const hook = (topic, shop, payload, { bad = false, id = crypto.randomUUID() } = {}) => {

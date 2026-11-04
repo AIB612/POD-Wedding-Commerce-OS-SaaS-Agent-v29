@@ -40,7 +40,7 @@
     10. 运行模式与部署
     附录 A  术语
     附录 B  与独立版 POD Agent 的差异（保留 / 替换 / 跳过）
-    附录 D  独立 Shopify App「Wed.AI Chat Agent」
+    附录 D  独立 Shopify App「Pod.AI」
     附录 C  修订记录（放在最后）
 
 
@@ -967,15 +967,15 @@ B.3 跳过（本版没有）
 
 
 ======================================================================
-附录 D  独立 Shopify App「Wed.AI Chat Agent」
+附录 D  独立 Shopify App「Pod.AI」
 ----------------------------------------------------------------------
   D.1 是什么：只把客户聊天 Agent 打包成可装到任何 Shopify 店铺的 App。
       与「POD Wedding Studio」是两个不同的 Partner App，凭据分开
       （AGENT_SHOPIFY_API_KEY / AGENT_SHOPIFY_API_SECRET，只放服务器 .env）。
   D.2 组成：
-      · 店面聊天：主题应用扩展 app embed（apps/shopify-agent/extensions/wedai-chat），
+      · 店面聊天：主题应用扩展 app embed（apps/shopify-agent/extensions/podai-chat），
         商家在 主题编辑 → App embeds 打开，不改主题代码、不注入脚本。
-      · 聊天接口：/apps/wedai-agent/chat → App Proxy → /shopify-agent/proxy/chat，
+      · 聊天接口：/apps/podai/chat → App Proxy → /shopify-agent/proxy/chat，
         服务器校验 Shopify 签名，店铺只从签名里取。
       · 后台：/shopify-agent（App Bridge + session token），概览 KPI、转人工队列、
         知识库、设置、试聊、安装说明。
@@ -1064,3 +1064,9 @@ B.3 跳过（本版没有）
         根目录 shopify.app.toml 删除旧 Render 回调地址；
         新测试 test:shopify-agent（已加入 test:all）。
         影响条款：7（新文件）、附录 D（新增）。
+
+    __HASH__ · 2026-11-04 · 独立 Shopify App 改名为「Pod.AI」：
+        shopify.app.toml name = "Pod.AI"；主题扩展目录 extensions/podai-chat，
+        店面 App embed 名称「Pod.AI Chat」；App Proxy 子路径 /apps/podai；
+        后台标题、README、.env.example 注释同步。Wed.AI 网站品牌不变。
+        影响条款：附录 D。

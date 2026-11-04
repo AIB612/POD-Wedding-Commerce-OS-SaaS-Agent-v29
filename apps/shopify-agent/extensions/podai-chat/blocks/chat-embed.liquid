@@ -1,6 +1,6 @@
-{%- comment -%} Wed.AI Chat Agent — app embed block (Online Store → Customize → App embeds). No script injection: Shopify loads this block. {%- endcomment -%}
-<div id="wedai-chat-root"
-  data-proxy="{{ routes.root_url | remove_last: '/' }}/apps/wedai-agent"
+{%- comment -%} Pod.AI — app embed block (Online Store → Customize → App embeds). No script injection: Shopify loads this block. {%- endcomment -%}
+<div id="podai-chat-root"
+  data-proxy="{{ routes.root_url | remove_last: '/' }}/apps/podai"
   data-lang="{{ request.locale.iso_code }}"
   data-title="{{ block.settings.title | escape }}"
   data-accent="{{ block.settings.accent }}"
@@ -8,7 +8,7 @@
   data-placeholder="{{ 'chat.placeholder' | t }}"></div>
 {% schema %}
 {
-  "name": "Wed.AI Chat",
+  "name": "Pod.AI Chat",
   "target": "body",
   "javascript": "chat.js",
   "stylesheet": "chat.css",

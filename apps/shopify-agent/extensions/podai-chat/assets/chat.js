@@ -1,5 +1,5 @@
 (function () {
-  var root = document.getElementById("wedai-chat-root");
+  var root = document.getElementById("podai-chat-root");
   if (!root || root.dataset.ready) return; root.dataset.ready = "1";
   var d = root.dataset, accent = d.accent || "#1f2937", side = d.position === "left" ? "wdc-left" : "wdc-right", key = "wdc_conv";
   var conv = null; try { conv = sessionStorage.getItem(key); } catch (e) {}
