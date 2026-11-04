@@ -38,11 +38,13 @@ export const validConversationId = id => /^c_[a-z0-9]{12,40}$/.test(String(id ||
 export const newConversationId = () => `c_${crypto.randomBytes(10).toString("hex")}`;
 
 export async function findOrCreateConversation(tenantId, id, { lang, page } = {}) {
+  let taken = false;
   if (validConversationId(id)) {
     const c = await findRecord("agent_conversations", id);
     if (c && c.tenant_id === tenantId) return c;
+    taken = !!c; // id of another tenant's chat: never reuse it (would overwrite that chat on save)
   }
-  const conv = { id: validConversationId(id) ? id : newConversationId(), tenant_id: tenantId, channel: "webchat", status: "open", language: lang || null,
+  const conv = { id: validConversationId(id) && !taken ? id : newConversationId(), tenant_id: tenantId, channel: "webchat", status: "open", language: lang || null,
     created_at: now(), last_message_at: now(), messages: [], intents: {}, tools: {}, slots: {}, failed_count: 0, total_tokens: 0, handoff_id: null, page: page || null };
   await addRecord("agent_conversations", conv);
   await prune(tenantId);

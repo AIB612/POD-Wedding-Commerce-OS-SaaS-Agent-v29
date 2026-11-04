@@ -1,0 +1,21 @@
+{%- comment -%} Wed.AI Chat Agent — app embed block (Online Store → Customize → App embeds). No script injection: Shopify loads this block. {%- endcomment -%}
+<div id="wedai-chat-root"
+  data-proxy="{{ routes.root_url | remove_last: '/' }}/apps/wedai-agent"
+  data-lang="{{ request.locale.iso_code }}"
+  data-title="{{ block.settings.title | escape }}"
+  data-accent="{{ block.settings.accent }}"
+  data-position="{{ block.settings.position }}"
+  data-placeholder="{{ 'chat.placeholder' | t }}"></div>
+{% schema %}
+{
+  "name": "Wed.AI Chat",
+  "target": "body",
+  "javascript": "chat.js",
+  "stylesheet": "chat.css",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Chat title", "default": "Questions? Chat with us" },
+    { "type": "color", "id": "accent", "label": "Accent colour", "default": "#1f2937" },
+    { "type": "select", "id": "position", "label": "Position", "default": "right", "options": [ { "value": "right", "label": "Bottom right" }, { "value": "left", "label": "Bottom left" } ] }
+  ]
+}
+{% endschema %}

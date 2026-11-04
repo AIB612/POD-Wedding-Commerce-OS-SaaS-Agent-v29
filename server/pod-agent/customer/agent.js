@@ -188,7 +188,7 @@ async function ruleAnswer(ctx, cls, text, tools) {
  * input: { message, conversation_id?, lang? (UI language), country? (visitor market country), page? }
  * Returns { answer, reply, conversation_id, language, intent, ui, handoff, mode, tools_used }.
  */
-export async function handleChat({ tenantId = "tenant_demo", message, conversation_id, lang: uiLang, country, page } = {}) {
+export async function handleChat({ tenantId = "tenant_demo", message, conversation_id, lang: uiLang, country, page, profile = null } = {}) {
   const settings = await getSettings(tenantId);
   const hint = LANGS.includes(String(uiLang || "").slice(0, 2)) ? String(uiLang).slice(0, 2) : "en";
   let text = String(message || "").trim().slice(0, 1000);
@@ -196,7 +196,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
   if (!text) return { answer: "", reply: "", skipped: "empty_message", ui: [] };
   if (!settings.enabled) return { answer: L("disabled", hint), reply: L("disabled", hint), ui: [], mode: "disabled" };
   const conv = await findOrCreateConversation(tenantId, conversation_id, { lang: hint, page: page ? String(page).slice(0, 200) : null });
-  const ctx = { tenantId, settings, conv, ui: [], toolLog: [], llm, countryHint: /^[A-Z]{2}$/.test(String(country || "")) ? String(country) : null, handoff: null, unanswered: false };
+  const ctx = { tenantId, settings, conv, ui: [], toolLog: [], llm, countryHint: /^[A-Z]{2}$/.test(String(country || "")) ? String(country) : null, handoff: null, unanswered: false, profile };
   const lang = /^[\s\S]{0,6}$/.test(text) && !/[\u3400-\u9fff]/.test(text) ? (conv.language || hint) : detectLanguage(text, conv.language || hint);
   ctx.lang = conv.language = lang;
   const out = (answer, extra = {}) => ({ answer, reply: answer, conversation_id: conv.id, language: lang, ui: ctx.ui, mode: extra.mode || llm.mode, handoff: ctx.handoff, tools_used: ctx.toolLog.map(t => t.name), ...extra });
@@ -228,7 +228,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
   }
 
   try {
-    ctx.facts = await shopFacts(tenantId);
+    ctx.facts = profile?.facts ? await profile.facts(ctx) : await shopFacts(tenantId);
     const followUp = !!(conv.slots?.pending && (cls.country || cls.quantity || cls.products?.length || cls.email || cls.order_number || (conv.slots.pending === "tracking" && /[A-Z0-9]{6,}/i.test(text))));
     let merged = { ...cls, emotion: "calm", wants_human: false, abusive: false, threat: false, unresolved_followup: UNRESOLVED_RE.test(text), price_hesitation: HESITATION_RE.test(text) };
     conv.failed_count = merged.unresolved_followup ? (conv.failed_count || 0) + 1 : 0;
@@ -245,11 +245,11 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
     const early = await handoffIf(merged); if (early) return early;
 
     // ⑧ route: local (rules + shop data) unless the question is complex / unmatched
-    const kb = cls.intent === "other" && !followUp ? await searchKnowledge(tenantId, text, lang, { custom: settings.custom_faq }) : [];
+    const kb = cls.intent === "other" && !followUp ? await (profile?.searchKnowledge || searchKnowledge)(tenantId, text, lang, { custom: settings.custom_faq }) : [];
     const route = decideRoute({ cls, text, kbScore: kb[0]?.score || 0, followUp });
-    const tools = createTools(ctx);
+    const tools = (profile?.createTools || createTools)(ctx);
     const local = async (extraReason) => {
-      const answer = await ruleAnswer(ctx, merged, text, tools);
+      const answer = await (profile?.ruleAnswer || ruleAnswer)(ctx, merged, text, tools);
       const r = { ...route, path: "local", ...(extraReason ? { reason: `${route.reason}|${extraReason}` } : {}) };
       return { answer, route: r };
     };
@@ -275,13 +275,13 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
         } catch { /* classifier optional */ }
         const late = await handoffIf(merged); if (late) return late;
         const history = conv.messages.slice(-11, -1).map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.text }));
-        const r = await runToolLoop({ messages: [{ role: "system", content: systemPrompt({ facts: ctx.facts, conv, lang, countryHint: ctx.countryHint, canIssueDiscount: !!settings.sales_discount?.enabled }) }, ...history, { role: "user", content: text }],
+        const r = await runToolLoop({ messages: [{ role: "system", content: (profile?.systemPrompt || systemPrompt)({ facts: ctx.facts, conv, lang, countryHint: ctx.countryHint, canIssueDiscount: !!settings.sales_discount?.enabled }) }, ...history, { role: "user", content: text }],
           tools: tools.definitions, executeTool: tools.execute, maxToolCalls: 4 });
         conv.total_tokens += r.tokens || 0;
         if (r.text) return finish(r.text, { intent: merged.intent, mode: "llm_tools", answered_by: "llm", route: { ...route, path: "llm" } });
       } else {
-        const hits = kb.length ? kb : await searchKnowledge(tenantId, text, lang, { custom: settings.custom_faq });
-        const sys = `${systemPrompt({ facts: ctx.facts, conv, lang, countryHint: ctx.countryHint, canIssueDiscount: false })}\n\nKNOWLEDGE (use only this):\n${hits.map(h => `- ${h.question} ${h.answer}`).join("\n") || "- (no match)"}\nIf the knowledge does not answer it, say you will check with the team.`;
+        const hits = kb.length ? kb : await (profile?.searchKnowledge || searchKnowledge)(tenantId, text, lang, { custom: settings.custom_faq });
+        const sys = `${(profile?.systemPrompt || systemPrompt)({ facts: ctx.facts, conv, lang, countryHint: ctx.countryHint, canIssueDiscount: false })}\n\nKNOWLEDGE (use only this):\n${hits.map(h => `- ${h.question} ${h.answer}`).join("\n") || "- (no match)"}\nIf the knowledge does not answer it, say you will check with the team.`;
         const a = await answerOpenQuestion({ system: sys, user: text });
         if (a) return finish(a, { intent: merged.intent, mode: "llm_answers", answered_by: "llm", route: { ...route, path: "llm" } });
       }

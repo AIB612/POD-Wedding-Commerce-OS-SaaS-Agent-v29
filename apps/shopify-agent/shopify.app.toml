@@ -1,0 +1,40 @@
+# Wed.AI Chat Agent — standalone Shopify app (App Store candidate). Separate Partner app from "POD Wedding Studio".
+# client_id is filled by `shopify app config link` after the app is created in the Partner/Dev Dashboard (see README.md).
+client_id = "REPLACE_WITH_AGENT_APP_CLIENT_ID"
+name = "Wed.AI Chat Agent"
+application_url = "https://wed.swisspro.site/shopify-agent"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = false
+include_config_on_deploy = true
+
+[access_scopes]
+# read_orders: order status in chat (protected customer data: e-mail, Level 2 request needed)
+# read_products: product search · read_legal_policies: shipping / refund / contact policies as knowledge
+scopes = "read_products,read_orders,read_legal_policies"
+
+use_legacy_install_flow = false
+
+[auth]
+# Shopify-managed install + token exchange: no OAuth callback route is used.
+redirect_urls = [ "https://wed.swisspro.site/shopify-agent" ]
+
+[webhooks]
+api_version = "2026-10"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "https://wed.swisspro.site/shopify-agent/webhooks"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+  uri = "https://wed.swisspro.site/shopify-agent/webhooks"
+
+[app_proxy]
+url = "https://wed.swisspro.site/shopify-agent/proxy"
+subpath = "wedai-agent"
+prefix = "apps"
+
+[pos]
+embedded = false

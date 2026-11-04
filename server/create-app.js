@@ -10,6 +10,7 @@ import { accountRouter } from "./routes/account.js";
 import { securityHeaders, errorHandler, notFound } from "./http/middleware.js";
 import webhooks from "./routes/webhooks.js";
 import shopifyApp from "./routes/shopify-app.js";
+import { shopifyAgentRouter } from "./shopify-agent/routes.js";
 import { getDb } from "./db/index.js";
 import { publicRouter } from "./routes/public.js";
 import { adminRouter } from "./routes/admin.js";
@@ -39,6 +40,7 @@ export async function createApp({ root = projectRoot, generatedDir = path.join(p
 
   // Webhooks MUST see raw bytes before express.json().
   app.use(webhooks);
+  app.use(shopifyAgentRouter()); // Shopify Chat Agent app: App Proxy chat, embedded admin, GDPR webhooks (own body parsing)
   app.use(shopifyApp); // Shopify app OAuth + webhooks (raw body); admin JSON routes parse their own body
 
   // 1 MB default JSON limit; /api/invitations sets its own larger limit (photos are embedded as data URLs).

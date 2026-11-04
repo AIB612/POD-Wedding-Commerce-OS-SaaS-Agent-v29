@@ -40,7 +40,8 @@
     10. 运行模式与部署
     附录 A  术语
     附录 B  与独立版 POD Agent 的差异（保留 / 替换 / 跳过）
-    附录 C  修订记录
+    附录 D  独立 Shopify App「Wed.AI Chat Agent」
+    附录 C  修订记录（放在最后）
 
 
 ======================================================================
@@ -966,6 +967,30 @@ B.3 跳过（本版没有）
 
 
 ======================================================================
+附录 D  独立 Shopify App「Wed.AI Chat Agent」
+----------------------------------------------------------------------
+  D.1 是什么：只把客户聊天 Agent 打包成可装到任何 Shopify 店铺的 App。
+      与「POD Wedding Studio」是两个不同的 Partner App，凭据分开
+      （AGENT_SHOPIFY_API_KEY / AGENT_SHOPIFY_API_SECRET，只放服务器 .env）。
+  D.2 组成：
+      · 店面聊天：主题应用扩展 app embed（apps/shopify-agent/extensions/wedai-chat），
+        商家在 主题编辑 → App embeds 打开，不改主题代码、不注入脚本。
+      · 聊天接口：/apps/wedai-agent/chat → App Proxy → /shopify-agent/proxy/chat，
+        服务器校验 Shopify 签名，店铺只从签名里取。
+      · 后台：/shopify-agent（App Bridge + session token），概览 KPI、转人工队列、
+        知识库、设置、试聊、安装说明。
+      · Webhook：/shopify-agent/webhooks —— app/uninstalled 与三个 GDPR 主题，
+        HMAC 错误返回 401，其余返回 200。
+  D.3 数据隔离：每个店铺一个租户 shopagent_<店铺域名>，只来自已校验的
+      session token / App Proxy 签名 / webhook HMAC；店铺之间、与 Wed.AI 之间
+      不共享会话、转人工、知识库；Wed.AI 内置 FAQ、商品、价格不会出现在店铺里。
+  D.4 回答来源：店铺自己的政策（运费 / 退货 / 联系方式）+ 商家知识库；
+      商品来自 Admin API 搜索；订单需订单号 + 下单邮箱一致（5 次失败锁 15 分钟）；
+      运费不能在结账外通用计算 → 回答运费政策 +“结账时按地址计算”。
+  D.5 验证：npm run test:shopify-agent（签名、安装、店面聊天、隔离、后台、
+      webhook、Wed.AI 结账 CHF 6.34 / 13.15 不变）。
+  D.6 需要 Partner 账号的步骤与上架清单：见 apps/shopify-agent/README.md。
+
 附录 C  修订记录
 ======================================================================
     修订规则：系统每次更新（代码、配置、后台、部署），必须在同一次提交或紧接
@@ -1029,3 +1054,13 @@ B.3 跳过（本版没有）
         三条 Agent 通道（客户聊天 / 后台运营 / 旧 /api/agent/chat）及审批只改
         状态不执行；均链接本文档为客户聊天 Agent 的权威文档。
         影响条款：无（本文档条款不变；7 中提到的文件说明以本文档为准）。
+
+    __HASH__ · 2026-11-01 · 独立 Shopify App「Wed.AI Chat Agent」（测试阶段，未提交 App Store）：
+        新增 server/shopify-agent/（core / profile / gdpr / routes / admin.html）与
+        apps/shopify-agent/（shopify.app.toml + 主题应用扩展 app embed）；
+        handleChat 新增可选 profile（知识、工具、规则答复、提示词可替换），
+        Wed.AI 站内行为不变；store.js：别的租户的会话 ID 不再复用（之前会覆盖）；
+        auth.js：x-tenant-id / tenant_id 不能选择 shopagent_ 租户；
+        根目录 shopify.app.toml 删除旧 Render 回调地址；
+        新测试 test:shopify-agent（已加入 test:all）。
+        影响条款：7（新文件）、附录 D（新增）。

@@ -15,7 +15,9 @@ function cookieValue(req,name){
 }
 
 export function tenantContext(req, res, next) {
-  req.tenantId = req.get("x-tenant-id") || req.query.tenant_id || process.env.DEFAULT_TENANT_ID || "tenant_demo";
+  const asked = req.get("x-tenant-id") || req.query.tenant_id;
+  // Shopify Chat Agent tenants (shopagent_<shop>) are only reachable through verified Shopify requests (server/shopify-agent).
+  req.tenantId = (asked && !String(asked).startsWith("shopagent_") ? asked : null) || process.env.DEFAULT_TENANT_ID || "tenant_demo";
   req.userRole = req.get("x-user-role") || "admin";
   next();
 }
