@@ -20,6 +20,9 @@ function normaliseCustom(list = []) {
 const strip = h => String(h || "").replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
 const POLICY_TAGS = { SHIPPING_POLICY: "shipping delivery versand livraison 运费 配送 发货 customs", REFUND_POLICY: "return returns refund exchange rückgabe retoure umtausch retour 退货 退款 换货",
   CONTACT_INFORMATION: "contact email phone address kontakt 联系", PRIVACY_POLICY: "privacy data datenschutz 隐私", TERMS_OF_SERVICE: "terms conditions agb 条款", SUBSCRIPTION_POLICY: "subscription abo 订阅", LEGAL_NOTICE: "impressum legal notice" };
+const POLICY_NAME = { REFUND_POLICY: { en: "return / refund policy", de: "Rückgabe-/Erstattungsrichtlinie", fr: "politique de retour", zh: "退换货政策" },
+  SHIPPING_POLICY: { en: "shipping policy", de: "Versandrichtlinie", fr: "politique d'expédition", zh: "配送政策" },
+  CONTACT_INFORMATION: { en: "contact page", de: "Kontaktseite", fr: "page de contact", zh: "联系方式" } };
 const INTENT_POLICY = { shipping_quote: "SHIPPING_POLICY", delivery_time: "SHIPPING_POLICY", customs: "SHIPPING_POLICY", return_request: "REFUND_POLICY", cancel_or_change: "REFUND_POLICY", contact_info: "CONTACT_INFORMATION" };
 
 const FACTS_TTL = 10 * 60_000, factsCache = new Map();
@@ -33,8 +36,9 @@ export async function shopFactsFor(shop) {
     const s = d.shop || {};
     facts = { shop_name: s.name || facts.shop_name, email: s.contactEmail || null, currency: s.currencyCode || null, taxes_included: !!s.taxesIncluded, url: s.primaryDomain?.url || facts.url,
       policies: (s.shopPolicies || []).map(p => ({ type: p.type, title: p.title, text: strip(p.body).slice(0, 1500), url: p.url })).filter(p => p.text) };
-  } catch (e) { facts.error = e.message; }
-  factsCache.set(shop, { at: Date.now(), facts });
+  } catch (e) { facts.error = e.message; console.error("[pod.ai] shop facts failed:", shop, String(e.message).slice(0, 200)); }
+  // errors are cached only briefly so a fixed scope / token is picked up at once
+  factsCache.set(shop, { at: facts.error ? Date.now() - FACTS_TTL + 30_000 : Date.now(), facts });
   return facts;
 }
 
@@ -71,21 +75,25 @@ export async function findShopOrder(shop, { order_number, email }) {
     total: o.totalPriceSet?.shopMoney?.amount, currency: o.totalPriceSet?.shopMoney?.currencyCode, items: (o.lineItems?.nodes || []).map(i => ({ title: i.title, quantity: i.quantity })), tracking } };
 }
 
-const PRODUCT_Q = `query($q: String!) { products(first: 4, query: $q) { nodes { id title handle onlineStoreUrl status productType featuredImage { url }
+const PRODUCT_Q = `query($q: String!, $first: Int!, $sort: ProductSortKeys!, $rev: Boolean!) { products(first: $first, query: $q, sortKey: $sort, reverse: $rev) { nodes { id title handle onlineStoreUrl status productType featuredImage { url }
   priceRangeV2 { minVariantPrice { amount currencyCode } maxVariantPrice { amount currencyCode } } collections(first: 3) { nodes { title } }
   variants(first: 5) { nodes { title price availableForSale } } metafields(first: 5) { nodes { namespace key value type } } } } }`;
-export async function searchShopProducts(shop, query) {
-  const ts = terms(query).filter(t => !/^(do|have|sell|buy|price|cost|kostet|preis|any|some|product|products|item|items|shop|store|you|recommend|looking|need|want|show)$/.test(t)).slice(0, 4);
-  if (!ts.length) return { ok: true, products: [] };
-  const q = `(${ts.map(t => `title:*${t.replace(/[^\p{L}\p{N}-]/gu, "")}*`).join(" OR ")}) AND status:active`;
+/** Generic "show me products / what do you sell / bestsellers" requests (EN / DE / FR / ZH). */
+export const BROWSE_RE = /(\b(show|see|list|browse)\b.{0,20}\b(products?|items?|things|collection|catalog(ue)?|range|stuff)\b|what (do|can) (you|i) (sell|buy|offer|have)|what('s| is) (for sale|in stock|available)|\b(your|all) (products|items)\b|best ?sellers?|top sellers?|most popular|popular (products|items)|new arrivals|what'?s new|\bcatalog(ue)?\b|\b(produkte|sortiment|angebot)\b|was (verkauft|habt|haben) (ihr|sie)|zeig(en sie)? (mir )?.{0,10}(produkte|artikel)|meistverkauft|beliebteste|vos produits|qu'est-ce que vous vendez|有什么(商品|产品|卖)|卖什么|看看(商品|产品)|商品列表|所有商品|热卖|畅销|爆款|新品|推荐.{0,4}(商品|产品))/i;
+const NOT_A_WORD = /^(do|have|sell|buy|price|prices|cost|kostet|preis|any|some|product|products|item|items|shop|store|you|recommend|looking|need|want|show|see|list|browse|all|your|me|bestseller|bestsellers|best|sellers|popular|new|arrivals|catalog|catalogue|things|stuff|produkte|zeig|zeigen|mir|artikel|sortiment)$/;
+export async function searchShopProducts(shop, query, { browse = false } = {}) {
+  const ts = browse ? [] : terms(query).filter(t => !NOT_A_WORD.test(t)).slice(0, 4);
+  if (!ts.length && !browse) return { ok: true, products: [] };
+  // browse: newest active products first (Shopify's product query has no best-selling sort)
+  const q = ts.length ? `(${ts.map(t => `title:*${t.replace(/[^\p{L}\p{N}-]/gu, "")}*`).join(" OR ")}) AND status:active` : "status:active";
   try {
-    const nodes = (await graphql(shop, PRODUCT_Q, { q })).products?.nodes || [];
+    const nodes = (await graphql(shop, PRODUCT_Q, { q, first: browse ? 6 : 4, sort: ts.length ? "RELEVANCE" : "UPDATED_AT", rev: !ts.length })).products?.nodes || [];
     return { ok: true, products: nodes.map(p => ({ id: p.id, name: p.title, image: p.featuredImage?.url || null, unit_price: Number(p.priceRangeV2?.minVariantPrice?.amount ?? NaN),
       currency: p.priceRangeV2?.minVariantPrice?.currencyCode || null, max_price: Number(p.priceRangeV2?.maxVariantPrice?.amount ?? NaN), link: p.onlineStoreUrl || `/products/${p.handle}`,
       type: p.productType || "", collections: (p.collections?.nodes || []).map(c => c.title),
       variants: (p.variants?.nodes || []).map(v => ({ title: v.title, price: Number(v.price), available: !!v.availableForSale })),
       details: (p.metafields?.nodes || []).filter(m => /^(single_line_text_field|multi_line_text_field|number_integer|number_decimal|boolean|dimension|weight|volume)$/.test(m.type)).map(m => ({ key: m.key, value: String(m.value).slice(0, 200) })) })) };
-  } catch (e) { return { ok: false, error: "product_search_failed" }; }
+  } catch (e) { console.error("[pod.ai] product search failed:", shop, String(e.message).slice(0, 200)); return { ok: false, error: "product_search_failed" }; }
 }
 
 // ---- shipping: delivery profiles → zones → rates (read_shipping). Calculated (carrier-service) rates → "at checkout". ----
@@ -153,6 +161,13 @@ const TX = {
   askCode: { en: "Do you have a discount code? Send it and I'll check it.", de: "Haben Sie einen Rabattcode? Senden Sie ihn, ich prüfe ihn.", fr: "Vous avez un code ? Envoyez-le, je le vérifie.", zh: "有优惠码吗？发给我帮你查。" },
   taxIncl: { en: "Prices include tax.", de: "Preise inkl. Steuern.", fr: "Prix TTC.", zh: "价格含税。" },
   taxExcl: { en: "Taxes are added at checkout.", de: "Steuern werden im Checkout berechnet.", fr: "Taxes calculées au paiement.", zh: "税费在结账时计算。" },
+  browse: { en: "Here are some of our products:", de: "Hier sind einige unserer Produkte:", fr: "Voici quelques-uns de nos produits :", zh: "这是我们的部分商品：" },
+  noCatalog: { en: "There are no products in the shop yet. I can pass your question to the team.", de: "Im Shop sind noch keine Produkte. Ich kann Ihre Frage an das Team weitergeben.", fr: "La boutique n'a pas encore de produits. Je peux transmettre à l'équipe.", zh: "店铺暂时还没有商品，我可以帮你转给团队。" },
+  productErr: { en: "I can't load the products right now. I can pass your question to the team.", de: "Ich kann die Produkte gerade nicht laden. Ich kann Ihre Frage an das Team weitergeben.", fr: "Je ne peux pas charger les produits. Je peux transmettre à l'équipe.", zh: "暂时无法加载商品，我可以帮你转给团队。" },
+  noPolicyFor: { en: n => `This shop hasn't published a ${n} yet.`, de: n => `Dieser Shop hat noch keine ${n} veröffentlicht.`, fr: n => `Cette boutique n'a pas encore publié de ${n}.`, zh: n => `本店暂未发布${n}。` },
+  shipInfo: { en: "Shipping:", de: "Versand:", fr: "Livraison :", zh: "配送说明：" },
+  mailUs: { en: e => `For questions you can e-mail ${e}.`, de: e => `Bei Fragen schreiben Sie an ${e}.`, fr: e => `Pour toute question : ${e}.`, zh: e => `如有问题可发邮件至 ${e}。` },
+  offerTeam: { en: "Or I can pass your question to the team right here.", de: "Oder ich gebe Ihre Frage direkt an das Team weiter.", fr: "Ou je transmets votre question à l'équipe.", zh: "也可以由我直接帮你转给团队。" },
   human: { en: "Talk to a person", de: "Mit einem Menschen sprechen", fr: "Parler à une personne", zh: "转人工" },
   chips: { en: ["Where is my order?", "Shipping", "Returns"], de: ["Wo ist meine Bestellung?", "Versand", "Rückgabe"], fr: ["Où est ma commande ?", "Livraison", "Retours"], zh: ["我的订单在哪", "运费", "退货"] }
 };
@@ -192,7 +207,7 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
         async search_knowledge({ query }) { return { ok: true, results: rankKnowledge(await facts(), settings.custom_faq, query, lang).map(h => ({ question: h.question, answer: cut(h.answer, 1200) })) }; },
         async get_policy({ topic }) { const f = await facts(), type = { shipping: "SHIPPING_POLICY", returns: "REFUND_POLICY", refund: "REFUND_POLICY", contact: "CONTACT_INFORMATION", privacy: "PRIVACY_POLICY", terms: "TERMS_OF_SERVICE" }[topic] || topic;
           const p = f.policies.find(x => x.type === type); return p ? { ok: true, title: p.title, text: cut(p.text, 1500), url: p.url } : { ok: false, error: "policy_not_set" }; },
-        async search_products({ query }) { const r = await searchShopProducts(shop, query); if (r.ok && r.products.length) ctx.ui.push({ type: "products", items: r.products }); return r; },
+        async search_products({ query, browse = false }) { const r = await searchShopProducts(shop, query, { browse: browse || BROWSE_RE.test(String(query || "")) || !String(query || "").trim() }); if (r.ok && r.products.length) ctx.ui.push({ type: "products", items: r.products }); return r; },
         async find_order({ order_number, email }) {
           const r = await findShopOrder(shop, { order_number: order_number || conv.slots?.order_number, email: email || conv.slots?.email });
           if (r.ok) {
@@ -215,7 +230,7 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
       const definitions = [
         fn("search_knowledge", "Search the shop FAQ and policies.", { query: { type: "string" } }, ["query"]),
         fn("get_policy", "Get a shop policy: shipping, returns, contact, privacy, terms.", { topic: { type: "string" } }, ["topic"]),
-        fn("search_products", "Search active products by keywords.", { query: { type: "string" } }, ["query"]),
+        fn("search_products", "Search active products by keywords; empty query or browse=true lists the shop's products.", { query: { type: "string" }, browse: { type: "boolean" } }),
         fn("find_order", "Order status + tracking. Needs order number and the order e-mail.", { order_number: { type: "string" }, email: { type: "string" } }, ["order_number", "email"]),
         fn("quote_shipping", "Shipping methods and rates of the shop for a destination country (ISO-2).", { country: { type: "string" } }, ["country"]),
         fn("check_discount_code", "Check whether a discount code the customer has is active (read-only).", { code: { type: "string" } }, ["code"]),
@@ -236,6 +251,7 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
       if (m.email) conv.slots.email = m.email;
       let intent = m.intent;
       if (conv.slots.pending === "order" && (m.order_number || m.email) && !["greeting", "thanks"].includes(intent)) intent = "order_status";
+      if (BROWSE_RE.test(text) && !["order_status", "tracking", "shipping_quote", "discount"].includes(intent)) intent = "browse";
       if (conv.slots.pending === "shipping" && m.country && !["greeting", "thanks"].includes(intent)) intent = "shipping_quote";
       switch (intent) {
         case "greeting": ctx.ui.push({ type: "chips", items: t("chips", lang) }); return settings.greeting?.[lang] || settings.greeting?.en || t("greet", lang)(f.shop_name);
@@ -276,6 +292,11 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
           if (!r.ok) break;
           return r.valid ? t("codeOk", lang)(r.code, r.summary) : t("codeBad", lang)(r.code);
         }
+        case "browse": {
+          const r = await tools.execute("search_products", { query: text, browse: true });
+          if (r.ok && r.products.length) return `${t("browse", lang)} ${t(f.taxes_included ? "taxIncl" : "taxExcl", lang)}`;
+          ctx.ui.push(human); return t(r.ok ? "noCatalog" : "productErr", lang);
+        }
         case "price": case "product_question": case "recommendation": {
           const r = await tools.execute("search_products", { query: text });
           if (r.ok && r.products.length) return `${t("products", lang)} ${t(f.taxes_included ? "taxIncl" : "taxExcl", lang)}`;
@@ -292,7 +313,14 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
         if (p) return cut(p.text) + (intent === "shipping_quote" ? `\n\n${t("shipCheckout", lang)}` : "") + (p.url ? `\n${p.url}` : "");
         if (intent === "shipping_quote") return t("shipCheckout", lang);
         if (intent === "contact_info" && f.email) return f.email;
-        ctx.unanswered = true; ctx.ui.push(human); return t("noPolicy", lang);
+        // no published policy: say so, give what the shop does publish (shipping policy / contact) and offer a person
+        const ship = type !== "SHIPPING_POLICY" ? f.policies.find(x => x.type === "SHIPPING_POLICY") : null;
+        const contact = f.policies.find(x => x.type === "CONTACT_INFORMATION");
+        const parts = [t("noPolicyFor", lang)(POLICY_NAME[type]?.[lang] || POLICY_NAME[type]?.en || "")];
+        if (ship) parts.push(`${t("shipInfo", lang)} ${cut(ship.text, 300)}${ship.url ? ` ${ship.url}` : ""}`);
+        if (f.email) parts.push(t("mailUs", lang)(f.email)); else if (contact) parts.push(cut(contact.text, 300));
+        parts.push(t("offerTeam", lang));
+        ctx.ui.push(human); return parts.join("\n\n");
       }
       // nothing matched: maybe the customer named a product of this shop (the engine has no catalog of its own)
       const pr = await tools.execute("search_products", { query: text });

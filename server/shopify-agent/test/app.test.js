@@ -49,7 +49,7 @@ globalThis.fetch = async (url, init = {}) => {
         { name: "Old", active: false, rateProvider: { __typename: "DeliveryRateDefinition", price: { amount: "1.0", currencyCode: "CHF" } }, methodConditions: [] }] } }] } }] }] : [] } } });
   if (/codeDiscountNodes/.test(body.query)) { const c = body.variables.q.replace("code:", ""); return json({ data: { codeDiscountNodes: { nodes: shop === A && c === "ALPS10" ? [{ codeDiscount: { __typename: "DiscountCodeBasic", title: "Alps", status: "ACTIVE", summary: "10% off entire order", endsAt: null } }] : shop === A && c === "OLD5" ? [{ codeDiscount: { __typename: "DiscountCodeBasic", title: "Old", status: "EXPIRED", summary: "5% off" } }] : [] } } }); }
   if (/orders\(/.test(body.query)) { const n = body.variables.q.replace("name:#", ""); return json({ data: { orders: { nodes: s.orders[n] ? [s.orders[n]] : [] } } }); }
-  if (/products\(/.test(body.query)) return json({ data: { products: { nodes: /tee/i.test(body.variables.q) ? s.products : [] } } });
+  if (/products\(/.test(body.query)) return json({ data: { products: { nodes: /tee/i.test(body.variables.q) || body.variables.q === "status:active" ? s.products : [] } } });
   return json({ errors: [{ message: "unexpected" }] });
 };
 
@@ -59,7 +59,7 @@ const call = async (p, { method = "GET", body, headers = {} } = {}) => {
   return { status: r.status, json, text, headers: r.headers };
 };
 const signedQuery = (shop, extra = {}) => { const q = { shop, logged_in_customer_id: "", path_prefix: "/apps/podai", timestamp: String(Math.floor(Date.now() / 1000)), ...extra }; q.signature = core.proxySignature(q, "agentsecret"); return new URLSearchParams(q).toString(); };
-const proxy = (shop, message, conversation_id) => call(`/shopify-agent/proxy/chat?${signedQuery(shop)}`, { method: "POST", body: { message, conversation_id, lang: "en" } });
+const proxy = (shop, message, conversation_id, lang = "en") => call(`/shopify-agent/proxy/chat?${signedQuery(shop)}`, { method: "POST", body: { message, conversation_id, lang } });
 const adm = (shop, p, opt = {}) => call(`/shopify-agent/api${p}`, { ...opt, headers: { Authorization: `Bearer ${core.signSession(shop)}` } });
 const hook = (topic, shop, payload, { bad = false, id = crypto.randomUUID() } = {}) => {
   const raw = JSON.stringify(payload), h = crypto.createHmac("sha256", bad ? "wrong" : "agentsecret").update(raw).digest("base64");
@@ -129,8 +129,18 @@ try {
   r = await proxy(A, "I want to talk to a person please, my email is anna@example.com", hc); assert.ok(r.json.handoff, JSON.stringify(r.json));
   result.storefront_chat = "pass";
 
+  // 3b. Generic product browsing (EN / DE / ZH) lists the shop's products; no refund policy → fallback, not a dead end
+  for (const [q, head, lg] of [["Show me some products", /Here are some of our products/], ["What do you sell?", /Here are some/], ["Bestsellers?", /Here are some/], ["Zeig mir eure Produkte", /Hier sind einige/, "de"], ["你们有什么商品", /部分商品/, "zh"]]) {
+    r = await proxy(A, q, undefined, lg); assert.match(r.json.answer, head, `${q} → ${r.json.answer}`);
+    const pc = r.json.ui.find(u => u.type === "products"); assert.ok(pc && pc.items[0].name === "Mountain Tee" && pc.items[0].image && pc.items[0].link && pc.items[0].unit_price === 19.5, q);
+  }
+  assert.ok(gql.some(g => g.v?.q === "status:active" && g.v.sort === "UPDATED_AT"));
+  r = await proxy(B, "Show me some products"); assert.match(r.json.answer, /no products in the shop yet/);
+  r = await proxy(B, "What is your return policy?");
+  assert.match(r.json.answer, /hasn't published a return \/ refund policy/); assert.match(r.json.answer, /team@shop-b\.myshopify\.com/); assert.match(r.json.answer, /pass your question to the team/);
+  assert.ok(r.json.ui.some(u => u.type === "chips"));
   // 4. Isolation: shop B sees nothing of shop A; B gets no Wed.AI or shop-A data; x-tenant-id cannot reach shop tenants
-  r = await proxy(B, "What is your return policy?"); assert.doesNotMatch(r.json.answer, /30 days|Wed\.AI/); assert.match(r.json.answer, /team/);
+  r = await proxy(B, "What is your return policy?"); assert.doesNotMatch(r.json.answer, /30 days|Wed\.AI/);
   r = await proxy(B, "Where is my order #1001? buyer@example.com"); assert.match(r.json.answer, /couldn't find/);
   r = await proxy(B, "hello", conv); assert.notEqual(r.json.conversation_id, conv, "conversation of shop A not reused by B");
   assert.ok(gql.some(g => g.shop === B), "shop B queried with its own token (mock asserts token per shop)");

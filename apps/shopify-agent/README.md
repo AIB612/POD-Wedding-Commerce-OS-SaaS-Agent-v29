@@ -17,7 +17,8 @@ or webhook HMAC. `x-tenant-id` / `tenant_id` can never select a `shopagent_` ten
 
 Answers (local first, LLM only when a key is configured on the server):
 - policies (shipping / refund / contact …) from the shop's own Shopify policies + the merchant's FAQ (admin → Knowledge)
-- products from Admin API search (price, image, link)
+- products from Admin API search (price, image, link); generic requests ("show me products", "what do you sell", "bestsellers", "Zeig mir eure Produkte", "你们有什么商品") list the newest active products
+- no published policy (e.g. dev store without a refund policy) → says so, adds shipping policy / contact e-mail, offers the team
 - order status + tracking: order number **and** order e-mail must match; 5 wrong tries → 15 min lock.
   Tracking: our carrier APIs (YunExpress sandbox, 4PX production; PODAI_YUNEXPRESS_MODE / PODAI_FOURPX_MODE) → 51Tracking v4 (`TRACKING51_API_KEY`) → Shopify tracking link; status, latest event and timeline in chat; cached 30 min; read-only
 - shipping cost: the shop's delivery-profile rates for the customer's country; calculated rates / no zones → policy + "calculated at checkout"
@@ -38,6 +39,8 @@ Nothing is read from the Wed.AI site (catalog, prices, fees, orders, promo codes
 (`server/shopify-agent/engine`, from the site agent) and its own collections (`podai_*`). Boundary is enforced by `test/audit.test.js`.
 Shared infrastructure used unchanged: `saas-store.js` (storage file), `utils/crypto.js` (token encryption), carrier API clients
 `logistics/{yunexpress,fourpx,http}.js` (tracking calls only). Site hook: one mount line in `server/create-app.js`.
+
+Diagnosis on the server (no secrets printed): `node server/shopify-agent/tools/diag.mjs dropkingdev.myshopify.com`
 
 Tests: `node server/shopify-agent/test/app.test.js && node server/shopify-agent/test/tracking.test.js && node server/shopify-agent/test/audit.test.js`
 

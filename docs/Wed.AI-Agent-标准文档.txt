@@ -1111,3 +1111,11 @@ B.3 跳过（本版没有）
         主题扩展 uid 由 CLI 生成。服务器 .env 已配置 AGENT_SHOPIFY_API_KEY / SECRET（值不入库）。
         POD Wedding Studio 发布 pod-wedding-studio-3（删除旧 Render 回调地址）。
         影响条款：附录 D（D.6）。
+
+    __HASH__ · 2026-11-04 · Pod.AI 店面实测修正（dropkingdev）：
+        “Show me some products / what do you sell / bestsellers / Zeig mir eure Produkte /
+        你们有什么商品”等泛浏览请求列出店铺商品（价格、图片、链接）；店铺未发布
+        退货政策时不再只说“没有”，改为说明 + 运费政策 / 联系邮箱 + 转人工；
+        店铺信息读取失败只缓存 30 秒并写服务器日志（不含令牌）；新增诊断脚本
+        server/shopify-agent/tools/diag.mjs。仅改 Pod.AI 文件。影响条款：附录 D。
+
