@@ -1105,3 +1105,9 @@ B.3 跳过（本版没有）
         2bb6cdf 中“Wed.AI 站内 find_order / get_tracking 同样调用”和站内后台显示来源
         已撤回，网站行为与 954e976 相同。
         影响条款：附录 D（D.4、D.4b、D.5）。
+
+    d005473 · 2026-11-04 · Pod.AI 已在 Dev Dashboard（DropkingAI）创建并发布版本 pod-ai-2：
+        client_id 写入 apps/shopify-agent/shopify.app.toml；新增 CLI 用的 package.json；
+        主题扩展 uid 由 CLI 生成。服务器 .env 已配置 AGENT_SHOPIFY_API_KEY / SECRET（值不入库）。
+        POD Wedding Studio 发布 pod-wedding-studio-3（删除旧 Render 回调地址）。
+        影响条款：附录 D（D.6）。
