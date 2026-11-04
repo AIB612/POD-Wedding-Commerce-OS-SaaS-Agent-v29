@@ -1179,3 +1179,9 @@ B.3 跳过（本版没有）
     dd02d3d · 2026-11-04 · Pod.AI 识别修复（上线验证发现）：邮箱提取只接受 ASCII 本地部分（中文消息“到哪了？邮箱”
         不再把汉字并入邮箱，#1011 中文查询可查到订单）；德语识别新增 zeig/mir/eure/produkte 等词。仅改 Pod.AI 文件。影响条款：附录 D。
 
+    b097870 · 2026-11-04 · Pod.AI 上线修复：(1) 商品卡：开发店 / 密码保护店 onlineStoreUrl 为空（且无 read_product_listings /
+        read_publications 权限），不再按它过滤；ACTIVE 商品用 onlineStoreUrl 或 店铺域名/products/<handle>，组件在访客会话中请求
+        /products/<handle>.js，404（未上架 Online Store）的卡片移除。(2) 主题 App 嵌入检测：组件每 24 小时发送 embed_ping 心跳，
+        清单按 14 天内心跳 / 打开聊天 / 对话判断（无需新增 read_themes 权限）。(3) 后台欢迎语字段改为 EN / DE / FR / IT（移除中文字段，
+        已存中文值保留）。仅改 Pod.AI 文件。影响条款：附录 D。
+
