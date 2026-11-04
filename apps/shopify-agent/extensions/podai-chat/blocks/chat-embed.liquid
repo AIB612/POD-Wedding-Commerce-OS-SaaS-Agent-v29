@@ -10,6 +10,7 @@ Empty settings fall back to the merchant's Pod.AI app settings (/apps/podai/conf
   data-greeting="{{ block.settings.greeting | escape }}"
   data-avatar="{% if block.settings.avatar %}{{ block.settings.avatar | image_url: width: 96 }}{% endif %}"
   data-placeholder="{{ 'chat.placeholder' | t }}"></div>
+<script src="{{ 'chat-i18n.js' | asset_url }}"></script>
 {% schema %}
 {
   "name": "Pod.AI Chat",

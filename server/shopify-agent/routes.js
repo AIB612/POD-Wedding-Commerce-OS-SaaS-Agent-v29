@@ -21,7 +21,7 @@ const HEX = v => /^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v) : null;
 // storefront look, editable in the app (the theme app embed can override colour / position)
 function widgetOf(s) { const w = s.widget || {};
   return { color: HEX(w.color) || "#2b2520", position: w.position === "left" ? "left" : "right", title: String(w.title || "").slice(0, 60), avatar: /^https:\/\//.test(w.avatar || "") ? String(w.avatar).slice(0, 500) : "",
-    language: ["auto", "en", "zh", "de"].includes(w.language) ? w.language : "auto" }; }
+    language: ["auto", "en", "zh", "de", "fr", "it"].includes(w.language) ? w.language : "auto" }; }
 
 const PAGE = new URL("./admin.html", import.meta.url);
 const attr = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));

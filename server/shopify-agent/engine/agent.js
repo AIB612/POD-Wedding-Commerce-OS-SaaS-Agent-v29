@@ -70,6 +70,12 @@ const T = {
 /** Languages the chat detects (LANGS) and the languages with full reply templates (REPLY_LANGS; others fall back to English). */
 export const DETECTED_LANGS = LANGS;
 export const REPLY_LANGS = Object.keys(T.greet);
+// Pod.AI: FR / IT for the engine messages the shop app uses
+Object.assign(T.muted, { fr: "Votre demande est entre les mains de notre équipe — réponse bientôt. J'ai ajouté votre message.", it: "La sua richiesta è presso il nostro team — risponderà presto. Ho aggiunto il suo messaggio." });
+Object.assign(T.emailNoted, { fr: "Merci — j'ai ajouté votre e-mail pour que l'équipe puisse répondre.", it: "Grazie — ho aggiunto la sua e-mail così il team può rispondere." });
+Object.assign(T.rate, { fr: "Vous avez envoyé beaucoup de messages. Patientez un instant.", it: "Ha inviato molti messaggi. Attenda un momento." });
+Object.assign(T.disabled, { fr: "L'assistant est hors ligne pour le moment. Réessayez plus tard.", it: "L'assistente è offline al momento. Riprovi più tardi." });
+Object.assign(T.thanks, { fr: "Avec plaisir ! Autre chose ?", it: "Prego! Posso aiutarla in altro?" });
 const L = (key, lang) => { const e = T[key]; return e[lang] || e.en; };
 const CHIPS = {
   en: ["Shipping to Switzerland for 10 invitations", "Recommend wedding favours", "How long does delivery take?", "Track my order"],
@@ -165,7 +171,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
       // No key: best rule-based answer + offer a person.
       const l = await local("no_llm_key");
       // Pod.AI: no trailing "I can pass it to our team" sentence — the handoff button is enough (Sherry, 2026-11-04)
-      const btn = lang === "zh" ? "转人工" : lang === "de" ? "Mit einem Menschen sprechen" : lang === "fr" ? "Parler à une personne" : "Talk to a person";
+      const btn = lang === "zh" ? "转人工" : lang === "de" ? "Mit einem Menschen sprechen" : lang === "fr" ? "Parler à une personne" : lang === "it" ? "Parlare con una persona" : "Talk to a person";
       if (!ctx.unanswered && !ctx.ui.some(u => u.type === "chips" && u.items.includes(btn))) ctx.ui.push(chips(lang, [btn]));
       return finish(l.answer, { intent: merged.intent, mode: "rules", answered_by: "local", route: l.route });
     }

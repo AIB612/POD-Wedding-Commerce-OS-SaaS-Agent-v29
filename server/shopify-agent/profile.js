@@ -20,9 +20,9 @@ function normaliseCustom(list = []) {
 const strip = h => String(h || "").replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
 const POLICY_TAGS = { SHIPPING_POLICY: "shipping delivery versand livraison 运费 配送 发货 customs", REFUND_POLICY: "return returns refund exchange rückgabe retoure umtausch retour 退货 退款 换货",
   CONTACT_INFORMATION: "contact email phone address kontakt 联系", PRIVACY_POLICY: "privacy data datenschutz 隐私", TERMS_OF_SERVICE: "terms conditions agb 条款", SUBSCRIPTION_POLICY: "subscription abo 订阅", LEGAL_NOTICE: "impressum legal notice" };
-const POLICY_NAME = { REFUND_POLICY: { en: "return / refund policy", de: "Rückgabe-/Erstattungsrichtlinie", fr: "politique de retour", zh: "退换货政策" },
-  SHIPPING_POLICY: { en: "shipping policy", de: "Versandrichtlinie", fr: "politique d'expédition", zh: "配送政策" },
-  CONTACT_INFORMATION: { en: "contact page", de: "Kontaktseite", fr: "page de contact", zh: "联系方式" } };
+const POLICY_NAME = { REFUND_POLICY: { en: "return / refund policy", de: "Rückgabe-/Erstattungsrichtlinie", fr: "politique de retour", it: "politica di reso", zh: "退换货政策" },
+  SHIPPING_POLICY: { en: "shipping policy", de: "Versandrichtlinie", fr: "politique d'expédition", it: "politica di spedizione", zh: "配送政策" },
+  CONTACT_INFORMATION: { en: "contact page", de: "Kontaktseite", fr: "page de contact", it: "pagina contatti", zh: "联系方式" } };
 const INTENT_POLICY = { shipping_quote: "SHIPPING_POLICY", delivery_time: "SHIPPING_POLICY", customs: "SHIPPING_POLICY", return_request: "REFUND_POLICY", cancel_or_change: "REFUND_POLICY", contact_info: "CONTACT_INFORMATION" };
 
 const FACTS_TTL = 10 * 60_000, factsCache = new Map();
@@ -79,7 +79,7 @@ const PRODUCT_Q = `query($q: String!, $first: Int!, $sort: ProductSortKeys!, $re
   priceRangeV2 { minVariantPrice { amount currencyCode } maxVariantPrice { amount currencyCode } } collections(first: 3) { nodes { title } }
   variants(first: 5) { nodes { id title price availableForSale } } metafields(first: 5) { nodes { namespace key value type } } } } }`;
 /** Generic "show me products / what do you sell / bestsellers" requests (EN / DE / FR / ZH). */
-export const BROWSE_RE = /(\b(show|see|list|browse)\b.{0,20}\b(products?|items?|things|collection|catalog(ue)?|range|stuff)\b|what (do|can) (you|i) (sell|buy|offer|have)|what('s| is) (for sale|in stock|available)|\b(your|all) (products|items)\b|best ?sellers?|top sellers?|most popular|popular (products|items)|new arrivals|what'?s new|\bcatalog(ue)?\b|\b(produkte|sortiment|angebot)\b|was (verkauft|habt|haben) (ihr|sie)|zeig(en sie)? (mir )?.{0,10}(produkte|artikel)|meistverkauft|beliebteste|vos produits|qu'est-ce que vous vendez|有什么(商品|产品|卖)|卖什么|看看(商品|产品)|商品列表|所有商品|热卖|畅销|爆款|新品|推荐.{0,4}(商品|产品))/i;
+export const BROWSE_RE = /(\b(show|see|list|browse)\b.{0,20}\b(products?|items?|things|collection|catalog(ue)?|range|stuff)\b|what (do|can) (you|i) (sell|buy|offer|have)|what('s| is) (for sale|in stock|available)|\b(your|all) (products|items)\b|best ?sellers?|top sellers?|most popular|popular (products|items)|new arrivals|what'?s new|\bcatalog(ue)?\b|\b(produkte|sortiment|angebot)\b|was (verkauft|habt|haben) (ihr|sie)|zeig(en sie)? (mir )?.{0,10}(produkte|artikel)|meistverkauft|beliebteste|vos produits|montrez(-moi)? (vos |des )?produits|\b(prodotti|catalogo)\b|cosa vendete|mostrami .{0,12}prodotti|qu'est-ce que vous vendez|有什么(商品|产品|卖)|卖什么|看看(商品|产品)|商品列表|所有商品|热卖|畅销|爆款|新品|推荐.{0,4}(商品|产品))/i;
 const NOT_A_WORD = /^(do|have|sell|buy|price|prices|cost|kostet|preis|any|some|product|products|item|items|shop|store|you|recommend|looking|need|want|show|see|list|browse|all|your|me|bestseller|bestsellers|best|sellers|popular|new|arrivals|catalog|catalogue|things|stuff|produkte|zeig|zeigen|mir|artikel|sortiment)$/;
 export async function searchShopProducts(shop, query, { browse = false } = {}) {
   const ts = browse ? [] : terms(query).filter(t => !NOT_A_WORD.test(t)).slice(0, 4);
@@ -174,6 +174,25 @@ const TX = {
   human: { en: "Talk to a person", de: "Mit einem Menschen sprechen", fr: "Parler à une personne", zh: "转人工" },
   chips: { en: ["Where is my order?", "Shipping", "Returns"], de: ["Wo ist meine Bestellung?", "Versand", "Rückgabe"], fr: ["Où est ma commande ?", "Livraison", "Retours"], zh: ["我的订单在哪", "运费", "退货"] }
 };
+
+// Italian replies (Pod.AI answers in the customer's language; FR is inline above)
+const TX_IT = {
+  greet: n => `Ciao! Sono l'assistente di ${n}. Posso aiutarla con ordini, spedizioni, resi e prodotti.`,
+  thanks: "Prego! Altro?", askOrder: "Mi invii il numero d'ordine (es. #1001) e l'e-mail usata per l'ordine.",
+  askEmail: "Grazie! Quale e-mail ha usato per questo ordine?", askNumber: "Grazie! Qual è il numero d'ordine (es. #1001)?",
+  notFound: "Non trovo un ordine con questo numero ed e-mail. Controlli entrambi, oppure la passo al team.",
+  locked: "Troppi tentativi per questo ordine. Riprovi tra 15 minuti o chieda di una persona.", orderErr: "La ricerca ordini non è disponibile ora. Posso passarla al team.",
+  shipCheckout: "Le spese di spedizione esatte vengono calcolate al checkout in base all'indirizzo.", noPolicy: "Non ho ancora questa informazione. Posso passare la domanda al team.",
+  products: "Ecco cosa ho trovato.", noProducts: "Non ho trovato un prodotto corrispondente. Provi un'altra parola o sfogli il negozio.",
+  unknown: "Non ne sono sicuro. Vuole che passi la domanda al team?", ship: (z, l) => `Spedizione verso ${z}: ${l}.`, noShip: c => `Al momento non spediamo verso ${c}.`,
+  askCountry: "In quale paese dobbiamo spedire?", codeOk: (c, x) => `Il codice ${c} è valido${x ? `: ${x}` : ""}. Lo inserisca al checkout.`, codeBad: c => `Il codice ${c} non è attivo.`,
+  askCode: "Ha un codice sconto? Me lo invii e lo verifico.", taxIncl: "Prezzi IVA inclusa.", taxExcl: "Le tasse vengono aggiunte al checkout.",
+  browse: "Ecco alcuni prodotti del nostro negozio.", noCatalog: "Il negozio non ha ancora prodotti. Posso passare la domanda al team.",
+  productErr: "Non riesco a caricare i prodotti ora. Posso passare la domanda al team.", noPolicyFor: n => `Questo negozio non ha ancora pubblicato una ${n}.`,
+  shipInfo: "Spedizione:", mailUs: e => `Per domande può scrivere a ${e}.`, offerTeam: "Oppure passo subito la sua domanda al team.",
+  human: "Parlare con una persona", chips: ["Dov'è il mio ordine?", "Spedizione", "Resi"]
+};
+for (const [k, v] of Object.entries(TX_IT)) if (TX[k]) TX[k].it = v;
 const t = (k, lang) => TX[k][lang] ?? TX[k].en;
 const cut = (s, n = 700) => s.length > n ? `${s.slice(0, n).replace(/\s+\S*$/, "")} …` : s;
 
@@ -184,6 +203,9 @@ function taxNote(ctx, f, lang) { const c = [...ctx.ui].reverse().find(u => u.typ
 function orderShort(o, lang) {
   const st = o.cancelled ? "cancelled" : String(o.fulfillment || "").toLowerCase().replace(/_/g, " ");
   const tr = o.tracking.find(x => x.number), car = tr?.company && !/^other$/i.test(tr.company) ? tr.company : "";
+  if (tr?.status === "delivered" && (lang === "fr" || lang === "it")) return lang === "fr" ? `La commande ${o.name} a été livrée — détails ci-dessous.` : `L'ordine ${o.name} è stato consegnato — dettagli qui sotto.`;
+  if (lang === "fr") return tr ? `La commande ${o.name} est en route${car ? ` avec ${car}` : ""} — détails ci-dessous.` : `Commande ${o.name} : ${st}. Pas encore de numéro de suivi.`;
+  if (lang === "it") return tr ? `L'ordine ${o.name} è in viaggio${car ? ` con ${car}` : ""} — dettagli qui sotto.` : `Ordine ${o.name}: ${st}. Nessun numero di tracciamento ancora.`;
   if (tr?.status === "delivered") return lang === "zh" ? `订单 ${o.name} 已签收，详情见下方。` : lang === "de" ? `Bestellung ${o.name} wurde zugestellt – Details unten.` : `Order ${o.name} has been delivered — details below.`;
   if (lang === "zh") return tr ? `订单 ${o.name} 已发货${car ? `（${car}）` : ""}，物流详情见下方。` : `订单 ${o.name}：${st}，暂无物流单号。`;
   if (lang === "de") return tr ? `Bestellung ${o.name} ist unterwegs${car ? ` mit ${car}` : ""} – Details unten.` : `Bestellung ${o.name}: ${st}. Noch keine Sendungsnummer.`;

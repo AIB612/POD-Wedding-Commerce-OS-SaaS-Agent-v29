@@ -134,7 +134,7 @@ try {
   result.storefront_chat = "pass";
 
   // 3b. Generic product browsing (EN / DE / ZH) lists the shop's products; no refund policy → fallback, not a dead end
-  for (const [q, head, lg] of [["Show me some products", /^Here are a few picks from our shop\.$/], ["What do you sell?", /a few picks/], ["Bestsellers?", /a few picks/], ["Zeig mir eure Produkte", /ein paar Produkte/, "de"], ["你们有什么商品", /几件店里的商品/, "zh"]]) {
+  for (const [q, head, lg] of [["Show me some products", /^Here are a few picks from our shop\.$/], ["What do you sell?", /a few picks/], ["Bestsellers?", /a few picks/], ["Zeig mir eure Produkte", /ein paar Produkte/, "de"], ["你们有什么商品", /几件店里的商品/, "zh"], ["Montrez-moi vos produits", /quelques produits/, "fr"], ["Mostrami i vostri prodotti", /alcuni prodotti/, "it"]]) {
     r = await proxy(A, q, undefined, lg); assert.match(r.json.answer, head, `${q} → ${r.json.answer}`);
     const pc = r.json.ui.find(u => u.type === "products"); assert.ok(pc && pc.items[0].name === "Mountain Tee" && pc.items[0].image && pc.items[0].link && pc.items[0].unit_price === 19.5, q);
   }
