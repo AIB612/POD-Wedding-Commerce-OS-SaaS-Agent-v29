@@ -1119,7 +1119,7 @@ B.3 跳过（本版没有）
         店铺信息读取失败只缓存 30 秒并写服务器日志（不含令牌）；新增诊断脚本
         server/shopify-agent/tools/diag.mjs。仅改 Pod.AI 文件。影响条款：附录 D。
 
-    __HASH__ · 2026-11-04 · Pod.AI：无 LLM 时回答末尾不再追加“如果这还没有完全解答…可转人工”
+    eb13e8f · 2026-11-04 · Pod.AI：无 LLM 时回答末尾不再追加“如果这还没有完全解答…可转人工”
         一句（英 / 中 / 德），只保留“转人工”按钮（每条回答最多一个）。
         仅改 server/shopify-agent/engine/agent.js；站内 Agent 不变。影响条款：附录 D。
 
