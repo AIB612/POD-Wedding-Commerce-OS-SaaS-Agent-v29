@@ -1,0 +1,7 @@
+{
+  "name": "pod-ai",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pod.AI Shopify app (Shopify CLI project: config + theme app extension). Server code: server/shopify-agent.",
+  "scripts": { "deploy": "shopify app deploy" }
+}

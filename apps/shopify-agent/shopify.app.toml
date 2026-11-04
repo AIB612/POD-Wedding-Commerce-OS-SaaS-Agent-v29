@@ -1,13 +1,12 @@
 # Pod.AI — standalone Shopify app (App Store candidate). Separate Partner app from "POD Wedding Studio".
-# client_id is filled by `shopify app config link` after the app is created in the Partner/Dev Dashboard (see README.md).
-client_id = "REPLACE_WITH_AGENT_APP_CLIENT_ID"
+# Dev Dashboard: org DropkingAI, app "Pod.AI" (id 443599257601). Deploy: cd apps/shopify-agent && shopify app deploy
+client_id = "46d75edb5ea4339d6f66ef87e28ab37d"
 name = "Pod.AI"
 application_url = "https://wed.swisspro.site/shopify-agent"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = false
-include_config_on_deploy = true
 
 [access_scopes]
 # read_orders: order status in chat (protected customer data: e-mail, Level 2 request needed)
