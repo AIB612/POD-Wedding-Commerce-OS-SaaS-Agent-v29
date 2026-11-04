@@ -1,10 +1,14 @@
-{%- comment -%} Pod.AI — app embed block (Online Store → Customize → App embeds). No script injection: Shopify loads this block. {%- endcomment -%}
-<div id="podai-chat-root"
+{%- comment -%} Pod.AI — app embed block (Online Store → Customize → App embeds). Shopify loads this block; no script tags injected.
+Empty settings fall back to the merchant's Pod.AI app settings (/apps/podai/config). {%- endcomment -%}
+<div id="podai-chat-root" hidden
   data-proxy="{{ routes.root_url | remove_last: '/' }}/apps/podai"
   data-lang="{{ request.locale.iso_code }}"
+  data-shop="{{ shop.name | escape }}"
   data-title="{{ block.settings.title | escape }}"
   data-accent="{{ block.settings.accent }}"
   data-position="{{ block.settings.position }}"
+  data-greeting="{{ block.settings.greeting | escape }}"
+  data-avatar="{% if block.settings.avatar %}{{ block.settings.avatar | image_url: width: 96 }}{% endif %}"
   data-placeholder="{{ 'chat.placeholder' | t }}"></div>
 {% schema %}
 {
@@ -13,9 +17,11 @@
   "javascript": "chat.js",
   "stylesheet": "chat.css",
   "settings": [
-    { "type": "text", "id": "title", "label": "Chat title", "default": "Questions? Chat with us" },
-    { "type": "color", "id": "accent", "label": "Accent colour", "default": "#1f2937" },
-    { "type": "select", "id": "position", "label": "Position", "default": "right", "options": [ { "value": "right", "label": "Bottom right" }, { "value": "left", "label": "Bottom left" } ] }
+    { "type": "color", "id": "accent", "label": "Brand colour", "info": "Empty = colour from the Pod.AI app" },
+    { "type": "select", "id": "position", "label": "Position", "default": "app", "options": [ { "value": "app", "label": "From the Pod.AI app" }, { "value": "right", "label": "Bottom right" }, { "value": "left", "label": "Bottom left" } ] },
+    { "type": "text", "id": "title", "label": "Header title", "info": "Empty = shop name" },
+    { "type": "text", "id": "greeting", "label": "Greeting", "info": "Empty = greeting from the Pod.AI app" },
+    { "type": "image_picker", "id": "avatar", "label": "Avatar" }
   ]
 }
 {% endschema %}

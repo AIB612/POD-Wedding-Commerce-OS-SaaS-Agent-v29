@@ -13,6 +13,15 @@ import { handleChat } from "./engine/agent.js";
 import { agentOverview, agentConversations, agentHandoffs, patchHandoff, getSettings, putAgentSettings, upsertKnowledge, deleteKnowledge } from "./engine/kpis.js";
 import { listForTenant } from "../saas-store.js";
 import { trackingSources } from "./tracking.js";
+import { dashboard, recordEvent } from "./dashboard.js";
+import { saveSettings } from "./engine/store.js";
+import { llmStatus } from "./engine/llm.js";
+
+const HEX = v => /^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v) : null;
+// storefront look, editable in the app (the theme app embed can override colour / position)
+function widgetOf(s) { const w = s.widget || {};
+  return { color: HEX(w.color) || "#2b2520", position: w.position === "left" ? "left" : "right", title: String(w.title || "").slice(0, 60), avatar: /^https:\/\//.test(w.avatar || "") ? String(w.avatar).slice(0, 500) : "",
+    language: ["auto", "en", "zh", "de"].includes(w.language) ? w.language : "auto" }; }
 
 const PAGE = new URL("./admin.html", import.meta.url);
 const attr = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -51,6 +60,15 @@ export function shopifyAgentRouter() {
     res.set("Cache-Control", "no-store").json({ answer: out.answer, conversation_id: out.conversation_id, language: out.language, ui: out.ui, handoff: out.handoff || null, answered_by: out.answered_by || null });
   }));
 
+  // storefront widget config + events (App Proxy signature required, like chat)
+  const proxyShop = async (req, res) => { const v = core.verifyProxy(req.query); if (!v.ok) { res.status(401).json({ error: v.error }); return null; }
+    if (!(await core.isInstalled(v.shop))) { res.status(404).json({ error: "shop_not_installed" }); return null; } return v.shop; };
+  r.get("/shopify-agent/proxy/config", notConfigured, ah(async (req, res) => { const shop = await proxyShop(req, res); if (!shop) return;
+    const s = await getSettings(core.tenantFor(shop));
+    res.set("Cache-Control", "public, max-age=60").json({ enabled: s.enabled, greeting: s.greeting, widget: widgetOf(s), reply_hours: s.human_reply_hours }); }));
+  r.post("/shopify-agent/proxy/event", notConfigured, json, ah(async (req, res) => { const shop = await proxyShop(req, res); if (!shop) return;
+    res.json(await recordEvent(core.tenantFor(shop), req.body || {})); }));
+
   r.get("/shopify-agent", notConfigured, (req, res) => {
     const shop = core.normalizeShop(req.query.shop);
     if (!shop) return res.status(400).type("text/plain").send("Open this app from your Shopify admin.");
@@ -65,6 +83,14 @@ export function shopifyAgentRouter() {
     const row = await core.getShop(req.agentShop);
     res.json({ shop: req.agentShop, installed: !!row?.access_token_enc, exchanged: t.exchanged, scopes: row?.scopes || "" });
   }));
+  api.get("/dashboard", ah(async (req, res) => res.json(await dashboard(req.agentTenant, req.agentShop, { days: req.query.days }))));
+  api.get("/checklist", ah(async (req, res) => {
+    const out = { tracking: await trackingSources(), llm: { available: llmStatus().available } };
+    try { const d = await core.graphql(req.agentShop, "{ shop { name shopPolicies { type } } }"); out.shop_name = d.shop.name; out.policies = d.shop.shopPolicies.map(p => p.type); } catch { out.policies = null; }
+    try { await core.graphql(req.agentShop, "{ orders(first:1) { nodes { id } } }"); out.protected_data = "ok"; } catch (e) { out.protected_data = /access|protected|denied/i.test(e.message) ? "not_approved" : "error"; }
+    out.chat_seen = (await listForTenant("podai_conversations", req.agentTenant)).length > 0; // proxy chats arrive only when the app embed is on
+    res.json(out);
+  }));
   api.get("/overview", ah(async (req, res) => {
     const o = await agentOverview(req.agentTenant, { days: Math.min(365, Number(req.query.days) || 30) });
     // shop tenants: product search instead of the POD.AI recommender; no chat quotes / discount codes in this app
@@ -77,8 +103,8 @@ export function shopifyAgentRouter() {
   api.get("/knowledge", ah(async (req, res) => res.json({ custom: (await getSettings(req.agentTenant)).custom_faq }))); // no POD.AI built-ins for shops
   api.post("/knowledge", ah(async (req, res) => res.json(await upsertKnowledge(req.agentTenant, req.body))));
   api.delete("/knowledge/:id", ah(async (req, res) => res.json(await deleteKnowledge(req.agentTenant, req.params.id))));
-  api.get("/settings", ah(async (req, res) => { const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours, tracking_sources: await trackingSources() }); }));
-  api.put("/settings", ah(async (req, res) => { const b = req.body || {}; await putAgentSettings(req.agentTenant, { enabled: b.enabled, greeting: b.greeting, human_reply_hours: b.human_reply_hours }); clearFactsCache(req.agentShop); const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours }); }));
+  api.get("/settings", ah(async (req, res) => { const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours, widget: widgetOf(s), llm_enabled: s.llm_enabled !== false, llm_available: llmStatus().available, tracking_sources: await trackingSources() }); }));
+  api.put("/settings", ah(async (req, res) => { const b = req.body || {}; await putAgentSettings(req.agentTenant, { enabled: b.enabled, greeting: b.greeting, human_reply_hours: b.human_reply_hours }); { const cur = await getSettings(req.agentTenant); await saveSettings(req.agentTenant, { widget: b.widget ? widgetOf({ widget: { ...widgetOf(cur), ...b.widget } }) : widgetOf(cur), llm_enabled: b.llm_enabled === undefined ? cur.llm_enabled !== false : b.llm_enabled !== false }); } clearFactsCache(req.agentShop); const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours }); }));
   api.get("/privacy", ah(async (req, res) => res.json((await listForTenant("podai_gdpr", req.agentTenant)).slice(-50))));
   api.post("/preview", ah(async (req, res) => { const b = req.body || {}; const out = await handleChat({ tenantId: req.agentTenant, profile: makeProfile(req.agentShop), message: b.message, conversation_id: b.conversation_id, lang: b.lang });
     res.json({ answer: out.answer, conversation_id: out.conversation_id, ui: out.ui, handoff: out.handoff || null, answered_by: out.answered_by || null }); }));

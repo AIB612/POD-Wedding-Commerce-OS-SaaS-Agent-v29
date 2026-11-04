@@ -4,97 +4,280 @@
 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
 <title>Pod.AI</title>
 <style>
-:root{--bg:#f1f1f1;--card:#fff;--ink:#303030;--mut:#616161;--line:#e3e3e3;--acc:#008060;--warn:#b98900;--bad:#d72c0d}
-*{box-sizing:border-box}body{margin:0;font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
-.wrap{max-width:1080px;margin:0 auto;padding:20px}h1{font-size:20px;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 16px}
-nav{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}nav button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;cursor:pointer;font:inherit}
-nav button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-.card{background:var(--card);border-radius:12px;box-shadow:0 1px 0 rgba(0,0,0,.07);padding:16px;margin-bottom:14px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
-.k{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 0 rgba(0,0,0,.07)}.k b{display:block;font-size:24px;margin:4px 0}.k small{color:var(--mut)}
-.pill{font-size:11px;border-radius:10px;padding:1px 8px;background:#eee}.PASS{background:#cdfee1;color:#0c5132}.WARN{background:#fff1c7;color:#5e4200}
-table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mut);font-weight:500}
-input,textarea,select{font:inherit;border:1px solid #8a8a8a;border-radius:8px;padding:7px 9px;width:100%}textarea{min-height:70px}
-.btn{background:var(--ink);color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font:inherit}.btn.s{background:#fff;color:var(--ink);border:1px solid var(--line)}
-.row{display:flex;gap:10px;align-items:center}.row>*{flex:1}.muted{color:var(--mut)}.hide{display:none}
-.chat{height:300px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fafafa}
-.m{margin:6px 0;max-width:80%;padding:8px 11px;border-radius:12px;white-space:pre-wrap}.u{margin-left:auto;background:var(--ink);color:#fff}.a{background:#fff;border:1px solid var(--line)}
-.steps li{margin:6px 0}
-</style></head><body><div class="wrap">
-<h1>Pod.AI</h1><p class="sub" id="shop">Loading…</p>
-<nav id="tabs"><button data-t="overview" class="on">Overview</button><button data-t="handoffs">Handoffs</button><button data-t="knowledge">Knowledge</button><button data-t="settings">Settings</button><button data-t="preview">Try it</button><button data-t="setup">Setup</button></nav>
+/* POD.AI design tokens (wed.swisspro.site / agent.html): warm ink + gold, glass cards, Inter + Georgia, pill controls */
+:root{--bg:#f6f0e8;--ink:#241f1b;--ink2:#5d5249;--mut:#8a7e74;--gold:#b8865b;--gold2:#8a5a33;--card:rgba(255,253,249,.78);--line:rgba(45,36,30,.1);--r:20px;
+--ok:#2f7d5b;--okb:#e3f2ea;--warn:#9a6a16;--warnb:#fbefd6;--bad:#a8402f;--badb:#f8e3de;--info:#5e4533;--infob:#efe6dc;--grad:linear-gradient(135deg,#2b2520,#5e4533)}
+*{box-sizing:border-box}html{background:var(--bg)}
+body{margin:0;font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;
+background:radial-gradient(900px 420px at 85% -10%,rgba(184,134,91,.16),transparent 60%),radial-gradient(700px 380px at -10% 10%,rgba(255,255,255,.7),transparent 60%),var(--bg);min-height:100vh}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 22px 60px}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.mark{width:38px;height:38px;border-radius:12px;background:var(--grad);color:#fff;display:grid;place-items:center;font:700 15px Inter;box-shadow:0 8px 20px rgba(43,37,32,.25)}
+.brand b{display:block;font:500 21px/1.1 Georgia,"Times New Roman",serif;letter-spacing:-.01em}.brand small{color:var(--mut);font-size:12px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#3aa776;margin-right:6px;box-shadow:0 0 0 3px rgba(58,167,118,.18)}
+.sp{flex:1}
+.seg{display:inline-flex;background:rgba(255,255,255,.6);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.seg button{border:0;background:none;font:600 12.5px Inter;color:var(--ink2);padding:6px 12px;border-radius:999px;cursor:pointer}
+.seg button.on{background:var(--ink);color:#fff}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;margin:0 0 18px;padding:4px;background:rgba(255,255,255,.55);border:1px solid var(--line);border-radius:999px;width:max-content;max-width:100%;scrollbar-width:none}
+nav.tabs button{border:0;background:none;font:600 13px Inter;color:var(--ink2);padding:8px 16px;border-radius:999px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px}
+nav.tabs button.on{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(43,37,32,.22)}
+nav.tabs .n{background:var(--gold);color:#fff;border-radius:999px;font-size:11px;padding:0 6px;line-height:17px}
+.glass{background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.75);box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 14px 40px rgba(70,48,30,.08);border-radius:var(--r)}
+.card{padding:18px 20px;margin-bottom:16px}
+h2{font:500 18px/1.2 Georgia,serif;margin:0 0 4px}h3{font:600 13px Inter;margin:0 0 12px;color:var(--ink2);letter-spacing:.02em;text-transform:uppercase}
+.mut{color:var(--mut)}.small{font-size:12px}
+.hd{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}.hd h2{margin:0;font-size:24px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.kpi{padding:16px 18px 12px;position:relative;overflow:hidden;min-height:150px;display:flex;flex-direction:column}
+.kpi .l{font-size:12.5px;color:var(--ink2);font-weight:600;display:flex;gap:6px;align-items:center}
+.kpi .v{font:500 32px/1.1 Georgia,serif;margin:8px 0 2px;letter-spacing:-.02em}.kpi .v small{font:600 14px Inter;color:var(--mut);margin-left:2px}
+.kpi .s{font-size:12px;color:var(--mut);min-height:18px}
+.kpi>svg{display:block;width:100%;height:38px;margin-top:auto}
+.tr{font:700 11.5px Inter;border-radius:999px;padding:2px 8px;margin-left:auto}.tr.up{background:var(--okb);color:var(--ok)}.tr.dn{background:var(--badb);color:var(--bad)}.tr.fl{background:var(--infob);color:var(--info)}
+.i{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.g2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.bar{display:grid;grid-template-columns:130px 1fr 40px;gap:10px;align-items:center;margin:8px 0;font-size:13px}
+.bar i{display:block;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--gold),#d9b48e)}.bar .t{background:rgba(45,36,30,.06);border-radius:99px}
+.heat{display:grid;grid-template-columns:28px repeat(24,1fr);gap:3px;font-size:10px;color:var(--mut)}
+.heat b{aspect-ratio:1;border-radius:4px;background:rgba(184,134,91,var(--a));display:block}
+.list{list-style:none;margin:0;padding:0}.list li{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.list li:first-child{border-top:0}
+.list .q{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:9px 16px;font:700 13px Inter;border:0;cursor:pointer;background:var(--grad);color:#fff;box-shadow:0 8px 20px rgba(43,37,32,.2);text-decoration:none;white-space:nowrap}
+.btn.s{background:rgba(255,255,255,.8);color:var(--ink);border:1px solid rgba(45,36,30,.14);box-shadow:none}.btn.xs{padding:5px 11px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:default}
+.badge{display:inline-flex;align-items:center;gap:5px;font:700 11.5px Inter;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.badge:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.b-open,.b-warn{background:var(--warnb);color:var(--warn)}.b-in_progress,.b-info{background:var(--infob);color:var(--info)}.b-resolved,.b-ok{background:var(--okb);color:var(--ok)}.b-bad{background:var(--badb);color:var(--bad)}
+.ex{display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:14px;background:var(--warnb);color:var(--warn);font-weight:600;font-size:13px;margin-bottom:14px}
+.check{list-style:none;margin:0;padding:0}.check li{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}.check li:first-child{border-top:0}
+.check .c{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;border:1.5px dashed rgba(45,36,30,.3)}.check .c.ok{background:var(--ok);border:0;color:#fff}.check .c.w{background:var(--warnb);border:0;color:var(--warn)}
+.check .tx{flex:1}.check .tx b{display:block;font-size:13.5px}.check .tx span{font-size:12.5px;color:var(--mut)}
+.prog{height:6px;border-radius:99px;background:rgba(45,36,30,.08);overflow:hidden;margin:6px 0 4px}.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+table{width:100%;border-collapse:separate;border-spacing:0}th{font:600 11.5px Inter;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13.5px}tr:last-child td{border-bottom:0}tbody tr:hover td{background:rgba(255,255,255,.55)}
+.clip{max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+select,input,textarea{font:14px Inter;color:var(--ink);background:rgba(255,255,255,.85);border:1px solid rgba(45,36,30,.16);border-radius:12px;padding:9px 12px;width:100%;outline:none;transition:border-color .2s,box-shadow .2s}
+select:focus,input:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,134,91,.18)}
+td select{width:auto;padding:5px 10px;border-radius:999px;font-size:12.5px}
+label.f{display:block;font:600 12.5px Inter;color:var(--ink2);margin:0 0 14px}label.f>span{display:block;margin-bottom:6px}label.f small{font-weight:400;color:var(--mut)}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.row>*{flex:1;min-width:160px}
+.sw{display:flex;gap:8px;align-items:center}.sw button{width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer}.sw input[type=color]{width:40px;height:32px;padding:2px;border-radius:10px}
+.tog{position:relative;width:42px;height:24px;flex:none}.tog input{opacity:0;position:absolute;inset:0;margin:0;cursor:pointer;z-index:1}.tog i{position:absolute;inset:0;border-radius:99px;background:rgba(45,36,30,.18);transition:.2s}
+.tog i:after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.tog input:checked+i{background:var(--ink)}.tog input:checked+i:after{transform:translateX(18px)}
+.line{display:flex;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}.line:first-of-type{border-top:0}.line .tx{flex:1}.line .tx b{display:block;font-size:13.5px}.line .tx span{font-size:12.5px;color:var(--mut)}
+.empty{text-align:center;padding:36px 10px;color:var(--mut)}.empty b{display:block;color:var(--ink);font:500 17px Georgia,serif;margin-bottom:4px}
+dialog{border:0;padding:0;border-radius:22px;width:min(560px,94vw);background:#fffdf9;box-shadow:0 30px 80px rgba(40,28,18,.3)}dialog::backdrop{background:rgba(36,31,27,.35);backdrop-filter:blur(3px)}
+dialog .in{padding:22px}dialog .ft{display:flex;gap:8px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--line);background:rgba(246,240,232,.5);border-radius:0 0 22px 22px}
+/* Try-it: storefront-like chat */
+.phone{max-width:390px;margin:0 auto;border-radius:30px;background:#fff;border:1px solid var(--line);box-shadow:0 30px 70px rgba(40,28,18,.18);overflow:hidden;display:flex;flex-direction:column;height:620px}
+.ph-h{display:flex;gap:10px;align-items:center;padding:14px 16px;color:#fff;background:var(--acc,#2b2520)}.ph-h .av{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;font-weight:700}
+.ph-h small{display:block;opacity:.75;font-size:11.5px}
+.ph-log{flex:1;overflow:auto;padding:14px;background:#faf8f5;display:flex;flex-direction:column;gap:8px}
+.m{max-width:82%;padding:9px 13px;border-radius:16px;font-size:13.5px;white-space:pre-wrap;line-height:1.45;animation:in .25s ease}.m.a{background:#fff;border:1px solid #eee;border-bottom-left-radius:5px}.m.u{align-self:flex-end;color:#fff;background:var(--acc,#2b2520);border-bottom-right-radius:5px}
+@keyframes in{from{opacity:0;transform:translateY(6px)}}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips button{border:1px solid rgba(45,36,30,.18);background:#fff;border-radius:999px;padding:6px 11px;font:600 12px Inter;cursor:pointer;color:var(--ink)}
+.car{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}.pc{flex:0 0 140px;scroll-snap-align:start;background:#fff;border:1px solid #eee;border-radius:14px;overflow:hidden;font-size:12.5px}
+.pc img,.pc .ph{width:100%;aspect-ratio:1;object-fit:cover;background:#f1ece6;display:block}.pc div{padding:8px}.pc b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oc{background:#fff;border:1px solid #eee;border-radius:14px;padding:12px;font-size:12.5px}.tl{list-style:none;margin:8px 0 0;padding:0 0 0 14px;border-left:2px solid #eee}.tl li{position:relative;margin:0 0 8px}.tl li:before{content:"";position:absolute;left:-19px;top:4px;width:8px;height:8px;border-radius:50%;background:#ccc}.tl li:first-child:before{background:var(--gold)}
+.ph-in{display:flex;gap:8px;padding:10px;border-top:1px solid #eee}.ph-in input{border-radius:999px}
+.ty{display:flex;gap:4px;padding:12px 14px;background:#fff;border:1px solid #eee;border-radius:16px;width:max-content}.ty i{width:6px;height:6px;border-radius:50%;background:#bbb;animation:b 1s infinite}.ty i:nth-child(2){animation-delay:.15s}.ty i:nth-child(3){animation-delay:.3s}
+@keyframes b{50%{transform:translateY(-4px);opacity:.5}}
+.hide{display:none!important}
+@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.g2,.g3{grid-template-columns:1fr}}
+@media(max-width:560px){.wrap{padding:14px 12px 40px}.kpis{grid-template-columns:1fr}.kpi{min-height:0}.bar{grid-template-columns:100px 1fr 32px}.clip{max-width:150px}.hm-wrap{overflow-x:auto}.heat{min-width:520px}
+ table.idx thead{display:none}table.idx tr{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:12px 0;border-bottom:1px solid var(--line)}table.idx td{border:0;padding:0}}
+</style></head>
+<body><div class="wrap">
+<div class="top"><div class="mark">P</div><div class="brand"><b>Pod.AI</b><small id="shop"><span class="dot"></span>…</small></div><div class="sp"></div>
+ <div class="seg" id="lang"><button data-l="en" class="on">EN</button><button data-l="zh">中文</button></div></div>
+<nav class="tabs" id="tabs" role="tablist"></nav>
 
-<section id="overview"><div class="grid" id="kpis"></div><div class="card" style="margin-top:14px"><b>Top questions</b><div id="intents" class="muted"></div></div></section>
+<section id="overview">
+ <div class="hd"><h2 data-i="ov.h"></h2><span class="mut small" id="ovsub"></span><div class="sp"></div><div class="seg" id="range"><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button></div></div>
+ <div class="ex hide" id="exbar"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span data-i="ex"></span></div>
+ <div class="kpis" id="kpis"></div>
+ <div class="g2">
+  <div class="glass card"><h3 data-i="ov.intents"></h3><div id="intents"></div></div>
+  <div class="glass card"><div class="hd" style="margin-bottom:6px"><h3 style="margin:0" data-i="ov.unans"></h3></div><ul class="list" id="unans"></ul></div>
+ </div>
+ <div class="g2">
+  <div class="glass card"><h3 data-i="ov.heat"></h3><div class="hm-wrap"><div class="heat" id="heat"></div></div></div>
+  <div class="glass card"><h3 data-i="ov.sla"></h3><div id="sla"></div></div>
+ </div>
+ <div class="g2">
+  <div class="glass card" id="setupCard"><div class="hd" style="margin-bottom:4px"><h3 style="margin:0" data-i="ck.h"></h3><div class="sp"></div><span class="small mut" id="ckn"></span></div><div class="prog"><i id="ckp" style="width:0"></i></div><ul class="check" id="check"></ul></div>
+  <div class="glass card"><h3 data-i="ov.tech"></h3><div id="tech"></div></div>
+ </div>
+</section>
 
-<section id="handoffs" class="hide"><div class="card"><table><thead><tr><th>When</th><th>Reason</th><th>Customer</th><th>Last message</th><th>Status</th></tr></thead><tbody id="ho"></tbody></table><p id="hoEmpty" class="muted">No handoffs yet.</p></div></section>
+<section id="handoffs" class="hide"><div class="glass card">
+ <div class="hd"><h2 data-i="ho.h"></h2><div class="sp"></div><div class="seg" id="hof"><button data-s="" class="on" data-i="all"></button><button data-s="open" data-i="st.open"></button><button data-s="in_progress" data-i="st.in_progress"></button><button data-s="resolved" data-i="st.resolved"></button></div></div>
+ <table class="idx"><thead><tr><th data-i="ho.c1"></th><th data-i="ho.c2"></th><th data-i="ho.c3"></th><th data-i="ho.c4"></th><th data-i="ho.c5"></th></tr></thead><tbody id="ho"></tbody></table>
+ <div class="empty hide" id="hoEmpty"><b data-i="ho.e1"></b><span data-i="ho.e2"></span></div></div></section>
 
-<section id="knowledge" class="hide"><div class="card"><b>Add an answer</b><p class="muted">Your shop policies (shipping, refunds, contact) are used automatically. Add anything else customers ask.</p>
-<div class="row"><input id="kq" placeholder="Question, e.g. Do you ship to Austria?"><input id="kt" placeholder="Keywords, e.g. austria, shipping" style="max-width:260px"></div>
-<p><textarea id="ka" placeholder="Answer"></textarea></p><button class="btn" id="kadd">Save answer</button></div>
-<div class="card"><table><tbody id="kl"></tbody></table><p id="klEmpty" class="muted">No custom answers yet.</p></div></section>
+<section id="knowledge" class="hide"><div class="glass card">
+ <div class="hd"><h2 data-i="kn.h"></h2><span class="mut small" data-i="kn.s"></span><div class="sp"></div><button class="btn" id="kadd"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i="kn.add"></span></button></div>
+ <table class="idx"><thead><tr><th data-i="kn.q"></th><th data-i="kn.a"></th><th data-i="kn.t"></th><th></th></tr></thead><tbody id="kl"></tbody></table>
+ <div class="empty hide" id="klEmpty"><b data-i="kn.e1"></b><span data-i="kn.e2"></span></div></div></section>
 
-<section id="settings" class="hide"><div class="card">
-<p><label><input type="checkbox" id="sen" style="width:auto"> Chat enabled on the storefront</label></p>
-<p>Greeting (English)<input id="sg" placeholder="Leave empty for the default greeting"></p>
-<p>Team reply time (hours)<input id="sh" type="number" min="1" max="168"></p>
-<button class="btn" id="ssave">Save</button> <span id="smsg" class="muted"></span></div>
-<div class="card"><b>Order tracking sources</b><p class="muted">Order lookup asks the carrier first (YunExpress, 4PX), then 51Tracking, then shows your Shopify tracking link.</p><ul id="tsrc"></ul></div></section>
+<section id="settings" class="hide"><div class="g2">
+ <div>
+  <div class="glass card"><h3 data-i="se.chat"></h3>
+   <div class="line"><div class="tx"><b data-i="se.en"></b><span data-i="se.ens"></span></div><label class="tog"><input type="checkbox" id="sen"><i></i></label></div>
+   <div class="line"><div class="tx"><b data-i="se.llm"></b><span id="llmNote"></span></div><label class="tog"><input type="checkbox" id="sllm"><i></i></label></div>
+   <label class="f" style="margin-top:12px"><span data-i="se.gr"></span><input id="sg_en" placeholder="English"><input id="sg_zh" placeholder="中文" style="margin-top:6px"><input id="sg_de" placeholder="Deutsch" style="margin-top:6px"></label>
+   <div class="row"><label class="f"><span data-i="se.lang"></span><select id="slang"><option value="auto"></option><option value="en">English</option><option value="zh">中文</option><option value="de">Deutsch</option></select></label>
+   <label class="f"><span data-i="se.hours"></span><input id="sh" type="number" min="1" max="168"></label></div></div>
+  <div class="glass card"><h3 data-i="se.look"></h3>
+   <label class="f"><span data-i="se.color"></span><div class="sw" id="swatch"><input type="color" id="scol"></div></label>
+   <label class="f"><span data-i="se.pos"></span><div class="seg" id="spos"><button data-p="left" data-i="se.left"></button><button data-p="right" data-i="se.right"></button></div></label>
+   <div class="row"><label class="f"><span data-i="se.title"></span><input id="stitle" maxlength="60"></label><label class="f"><span data-i="se.av"></span><input id="sav" placeholder="https://…"></label></div>
+   <p class="small mut" style="margin:0" data-i="se.embed"></p></div>
+  <button class="btn" id="ssave"><span data-i="save"></span></button>
+ </div>
+ <div class="glass card"><h3 data-i="se.prev"></h3><div class="phone" id="sprev" style="height:430px"><div class="ph-h"><div class="av" id="pav">P</div><div><b id="ptitle"></b><small><span class="dot"></span><span data-i="online"></span></small></div></div><div class="ph-log"><div class="m a" id="pgreet"></div><div class="chips"><button data-i="c1"></button><button data-i="c2"></button></div></div></div>
+  <h3 style="margin-top:18px" data-i="se.trk"></h3><div id="tsrc"></div></div>
+</div></section>
 
-<section id="preview" class="hide"><div class="card"><div class="chat" id="chat"></div>
-<div class="row" style="margin-top:10px"><input id="pin" placeholder="Ask like a customer, e.g. What is your return policy?"><button class="btn" id="psend" style="flex:0 0 auto">Send</button></div></div></section>
-
-<section id="setup" class="hide"><div class="card"><b>Show the chat on your store</b><ol class="steps">
-<li>Open <b>Online Store → Themes → Customize → App embeds</b>.</li><li>Turn on <b>Pod.AI Chat</b> and save.</li><li>Add your shipping and refund policies in <b>Settings → Policies</b> — the agent answers from them.</li></ol>
-<a class="btn" id="embedLink" target="_top" href="#">Open theme editor</a></div></section>
+<section id="preview" class="hide"><div class="g2">
+ <div class="phone" id="phone"><div class="ph-h"><div class="av">P</div><div><b id="ptitle2">Chat</b><small><span class="dot"></span><span data-i="online"></span></small></div></div><div class="ph-log" id="chat"></div>
+  <form class="ph-in" id="pform"><input id="pin" autocomplete="off"><button class="btn" type="submit"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form></div>
+ <div class="glass card"><h2 data-i="pv.h"></h2><p class="mut" data-i="pv.s"></p><div class="chips" id="pvchips"></div></div>
+</div></section>
 </div>
+
+<dialog id="kdlg"><form method="dialog"><div class="in"><h2 id="kdh"></h2><p class="mut small" data-i="kn.s"></p>
+ <label class="f"><span data-i="kn.q"></span><input id="kq" required maxlength="300"></label>
+ <label class="f"><span data-i="kn.a"></span><textarea id="ka" rows="5" required maxlength="2000"></textarea></label>
+ <label class="f"><span data-i="kn.t"></span><input id="kt" placeholder="shipping, gift"></label></div>
+ <div class="ft"><button class="btn s" value="cancel" formnovalidate data-i="cancel"></button><button class="btn" id="ksave" value="ok" data-i="save"></button></div></form></dialog>
+
 <script>
-const $ = s => document.querySelector(s), esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-async function api(path, opt = {}) {
-  const token = await shopify.idToken();
-  const r = await fetch("/shopify-agent/api" + path, { ...opt, headers: { "Content-Type": "application/json", Authorization: "Bearer " + token, ...(opt.headers || {}) } });
-  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
-  return r.json();
-}
-const loaders = {
-  async overview() {
-    const o = await api("/overview");
-    $("#kpis").innerHTML = o.kpis.map(k => `<div class="k"><small>${esc(k.label)}</small><b>${k.value == null ? "–" : esc(k.value)}${k.unit && k.value != null ? esc(k.unit) : ""}</b><span class="pill ${k.status}">${esc(k.status)}</span></div>`).join("");
-    const top = Object.entries(o.intents || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
-    $("#intents").innerHTML = top.length ? top.map(([k, v]) => `${esc(k.replace(/_/g, " "))} · ${v}`).join("<br>") : "No conversations yet.";
-  },
-  async handoffs() {
-    const l = await api("/handoffs");
-    $("#hoEmpty").classList.toggle("hide", !!l.length);
-    $("#ho").innerHTML = l.map(h => `<tr><td>${esc(new Date(h.created_at).toLocaleString())}</td><td>${esc(h.reason)}</td><td>${esc(h.customer_email || "–")}</td><td>${esc((h.messages || []).filter(m => m.role === "user").slice(-1)[0]?.text || "")}</td>
-      <td><select data-id="${esc(h.id)}">${["open", "in_progress", "resolved"].map(s => `<option ${s === h.status ? "selected" : ""}>${s}</option>`).join("")}</select></td></tr>`).join("");
-    document.querySelectorAll("#ho select").forEach(s => s.onchange = () => api("/handoffs/" + s.dataset.id, { method: "PATCH", body: JSON.stringify({ status: s.value }) }).then(() => shopify.toast.show("Updated")));
-  },
-  async knowledge() {
-    const r = await api("/knowledge"), l = r.custom || r.items || r.entries || [];
-    $("#klEmpty").classList.toggle("hide", !!l.length);
-    $("#kl").innerHTML = l.map(x => `<tr><td><b>${esc(x.question)}</b><br><span class="muted">${esc(x.answer)}</span></td><td style="width:90px"><button class="btn s" data-del="${esc(x.id)}">Delete</button></td></tr>`).join("");
-    document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => api("/knowledge/" + b.dataset.del, { method: "DELETE" }).then(loaders.knowledge));
-  },
-  async settings() { const s = await api("/settings"); $("#sen").checked = s.enabled; $("#sg").value = s.greeting?.en || ""; $("#sh").value = s.human_reply_hours;
-    const t = s.tracking_sources, ok = v => v ? "configured" : "not set";
-    $("#tsrc").innerHTML = t ? [...t.carriers.map(c => `<li>${esc(c.name)}: ${ok(c.configured)}</li>`), `<li>51Tracking: ${ok(t.tracking51.configured)}</li>`, "<li>Fallback: Shopify tracking link</li>"].join("") : ""; },
-  preview() {}, setup() {}
-};
-$("#tabs").onclick = e => { const t = e.target.dataset.t; if (!t) return; document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.t === t)); document.querySelectorAll("section").forEach(s => s.classList.toggle("hide", s.id !== t)); loaders[t]().catch(err => shopify.toast.show(String(err.message), { isError: true })); };
-$("#kadd").onclick = () => api("/knowledge", { method: "POST", body: JSON.stringify({ question: $("#kq").value, answer: $("#ka").value, tags: $("#kt").value, lang: "en" }) }).then(() => { $("#kq").value = $("#ka").value = $("#kt").value = ""; shopify.toast.show("Saved"); loaders.knowledge(); }).catch(e => shopify.toast.show(String(e.message), { isError: true }));
-$("#ssave").onclick = () => api("/settings", { method: "PUT", body: JSON.stringify({ enabled: $("#sen").checked, greeting: { en: $("#sg").value }, human_reply_hours: Number($("#sh").value) }) }).then(() => shopify.toast.show("Saved"));
-let conv = null;
-const say = (cls, text) => { const d = document.createElement("div"); d.className = "m " + cls; d.textContent = text; $("#chat").append(d); $("#chat").scrollTop = 1e9; };
-async function send() { const m = $("#pin").value.trim(); if (!m) return; $("#pin").value = ""; say("u", m);
-  const r = await api("/preview", { method: "POST", body: JSON.stringify({ message: m, conversation_id: conv }) }); conv = r.conversation_id;
-  say("a", r.answer + (r.ui || []).filter(u => u.type === "products").flatMap(u => u.items).map(p => `\n• ${p.name}${Number.isFinite(p.unit_price) ? ` – ${p.unit_price} ${p.currency || ""}` : ""}`).join("")); }
-$("#psend").onclick = send; $("#pin").onkeydown = e => e.key === "Enter" && send();
-(async () => {
-  try {
-    const b = await api("/bootstrap", { method: "POST" });
-    $("#shop").textContent = b.shop + " · chat agent connected";
-    $("#embedLink").href = `https://${b.shop}/admin/themes/current/editor?context=apps&activateAppId=${encodeURIComponent(document.querySelector('meta[name="shopify-api-key"]').content)}/chat-embed`;
-    await loaders.overview();
-  } catch (e) { $("#shop").textContent = "Could not connect: " + e.message; }
-})();
+const T={en:{"tab.overview":"Overview","tab.handoffs":"Handoffs","tab.knowledge":"Knowledge","tab.settings":"Settings","tab.preview":"Try it",
+"ov.h":"Performance","ov.intents":"Top customer questions","ov.unans":"Questions the AI couldn't answer","ov.heat":"Busiest hours","ov.sla":"Handoff queue","ov.tech":"Languages & answer engine",
+ex:"Example data — your numbers appear after the first storefront chats.",vs:"vs previous",
+"k.conversations":"Conversations","k.resolution_rate":"AI resolution rate","k.hours_saved":"Support hours saved","k.wismo":"Order lookups self-served","k.influenced_revenue":"Chat-influenced revenue","k.product_clicks":"Product card clicks","k.first_response":"Median first response",
+"s.conversations":"Storefront chats","s.resolution_rate":"Resolved without a human","s.hours_saved":"{r} chats × {m} min","s.wismo":"{p}% of {t} “Where is my order?”","s.influenced_revenue":"{o} orders via chat links (UTM)","s.product_clicks":"CTR {c}% · {a} add-to-cart","s.first_response":"Time to the first AI reply",
+attr_protected:"Revenue attribution needs protected customer data access",addk:"Add to knowledge",nounans:"Nothing unanswered — nice.",
+"sla.open":"Open","sla.wait":"Oldest waiting","sla.res":"Avg. time to resolve","sla.target":"Your reply promise","sla.go":"Open queue",
+local:"Rules + shop data",llm:"LLM","ck.h":"Get set up","ck.embed":"Turn on the chat in your theme","ck.embeds":"Theme editor → App embeds → Pod.AI Chat","ck.pol":"Add shipping & refund policies","ck.pols":"The AI answers from Settings → Policies",
+"ck.prot":"Order data access","ck.prots":"Needed for order tracking in chat","ck.trk":"Live parcel tracking","ck.trks":"Carrier API or 51Tracking (else tracking link)","ck.llm":"LLM answers (optional)","ck.llms":"Server key; rules + shop data work without it",
+open:"Open",done:"done",setup:"Set up",
+"ho.h":"Handoffs","ho.c1":"Customer","ho.c2":"Last message","ho.c3":"Reason","ho.c4":"Waiting","ho.c5":"Status","ho.e1":"No handoffs","ho.e2":"Chats the AI hands to your team show up here.",all:"All","st.open":"Open","st.in_progress":"In progress","st.resolved":"Resolved",
+"kn.h":"Knowledge","kn.s":"Extra answers on top of your policies and products.","kn.add":"Add answer","kn.q":"Question","kn.a":"Answer","kn.t":"Tags","kn.e1":"No custom answers yet","kn.e2":"Add answers to questions your policies don't cover.","kn.edit":"Edit answer",del:"Delete",edit:"Edit",
+"se.chat":"Chat","se.en":"Chat on storefront","se.ens":"Shown when the app embed is on","se.llm":"LLM answers","se.gr":"Greeting","se.lang":"Language","se.hours":"Team reply time (hours)","se.look":"Appearance","se.color":"Brand colour","se.pos":"Launcher position","se.left":"Left","se.right":"Right","se.title":"Header title","se.av":"Avatar image URL",
+"se.embed":"Colour and position in the theme app embed override these.","se.prev":"Preview","se.trk":"Order tracking sources",llmon:"Uses the server LLM for open questions.",llmoff:"No LLM key on the server — rules + shop data only.",auto:"Auto (visitor's language)",
+save:"Save",saved:"Saved",cancel:"Cancel",online:"Online · replies instantly",c1:"Where is my order?",c2:"Shipping costs","pv.h":"Try it","pv.s":"Chat like a customer. Uses your live shop data; nothing is sent to customers.",
+q1:"Show me your products",q2:"Where is order #1001?",q3:"What is your return policy?",q4:"Talk to a person",track:"Track parcel",view:"View",cart:"Add to cart",cfg:"configured",ncfg:"not set",fb:"Fallback: Shopify tracking link",items:"Items",hello:"Hi! Ask me about products, shipping or your order.",
+mon:"Mon",tue:"Tue",wed:"Wed",thu:"Thu",fri:"Fri",sat:"Sat",sun:"Sun",ago:"{h} h"},
+zh:{"tab.overview":"概览","tab.handoffs":"转人工","tab.knowledge":"知识库","tab.settings":"设置","tab.preview":"试用",
+"ov.h":"运营表现","ov.intents":"顾客最常问","ov.unans":"AI 未能回答的问题","ov.heat":"咨询高峰时段","ov.sla":"转人工队列","ov.tech":"语言与回答引擎",
+ex:"示例数据 —— 店铺产生首批对话后显示真实数据。",vs:"环比",
+"k.conversations":"对话数","k.resolution_rate":"AI 解决率","k.hours_saved":"节省客服工时","k.wismo":"自助查单","k.influenced_revenue":"聊天带来的销售额","k.product_clicks":"商品卡片点击","k.first_response":"首次响应中位数",
+"s.conversations":"店铺聊天","s.resolution_rate":"无需人工即解决","s.hours_saved":"{r} 个对话 × {m} 分钟","s.wismo":"{t} 次查单中 {p}% 自助完成","s.influenced_revenue":"{o} 笔订单来自聊天链接 (UTM)","s.product_clicks":"点击率 {c}% · 加购 {a}","s.first_response":"AI 首次回复用时",
+attr_protected:"销售额归因需要受保护客户数据权限",addk:"加入知识库",nounans:"没有未回答的问题。",
+"sla.open":"待处理","sla.wait":"最长等待","sla.res":"平均解决时长","sla.target":"承诺回复时间","sla.go":"打开队列",
+local:"规则 + 店铺数据",llm:"大模型","ck.h":"上线清单","ck.embed":"在主题中开启聊天","ck.embeds":"主题编辑器 → 应用嵌入 → Pod.AI Chat","ck.pol":"添加运费和退款政策","ck.pols":"AI 依据 设置 → 政策 回答",
+"ck.prot":"订单数据权限","ck.prots":"聊天查单所需","ck.trk":"实时物流追踪","ck.trks":"承运商 API 或 51Tracking（否则显示追踪链接）","ck.llm":"大模型回答（可选）","ck.llms":"服务器密钥；没有也可用规则 + 店铺数据",
+open:"打开",done:"已完成",setup:"去设置",
+"ho.h":"转人工","ho.c1":"顾客","ho.c2":"最后消息","ho.c3":"原因","ho.c4":"等待","ho.c5":"状态","ho.e1":"暂无转人工","ho.e2":"AI 转给团队的对话会显示在这里。",all:"全部","st.open":"待处理","st.in_progress":"处理中","st.resolved":"已解决",
+"kn.h":"知识库","kn.s":"在政策和商品之外补充的回答。","kn.add":"新增回答","kn.q":"问题","kn.a":"回答","kn.t":"标签","kn.e1":"还没有自定义回答","kn.e2":"为政策未覆盖的问题添加回答。","kn.edit":"编辑回答",del:"删除",edit:"编辑",
+"se.chat":"聊天","se.en":"店铺显示聊天","se.ens":"开启应用嵌入后显示","se.llm":"大模型回答","se.gr":"欢迎语","se.lang":"语言","se.hours":"团队回复时间（小时）","se.look":"外观","se.color":"品牌色","se.pos":"按钮位置","se.left":"左下","se.right":"右下","se.title":"标题","se.av":"头像图片链接",
+"se.embed":"主题应用嵌入中的颜色和位置会覆盖这里的设置。","se.prev":"预览","se.trk":"物流追踪来源",llmon:"开放式问题使用服务器大模型。",llmoff:"服务器未配置大模型密钥 —— 仅规则 + 店铺数据。",auto:"自动（访客语言）",
+save:"保存",saved:"已保存",cancel:"取消",online:"在线 · 即时回复",c1:"我的订单到哪了？",c2:"运费多少？","pv.h":"试用","pv.s":"像顾客一样提问。使用店铺真实数据，不会发送给顾客。",
+q1:"看看你们的商品",q2:"订单 #1001 到哪了？",q3:"退货政策是什么？",q4:"转人工",track:"查看物流",view:"查看",cart:"加入购物车",cfg:"已配置",ncfg:"未设置",fb:"兜底：Shopify 物流链接",items:"商品",hello:"你好！可以问我商品、运费或订单。",
+mon:"一",tue:"二",wed:"三",thu:"四",fri:"五",sat:"六",sun:"日",ago:"{h} 小时"}};
+let L=localStorage.getItem("podai_lang")||((navigator.language||"").startsWith("zh")?"zh":"en");
+const t=(k,v={})=>String((T[L]||T.en)[k]??T.en[k]??k).replace(/\{(\w+)\}/g,(_,x)=>v[x]??"");
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const toast=(m,e)=>{try{shopify.toast.show(m,e?{isError:true}:undefined)}catch{}};
+async function api(path,opt={}){const token=await shopify.idToken();const r=await fetch("/shopify-agent/api"+path,{...opt,headers:{"Content-Type":"application/json",Authorization:"Bearer "+token,...(opt.headers||{})}});
+ if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||r.status);return r.json();}
+const TABS=["overview","handoffs","knowledge","settings","preview"];let tab="overview",days=30,shop="",st={};
+function i18n(){document.documentElement.lang=L==="zh"?"zh-CN":"en";$$("[data-i]").forEach(e=>e.textContent=t(e.dataset.i));$("#slang option[value=auto]").textContent=t("auto");
+ $("#tabs").innerHTML=TABS.map(x=>`<button role="tab" data-t="${x}" class="${x===tab?"on":""}">${t("tab."+x)}${x==="handoffs"&&st.open?`<span class="n">${st.open}</span>`:""}</button>`).join("");
+ $$("#lang button").forEach(b=>b.classList.toggle("on",b.dataset.l===L));$("#pin").placeholder=t("q3");}
+const ICON={conversations:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',resolution_rate:'<path d="M20 6 9 17l-5-5"/>',hours_saved:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',wismo:'<path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7M12 11v10"/>',influenced_revenue:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',product_clicks:'<path d="M9 9l11 4-5 2-2 5-4-11zM4 4l2 2M4 10H2M10 4V2"/>',first_response:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'};
+function spark(a,lower){if(!a||a.length<2)return"";const mx=Math.max(1,...a),w=200,h=38,s=w/(a.length-1),p=a.map((v,i)=>`${(i*s).toFixed(1)},${(h-3-(v/mx)*(h-8)).toFixed(1)}`);
+ return`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><defs><linearGradient id="g${a.length}${a[0]}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8865b" stop-opacity=".28"/><stop offset="1" stop-color="#b8865b" stop-opacity="0"/></linearGradient></defs><path d="M0,${h} L${p.join(" L")} L${w},${h}Z" fill="url(#g${a.length}${a[0]})"/><polyline points="${p.join(" ")}" fill="none" stroke="#8a5a33" stroke-width="1.8" vector-effect="non-scaling-stroke"/></svg>`;}
+function bars(a){return`<svg viewBox="0 0 200 38" preserveAspectRatio="none">${a.map((v,i)=>`<rect x="${i*200/a.length+1}" width="${200/a.length-2}" y="${38-v*34}" height="${v*34}" rx="2" fill="#b8865b" opacity="${.35+v*.6}"/>`).join("")}</svg>`;}
+const fmt=(v,u)=>v==null?"–":(u==="%"||u==="h"||u==="s")?`${String(v)}<small>${u}</small>`:Number(v).toLocaleString(L==="zh"?"zh-CN":"en");
+const EXAMPLE={days:30,empty:true,primary:[{id:"conversations",value:412,trend:15.7,spark:[9,12,11,14,13,15,12,16,18,15,17,19,16,18,21,17,19,22,20,18,23,21,24,20,22,25,23,26,24,27]},{id:"resolution_rate",unit:"%",value:86.4,trend:5.2,spark:[80,82,81,84,83,85,84,86,85,87,86,88,86,87]},{id:"hours_saved",unit:"h",value:23.7,trend:21.5,note:{resolved:356,min_per_chat:4},spark:[5,6,5,7,8,7,9,8,10,9,11,10,12,11]},{id:"wismo",value:131,trend:11,note:{total:142,rate:92.3},spark:[3,5,4,6,5,7,6,5,8,7,6,9,7,8]},{id:"product_clicks",value:288,trend:20,note:{ctr:31.5,add_to_cart:64}},{id:"first_response",unit:"s",value:1.4,trend:-26.3,lower_is_better:true}],
+ intents:[{id:"order_status",n:142},{id:"product_question",n:96},{id:"shipping",n:71},{id:"returns",n:38},{id:"sizing",n:22}],unanswered:[{text:"Do you ship to Iceland?"},{text:"Can I change the engraving after ordering?"}],sla:{open:3,oldest_wait_h:5.2,avg_resolve_h:3.1,target_h:24},
+ heatmap:Array.from({length:7},(_,d)=>Array.from({length:24},(_,h)=>Math.round(Math.max(0,Math.sin((h-7)/17*Math.PI))*(d<5?7:4)))),languages:{en:268,zh:84,de:60},answer_paths:{local:1210,llm:190}};
+async function overview(){
+ let d=await api("/dashboard?days="+days),ex=d.empty;if(ex)d={...EXAMPLE,days};
+ $("#exbar").classList.toggle("hide",!ex);st.open=d.sla.open;
+ $("#kpis").innerHTML=d.primary.map(k=>{const n=k.note||{},good=k.trend==null?null:(k.lower_is_better?k.trend<0:k.trend>0);
+  const sub=k.id==="product_clicks"&&n.attribution==="protected_customer_data"?t("s.product_clicks",{c:n.ctr??"–",a:n.add_to_cart??0})+" · "+t("attr_protected"):t("s."+k.id,{r:n.resolved,m:n.min_per_chat,p:n.rate??"–",t:n.total,o:n.orders,c:n.ctr??"–",a:n.add_to_cart??0});
+  const v=k.id==="influenced_revenue"?`${Number(k.value).toLocaleString()}<small>${esc(k.currency||"")}</small>`:fmt(k.value,k.unit);
+  const ch=k.spark&&k.spark.length?spark(k.spark):k.id==="first_response"?bars([.5,.35,.42,.3,.28,.25,.22,.2,.24,.18]):bars([.3,.45,.4,.55,.5,.65,.6,.7,.75,.8]);
+  return`<div class="glass kpi"><div class="l"><svg class="i" viewBox="0 0 24 24">${ICON[k.id]||""}</svg>${t("k."+k.id)}${k.trend==null?"":`<span class="tr ${good?"up":k.trend===0?"fl":"dn"}" title="${t("vs")}">${k.trend>0?"▲":k.trend<0?"▼":"•"} ${Math.abs(k.trend)}%</span>`}</div><div class="v">${v}</div><div class="s">${esc(sub)}</div>${ch}</div>`;}).join("");
+ const mx=Math.max(1,...d.intents.map(x=>x.n));
+ $("#intents").innerHTML=d.intents.length?d.intents.map(x=>`<div class="bar"><span class="clip">${esc(x.id.replace(/_/g," "))}</span><div class="t"><i style="width:${x.n/mx*100}%"></i></div><b>${x.n}</b></div>`).join(""):`<p class="mut">–</p>`;
+ $("#unans").innerHTML=d.unanswered.length?d.unanswered.slice(0,6).map(u=>`<li><span class="q">${esc(u.text)}</span><button class="btn s xs" data-addk="${esc(u.text)}" ${ex?"disabled":""}>${t("addk")}</button></li>`).join(""):`<li class="mut">${t("nounans")}</li>`;
+ $$("[data-addk]").forEach(b=>b.onclick=()=>kedit({question:b.dataset.addk}));
+ const hm=Math.max(1,...d.heatmap.flat()),dn=["mon","tue","wed","thu","fri","sat","sun"];
+ $("#heat").innerHTML=`<span></span>${Array.from({length:24},(_,h)=>`<span style="text-align:center">${h%6?"":h}</span>`).join("")}`+d.heatmap.map((r,i)=>`<span>${t(dn[i])}</span>`+r.map((v,h)=>`<b style="--a:${(.06+v/hm*.9).toFixed(2)}" title="${t(dn[i])} ${h}:00 · ${v}"></b>`).join("")).join("");
+ const s=d.sla,cell=(l,v,c="")=>`<div style="padding:12px 0;border-top:1px solid var(--line);display:flex"><span class="mut">${l}</span><b style="margin-left:auto" class="${c}">${v}</b></div>`;
+ $("#sla").innerHTML=`<div style="display:flex;align-items:baseline;gap:8px"><span style="font:500 40px Georgia,serif">${s.open}</span><span class="badge ${s.open?"b-warn":"b-ok"}">${t("sla.open")}</span><div class="sp"></div><button class="btn s xs" data-go="handoffs">${t("sla.go")}</button></div>`+
+  cell(t("sla.wait"),s.oldest_wait_h==null?"–":t("ago",{h:s.oldest_wait_h}))+cell(t("sla.res"),s.avg_resolve_h==null?"–":t("ago",{h:s.avg_resolve_h}))+cell(t("sla.target"),t("ago",{h:s.target_h}));
+ const lt=Object.values(d.languages).reduce((a,b)=>a+b,0)||1,ap=d.answer_paths,at=(ap.local+ap.llm)||1;
+ $("#tech").innerHTML=Object.entries(d.languages).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="bar"><span>${esc(k.toUpperCase())}</span><div class="t"><i style="width:${v/lt*100}%"></i></div><b>${Math.round(v/lt*100)}%</b></div>`).join("")+
+  `<div class="prog" style="height:10px;margin-top:16px;display:flex"><i style="width:${ap.local/at*100}%"></i><i style="width:${ap.llm/at*100}%;background:#d9c3ad"></i></div><div class="small mut" style="display:flex"><span>${t("local")} ${Math.round(ap.local/at*100)}%</span><span style="margin-left:auto">${t("llm")} ${Math.round(ap.llm/at*100)}%</span></div>`;
+ $("#ovsub").textContent="";i18n();checklist().catch(()=>{});}
+async function checklist(){const c=await api("/checklist"),tr=c.tracking||{},pol=c.policies||[],has=x=>pol.includes(x);
+ const embed=`https://${shop}/admin/themes/current/editor?context=apps&activateAppId=${encodeURIComponent(document.querySelector('meta[name="shopify-api-key"]').content)}/chat-embed`;
+ const live=(tr.carriers||[]).some(x=>x.configured)||tr.tracking51?.configured;
+ const items=[[c.chat_seen,"warn","ck.embed","ck.embeds",embed],[has("SHIPPING_POLICY")&&has("REFUND_POLICY"),"warn","ck.pol","ck.pols",`https://${shop}/admin/settings/legal`],[c.protected_data==="ok","bad","ck.prot","ck.prots","https://shopify.dev/docs/apps/launch/protected-customer-data"],[!!tr.tracking51?.configured||live,"warn","ck.trk","ck.trks",null],[!!c.llm?.available,"opt","ck.llm","ck.llms",null]];
+ const n=items.filter(x=>x[0]).length;$("#ckn").textContent=`${n}/${items.length} ${t("done")}`;$("#ckp").style.width=n/items.length*100+"%";
+ $("#check").innerHTML=items.map(([ok,lv,h,s,href])=>`<li><span class="c ${ok?"ok":lv==="opt"?"":"w"}">${ok?'<svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>':""}</span><div class="tx"><b>${t(h)}</b><span>${t(s)}</span></div>${!ok&&href?`<a class="btn s xs" target="_top" href="${esc(href)}">${t("setup")}</a>`:""}</li>`).join("");}
+let hoAll=[],hoF="";
+async function handoffs(){hoAll=await api("/handoffs");drawHo();}
+function drawHo(){const l=hoAll.filter(h=>!hoF||h.status===hoF);$("#hoEmpty").classList.toggle("hide",!!l.length);$("table.idx",$("#handoffs"));
+ $("#ho").innerHTML=l.map(h=>{const w=(Date.now()-Date.parse(h.created_at))/36e5;return`<tr><td><b>${esc(h.customer_email||"–")}</b><div class="small mut">${esc(h.order_number||"")}</div></td><td><div class="clip">${esc((h.messages||[]).filter(m=>m.role==="user").slice(-1)[0]?.text||"")}</div></td><td><span class="small mut">${esc(String(h.reason||"").replace(/_/g," "))}</span></td><td><span class="small ${h.status!=="resolved"&&w>24?"":"mut"}">${w<1?"<1 h":t("ago",{h:Math.round(w)})}</span></td>
+ <td><select data-id="${esc(h.id)}" class="badge b-${esc(h.status)}" style="border:0">${["open","in_progress","resolved"].map(s=>`<option value="${s}" ${s===h.status?"selected":""}>${t("st."+s)}</option>`).join("")}</select></td></tr>`}).join("");
+ $$("#ho select").forEach(s=>s.onchange=()=>api("/handoffs/"+s.dataset.id,{method:"PATCH",body:JSON.stringify({status:s.value})}).then(()=>{toast(t("saved"));handoffs();}));}
+let kList=[],kCur=null;
+async function knowledge(){const r=await api("/knowledge");kList=r.custom||[];$("#klEmpty").classList.toggle("hide",!!kList.length);
+ $("#kl").innerHTML=kList.map((x,i)=>`<tr><td><b>${esc(x.question)}</b></td><td><div class="clip mut">${esc(x.answer)}</div></td><td>${String(x.tags||"").split(/[,\s]+/).filter(Boolean).map(g=>`<span class="badge b-info">${esc(g)}</span>`).join(" ")}</td><td style="text-align:right;white-space:nowrap"><button class="btn s xs" data-ke="${i}">${t("edit")}</button> <button class="btn s xs" data-kd="${esc(x.id)}">${t("del")}</button></td></tr>`).join("");
+ $$("[data-ke]").forEach(b=>b.onclick=()=>kedit(kList[b.dataset.ke]));$$("[data-kd]").forEach(b=>b.onclick=()=>api("/knowledge/"+b.dataset.kd,{method:"DELETE"}).then(knowledge));}
+function kedit(x={}){kCur=x;$("#kdh").textContent=t(x.id?"kn.edit":"kn.add");$("#kq").value=x.question||"";$("#ka").value=x.answer||"";$("#kt").value=Array.isArray(x.tags)?x.tags.join(", "):(x.tags||"");$("#kdlg").showModal();}
+$("#kdlg").onclose=()=>{if($("#kdlg").returnValue!=="ok")return;api("/knowledge",{method:"POST",body:JSON.stringify({id:kCur?.id,question:$("#kq").value,answer:$("#ka").value,tags:$("#kt").value,lang:L==="zh"?"zh":"en"})}).then(()=>{toast(t("saved"));tab==="knowledge"?knowledge():0;}).catch(e=>toast(String(e.message),1));};
+$("#kadd").onclick=()=>kedit();
+const SW=["#2b2520","#b8865b","#1f3a5f","#2f6b4f","#7a2e3a","#111111"];let pos="right";
+function prevLook(){const c=$("#scol").value;$("#sprev").style.setProperty("--acc",c);$("#phone").style.setProperty("--acc",c);$("#ptitle").textContent=$("#stitle").value||shopName||"Chat";$("#ptitle2").textContent=$("#ptitle").textContent;
+ const av=$("#sav").value;$$(".ph-h .av").forEach(a=>a.innerHTML=/^https:\/\//.test(av)?`<img src="${esc(av)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`:"P");
+ $("#pgreet").textContent=$("#sg_"+(L==="zh"?"zh":"en")).value||t("hello");$$("#spos button").forEach(b=>b.classList.toggle("on",b.dataset.p===pos));}
+let shopName="";
+async function settings(){const s=await api("/settings");$("#sen").checked=s.enabled;$("#sllm").checked=s.llm_enabled&&s.llm_available;$("#sllm").disabled=!s.llm_available;$("#llmNote").textContent=t(s.llm_available?"llmon":"llmoff");
+ ["en","zh","de"].forEach(l=>$("#sg_"+l).value=s.greeting?.[l]||"");$("#sh").value=s.human_reply_hours;const w=s.widget||{};$("#scol").value=w.color||"#2b2520";pos=w.position||"right";$("#stitle").value=w.title||"";$("#sav").value=w.avatar||"";$("#slang").value=w.language||"auto";
+ $("#swatch").innerHTML=SW.map(c=>`<button type="button" style="background:${c}" data-c="${c}" aria-label="${c}"></button>`).join("")+`<input type="color" id="scol" value="${esc(w.color||"#2b2520")}">`;
+ $$("#swatch [data-c]").forEach(b=>b.onclick=()=>{$("#scol").value=b.dataset.c;prevLook();});$("#scol").oninput=prevLook;
+ const tr=s.tracking_sources;$("#tsrc").innerHTML=tr?[...tr.carriers.map(c=>[c.name+(c.mode?` · ${c.mode}`:""),c.configured]),["51Tracking",tr.tracking51.configured]].map(([n,ok])=>`<div class="line"><div class="tx"><b>${esc(n)}</b></div><span class="badge ${ok?"b-ok":"b-warn"}">${t(ok?"cfg":"ncfg")}</span></div>`).join("")+`<div class="line"><div class="tx"><span>${t("fb")}</span></div></div>`:"";prevLook();}
+$("#spos").onclick=e=>{if(e.target.dataset.p){pos=e.target.dataset.p;prevLook();}};["#stitle","#sav","#sg_en","#sg_zh"].forEach(s=>$(s).oninput=prevLook);
+$("#ssave").onclick=()=>api("/settings",{method:"PUT",body:JSON.stringify({enabled:$("#sen").checked,llm_enabled:$("#sllm").checked,greeting:{en:$("#sg_en").value,zh:$("#sg_zh").value,de:$("#sg_de").value},human_reply_hours:Number($("#sh").value),
+ widget:{color:$("#scol").value,position:pos,title:$("#stitle").value,avatar:$("#sav").value,language:$("#slang").value}})}).then(()=>toast(t("saved"))).catch(e=>toast(String(e.message),1));
+// Try it — same cards as the storefront widget
+let conv=null;const log=()=>$("#chat");
+function bub(c,txt){const d=document.createElement("div");d.className="m "+c;d.textContent=txt;log().append(d);log().scrollTop=1e9;return d;}
+function cards(ui){(ui||[]).forEach(u=>{const w=document.createElement("div");
+ if(u.type==="chips"){w.className="chips";w.innerHTML=u.items.map(x=>`<button type="button">${esc(x)}</button>`).join("");w.onclick=e=>e.target.tagName==="BUTTON"&&ask(e.target.textContent);}
+ else if(u.type==="products"){w.className="car";w.innerHTML=u.items.map(p=>`<div class="pc">${p.image?`<img src="${esc(p.image)}" alt="" loading="lazy">`:`<span class="ph"></span>`}<div><b>${esc(p.name)}</b><span class="mut">${isFinite(p.unit_price)?Number(p.unit_price).toFixed(2)+" "+esc(p.currency||""):""}</span></div></div>`).join("");}
+ else if(u.type==="order"){const o=u.order;w.className="oc";w.innerHTML=`<div style="display:flex"><b>${esc(o.name)}</b><span class="badge b-${o.fulfillment==="FULFILLED"?"ok":"warn"}" style="margin-left:auto">${esc(String(o.fulfillment||"").toLowerCase().replace(/_/g," "))}</span></div><div class="mut">${o.items.map(i=>`${i.quantity}× ${esc(i.title)}`).join(", ")}</div>`;}
+ else if(u.type==="tracking"){w.className="oc";w.innerHTML=`<div style="display:flex;gap:8px"><b>${esc(u.carrier||"")}</b><span class="mut">${esc(u.number)}</span><span class="badge b-info" style="margin-left:auto">${esc(u.status||"")}</span></div><ul class="tl">${(u.events||[]).slice(0,4).map(e=>`<li><b>${esc(e.text||"")}</b><div class="mut small">${esc([e.time,e.location].filter(Boolean).join(" · "))}</div></li>`).join("")}</ul>${u.url?`<a href="${esc(u.url)}" target="_blank" rel="noopener" class="small">${t("track")} →</a>`:""}`;}
+ else return;log().append(w);});log().scrollTop=1e9;}
+async function ask(m){m=String(m||"").trim();if(!m)return;bub("u",m);const ty=document.createElement("div");ty.className="ty";ty.innerHTML="<i></i><i></i><i></i>";log().append(ty);log().scrollTop=1e9;
+ try{const r=await api("/preview",{method:"POST",body:JSON.stringify({message:m,conversation_id:conv,lang:L})});conv=r.conversation_id;ty.remove();bub("a",r.answer||"–");cards(r.ui);}catch(e){ty.remove();bub("a",String(e.message));}}
+$("#pform").onsubmit=e=>{e.preventDefault();const v=$("#pin").value;$("#pin").value="";ask(v);};
+function drawChips(){$("#pvchips").innerHTML=["q1","q2","q3","q4"].map(k=>`<button type="button">${t(k)}</button>`).join("");$("#pvchips").onclick=e=>e.target.tagName==="BUTTON"&&ask(e.target.textContent);}
+const load={overview,handoffs,knowledge,settings,preview:async()=>{drawChips();if(!log().children.length)bub("a",$("#sg_"+(L==="zh"?"zh":"en")).value||t("hello"));}};
+function go(x){tab=x;$$("section").forEach(s=>s.classList.toggle("hide",s.id!==x));i18n();load[x]().catch(e=>toast(String(e.message),1));}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-t],[data-go]");if(b&&(b.dataset.t||b.dataset.go)&&b.closest("#tabs,#sla"))go(b.dataset.t||b.dataset.go);});
+$("#range").onclick=e=>{const d=e.target.dataset.d;if(!d)return;days=+d;$$("#range button").forEach(b=>b.classList.toggle("on",b===e.target));overview().catch(er=>toast(String(er.message),1));};
+$("#hof").onclick=e=>{if(e.target.dataset.s===undefined)return;hoF=e.target.dataset.s;$$("#hof button").forEach(b=>b.classList.toggle("on",b===e.target));drawHo();};
+$("#lang").onclick=e=>{if(!e.target.dataset.l)return;L=e.target.dataset.l;localStorage.setItem("podai_lang",L);go(tab);};
+(async()=>{i18n();try{const b=await api("/bootstrap",{method:"POST"});shop=b.shop;shopName=b.shop.replace(".myshopify.com","");$("#shop").innerHTML=`<span class="dot"></span>${esc(b.shop)}`;await settings().catch(()=>{});go("overview");}
+ catch(e){$("#shop").textContent="Could not connect: "+e.message;}})();
 </script></body></html>

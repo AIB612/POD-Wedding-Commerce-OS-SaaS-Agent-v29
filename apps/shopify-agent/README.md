@@ -24,6 +24,11 @@ Answers (local first, LLM only when a key is configured on the server):
 - shipping cost: the shop's delivery-profile rates for the customer's country; calculated rates / no zones → policy + "calculated at checkout"
 - "talk to a person", anger, repeated failures → Handoffs queue in the embedded admin (no e-mail sent)
 
+## UI (v2, POD.AI visual system)
+- **Embedded admin** (`server/shopify-agent/admin.html`, App Bridge): Overview (merchant KPIs with 7/30/90-day range, trend and sparkline; example-data banner when empty; setup checklist), Handoffs (index table + status), Knowledge (table + modal editor), Settings (greeting, brand colour, launcher position, title, avatar, language, LLM on/off) with live preview, Try it. EN + 中文.
+- **Storefront widget** (`extensions/podai-chat`, app embed, ~20 KB): brand-colour launcher, open animation, header with shop name/avatar/online status, typing indicator, quick replies, product carousel (view / add to cart, UTM-tagged), order + tracking timeline card, inline e-mail form on handoff, full-screen on mobile, accessible. Empty embed settings fall back to the app settings (`/apps/podai/config`).
+- Events (`/apps/podai/event`: product_click, add_to_cart, chat_open) feed the dashboard; no personal data.
+
 ## Data sources (all from the shop, Admin GraphQL, per-shop offline token)
 | Chat needs | Shopify data | Scope |
 |---|---|---|

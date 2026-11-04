@@ -27,7 +27,7 @@ export async function customerRedact(shop, p = {}) {
 /** shop/redact (48 h after uninstall): delete everything of the shop. */
 export async function shopRedact(shop) {
   const tenant = tenantFor(shop);
-  for (const col of ["podai_conversations", "podai_handoffs", "podai_settings", "podai_discounts"]) await removeWhere(col, r => r.tenant_id === tenant);
+  for (const col of ["podai_conversations", "podai_handoffs", "podai_settings", "podai_discounts", "podai_events"]) await removeWhere(col, r => r.tenant_id === tenant);
   await removeWhere("podai_gdpr", r => r.tenant_id === tenant);
   await removeWhere("podai_shops", r => r.id === normalizeShop(shop));
   clearFactsCache(shop);

@@ -90,7 +90,8 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
   const settings = await getSettings(tenantId);
   const hint = LANGS.includes(String(uiLang || "").slice(0, 2)) ? String(uiLang).slice(0, 2) : "en";
   let text = String(message || "").trim().slice(0, 1000);
-  const llm = llmStatus();
+  // Pod.AI admin switch: LLM off → rules + shop data only
+  const llm = settings.llm_enabled === false ? { ...llmStatus(), available: false, mode: "rules" } : llmStatus();
   if (!text) return { answer: "", reply: "", skipped: "empty_message", ui: [] };
   if (!settings.enabled) return { answer: L("disabled", hint), reply: L("disabled", hint), ui: [], mode: "disabled" };
   const conv = await findOrCreateConversation(tenantId, conversation_id, { lang: hint, page: page ? String(page).slice(0, 200) : null });

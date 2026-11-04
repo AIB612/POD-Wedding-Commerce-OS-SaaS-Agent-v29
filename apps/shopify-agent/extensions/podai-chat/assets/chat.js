@@ -1,38 +1,117 @@
+/* Pod.AI storefront chat (theme app embed). Vanilla JS, no dependencies; talks only to the shop's App Proxy (/apps/podai). */
 (function () {
   var root = document.getElementById("podai-chat-root");
   if (!root || root.dataset.ready) return; root.dataset.ready = "1";
-  var d = root.dataset, accent = d.accent || "#1f2937", side = d.position === "left" ? "wdc-left" : "wdc-right", key = "wdc_conv";
-  var conv = null; try { conv = sessionStorage.getItem(key); } catch (e) {}
+  var d = root.dataset, P = d.proxy, KEY = "podai_conv", conv = null, busy = false, opened = false, cfg = {};
+  try { conv = sessionStorage.getItem(KEY); } catch (e) {}
+  var lg = String(d.lang || navigator.language || "en").toLowerCase(), LANG = lg.indexOf("zh") === 0 ? "zh" : lg.indexOf("de") === 0 ? "de" : "en";
+  var TX = {
+    en: { online: "Online · replies instantly", hi: "Hi! Ask me about products, shipping or your order.", open: "Open chat", close: "Close chat", send: "Send", view: "View", add: "Add to cart", track: "Track parcel", email: "Your e-mail", ok: "Send", err: "Sorry, the chat is not available right now.", chips: ["Show products", "Where is my order?", "Shipping costs"], by: "AI assistant · may make mistakes", items: "Items", thanks: "Thanks — our team will reply by e-mail." },
+    zh: { online: "在线 · 即时回复", hi: "你好！可以问我商品、运费或订单。", open: "打开聊天", close: "关闭聊天", send: "发送", view: "查看", add: "加入购物车", track: "查看物流", email: "您的邮箱", ok: "提交", err: "抱歉，聊天暂时不可用。", chips: ["看看商品", "我的订单到哪了？", "运费多少？"], by: "AI 助手 · 可能出错", items: "商品", thanks: "谢谢，我们的团队会通过邮件回复。" },
+    de: { online: "Online · antwortet sofort", hi: "Hallo! Fragen Sie mich zu Produkten, Versand oder Ihrer Bestellung.", open: "Chat öffnen", close: "Chat schließen", send: "Senden", view: "Ansehen", add: "In den Warenkorb", track: "Sendung verfolgen", email: "Ihre E-Mail", ok: "Senden", err: "Der Chat ist gerade nicht verfügbar.", chips: ["Produkte zeigen", "Wo ist meine Bestellung?", "Versandkosten"], by: "KI-Assistent · kann Fehler machen", items: "Artikel", thanks: "Danke – unser Team antwortet per E-Mail." }
+  };
+  var t = TX[LANG];
   function el(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; }
-  var btn = el("button", "wdc-btn " + side); btn.style.background = accent; btn.setAttribute("aria-label", d.title || "Chat");
-  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>';
-  var panel = el("div", "wdc-panel " + side), head = el("div", "wdc-head"), close = el("button", null, "×"), log = el("div", "wdc-log"), form = el("form", "wdc-form"), input = el("input"), send = el("button", null, "➤");
-  head.style.background = accent; head.append(el("span", null, d.title || "Chat"), close);
-  input.placeholder = d.placeholder || "Type your question…"; input.maxLength = 1000; send.type = "submit"; send.style.color = accent;
-  form.append(input, send); panel.append(head, log, form); document.body.append(btn, panel);
-  function msg(cls, text) { var m = el("div", "wdc-m " + cls, text); if (cls === "wdc-u") m.style.background = accent; log.append(m); log.scrollTop = 1e9; return m; }
+  function svg(p) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>"; }
+  function post(path, body) { return fetch(P + path, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify(body) }); }
+  function ev(type, extra) { try { post("/event", Object.assign({ type: type, conversation_id: conv }, extra || {})).catch(function () {}); } catch (e) {} }
+
+  var btn = el("button", "pc-l"), win = el("div", "pc-w"), head = el("div", "pc-h"), av = el("div", "pc-av"), tt = el("div", "pc-t"), name = el("b"), sub = el("small", null, t.online), x = el("button");
+  var log = el("div", "pc-log"), form = el("form", "pc-f"), ta = el("textarea"), send = el("button"), foot = el("div", "pc-ft", t.by), live = el("div", "pc-sr");
+  btn.type = "button"; btn.setAttribute("aria-label", t.open); btn.setAttribute("aria-expanded", "false"); btn.setAttribute("aria-controls", "pc-win");
+  btn.innerHTML = svg('<path class="o" d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>').replace('<svg ', '<svg class="o" ') + svg('<path d="M18 6 6 18M6 6l12 12"/>').replace('<svg ', '<svg class="x" ');
+  win.id = "pc-win"; win.setAttribute("role", "dialog"); win.setAttribute("aria-modal", "false"); win.setAttribute("aria-label", d.shop || "Chat");
+  x.type = "button"; x.setAttribute("aria-label", t.close); x.innerHTML = svg('<path d="M6 9l6 6 6-6"/>');
+  log.setAttribute("role", "log"); log.setAttribute("aria-live", "polite"); live.setAttribute("aria-live", "polite");
+  ta.rows = 1; ta.maxLength = 1000; ta.placeholder = d.placeholder || ({ en: "Write a message…", zh: "输入您的问题…", de: "Ihre Frage…" })[LANG]; ta.setAttribute("aria-label", ta.placeholder);
+  send.type = "submit"; send.setAttribute("aria-label", t.send); send.innerHTML = svg('<path d="M5 12h14M13 6l6 6-6 6"/>');
+  tt.append(name, sub); head.append(av, tt, x); form.append(ta, send); win.append(head, log, form, foot, live);
+
+  function apply() {
+    var color = /^#[0-9a-f]{6}$/i.test(d.accent || "") ? d.accent : (cfg.widget && cfg.widget.color) || "#2b2520";
+    var pos = d.position === "left" || d.position === "right" ? d.position : (cfg.widget && cfg.widget.position) || "right";
+    var side = pos === "left" ? "pc-lft" : "pc-r";
+    [btn, win].forEach(function (n) { n.style.setProperty("--a", color); n.classList.remove("pc-lft", "pc-r"); n.classList.add(side); });
+    name.textContent = d.title || (cfg.widget && cfg.widget.title) || d.shop || "Chat";
+    var img = d.avatar || (cfg.widget && cfg.widget.avatar);
+    av.innerHTML = ""; if (img) { var i = el("img"); i.src = img; i.alt = ""; av.append(i); } else av.textContent = String(name.textContent).trim().charAt(0).toUpperCase() || "P";
+  }
+  apply();
+  document.body.append(btn, win);
+  fetch(P + "/config", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (c) {
+    cfg = c || {}; if (cfg.enabled === false) { btn.remove(); win.remove(); return; }
+    if (cfg.widget && cfg.widget.language && cfg.widget.language !== "auto" && TX[cfg.widget.language]) { LANG = cfg.widget.language; t = TX[LANG]; sub.textContent = t.online; foot.textContent = t.by; }
+    apply();
+  }).catch(function () {});
+
+  function scroll() { log.scrollTop = log.scrollHeight; }
+  function msg(cls, text) { var m = el("div", "pc-m " + cls, text); log.append(m); scroll(); return m; }
+  function chips(items) { var c = el("div", "pc-ch"); items.forEach(function (s) { var b = el("button", null, s); b.type = "button"; b.onclick = function () { c.remove(); ask(s); }; c.append(b); }); log.append(c); scroll(); }
+  function link(href) { try { var u = new URL(href, location.origin); if (u.origin === location.origin) { u.searchParams.set("utm_source", "podai"); u.searchParams.set("utm_medium", "chat"); } return u.toString(); } catch (e) { return href; } }
+  function money(v, c) { if (!isFinite(v)) return ""; try { return new Intl.NumberFormat(document.documentElement.lang || undefined, { style: "currency", currency: c || "USD" }).format(v); } catch (e) { return Number(v).toFixed(2) + " " + (c || ""); } }
   function render(ui) {
     (ui || []).forEach(function (u) {
-      if (u.type === "chips") { var c = el("div", "wdc-chips"); u.items.forEach(function (t) { var b = el("button", null, t); b.type = "button"; b.onclick = function () { ask(t); }; c.append(b); }); log.append(c); }
-      if (u.type === "tracking") { var tb = el("div", "wdc-m wdc-a wdc-track"); tb.append(el("b", null, (u.carrier ? u.carrier + " " : "") + u.number));
-        if (u.status) tb.append(el("div", null, u.status));
-        (u.events || []).slice(0, 5).forEach(function (e) { tb.append(el("div", "wdc-ev", [e.time && String(e.time).slice(0, 16).replace("T", " "), e.location, e.text].filter(Boolean).join(" · "))); });
-        if (u.url) { var l = el("a", null, "Track parcel"); l.href = u.url; l.target = "_blank"; l.rel = "noopener"; tb.append(l); } log.append(tb); }
-      if (u.type === "products") { var w = el("div", "wdc-cards"); u.items.forEach(function (p) { var a = el("a", "wdc-card"); a.href = p.link; if (p.image) { var i = el("img"); i.src = p.image; i.alt = p.name; i.loading = "lazy"; a.append(i); }
-        var t = el("div"); t.append(el("b", null, p.name)); if (isFinite(p.unit_price)) t.append(el("span", null, Number(p.unit_price).toFixed(2) + " " + (p.currency || ""))); a.append(t); w.append(a); }); log.append(w); }
-    }); log.scrollTop = 1e9;
+      if (u.type === "chips" && u.items && u.items.length) chips(u.items);
+      if (u.type === "products") {
+        var w = el("div", "pc-car"); w.setAttribute("role", "list");
+        u.items.forEach(function (p) {
+          var c = el("div", "pc-pc"); c.setAttribute("role", "listitem");
+          var im = el("a", "pc-img"); im.href = link(p.link); im.tabIndex = -1; im.onclick = function () { ev("product_click", { product_id: p.id }); };
+          if (p.image) { var i = el("img"); i.src = p.image + (p.image.indexOf("?") < 0 ? "?width=320" : ""); i.alt = p.name; i.loading = "lazy"; i.width = 156; i.height = 156; im.append(i); }
+          var b = el("div", "pc-b"); b.append(el("b", null, p.name), el("span", "pc-p", money(p.unit_price, p.currency)));
+          var bt = el("div", "pc-btn"), v = el("a", null, t.view); v.href = link(p.link); v.onclick = im.onclick; bt.append(v);
+          if (p.variant_id) { var a = el("a", "pc-pri", t.add); a.href = "/cart/add?id=" + encodeURIComponent(p.variant_id) + "&quantity=1&utm_source=podai&utm_medium=chat"; a.onclick = function () { ev("add_to_cart", { product_id: p.id }); }; bt.append(a); }
+          b.append(bt); c.append(im, b); w.append(c);
+        });
+        log.append(w);
+      }
+      if (u.type === "order" && u.order) {
+        var o = u.order, oc = el("div", "pc-oc"), r1 = el("div", "pc-r1"), f = String(o.cancelled ? "cancelled" : o.fulfillment || "").toLowerCase().replace(/_/g, " ");
+        var bd = el("span", "pc-bd" + (/^fulfilled|delivered/.test(f) ? " ok" : ""), f); r1.append(el("b", null, o.name), bd); oc.append(r1);
+        oc.append(el("div", "pc-mu", (o.items || []).map(function (i) { return i.quantity + "× " + i.title; }).join(", ")));
+        log.append(oc);
+      }
+      if (u.type === "tracking") {
+        var tc = el("div", "pc-oc"), h = el("div", "pc-r1"); h.append(el("b", null, u.carrier || "")); h.append(el("span", "pc-mu", u.number)); if (u.status) h.append(el("span", "pc-bd", u.status)); tc.append(h);
+        if (u.events && u.events.length) { var ul = el("ul", "pc-tl"); u.events.slice(0, 4).forEach(function (e) { var li = el("li"); li.append(el("b", null, e.text || ""), el("span", "pc-mu", [e.time && String(e.time).slice(0, 16).replace("T", " "), e.location].filter(Boolean).join(" · "))); ul.append(li); }); tc.append(ul); }
+        if (u.url) { var l = el("a", "pc-sm pc-pri", t.track + " →"); l.href = u.url; l.target = "_blank"; l.rel = "noopener"; tc.append(l); }
+        log.append(tc);
+      }
+    }); scroll();
   }
-  var busy = false;
-  function ask(text, silent) {
-    text = String(text || "").trim(); if (!text || busy) return; busy = true; if (!silent) msg("wdc-u", text); var typing = el("div", "wdc-typing", "…"); log.append(typing);
-    fetch(d.proxy + "/chat", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ message: text, conversation_id: conv, lang: d.lang, page: location.pathname }) })
+  function emailForm() {
+    var f = el("form", "pc-hf"), i = el("input"), b = el("button", "pc-sm pc-pri", t.ok);
+    i.type = "email"; i.required = true; i.placeholder = t.email; i.autocomplete = "email"; i.setAttribute("aria-label", t.email); b.type = "submit"; b.style.flex = "0 0 auto";
+    f.append(i, b); f.onsubmit = function (e) { e.preventDefault(); if (!i.checkValidity()) return; var v = i.value; f.remove(); ask(v, false, true); };
+    log.append(f); scroll(); setTimeout(function () { i.focus(); }, 50);
+  }
+  function ask(text, silent, isEmail) {
+    text = String(text || "").trim(); if (!text || busy) return; busy = true; send.disabled = true;
+    if (!silent) msg("pc-u", text);
+    var ty = el("div", "pc-ty"); ty.innerHTML = "<i></i><i></i><i></i>"; ty.setAttribute("aria-label", "…"); log.append(ty); scroll();
+    post("/chat", { message: text, conversation_id: conv, lang: LANG, page: location.pathname })
       .then(function (r) { return r.json(); })
-      .then(function (r) { typing.remove(); if (r.conversation_id) { conv = r.conversation_id; try { sessionStorage.setItem(key, conv); } catch (e) {} } msg("wdc-a", r.answer || "Sorry, the chat is not available right now."); render(r.ui); })
-      .catch(function () { typing.remove(); msg("wdc-a", "Sorry, the chat is not available right now."); })
-      .finally(function () { busy = false; });
+      .then(function (r) {
+        ty.remove(); if (r.conversation_id) { conv = r.conversation_id; try { sessionStorage.setItem(KEY, conv); } catch (e) {} }
+        msg("pc-a", r.answer || t.err); live.textContent = r.answer || ""; render(r.ui);
+        if (r.handoff && !isEmail && /e-?mail|邮箱/i.test(r.answer || "")) emailForm();
+      })
+      .catch(function () { ty.remove(); msg("pc-a", t.err); })
+      .then(function () { busy = false; send.disabled = false; });
   }
-  var opened = false;
-  btn.onclick = function () { panel.classList.toggle("wdc-open"); if (!opened) { opened = true; ask(d.lang === "de" ? "Hallo" : d.lang === "zh-CN" || d.lang === "zh" ? "你好" : "Hello", true); } input.focus(); };
-  close.onclick = function () { panel.classList.remove("wdc-open"); };
-  form.onsubmit = function (e) { e.preventDefault(); var t = input.value; input.value = ""; ask(t); };
+  function toggle(on) {
+    on = on == null ? !win.classList.contains("pc-on") : on;
+    win.classList.toggle("pc-on", on); btn.setAttribute("aria-expanded", String(on)); btn.setAttribute("aria-label", on ? t.close : t.open);
+    if (on && !opened) { opened = true; ev("chat_open");
+      var g = cfg.greeting && cfg.greeting[LANG]; msg("pc-a", d.greeting || g || t.hi); chips(t.chips); }
+    if (on) setTimeout(function () { if (window.innerWidth > 520) ta.focus(); }, 250); else btn.focus();
+    if (window.innerWidth <= 520) document.documentElement.style.overflow = on ? "hidden" : "";
+  }
+  btn.onclick = function () { toggle(); };
+  x.onclick = function () { toggle(false); };
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && win.classList.contains("pc-on")) toggle(false); });
+  ta.addEventListener("input", function () { ta.style.height = "auto"; ta.style.height = Math.min(110, ta.scrollHeight) + "px"; });
+  ta.addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit ? form.requestSubmit() : form.onsubmit(e); } });
+  form.onsubmit = function (e) { e.preventDefault(); var v = ta.value; ta.value = ""; ta.style.height = "auto"; ask(v); };
+  if (/[?&]podai=open/.test(location.search)) toggle(true);
 })();

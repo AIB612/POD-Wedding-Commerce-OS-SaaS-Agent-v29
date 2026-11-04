@@ -188,6 +188,21 @@ try {
   assert.ok(s2.podai_shops.some(x => x.id === B), "other shop untouched");
   result.webhooks = "pass";
 
+  // 6b. Widget config, storefront events, dashboard, checklist (UI v2)
+  assert.equal((await call(`/shopify-agent/proxy/config?shop=${B}`)).status, 401, "config needs signature");
+  let cf = await call(`/shopify-agent/proxy/config?${signedQuery(B)}`); assert.equal(cf.status, 200); assert.match(cf.json.widget.color, /^#[0-9a-f]{6}$/i);
+  assert.equal((await adm(B, "/settings", { method: "PUT", body: { widget: { color: "#123456", position: "left", avatar: "javascript:x" }, llm_enabled: false } })).status, 200);
+  const st2 = (await adm(B, "/settings")).json; assert.equal(st2.widget.color, "#123456"); assert.equal(st2.widget.position, "left"); assert.equal(st2.widget.avatar, ""); assert.equal(st2.llm_enabled, false);
+  cf = await call(`/shopify-agent/proxy/config?${signedQuery(B)}`); assert.equal(cf.json.widget.color, "#123456");
+  assert.equal((await call(`/shopify-agent/proxy/event?${signedQuery(B)}`, { method: "POST", body: { type: "product_click", product_id: "gid://shopify/Product/1" } })).json.ok, true);
+  assert.equal((await call(`/shopify-agent/proxy/event?${signedQuery(B)}`, { method: "POST", body: { type: "evil" } })).json.ok, false);
+  const db = (await adm(B, "/dashboard?days=7")).json;
+  assert.equal(db.days, 7); assert.equal(db.primary.length, 6); assert.ok(db.primary.some(k => k.id === "product_clicks" && k.value >= 1) || db.primary.some(k => k.id === "influenced_revenue"));
+  assert.ok(Array.isArray(db.heatmap) && db.heatmap.length === 7 && db.sla && db.answer_paths);
+  assert.equal((await adm(B, "/checklist")).status, 200);
+  assert.equal((await adm(B, "/settings", { method: "PUT", body: { llm_enabled: true } })).status, 200);
+  result.ui_v2 = "pass";
+
   // 7. POD.AI storefront + checkout unchanged
   const q = await quoteStorefront({ tenantId: "tenant_demo", cart: [{ product_id: "invitation", quantity: 10 }], country: "CH" });
   const std = q.shipping_options.find(o => o.id === "standard").amount, exp = q.shipping_options.find(o => o.id === "express").amount;

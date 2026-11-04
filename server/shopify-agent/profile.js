@@ -77,7 +77,7 @@ export async function findShopOrder(shop, { order_number, email }) {
 
 const PRODUCT_Q = `query($q: String!, $first: Int!, $sort: ProductSortKeys!, $rev: Boolean!) { products(first: $first, query: $q, sortKey: $sort, reverse: $rev) { nodes { id title handle onlineStoreUrl status productType featuredImage { url }
   priceRangeV2 { minVariantPrice { amount currencyCode } maxVariantPrice { amount currencyCode } } collections(first: 3) { nodes { title } }
-  variants(first: 5) { nodes { title price availableForSale } } metafields(first: 5) { nodes { namespace key value type } } } } }`;
+  variants(first: 5) { nodes { id title price availableForSale } } metafields(first: 5) { nodes { namespace key value type } } } } }`;
 /** Generic "show me products / what do you sell / bestsellers" requests (EN / DE / FR / ZH). */
 export const BROWSE_RE = /(\b(show|see|list|browse)\b.{0,20}\b(products?|items?|things|collection|catalog(ue)?|range|stuff)\b|what (do|can) (you|i) (sell|buy|offer|have)|what('s| is) (for sale|in stock|available)|\b(your|all) (products|items)\b|best ?sellers?|top sellers?|most popular|popular (products|items)|new arrivals|what'?s new|\bcatalog(ue)?\b|\b(produkte|sortiment|angebot)\b|was (verkauft|habt|haben) (ihr|sie)|zeig(en sie)? (mir )?.{0,10}(produkte|artikel)|meistverkauft|beliebteste|vos produits|qu'est-ce que vous vendez|有什么(商品|产品|卖)|卖什么|看看(商品|产品)|商品列表|所有商品|热卖|畅销|爆款|新品|推荐.{0,4}(商品|产品))/i;
 const NOT_A_WORD = /^(do|have|sell|buy|price|prices|cost|kostet|preis|any|some|product|products|item|items|shop|store|you|recommend|looking|need|want|show|see|list|browse|all|your|me|bestseller|bestsellers|best|sellers|popular|new|arrivals|catalog|catalogue|things|stuff|produkte|zeig|zeigen|mir|artikel|sortiment)$/;
@@ -92,6 +92,7 @@ export async function searchShopProducts(shop, query, { browse = false } = {}) {
       currency: p.priceRangeV2?.minVariantPrice?.currencyCode || null, max_price: Number(p.priceRangeV2?.maxVariantPrice?.amount ?? NaN), link: p.onlineStoreUrl || `/products/${p.handle}`,
       type: p.productType || "", collections: (p.collections?.nodes || []).map(c => c.title),
       variants: (p.variants?.nodes || []).map(v => ({ title: v.title, price: Number(v.price), available: !!v.availableForSale })),
+      variant_id: String((p.variants?.nodes || []).find(v => v.availableForSale)?.id || "").split("/").pop() || null,
       details: (p.metafields?.nodes || []).filter(m => /^(single_line_text_field|multi_line_text_field|number_integer|number_decimal|boolean|dimension|weight|volume)$/.test(m.type)).map(m => ({ key: m.key, value: String(m.value).slice(0, 200) })) })) };
   } catch (e) { console.error("[pod.ai] product search failed:", shop, String(e.message).slice(0, 200)); return { ok: false, error: "product_search_failed" }; }
 }
@@ -215,7 +216,7 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
             // live tracking: carrier API (YunExpress / 4PX) → 51Tracking → Shopify tracking link
             r.order.tracking = await Promise.all(r.order.tracking.filter(x => x.number).slice(0, 3).map(async x => {
               const t = await trackParcel({ number: x.number, company: x.company, url: x.url, lang }).catch(() => null);
-              return t ? { ...x, url: t.url || x.url, source: t.source, status: t.status, status_text: t.status_text, last_event: t.last_event, events: t.events.slice(0, 8) } : x;
+              return t ? { ...x, company: t.carrier || x.company, url: t.url || x.url, source: t.source, status: t.status, status_text: t.status_text, last_event: t.last_event, events: t.events.slice(0, 8) } : x;
             }));
             ctx.ui.push({ type: "order", order: r.order });
             for (const t of r.order.tracking) ctx.ui.push({ type: "tracking", carrier: t.company || "", number: t.number, status: t.status_text || "", url: t.url || "", source: t.source || "link", events: t.events || [] });
