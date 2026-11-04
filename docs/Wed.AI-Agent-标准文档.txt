@@ -1055,7 +1055,7 @@ B.3 跳过（本版没有）
         状态不执行；均链接本文档为客户聊天 Agent 的权威文档。
         影响条款：无（本文档条款不变；7 中提到的文件说明以本文档为准）。
 
-    __HASH__ · 2026-11-01 · 独立 Shopify App「Wed.AI Chat Agent」（测试阶段，未提交 App Store）：
+    bb38b89 · 2026-11-01 · 独立 Shopify App「Wed.AI Chat Agent」（测试阶段，未提交 App Store）：
         新增 server/shopify-agent/（core / profile / gdpr / routes / admin.html）与
         apps/shopify-agent/（shopify.app.toml + 主题应用扩展 app embed）；
         handleChat 新增可选 profile（知识、工具、规则答复、提示词可替换），
