@@ -23,7 +23,7 @@ assert.equal(signYun("s", { method: "GET", path: "/x", date: "1" }), require_hma
 
 const ship = { reference: "POD-T1", service: "P1", weight_kg: 0.5, currency: "CHF", declared_value: 20, dims: null,
   to: { first_name: "Anna", last_name: "M", address1: "Str 1", city: "Berlin", postal_code: "10115", country: "DE", phone: "1", email: "a@x.de" },
-  from: { name: "Wed.AI", country: "CN", city: "Shenzhen", address1: "A", postal_code: "518000" }, items: [{ sku: "menu", name_en: "Menu card", quantity: 2, unit_value: 10, unit_weight_kg: 0.12, hs_code: "4909" }] };
+  from: { name: "POD.AI", country: "CN", city: "Shenzhen", address1: "A", postal_code: "518000" }, items: [{ sku: "menu", name_en: "Menu card", quantity: 2, unit_value: 10, unit_weight_kg: 0.12, hs_code: "4909" }] };
 const res = (body, status = 200) => ({ ok: status < 300, status, text: async () => JSON.stringify(body) });
 
 // 2. 4PX adapter against mocked HTTP.

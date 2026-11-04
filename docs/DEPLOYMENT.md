@@ -30,8 +30,8 @@ ssh -p 1988 dropking@rs8-fra.serverhostgroup.com 'cd ~/pod-wedding && git pull &
 
 4. 发布后检查：`/`、`/agent.html`、`/api/health` 返回 200；`/api/pod-agent/status`；
    `POST /api/storefront/shipping/quote`（`{"country":"CH","currency":"CHF","cart":[{"product_id":"invitation","quantity":10}]}`）
-   标准 / 快递运费不变（2026-11-01：CHF 6.34 / 13.15）；首页 “Ask Wed.AI” 可打开。
-5. 涉及 Agent 的改动同步更新 `docs/Wed.AI-Agent-标准文档.txt` 修订记录。
+   标准 / 快递运费不变（2026-11-01：CHF 6.34 / 13.15）；首页 “Ask POD.AI” 可打开。
+5. 涉及 Agent 的改动同步更新 `docs/POD.AI-Agent-标准文档.txt` 修订记录。
 
 ### 生产环境变量（名称，值只在服务器 `.env`）
 

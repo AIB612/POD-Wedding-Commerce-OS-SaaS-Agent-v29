@@ -1,4 +1,4 @@
-// Pod.AI copy of the Wed.AI POD Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
+// Pod.AI copy of the POD.AI Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
 // Answer routing: local first. Our own rule engine + shop data answer everything it can answer confidently
 // (products, prices, shipping quotes, orders/tracking, discount codes, FAQ / knowledge base). Only complex or
 // unmatched questions go to an LLM, and only when a key is configured (LLM_PROVIDER + OPENAI_/XAI_/DEEPSEEK_API_KEY).

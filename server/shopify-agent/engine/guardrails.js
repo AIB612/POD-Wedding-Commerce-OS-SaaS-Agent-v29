@@ -1,8 +1,8 @@
-// Pod.AI copy of the Wed.AI POD Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
+// Pod.AI copy of the POD.AI Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
 // Safety net for the customer chat, ported from the POD Agent (core/src/guardrails.js).
 // Runs BEFORE any answer (rules, not model goodwill): human request, abuse, legal / chargeback threats,
 // refund requests, repeated unresolved answers and the per-conversation budget hand the chat to the team.
-// Additions for Wed.AI: prompt-injection and payment-data patterns, which are refused instead of answered.
+// Additions for POD.AI: prompt-injection and payment-data patterns, which are refused instead of answered.
 
 export const THREAT_RE =
   /\b(chargeback|r[üu]ckbuchung|paypal[- ]?(fall|case|dispute|konflikt|litige|reclamo)|anwalt|rechtsanwalt|avocat|avvocat[oa]|lawyer|attorney|polizei|police|polizia|betreibung|konsumentenschutz|verbraucherzentrale|tribunal|klage|anzeige|denuncia|plainte|sue you|small claims)\b/i;

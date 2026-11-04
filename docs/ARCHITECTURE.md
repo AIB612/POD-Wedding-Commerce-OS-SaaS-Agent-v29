@@ -22,7 +22,7 @@ Express（server/create-app.js）
 
 ## 文档索引
 
-- `Wed.AI-Agent-标准文档.txt` — **客户聊天 Agent 权威文档**（功能、数据、KPI、验证、文件地图、修订记录）
+- `POD.AI-Agent-标准文档.txt` — **客户聊天 Agent 权威文档**（功能、数据、KPI、验证、文件地图、修订记录）
 - `../AGENT_FRAMEWORK.txt` — 系统里三条 Agent 通道的入口与边界
 - `../ARCHITECTURE_AND_OPTIMIZATION.txt` — 文件结构、外部服务线上状态、待办
 - `SAAS_ARCHITECTURE.md` — 业务架构（目标 + 当前实现对照）

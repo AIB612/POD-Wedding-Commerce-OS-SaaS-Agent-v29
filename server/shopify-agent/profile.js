@@ -1,11 +1,11 @@
 // Chat profile for one Shopify shop: plugs into the Pod.AI engine (server/shopify-agent/engine, a copy of the site agent).
-// ALL shop data comes from that shop's Admin GraphQL API with its own offline token — never from Wed.AI site services.
+// ALL shop data comes from that shop's Admin GraphQL API with its own offline token — never from POD.AI site services.
 // Same pipeline (guardrails, local-first routing, LLM fallback, handoff queue, KPIs); shop-specific data:
 //   knowledge   = the merchant's own FAQ (embedded admin) + the shop's legal policies (shipping / refund / contact …)
 //   products    = Admin API product search (read_products)
 //   orders      = Admin API order by name + e-mail check (read_orders; protected customer data), per-order lock
 //   shipping    = Shopify has no generic rate API for apps outside checkout → shipping policy + "calculated at checkout"
-// No Wed.AI catalog, prices or FAQ ever leak into a shop tenant.
+// No POD.AI catalog, prices or FAQ ever leak into a shop tenant.
 import crypto from "node:crypto";
 import { graphql } from "./core.js";
 import { createHandoff } from "./engine/store.js";

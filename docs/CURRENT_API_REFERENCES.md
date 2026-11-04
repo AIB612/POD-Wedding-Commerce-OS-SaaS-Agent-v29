@@ -2,7 +2,7 @@
 
 > Updated 2026-11-01 (main after 620ba20). The first list shows which external APIs the **live** site actually calls;
 > the lists below it are references for adapters that exist in code but are not configured in production
-> (see `API_CREDENTIALS_MATRIX.md`). Agent behaviour: [`Wed.AI-Agent-标准文档.txt`](Wed.AI-Agent-标准文档.txt).
+> (see `API_CREDENTIALS_MATRIX.md`). Agent behaviour: [`POD.AI-Agent-标准文档.txt`](POD.AI-Agent-标准文档.txt).
 
 ## Used by the live site (https://wed.swisspro.site)
 

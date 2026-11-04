@@ -1,14 +1,14 @@
 # SaaS 完整架构
 
 > 更新：2026-11-01（对应 620ba20 之后的 main）。“当前实现”一节描述线上系统；其后的“目标链路”及各小节是设计方向，
-> 未实现的部分已标注。Agent 细节见 [`Wed.AI-Agent-标准文档.txt`](Wed.AI-Agent-标准文档.txt) 与 [`../AGENT_FRAMEWORK.txt`](../AGENT_FRAMEWORK.txt)。
+> 未实现的部分已标注。Agent 细节见 [`POD.AI-Agent-标准文档.txt`](POD.AI-Agent-标准文档.txt) 与 [`../AGENT_FRAMEWORK.txt`](../AGENT_FRAMEWORK.txt)。
 
 ## 当前实现（线上 https://wed.swisspro.site）
 
 ```
-顾客：首页 / Studio / 结账 / 账户 / 首页“Ask Wed.AI”对话 / 第三方网站 widget.js
+顾客：首页 / Studio / 结账 / 账户 / 首页“Ask POD.AI”对话 / 第三方网站 widget.js
         ↓
-Wed.AI 单体服务（Node.js / Express，单实例，cPanel）
+POD.AI 单体服务（Node.js / Express，单实例，cPanel）
   ├─ 店面：目录、价目表、费用与税、优惠码、服务器报价（quoteStorefront）
   ├─ 结账与支付：PayPal（代码就绪，线上未配置）、TWINT（骨架）
   ├─ 订单 / Proof / 生产 / 承运商运单（YunExpress / 4PX）/ 追踪

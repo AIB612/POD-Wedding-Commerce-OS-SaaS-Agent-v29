@@ -33,7 +33,7 @@
 | 达人 / 联盟 | `/api/saas/influencers`、`/api/saas/affiliates` |
 | 财务 / 利润 | `/api/saas/finance` |
 | Agent 任务中心 | 后台运营 Agent：`POST /api/agent/ops`（见 `../AGENT_FRAMEWORK.txt`） |
-| AI 客服 / Chat agent | 客户聊天 Agent：Overview（15 项 KPI）、Handoffs、Conversations、Knowledge、Settings、Data check（`/api/saas/agent/*`；见 `Wed.AI-Agent-标准文档.txt`） |
+| AI 客服 / Chat agent | 客户聊天 Agent：Overview（15 项 KPI）、Handoffs、Conversations、Knowledge、Settings、Data check（`/api/saas/agent/*`；见 `POD.AI-Agent-标准文档.txt`） |
 | 审批中心 | `/api/saas/tasks`、`/api/saas/tasks/:id/approve`（只改状态，不自动执行） |
 | API / 协议 | 连接器配置（加密保存，不回显密钥）、测试、协议状态 |
 

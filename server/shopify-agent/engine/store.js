@@ -1,4 +1,4 @@
-// Pod.AI copy of the Wed.AI POD Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
+// Pod.AI copy of the POD.AI Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
 // Persistence for the customer chat in OUR data store (data/store.json via saas-store.js) — replaces the POD Agent's
 // Supabase tables (conversations, messages, handoffs, discounts_issued, settings). Collections:
 //   agent_settings       one row per tenant (admin → AI Agent → Settings / Knowledge)

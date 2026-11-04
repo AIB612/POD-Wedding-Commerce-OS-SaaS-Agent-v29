@@ -1,11 +1,11 @@
 # Agent Functions
 
 更新：2026-11-01（对应 620ba20 之后的 main）。客户聊天 Agent 的完整说明见
-[`Wed.AI-Agent-标准文档.txt`](Wed.AI-Agent-标准文档.txt)；各通道入口见 [`../AGENT_FRAMEWORK.txt`](../AGENT_FRAMEWORK.txt)。
+[`POD.AI-Agent-标准文档.txt`](POD.AI-Agent-标准文档.txt)；各通道入口见 [`../AGENT_FRAMEWORK.txt`](../AGENT_FRAMEWORK.txt)。
 
 ## 1. 客户聊天 Agent（线上主力，公开）
 
-入口：首页页头 “Ask Wed.AI”（主图区对话面板，无悬浮气泡）、`/?ask=1`、第三方网站 `widget.js`、`POST /api/pod-agent/chat`。
+入口：首页页头 “Ask POD.AI”（主图区对话面板，无悬浮气泡）、`/?ask=1`、第三方网站 `widget.js`、`POST /api/pod-agent/chat`。
 
 - 运费报价（与结账同一报价函数）
 - 商品问答、阶梯价、推荐卡片（按场合 / 预算）

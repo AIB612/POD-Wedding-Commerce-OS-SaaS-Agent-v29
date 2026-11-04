@@ -15,7 +15,7 @@ function fake({ starttls = false } = {}) {
   return new Promise(r => srv.listen(0, "127.0.0.1", () => r({ srv, log, port: srv.address().port })));
 }
 assert.equal(smtpConfigured({}), false); assert.equal(smtpConfigured({ SMTP_HOST: "x" }), true);
-const m = buildMessage({ from: "a@b.ch", fromName: "Wed.AI 婚礼", to: "c@d.ch", subject: "Hi · 已发货", text: "t", html: "<p>h</p>" });
+const m = buildMessage({ from: "a@b.ch", fromName: "POD.AI 婚礼", to: "c@d.ch", subject: "Hi · 已发货", text: "t", html: "<p>h</p>" });
 assert.match(m, /=\?UTF-8\?B\?/); assert.match(m, /multipart\/alternative/);
 { // TLS required by default: server without STARTTLS is refused
   const f = await fake(); await assert.rejects(sendSmtp({ to: "c@d.ch", subject: "s", text: "t" }, { SMTP_HOST: "127.0.0.1", SMTP_PORT: String(f.port), FROM_EMAIL: "a@b.ch" }), /starttls_unavailable/); f.srv.close(); }

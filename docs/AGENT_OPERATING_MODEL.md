@@ -1,7 +1,7 @@
 # Agent 一站式会话与任务驱动模型
 
 > 更新：2026-11-01（对应 620ba20 之后的 main）。本文前半部分是**当前实现**，后半部分（“目标模型”）是设计方向，
-> 其中的 tool 名称尚未实现为独立工具。客户聊天 Agent 以 [`Wed.AI-Agent-标准文档.txt`](Wed.AI-Agent-标准文档.txt) 为准。
+> 其中的 tool 名称尚未实现为独立工具。客户聊天 Agent 以 [`POD.AI-Agent-标准文档.txt`](POD.AI-Agent-标准文档.txt) 为准。
 
 ## 当前实现
 

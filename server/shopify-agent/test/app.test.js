@@ -1,5 +1,5 @@
 // Shopify Chat Agent app (server/shopify-agent): signed App Proxy chat, session-token admin API, per-shop isolation,
-// Shopify data (orders/products/policies, mocked Admin API), handoff, GDPR + uninstall webhooks, Wed.AI checkout unchanged.
+// Shopify data (orders/products/policies, mocked Admin API), handoff, GDPR + uninstall webhooks, POD.AI checkout unchanged.
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -144,7 +144,7 @@ try {
   r = await proxy(B, "What is your return policy?");
   assert.match(r.json.answer, /hasn't published a return \/ refund policy/); assert.match(r.json.answer, /team@shop-b\.myshopify\.com/); assert.match(r.json.answer, /pass your question to the team/);
   assert.ok(r.json.ui.some(u => u.type === "chips"));
-  // 4. Isolation: shop B sees nothing of shop A; B gets no Wed.AI or shop-A data; x-tenant-id cannot reach shop tenants
+  // 4. Isolation: shop B sees nothing of shop A; B gets no POD.AI or shop-A data; x-tenant-id cannot reach shop tenants
   r = await proxy(B, "What is your return policy?"); assert.doesNotMatch(r.json.answer, /30 days|Wed\.AI/);
   r = await proxy(B, "Where is my order #1001? buyer@example.com"); assert.match(r.json.answer, /couldn't find/);
   r = await proxy(B, "hello", conv); assert.notEqual(r.json.conversation_id, conv, "conversation of shop A not reused by B");
@@ -160,7 +160,7 @@ try {
   assert.ok(!((await getState()).podai_conversations || []).some(c => c.id === leak.json.conversation_id), "site chat (any x-tenant-id) never writes Pod.AI data");
   result.isolation = "pass";
 
-  // 5. Embedded admin: knowledge (no Wed.AI built-ins), settings, handoff resolve, preview
+  // 5. Embedded admin: knowledge (no POD.AI built-ins), settings, handoff resolve, preview
   assert.deepEqual((await adm(A, "/knowledge")).json, { custom: [] });
   assert.equal((await adm(A, "/knowledge", { method: "POST", body: { question: "Do you ship to Austria?", answer: "Yes, Austria in 3-5 days.", tags: "austria", lang: "en" } })).status, 200);
   r = await proxy(A, "Do you ship to Austria?"); assert.match(r.json.answer, /Austria in 3-5 days/);
@@ -188,7 +188,7 @@ try {
   assert.ok(s2.podai_shops.some(x => x.id === B), "other shop untouched");
   result.webhooks = "pass";
 
-  // 7. Wed.AI storefront + checkout unchanged
+  // 7. POD.AI storefront + checkout unchanged
   const q = await quoteStorefront({ tenantId: "tenant_demo", cart: [{ product_id: "invitation", quantity: 10 }], country: "CH" });
   const std = q.shipping_options.find(o => o.id === "standard").amount, exp = q.shipping_options.find(o => o.id === "express").amount;
   r = await call("/api/pod-agent/chat", { method: "POST", body: { message: "How much is shipping to Switzerland for 10 invitations?", lang: "en" } });

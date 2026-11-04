@@ -1,9 +1,9 @@
 ================================================================================
-Wedding Commerce OS（Wed.AI）— Agent 框架与底层逻辑
+Wedding Commerce OS（POD.AI）— Agent 框架与底层逻辑
 ================================================================================
 更新时间：2026-11-01 · 对应代码：620ba20 之后的 main（线上 https://wed.swisspro.site）
 
-  客户聊天 Agent 的权威文档是 docs/Wed.AI-Agent-标准文档.txt（功能、数据、
+  客户聊天 Agent 的权威文档是 docs/POD.AI-Agent-标准文档.txt（功能、数据、
   KPI、验证、文件地图、修订记录）。本文件只说明系统里有哪几个 Agent、
   它们的入口与边界，细节以标准文档为准。
 
@@ -15,7 +15,7 @@ Wedding Commerce OS（Wed.AI）— Agent 框架与底层逻辑
   │ 通道                         │ 入口                      │ 谁用         │
   ├──────────────────────────────┼───────────────────────────┼──────────────┤
   │ A. 客户聊天 Agent（主力）    │ POST /api/pod-agent/chat  │ 顾客（公开） │
-  │    本地优先 + 云模型可选     │ 首页“Ask Wed.AI”面板、    │              │
+  │    本地优先 + 云模型可选     │ 首页“Ask POD.AI”面板、    │              │
   │                              │ widget.js 嵌入、REST      │              │
   │ B. 后台运营 Agent            │ POST /api/agent/ops       │ 管理员       │
   │    关键词意图 → 读数据/建任务│ Admin “Agent 任务中心”    │              │

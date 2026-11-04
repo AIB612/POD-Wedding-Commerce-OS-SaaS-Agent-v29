@@ -1,4 +1,4 @@
-// Pod.AI copy of the Wed.AI POD Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
+// Pod.AI copy of the POD.AI Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
 // Multi-provider LLM call. Returns {text, configured}. When no provider is configured the caller
 // can fall back to its own demo behaviour instead of showing a configuration message to customers.
 const TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 30_000);

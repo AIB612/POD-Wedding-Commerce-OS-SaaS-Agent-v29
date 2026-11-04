@@ -1,12 +1,12 @@
 /**
- * Wed.AI POD Agent widget — embed the customer chat on any website (same API as the homepage panel).
+ * POD.AI Agent widget — embed the customer chat on any website (same API as the homepage panel).
  *
  *   <script src="https://wed.swisspro.site/pod-agent/widget.js" data-lang="en" async></script>
  *
  * Attributes: data-lang (en | zh | de; default = page language), data-position (bottom-right | bottom-left),
  * data-api (API origin; default = the origin this script is loaded from), data-country (ISO-2 market hint).
- * Talks to POST {api}/api/pod-agent/chat (local-first answers on Wed.AI shop data). All text is rendered with
- * textContent; links are only https URLs or Wed.AI paths (made absolute to the API origin).
+ * Talks to POST {api}/api/pod-agent/chat (local-first answers on POD.AI shop data). All text is rendered with
+ * textContent; links are only https URLs or POD.AI paths (made absolute to the API origin).
  * Programmatic: WedAIWidget.open(), .close(), .send("text").
  */
 (function () {
@@ -21,11 +21,11 @@
   var left = /left/.test(attr("data-position", "bottom-right"));
   var country = String(attr("data-country", "")).toUpperCase().slice(0, 2);
   var T = {
-    en: { title: "Wed.AI assistant", sub: "Products · prices & shipping · orders", ph: "Ask about products, shipping or your order…", send: "Send", hi: "Hi! I'm the Wed.AI assistant. Ask me for product ideas, a shipping quote or your order status.", err: "Sorry, the assistant can't be reached right now. Please try again.", open: "Open chat", close: "Close chat",
+    en: { title: "POD.AI assistant", sub: "Products · prices & shipping · orders", ph: "Ask about products, shipping or your order…", send: "Send", hi: "Hi! I'm the POD.AI assistant. Ask me for product ideas, a shipping quote or your order status.", err: "Sorry, the assistant can't be reached right now. Please try again.", open: "Open chat", close: "Close chat",
           chips: ["Shipping to Switzerland for 10 invitations", "Recommend wedding favours", "Track my order"] },
-    zh: { title: "Wed.AI 助手", sub: "产品推荐 · 报价与运费 · 订单查询", ph: "询问产品、运费或订单…", send: "发送", hi: "您好！我是 Wed.AI 助手，可以为您推荐产品、报价运费或查询订单。", err: "抱歉，助手暂时无法连接，请稍后再试。", open: "打开对话", close: "关闭对话",
+    zh: { title: "POD.AI 助手", sub: "产品推荐 · 报价与运费 · 订单查询", ph: "询问产品、运费或订单…", send: "发送", hi: "您好！我是 POD.AI 助手，可以为您推荐产品、报价运费或查询订单。", err: "抱歉，助手暂时无法连接，请稍后再试。", open: "打开对话", close: "关闭对话",
           chips: ["10 份邀请卡寄到瑞士运费多少", "推荐婚礼伴手礼", "查询我的订单"] },
-    de: { title: "Wed.AI-Assistent", sub: "Produkte · Preise & Versand · Bestellungen", ph: "Fragen zu Produkten, Versand oder Bestellung…", send: "Senden", hi: "Hallo! Ich bin der Wed.AI-Assistent. Fragen Sie nach Produktideen, Versandkosten oder Ihrer Bestellung.", err: "Der Assistent ist gerade nicht erreichbar. Bitte später erneut versuchen.", open: "Chat öffnen", close: "Chat schliessen",
+    de: { title: "POD.AI-Assistent", sub: "Produkte · Preise & Versand · Bestellungen", ph: "Fragen zu Produkten, Versand oder Bestellung…", send: "Senden", hi: "Hallo! Ich bin der POD.AI-Assistent. Fragen Sie nach Produktideen, Versandkosten oder Ihrer Bestellung.", err: "Der Assistent ist gerade nicht erreichbar. Bitte später erneut versuchen.", open: "Chat öffnen", close: "Chat schliessen",
           chips: ["Versand in die Schweiz für 10 Einladungen", "Gastgeschenke empfehlen", "Meine Bestellung verfolgen"] }
   }[lang];
   var KEY = "wedai-widget-v1", S = { id: null };

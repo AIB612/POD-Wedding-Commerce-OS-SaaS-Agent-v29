@@ -2,7 +2,7 @@
 
 > Updated 2026-11-01 (main after 620ba20). The first section describes the **live system**. The sections after it
 > (AfterShip/EasyPost/Avalara connector slots, v10/v10.1 notes) describe code paths that exist but are **not configured in production**.
-> The customer chat agent's use of quotes and tracking is specified in [`Wed.AI-Agent-标准文档.txt`](Wed.AI-Agent-标准文档.txt).
+> The customer chat agent's use of quotes and tracking is specified in [`POD.AI-Agent-标准文档.txt`](POD.AI-Agent-标准文档.txt).
 
 ## Current live system (https://wed.swisspro.site)
 

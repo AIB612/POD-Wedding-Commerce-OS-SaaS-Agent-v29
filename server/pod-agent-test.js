@@ -1,4 +1,4 @@
-// Wed.AI POD Agent (customer chat): API, real shop data, guardrails, handoff, feedback, admin routes, LLM tool loop (mocked).
+// POD.AI Agent (customer chat): API, real shop data, guardrails, handoff, feedback, admin routes, LLM tool loop (mocked).
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";

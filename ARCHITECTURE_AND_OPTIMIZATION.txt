@@ -1,11 +1,11 @@
 ================================================================================
-POD Wedding Commerce OS（Wed.AI）— 架构说明与优化方案
+POD Wedding Commerce OS（POD.AI）— 架构说明与优化方案
 ================================================================================
 更新时间：2026-11-01 · 对应代码：620ba20 之后的 main
 线上：https://wed.swisspro.site（分支 feature/home-en-images = main）
 
   相关文档：
-    docs/Wed.AI-Agent-标准文档.txt   客户聊天 Agent 权威文档
+    docs/POD.AI-Agent-标准文档.txt   客户聊天 Agent 权威文档
     AGENT_FRAMEWORK.txt              系统中各 Agent 的入口与边界
     docs/DEPLOYMENT.md               部署（cPanel / CloudLinux）
     docs/LOGISTICS.md                运费、承运商（YunExpress / 4PX）
@@ -17,7 +17,7 @@ POD Wedding Commerce OS（Wed.AI）— 架构说明与优化方案
 --------------------------------------------------------------------------------
 
 【前端（静态文件，由 Node 服务直接提供）】
-- index.html / home-chat.js  首页：场景、产品墙、页头“Ask Wed.AI”主图区对话面板
+- index.html / home-chat.js  首页：场景、产品墙、页头“Ask POD.AI”主图区对话面板
                              （无悬浮气泡；/?ask=1 打开）
 - studio.html / studio*.js   设计工作室（场景套装、定制、定价、寄送、包装、确认）
 - checkout.html / .js        结账（联系 → 配送 → 支付 → 确认），金额由服务器报价

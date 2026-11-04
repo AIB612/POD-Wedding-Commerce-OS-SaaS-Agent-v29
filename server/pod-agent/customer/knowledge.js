@@ -10,9 +10,9 @@ import { paymentMethods } from "../../services/checkout-service.js";
 const FAQ = [
   { id: "what_we_sell", tags: ["products", "sell", "offer", "range", "什么", "卖", "产品", "sortiment", "angebot"],
     q: { en: "What do you sell?", zh: "你们卖什么？", de: "Was verkaufen Sie?" },
-    a: { en: "Wed.AI makes custom wedding stationery and personalised gifts: invitations, save-the-date cards, menus, place cards, table numbers, welcome signs, gift boxes and favours, plus mugs, tees, totes and more. Everything is printed on demand.",
-         zh: "Wed.AI 提供定制婚礼纸品和个性化礼品：邀请卡、Save the Date、菜单、席位卡、桌号、迎宾牌、礼盒和伴手礼，以及马克杯、T 恤、帆布袋等。所有商品按需印制。",
-         de: "Wed.AI fertigt individuelle Hochzeitspapeterie und personalisierte Geschenke: Einladungen, Save-the-Date-Karten, Menükarten, Platzkarten, Tischnummern, Willkommensschilder, Geschenkboxen und Gastgeschenke sowie Tassen, Shirts und Taschen. Alles wird auf Bestellung gedruckt." } },
+    a: { en: "POD.AI makes custom wedding stationery and personalised gifts: invitations, save-the-date cards, menus, place cards, table numbers, welcome signs, gift boxes and favours, plus mugs, tees, totes and more. Everything is printed on demand.",
+         zh: "POD.AI 提供定制婚礼纸品和个性化礼品：邀请卡、Save the Date、菜单、席位卡、桌号、迎宾牌、礼盒和伴手礼，以及马克杯、T 恤、帆布袋等。所有商品按需印制。",
+         de: "POD.AI fertigt individuelle Hochzeitspapeterie und personalisierte Geschenke: Einladungen, Save-the-Date-Karten, Menükarten, Platzkarten, Tischnummern, Willkommensschilder, Geschenkboxen und Gastgeschenke sowie Tassen, Shirts und Taschen. Alles wird auf Bestellung gedruckt." } },
   { id: "proof", tags: ["proof", "mockup", "approve", "preview", "效果图", "样稿", "确认", "korrektur", "abzug", "freigabe", "vorschau"],
     q: { en: "When do I get my design proof?", zh: "什么时候能看到效果图？", de: "Wann bekomme ich meinen Korrekturabzug?" },
     a: { en: "For personalised designs we e-mail you a proof link after payment; production starts only after you approve it (or right after payment if you approve the mockup at checkout). Please check names, dates and spelling carefully.",

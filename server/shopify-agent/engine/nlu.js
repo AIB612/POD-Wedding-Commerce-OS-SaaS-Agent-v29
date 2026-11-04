@@ -1,8 +1,8 @@
-// Pod.AI copy of the Wed.AI POD Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
+// Pod.AI copy of the POD.AI Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
 // Rule-based language detection, intent classification and entity extraction for the customer chat.
 // Used (a) as the full classifier when no LLM key is configured and (b) as a deterministic safety layer
 // next to the LLM classifier (the POD Agent's router.js asks the model for the same JSON shape).
-// Pod.AI: no Wed.AI catalog — products come from the shop (Admin API search).
+// Pod.AI: no POD.AI catalog — products come from the shop (Admin API search).
 const studioCatalog = () => ({ products: [] });
 
 const CJK = /[\u3400-\u9fff]/;

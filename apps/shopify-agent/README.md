@@ -35,7 +35,7 @@ Answers (local first, LLM only when a key is configured on the server):
 | Returns / payment info | shop policies (refund, shipping, contact, terms) | read_legal_policies |
 | Merchant FAQ | Pod.AI admin → Knowledge | — |
 
-Nothing is read from the Wed.AI site (catalog, prices, fees, orders, promo codes, site agent). Pod.AI has its own engine copy
+Nothing is read from the POD.AI site (catalog, prices, fees, orders, promo codes, site agent). Pod.AI has its own engine copy
 (`server/shopify-agent/engine`, from the site agent) and its own collections (`podai_*`). Boundary is enforced by `test/audit.test.js`.
 Shared infrastructure used unchanged: `saas-store.js` (storage file), `utils/crypto.js` (token encryption), carrier API clients
 `logistics/{yunexpress,fourpx,http}.js` (tracking calls only). Site hook: one mount line in `server/create-app.js`.

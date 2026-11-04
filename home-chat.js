@@ -1,4 +1,4 @@
-/* Homepage inline chat (Wed.AI POD Agent). Opened from the "Ask Wed.AI" entry next to the brand in the header
+/* Homepage inline chat (POD.AI Agent). Opened from the "Ask POD.AI" entry next to the brand in the header
    (header.js #shAiBtn): the hero image area (#stage) swaps to this panel; "Back to the scene" / Esc restores the image.
    No floating bubble. Talks to POST /api/pod-agent/chat (server/pod-agent/customer). All text is rendered with
    textContent; links are only same-site paths or https URLs. Transcript lives in sessionStorage for this tab. */
@@ -46,9 +46,9 @@
   "@media(max-height:620px){.hc-id span,.hc-priv{display:none}.hc-form textarea{min-height:40px}}";
   var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
 
-  var el=document.createElement("section");el.className="hero-chat";el.id="heroChat";el.setAttribute("role","region");el.setAttribute("aria-label","Wed.AI assistant");el.setAttribute("data-no-translate","");
+  var el=document.createElement("section");el.className="hero-chat";el.id="heroChat";el.setAttribute("role","region");el.setAttribute("aria-label","POD.AI assistant");el.setAttribute("data-no-translate","");
   el.innerHTML='<div class="hc-head"><button class="hc-back" type="button" data-hc="back" aria-label="Back to the scene"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span data-hck="hc.back">Back to the scene</span></button>'+
-    '<div class="hc-id"><b data-hck="hc.title">Wed.AI assistant</b><span data-hck="hc.sub">Product ideas · prices &amp; shipping · order status</span></div><button class="hc-new" type="button" data-hc="new" data-hck="hc.new">New chat</button></div>'+
+    '<div class="hc-id"><b data-hck="hc.title">POD.AI assistant</b><span data-hck="hc.sub">Product ideas · prices &amp; shipping · order status</span></div><button class="hc-new" type="button" data-hc="new" data-hck="hc.new">New chat</button></div>'+
     '<div class="hc-msgs" data-hc="msgs" aria-live="polite"></div><div class="hc-chips" data-hc="chips"></div>'+
     '<form class="hc-form" data-hc="form"><textarea rows="1" data-hc="input" maxlength="1000" aria-label="Message"></textarea><button class="hc-send" data-hc="send" type="submit" data-hck="hc.send">Send</button><div class="hc-priv" data-hck="hc.privacy">Never share card details or passwords in the chat.</div></form>';
   stage.appendChild(el);
@@ -81,7 +81,7 @@
     msgs.appendChild(d);if(m.ui)renderUi(m.ui);if(store){S.msgs.push(m);wr()}msgs.scrollTop=msgs.scrollHeight;
   }
   var CHIPS={en:["Shipping to Switzerland for 10 invitations","Recommend wedding favours","How long does delivery take?","Track my order"],zh:["10 份邀请卡寄到瑞士运费多少","推荐婚礼伴手礼","多久能送达？","查询我的订单"],de:["Versand in die Schweiz für 10 Einladungen","Gastgeschenke empfehlen","Wie lange dauert die Lieferung?","Meine Bestellung verfolgen"]};
-  function greet(){msgs.textContent="";if(!S.msgs.length){addMsg({role:"assistant",text:K("hc.hello","Hi! I'm the Wed.AI assistant.")},false);setChips(CHIPS[lang()]||CHIPS.en)}else{S.msgs.forEach(function(m){addMsg(m,false)});var last=S.msgs[S.msgs.length-1];setChips(last&&last.chips||[])}}
+  function greet(){msgs.textContent="";if(!S.msgs.length){addMsg({role:"assistant",text:K("hc.hello","Hi! I'm the POD.AI assistant.")},false);setChips(CHIPS[lang()]||CHIPS.en)}else{S.msgs.forEach(function(m){addMsg(m,false)});var last=S.msgs[S.msgs.length-1];setChips(last&&last.chips||[])}}
   function country(){try{return window.PODMarket&&PODMarket.country()||""}catch(e){return ""}}
   function send(text){
     text=String(text||"").trim();if(!text||busy)return;busy=true;$("send").disabled=true;input.value="";setChips([]);

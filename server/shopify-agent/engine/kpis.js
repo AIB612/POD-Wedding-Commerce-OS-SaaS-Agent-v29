@@ -1,4 +1,4 @@
-// Pod.AI copy of the Wed.AI POD Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
+// Pod.AI copy of the POD.AI Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
 // Back-office side of the customer chat (Admin → AI Agent, behind the admin login). Ported from the POD Agent:
 //   metrics.js  KPIs (conversations, automation / handoff rate, unanswered rate, feedback, intents, tools, guardrails)
 //   handoff.js  handoff queue (status, team note) — the team replies from their own mailbox; nothing is sent from here

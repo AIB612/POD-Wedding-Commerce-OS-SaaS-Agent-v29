@@ -60,7 +60,7 @@ export function createYunExpress({ env = process.env, mode = "sandbox" } = {}) {
         receiver: { first_name: s.to.first_name, last_name: s.to.last_name, company: s.to.company || "", country_code: s.to.country, province: s.to.state || "", city: s.to.city,
           address_lines: lines(s.to.address1, s.to.address2), postal_code: s.to.postal_code, phone_number: s.to.phone || "", email: s.to.email || "" },
         declaration_info: s.items.map(i => ({ sku_code: i.sku, name_en: i.name_en, name_local: i.name_cn || i.name_en, quantity: i.quantity, unit_price: Math.max(0.01, i.unit_value), unit_weight: Math.max(0.001, i.unit_weight_kg), currency: s.currency, hs_code: i.hs_code || "" })),
-        ...(s.from?.address1 ? { sender: { first_name: s.from.name || "Wed.AI", last_name: s.from.last_name || "", company: s.from.company || "", country_code: s.from.country, province: s.from.state || "", city: s.from.city || "",
+        ...(s.from?.address1 ? { sender: { first_name: s.from.name || "POD.AI", last_name: s.from.last_name || "", company: s.from.company || "", country_code: s.from.country, province: s.from.state || "", city: s.from.city || "",
           address_lines: lines(s.from.address1), postal_code: s.from.postal_code || "", phone_number: s.from.phone || "" } } : {})
       };
       const r = await call("POST", "/v1/order/package/create", { body });

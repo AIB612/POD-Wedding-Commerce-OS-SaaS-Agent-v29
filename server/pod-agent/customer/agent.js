@@ -26,7 +26,7 @@ const cname = (cc, lang) => (COUNTRY_LABEL[lang] || COUNTRY_LABEL.en)[cc] || cc;
 
 // ---- Reply templates (EN / ZH / DE; FR / IT fall back to EN) ----
 const T = {
-  greet: { en: "Hi! I'm the Wed.AI assistant. I can recommend products, quote prices and shipping, and check your order.", zh: "您好！我是 Wed.AI 助手，可以为您推荐产品、报价和运费，以及查询订单。", de: "Hallo! Ich bin der Wed.AI-Assistent. Ich empfehle Produkte, berechne Preise und Versand und prüfe Ihre Bestellung." },
+  greet: { en: "Hi! I'm the POD.AI assistant. I can recommend products, quote prices and shipping, and check your order.", zh: "您好！我是 POD.AI 助手，可以为您推荐产品、报价和运费，以及查询订单。", de: "Hallo! Ich bin der POD.AI-Assistent. Ich empfehle Produkte, berechne Preise und Versand und prüfe Ihre Bestellung." },
   thanks: { en: "You're welcome! Anything else I can help with?", zh: "不客气！还有什么可以帮您？", de: "Gern geschehen! Kann ich sonst noch helfen?" },
   askProduct: { en: "Which product would you like a quote for? For example invitations, menu cards or place cards.", zh: "请问您想报价哪个产品？例如邀请卡、菜单卡或席位卡。", de: "Für welches Produkt möchten Sie ein Angebot? Zum Beispiel Einladungen, Menükarten oder Platzkarten." },
   askCountry: { en: "To which country should we deliver?", zh: "请问寄往哪个国家？", de: "In welches Land sollen wir liefern?" },

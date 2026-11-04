@@ -1,4 +1,4 @@
-// Pod.AI copy of the Wed.AI POD Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
+// Pod.AI copy of the POD.AI Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
 // LLM layer for the customer chat. Port of the POD Agent llm.js (chat / chatJson / runAgent tool loop) onto OUR
 // provider configuration (server/connectors/llm.js: LLM_PROVIDER + <PROVIDER>_API_KEY + <PROVIDER>_MODEL).
 // Tool calling uses the OpenAI-compatible chat-completions format: openai/chatgpt, xai/grok, deepseek.

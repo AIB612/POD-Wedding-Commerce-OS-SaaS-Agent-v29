@@ -23,7 +23,7 @@ try {
   await addRecord("orders", { id: "POD-F1", tenant_id: T, status: "Paid", payment_status: "paid", created_at: now, customer_email: "anna@example.com", currency: "CHF", shipping_charged: 12, shipping_address: addr, items: [{ name: "Card", quantity: 3, unit_price: 4 }] });
 
   // Settings: sender, IOSS, handover, sync, price tables
-  let r = await call("PUT", "/api/saas/carriers/settings", { sender: { name: "Wed.AI Studio", address1: "Room 1", city: "Shenzhen", postal_code: "518000", country: "cn", phone: "123" }, ioss_no: "IM1234567890",
+  let r = await call("PUT", "/api/saas/carriers/settings", { sender: { name: "POD.AI Studio", address1: "Room 1", city: "Shenzhen", postal_code: "518000", country: "cn", phone: "123" }, ioss_no: "IM1234567890",
     carriers: { yunexpress: { enabled: true, mode: "sandbox" }, fourpx: { enabled: true, mode: "sandbox", handover: "dropoff" } }, sync_minutes: 30,
     price_tables: [{ carrier: "yunexpress", product: "TABLEONLY", countries: "DE", currency: "CHF", first_kg: 0.5, first_price: 1, add_kg: 0.5, add_price: 1 }] });
   assert.equal(r.status, 200); assert.equal(r.body.settings.sender.country, "CN"); assert.equal(r.body.settings.carriers.fourpx.handover, "dropoff");
@@ -33,7 +33,7 @@ try {
   assert.equal((await call("PUT", "/api/saas/carriers/settings", { notify_customer_on_status: false })).body.settings.notify_customer_on_status, false);
   assert.equal((await call("GET", "/api/saas/carriers/settings")).body.settings.notify_customer_on_status, false);
   const st = await L.getSettings(T), req = L.shipmentRequest({ items: [], shipping_address: addr }, st, "fourpx");
-  assert.equal(req.from.name, "Wed.AI Studio"); assert.equal(req.ioss_no, "IM1234567890"); assert.equal(req.handover, "dropoff");
+  assert.equal(req.from.name, "POD.AI Studio"); assert.equal(req.ioss_no, "IM1234567890"); assert.equal(req.handover, "dropoff");
   assert.equal(L.tablePrice({ first_kg: 0.5, first_price: 10, add_kg: 0.5, add_price: 4, fixed_fee: 0 }, 1.2), 18);
 
   // Channel quotes: live (mock) + price table, cheapest, margin vs. the order's shipping charge

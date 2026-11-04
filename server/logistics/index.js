@@ -148,7 +148,7 @@ export const EU = new Set("AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU
 export const iossFor = (settings, country) => EU.has(String(country || "").toUpperCase()) ? (settings?.ioss_no || process.env.IOSS_NO || "") : "";
 export function senderFor(settings) {
   const a = settings?.sender || {}, e = process.env, pick = (k, env, d = "") => String(a[k] || e[env] || d);
-  return { name: pick("name", "SHIPPING_ORIGIN_NAME", "Wed.AI"), company: pick("company", "SHIPPING_ORIGIN_COMPANY"), phone: pick("phone", "SHIPPING_ORIGIN_PHONE"), email: pick("email", "SHIPPING_ORIGIN_EMAIL"),
+  return { name: pick("name", "SHIPPING_ORIGIN_NAME", "POD.AI"), company: pick("company", "SHIPPING_ORIGIN_COMPANY"), phone: pick("phone", "SHIPPING_ORIGIN_PHONE"), email: pick("email", "SHIPPING_ORIGIN_EMAIL"),
     country: pick("country", "SHIPPING_ORIGIN_COUNTRY", "CN").toUpperCase(), state: pick("state", "SHIPPING_ORIGIN_STATE"), city: pick("city", "SHIPPING_ORIGIN_CITY"),
     address1: pick("address1", "SHIPPING_ORIGIN_ADDRESS1"), address2: pick("address2", "SHIPPING_ORIGIN_ADDRESS2"), postal_code: pick("postal_code", "SHIPPING_ORIGIN_POSTAL") };
 }

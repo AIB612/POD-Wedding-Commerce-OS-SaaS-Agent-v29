@@ -67,14 +67,14 @@ export function shopifyAgentRouter() {
   }));
   api.get("/overview", ah(async (req, res) => {
     const o = await agentOverview(req.agentTenant, { days: Math.min(365, Number(req.query.days) || 30) });
-    // shop tenants: product search instead of the Wed.AI recommender; no chat quotes / discount codes in this app
+    // shop tenants: product search instead of the POD.AI recommender; no chat quotes / discount codes in this app
     o.kpis = o.kpis.filter(k => !["quotes", "discounts_issued"].includes(k.id)).map(k => k.id === "recommendations" ? { ...k, label: "Product searches", value: o.tools.search_products || 0 } : k);
     res.json(o);
   }));
   api.get("/conversations", ah(async (req, res) => res.json(await agentConversations(req.agentTenant, { limit: 50 }))));
   api.get("/handoffs", ah(async (req, res) => res.json(await agentHandoffs(req.agentTenant, { status: req.query.status }))));
   api.patch("/handoffs/:id", ah(async (req, res) => res.json(await patchHandoff(req.agentTenant, req.params.id, req.body))));
-  api.get("/knowledge", ah(async (req, res) => res.json({ custom: (await getSettings(req.agentTenant)).custom_faq }))); // no Wed.AI built-ins for shops
+  api.get("/knowledge", ah(async (req, res) => res.json({ custom: (await getSettings(req.agentTenant)).custom_faq }))); // no POD.AI built-ins for shops
   api.post("/knowledge", ah(async (req, res) => res.json(await upsertKnowledge(req.agentTenant, req.body))));
   api.delete("/knowledge/:id", ah(async (req, res) => res.json(await deleteKnowledge(req.agentTenant, req.params.id))));
   api.get("/settings", ah(async (req, res) => { const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours, tracking_sources: await trackingSources() }); }));

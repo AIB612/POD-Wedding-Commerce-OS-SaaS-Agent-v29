@@ -21,7 +21,7 @@ export function templateBuffer() {
     ["2. Recipient/address/weight only needed on the first row of each parcel. 收件信息与重量只需填写在每个包裹的第一行。"],
     ["3. carrier: yunexpress / fourpx, or leave blank to auto-pick the cheapest channel. 承运商留空 = 自动选最便宜渠道。"],
     ["4. route: carrier product code (e.g. THPHR, QC); blank = cheapest route of that carrier. 渠道代码留空 = 该承运商最便宜渠道。"],
-    ["5. If order_ref equals an existing Wed.AI order number, the shipment is linked to that order (status sync). 若订单参考号与站内订单号相同，将关联订单并同步状态。"],
+    ["5. If order_ref equals an existing POD.AI order number, the shipment is linked to that order (status sync). 若订单参考号与站内订单号相同，将关联订单并同步状态。"],
     ["6. Upload in admin → Carriers → Bulk (Excel). Review the preview, then confirm. 在后台 物流 → 批量下单 上传，预览确认后创建。"]];
   return workbookBuffer([{ name: "Shipments", rows: [COLUMNS.map(header), ...sample] }, { name: "Help", rows: help }]);
 }

@@ -2,7 +2,7 @@
    Usage (top of <body>, loaded synchronously so #cartBtn exists before cart.js runs):
      <div id="site-header" data-cart data-variant="checkout|studio"> [optional children with data-slot="actions" or data-header-menu] </div>
      <script src="/header.js"></script>
-   - Brand: "Wed.AI" (one name everywhere).
+   - Brand: "POD.AI" (one name everywhere).
    - Market (CH · CHF / EU · EUR) is ONE shared selection in localStorage ("pod-market-v1"), read by home, studio, cart and checkout
      through window.PODMarket. It is kept in sync with the checkout country ("pod-checkout-v1"): CH/LI -> CH (CHF), other countries -> EU (EUR).
    - Guest order lookup lives at /account#find-order. */
@@ -64,12 +64,12 @@
     var cartBtn=cart?'<button class="cart-btn" id="cartBtn" type="button" aria-haspopup="dialog" aria-controls="cartPanel">'+ICON_CART+'<span class="cart-btn-label" data-i18n="cart.button">Cart</span><span class="cart-badge" id="cartCount" data-n="0">0</span></button>':'';
     var h=document.createElement("header");h.className="sh topbar";h.setAttribute("data-variant",variant);
     if(isHome){
-      // "Ask Wed.AI" entry next to the brand: swaps the hero image for the inline chat panel (home-chat.js). No floating bubble.
-      h.innerHTML='<div class="sh-left"><a class="brand sh-brand" href="/" aria-label="Wed.AI — home"><div><b class="sh-name sh-wordmark">Wed.AI</b>'+sub+'</div></a>'+
-        '<button class="sh-ai" id="shAiBtn" type="button" aria-controls="heroChat" aria-expanded="false">'+ICON_AI+'<span data-i18n="hdr.ai">Ask Wed.AI</span></button></div>'+
+      // "Ask POD.AI" entry next to the brand: swaps the hero image for the inline chat panel (home-chat.js). No floating bubble.
+      h.innerHTML='<div class="sh-left"><a class="brand sh-brand" href="/" aria-label="POD.AI — home"><div><b class="sh-name sh-wordmark">POD.AI</b>'+sub+'</div></a>'+
+        '<button class="sh-ai" id="shAiBtn" type="button" aria-controls="heroChat" aria-expanded="false">'+ICON_AI+'<span data-i18n="hdr.ai">Ask POD.AI</span></button></div>'+
         '<div class="actions sh-act"><div class="lang-switch" data-lang-switch></div><div class="topbar-row2 sh-slot">'+marketSelect()+'</div>'+cartBtn+'</div>';
     }else{
-      h.innerHTML='<a class="brand sh-brand" href="/" aria-label="Wed.AI — home"><div><b class="sh-name sh-wordmark">Wed.AI</b>'+sub+'</div></a>'+
+      h.innerHTML='<a class="brand sh-brand" href="/" aria-label="POD.AI — home"><div><b class="sh-name sh-wordmark">POD.AI</b>'+sub+'</div></a>'+
         '<div class="actions sh-act">'+
         (variant==="checkout"?'<span class="sh-secure"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i18n="co.secure">Secure checkout</span></span>':'<div class="sh-slot"></div>')+
         marketSelect()+'<div class="lang-switch" data-lang-switch></div>'+back+

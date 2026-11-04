@@ -113,7 +113,9 @@ export async function trackParcel({ number, company = "", url = "", lang = "en" 
     if (cache.size > 2000) cache.delete(cache.keys().next().value);
   }
   const ours = detectCarrier(company, n);
+  // Shopify's generic "Other" carrier: show the carrier detected from the number pattern instead.
+  const named = /^(other|others|sonstige|autre|其他)?$/i.test(String(company).trim()) ? "" : company;
   const link = url || (ours ? CARRIERS[ours].track_url(n) : "");
-  return { number: n, carrier: company || (ours ? CARRIERS[ours].name : ""), source: r.source, status: r.status, status_text: statusText(r.status, lang),
+  return { number: n, carrier: named || (ours ? CARRIERS[ours].name : ""), source: r.source, status: r.status, status_text: statusText(r.status, lang),
     last_event: r.events[0] || null, events: r.events, url: link, cached: !!r.cached };
 }

@@ -1,4 +1,4 @@
-Wed.AI — POD Wedding Commerce OS (live: https://wed.swisspro.site)
+POD.AI — POD Wedding Commerce OS (live: https://wed.swisspro.site)
 
 Local development
 1. cp .env.example .env
@@ -9,10 +9,10 @@ Local development
 5. Open http://localhost:3000/
 
 Customer flow: homepage → Studio → cart → checkout (server-side quote) → order → proof → account.html.
-Ask Wed.AI: the chat opens inside the homepage hero (no floating bubble); /?ask=1 opens it directly.
+Ask POD.AI: the chat opens inside the homepage hero (no floating bubble); /?ask=1 opens it directly.
 Admin: http://localhost:3000/admin/login (password) → /admin. Scripts may use the x-admin-api-key header.
 E-mail: SendGrid, Postmark or SMTP credentials; without them the attempt is stored as not_configured.
 
 Production is deployed on cPanel / CloudLinux (not Render) — see docs/DEPLOYMENT.md.
 Docs: ARCHITECTURE_AND_OPTIMIZATION.txt, AGENT_FRAMEWORK.txt, docs/ARCHITECTURE.md,
-and docs/Wed.AI-Agent-标准文档.txt (authoritative document for the customer chat agent).
+and docs/POD.AI-Agent-标准文档.txt (authoritative document for the customer chat agent).
