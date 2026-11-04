@@ -37,7 +37,8 @@ input,textarea,select{font:inherit;border:1px solid #8a8a8a;border-radius:8px;pa
 <p><label><input type="checkbox" id="sen" style="width:auto"> Chat enabled on the storefront</label></p>
 <p>Greeting (English)<input id="sg" placeholder="Leave empty for the default greeting"></p>
 <p>Team reply time (hours)<input id="sh" type="number" min="1" max="168"></p>
-<button class="btn" id="ssave">Save</button> <span id="smsg" class="muted"></span></div></section>
+<button class="btn" id="ssave">Save</button> <span id="smsg" class="muted"></span></div>
+<div class="card"><b>Order tracking sources</b><p class="muted">Order lookup asks the carrier first (YunExpress, 4PX), then 51Tracking, then shows your Shopify tracking link.</p><ul id="tsrc"></ul></div></section>
 
 <section id="preview" class="hide"><div class="card"><div class="chat" id="chat"></div>
 <div class="row" style="margin-top:10px"><input id="pin" placeholder="Ask like a customer, e.g. What is your return policy?"><button class="btn" id="psend" style="flex:0 0 auto">Send</button></div></div></section>
@@ -74,7 +75,9 @@ const loaders = {
     $("#kl").innerHTML = l.map(x => `<tr><td><b>${esc(x.question)}</b><br><span class="muted">${esc(x.answer)}</span></td><td style="width:90px"><button class="btn s" data-del="${esc(x.id)}">Delete</button></td></tr>`).join("");
     document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => api("/knowledge/" + b.dataset.del, { method: "DELETE" }).then(loaders.knowledge));
   },
-  async settings() { const s = await api("/settings"); $("#sen").checked = s.enabled; $("#sg").value = s.greeting?.en || ""; $("#sh").value = s.human_reply_hours; },
+  async settings() { const s = await api("/settings"); $("#sen").checked = s.enabled; $("#sg").value = s.greeting?.en || ""; $("#sh").value = s.human_reply_hours;
+    const t = s.tracking_sources, ok = v => v ? "configured" : "not set";
+    $("#tsrc").innerHTML = t ? [...t.carriers.map(c => `<li>${esc(c.name)}: ${ok(c.configured)}</li>`), `<li>51Tracking: ${ok(t.tracking51.configured)}</li>`, "<li>Fallback: Shopify tracking link</li>"].join("") : ""; },
   preview() {}, setup() {}
 };
 $("#tabs").onclick = e => { const t = e.target.dataset.t; if (!t) return; document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.t === t)); document.querySelectorAll("section").forEach(s => s.classList.toggle("hide", s.id !== t)); loaders[t]().catch(err => shopify.toast.show(String(err.message), { isError: true })); };

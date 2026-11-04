@@ -9,6 +9,7 @@ import crypto from "node:crypto";
 import { graphql } from "./core.js";
 import { normaliseCustom } from "../pod-agent/customer/knowledge.js";
 import { createHandoff } from "../pod-agent/customer/store.js";
+import { trackParcel } from "../tracking/index.js";
 
 const strip = h => String(h || "").replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
 const POLICY_TAGS = { SHIPPING_POLICY: "shipping delivery versand livraison 运费 配送 发货 customs", REFUND_POLICY: "return returns refund exchange rückgabe retoure umtausch retour 退货 退款 换货",
@@ -99,7 +100,13 @@ const cut = (s, n = 700) => s.length > n ? `${s.slice(0, n).replace(/\s+\S*$/, "
 
 function orderText(o, lang) {
   const items = o.items.map(i => `${i.quantity}× ${i.title}`).join(", ");
-  const tr = o.tracking.map(x => `${x.company || "Tracking"} ${x.number || ""}`.trim()).join(", ");
+  const tr = o.tracking.map(x => {
+    const head = `${x.company || "Tracking"} ${x.number || ""}`.trim();
+    const st = x.status_text && x.status !== "unknown" ? ` — ${x.status_text}` : "";
+    const le = x.last_event ? ` (${[x.last_event.time, x.last_event.location, x.last_event.text].filter(Boolean).join(", ")})` : "";
+    const link = !x.last_event && x.url ? ` ${x.url}` : "";
+    return head + st + le + link;
+  }).join("; ");
   const st = o.cancelled ? "cancelled" : String(o.fulfillment || "").toLowerCase().replace(/_/g, " ");
   if (lang === "zh") return `订单 ${o.name}：${st}（付款：${String(o.payment || "").toLowerCase()}）。商品：${items}。${tr ? `物流：${tr}` : "暂无物流单号。"}`;
   if (lang === "de") return `Bestellung ${o.name}: ${st} (Zahlung: ${String(o.payment || "").toLowerCase()}). Artikel: ${items}. ${tr ? `Sendungsverfolgung: ${tr}` : "Noch keine Sendungsnummer."}`;
@@ -127,7 +134,16 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
         async search_products({ query }) { const r = await searchShopProducts(shop, query); if (r.ok && r.products.length) ctx.ui.push({ type: "products", items: r.products }); return r; },
         async find_order({ order_number, email }) {
           const r = await findShopOrder(shop, { order_number: order_number || conv.slots?.order_number, email: email || conv.slots?.email });
-          if (r.ok) { conv.slots.order_number = r.order.name; ctx.ui.push({ type: "order", order: r.order }); }
+          if (r.ok) {
+            conv.slots.order_number = r.order.name;
+            // live tracking: carrier API (YunExpress / 4PX) → 51Tracking → Shopify tracking link
+            r.order.tracking = await Promise.all(r.order.tracking.filter(x => x.number).slice(0, 3).map(async x => {
+              const t = await trackParcel({ number: x.number, company: x.company, url: x.url, lang }).catch(() => null);
+              return t ? { ...x, url: t.url || x.url, source: t.source, status: t.status, status_text: t.status_text, last_event: t.last_event, events: t.events.slice(0, 8) } : x;
+            }));
+            ctx.ui.push({ type: "order", order: r.order });
+            for (const t of r.order.tracking) ctx.ui.push({ type: "tracking", carrier: t.company || "", number: t.number, status: t.status_text || "", url: t.url || "", source: t.source || "link", events: t.events || [] });
+          }
           return r;
         },
         async handoff_to_human({ reason = "customer_request", summary = "" }) { const h = await createHandoff(tenantId, conv, { reason, summary }); ctx.handoff = h.reason; return { ok: true, handoff_id: h.id }; }

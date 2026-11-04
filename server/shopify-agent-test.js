@@ -32,6 +32,8 @@ const SHOPS = {
 };
 globalThis.fetch = async (url, init = {}) => {
   const u = String(url);
+  if (/api\.51tracking\.com\/v4\/trackings\/get/.test(u)) return new Response(JSON.stringify({ meta: { code: 200 }, data: { success: [{ tracking_number: "99.00.123456.78901234", courier_code: "swiss-post", delivery_status: "delivered",
+    origin_info: { trackinfo: [{ checkpoint_date: "2026-11-03 14:05", location: "8001 Zürich", tracking_detail: "Delivered" }, { checkpoint_date: "2026-11-02 07:10", location: "Härkingen", tracking_detail: "Sorted" }] } }] } }), { status: 200 });
   const m = u.match(/^https:\/\/([a-z0-9-]+\.myshopify\.com)\/admin\/(.*)$/);
   if (!m) return realFetch(url, init);
   const shop = m[1], body = JSON.parse(init.body || "{}"), json = d => new Response(JSON.stringify(d), { status: 200, headers: { "Content-Type": "application/json" } });
@@ -94,6 +96,13 @@ try {
   r = await proxy(A, "Where is my order #1001? buyer@example.com", conv);
   assert.match(r.json.answer, /#1001/); assert.match(r.json.answer, /Swiss Post 99\.00\.123456\.78901234/); assert.match(r.json.answer, /fulfilled/);
   assert.doesNotMatch(JSON.stringify(r.json), /Buyer@Example\.com/, "order e-mail not echoed");
+  assert.match(r.json.answer, /https:\/\/post\.ch\/t/, "no tracking source configured → Shopify tracking link");
+  // with 51Tracking configured: Swiss Post (not integrated) → 51Tracking status, latest event, timeline
+  process.env.TRACKING51_API_KEY = "k51"; (await import("./tracking/index.js")).clearTrackingCache();
+  r = await proxy(A, "Where is my order #1001? buyer@example.com", conv);
+  assert.match(r.json.answer, /Delivered \(2026-11-03 14:05, 8001 Zürich, Delivered\)/, r.json.answer);
+  const tl = r.json.ui.find(u => u.type === "tracking"); assert.equal(tl.source, "51tracking"); assert.equal(tl.events.length, 2);
+  delete process.env.TRACKING51_API_KEY;
   // lockout after 5 failures
   for (let i = 0; i < 5; i++) await proxy(A, `order #1001 x${i}@example.com`);
   r = await proxy(A, "order #1001 buyer@example.com"); assert.match(r.json.answer, /Too many attempts/);

@@ -14,6 +14,10 @@
   function render(ui) {
     (ui || []).forEach(function (u) {
       if (u.type === "chips") { var c = el("div", "wdc-chips"); u.items.forEach(function (t) { var b = el("button", null, t); b.type = "button"; b.onclick = function () { ask(t); }; c.append(b); }); log.append(c); }
+      if (u.type === "tracking") { var tb = el("div", "wdc-m wdc-a wdc-track"); tb.append(el("b", null, (u.carrier ? u.carrier + " " : "") + u.number));
+        if (u.status) tb.append(el("div", null, u.status));
+        (u.events || []).slice(0, 5).forEach(function (e) { tb.append(el("div", "wdc-ev", [e.time && String(e.time).slice(0, 16).replace("T", " "), e.location, e.text].filter(Boolean).join(" · "))); });
+        if (u.url) { var l = el("a", null, "Track parcel"); l.href = u.url; l.target = "_blank"; l.rel = "noopener"; tb.append(l); } log.append(tb); }
       if (u.type === "products") { var w = el("div", "wdc-cards"); u.items.forEach(function (p) { var a = el("a", "wdc-card"); a.href = p.link; if (p.image) { var i = el("img"); i.src = p.image; i.alt = p.name; i.loading = "lazy"; a.append(i); }
         var t = el("div"); t.append(el("b", null, p.name)); if (isFinite(p.unit_price)) t.append(el("span", null, Number(p.unit_price).toFixed(2) + " " + (p.currency || ""))); a.append(t); w.append(a); }); log.append(w); }
     }); log.scrollTop = 1e9;

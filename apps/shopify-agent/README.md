@@ -18,7 +18,8 @@ or webhook HMAC. `x-tenant-id` / `tenant_id` can never select a `shopagent_` ten
 Answers (local first, LLM only when a key is configured on the server):
 - policies (shipping / refund / contact …) from the shop's own Shopify policies + the merchant's FAQ (admin → Knowledge)
 - products from Admin API search (price, image, link)
-- order status + tracking: order number **and** order e-mail must match; 5 wrong tries → 15 min lock
+- order status + tracking: order number **and** order e-mail must match; 5 wrong tries → 15 min lock.
+  Tracking: our carrier APIs (YunExpress, 4PX) → 51Tracking v4 (`TRACKING51_API_KEY`) → Shopify tracking link; status, latest event and timeline in chat; cached 30 min; read-only
 - shipping cost: Shopify has no generic rate API outside checkout → shipping policy + "calculated at checkout"
 - "talk to a person", anger, repeated failures → Handoffs queue in the embedded admin (no e-mail sent)
 

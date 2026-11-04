@@ -987,6 +987,14 @@ B.3 跳过（本版没有）
   D.4 回答来源：店铺自己的政策（运费 / 退货 / 联系方式）+ 商家知识库；
       商品来自 Admin API 搜索；订单需订单号 + 下单邮箱一致（5 次失败锁 15 分钟）；
       运费不能在结账外通用计算 → 回答运费政策 +“结账时按地址计算”。
+  D.4a 物流轨迹（Pod.AI 与 Wed.AI 站内查单共用 server/tracking/index.js）：
+      订单号 + 邮箱验证通过后，取发货单的运单号与承运商：
+      ① 我们对接的平台（YunExpress、4PX，密钥已配置时）直接查询；
+      ② 不是我们对接的承运商，或平台没有返回轨迹 → 51Tracking v4
+         （TRACKING51_API_KEY；单号未登记时先登记再查询）；
+      ③ 都不行 → 显示承运商 / Shopify 的查询链接。
+      聊天显示状态、最新节点和时间线；结果缓存 30 分钟（TRACKING_CACHE_MINUTES）。
+      只读：不创建承运商订单。后台设置页显示哪些来源已配置（只显示变量名）。
   D.5 验证：npm run test:shopify-agent（签名、安装、店面聊天、隔离、后台、
       webhook、Wed.AI 结账 CHF 6.34 / 13.15 不变）。
   D.6 需要 Partner 账号的步骤与上架清单：见 apps/shopify-agent/README.md。
@@ -1070,3 +1078,11 @@ B.3 跳过（本版没有）
         店面 App embed 名称「Pod.AI Chat」；App Proxy 子路径 /apps/podai；
         后台标题、README、.env.example 注释同步。Wed.AI 网站品牌不变。
         影响条款：附录 D。
+
+    __HASH__ · 2026-11-04 · 查单物流轨迹：新增 server/tracking/index.js，
+        顺序为承运商接口（YunExpress / 4PX）→ 51Tracking v4（TRACKING51_API_KEY）
+        → 查询链接，缓存 30 分钟，只读。Pod.AI 查单显示状态、最新节点、时间线；
+        Wed.AI 站内 find_order / get_tracking 在没有已同步轨迹时同样调用。
+        后台（Wed.AI Admin → AI 客服 → Settings、Pod.AI 设置页）显示已配置的来源。
+        .env.example 新增 TRACKING51_API_KEY；新测试 test:tracking（已加入 test:all）。
+        影响条款：9.4、附录 D（D.4a）。
