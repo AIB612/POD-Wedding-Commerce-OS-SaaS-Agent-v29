@@ -48,8 +48,8 @@ try {
   const before = calls.length; r = await T.trackParcel({ number: "99.00.1.2", company: "Swiss Post", lang: "de" });
   assert.equal(r.source, "51tracking"); assert.equal(r.status, "delivered"); assert.equal(r.status_text, "Zugestellt");
   assert.deepEqual(calls.slice(before).map(c => c.method), ["GET"]); assert.ok(!calls.slice(before).some(c => /yunexpress|4px/.test(c.u)));
-  // unknown courier name → detect → create → get
-  r = await T.trackParcel({ number: "LX123456789CH", company: "" }); assert.equal(r.source, "51tracking"); assert.ok(calls.some(c => /couriers\/detect/.test(c.u)));
+  // unknown courier name: v4 has no detect endpoint → not registered, tracking link fallback
+  r = await T.trackParcel({ number: "LX123456789CH", company: "" }); assert.equal(r.source, "link"); assert.ok(!calls.some(c => /couriers\/detect/.test(c.u)));
   result.unintegrated_51 = "pass";
   // 6. 4PX without keys → skipped (no request), 51Tracking used
   const b4 = calls.length; r = await T.trackParcel({ number: "4PX3000000001CN", company: "4PX" });

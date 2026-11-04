@@ -74,12 +74,11 @@ async function get51(number, courier) {
 }
 async function via51(number, company) {
   if (!process.env.TRACKING51_API_KEY) return null;
-  let courier = courier51(company), item = await get51(number, courier);
+  // courier code from the carrier name, else from the number pattern (Shopify "Other" + YT… → yunexpress).
+  // 51Tracking v4 has no courier-detect endpoint (only /couriers/all), so unknown carriers are not registered.
+  const ours = detectCarrier("", number);
+  let courier = courier51(company) || (ours === "yunexpress" ? "yunexpress" : ours === "fourpx" ? "4px" : null), item = await get51(number, courier);
   if (!item) {
-    if (!courier) {
-      const d = await httpJson(`${API51}/couriers/detect`, { method: "POST", headers: h51(), body: JSON.stringify({ tracking_number: number }) });
-      courier = list51(d.body)[0]?.courier_code || null;
-    }
     if (!courier) return null;
     // registers the number with 51Tracking (a tracking subscription, not a carrier order)
     await httpJson(`${API51}/trackings/create`, { method: "POST", headers: h51(), body: JSON.stringify({ tracking_number: number, courier_code: courier }) });
