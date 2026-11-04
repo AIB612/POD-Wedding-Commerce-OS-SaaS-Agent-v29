@@ -1094,7 +1094,7 @@ B.3 跳过（本版没有）
         .env.example 新增 TRACKING51_API_KEY；新测试 test:tracking（已加入 test:all）。
         影响条款：9.4、附录 D（D.4a）。
 
-    __HASH__ · 2026-11-04 · Pod.AI 与网站完全分开（Sherry 规定：不改网站与站内 Agent）：
+    834635e · 2026-11-04 · Pod.AI 与网站完全分开（Sherry 规定：不改网站与站内 Agent）：
         撤回 bb38b89 / 2bb6cdf 对站内文件的修改（server/pod-agent/customer/*、
         server/auth.js、server/routes/admin.js、admin-sections.js、package.json）；
         Pod.AI 改用自己的引擎副本 server/shopify-agent/engine 与 podai_* 集合；
