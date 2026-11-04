@@ -1167,3 +1167,9 @@ B.3 跳过（本版没有）
         仅改 Pod.AI 文件（profile.js、dashboard.js、engine/agent.js、engine/store.js、admin.html、
         extensions/podai-chat）。影响条款：附录 D。
 
+    d886419 · 2026-11-04 · Pod.AI 语言（Sherry 最终决定）：嵌入后台语言切换仅 English（默认）/ Deutsch / Français /
+        Italiano（移除中文选项，新增完整德 / 法 / 意翻译）。店铺聊天不限语言：按顾客所写语言回答——
+        EN / DE / FR / IT / ZH 有模板（新增 IT 模板、FR/IT 引擎提示、IT/FR 语言识别词），其他语言有 LLM 时由 LLM 回答，
+        否则英文。组件界面 / 快捷回复跟随顾客语言（EN 内置，其他语言在 chat-i18n.js；chat.js 压缩到 10 KB 以内，
+        源码 apps/shopify-agent/src/）。仅改 Pod.AI 文件。影响条款：附录 D。
+
