@@ -70,7 +70,7 @@ export async function putAgentSettings(tenantId, b = {}) {
     failed_answers_before_handoff: num(b.failed_answers_before_handoff, 1, 10, cur.failed_answers_before_handoff),
     max_messages_per_10min: num(b.max_messages_per_10min, 3, 100, cur.max_messages_per_10min),
     max_tokens_per_conversation: num(b.max_tokens_per_conversation, 1000, 500000, cur.max_tokens_per_conversation),
-    greeting: { en: String(b.greeting?.en ?? cur.greeting.en).slice(0, 300), zh: String(b.greeting?.zh ?? cur.greeting.zh).slice(0, 300), de: String(b.greeting?.de ?? cur.greeting.de).slice(0, 300) },
+    greeting: { en: String(b.greeting?.en ?? cur.greeting.en).slice(0, 300), zh: String(b.greeting?.zh ?? cur.greeting.zh).slice(0, 300), de: String(b.greeting?.de ?? cur.greeting.de).slice(0, 300), fr: String(b.greeting?.fr ?? cur.greeting.fr ?? "").slice(0, 300), it: String(b.greeting?.it ?? cur.greeting.it ?? "").slice(0, 300) },
     sales_discount: { enabled: sd.enabled === undefined ? cur.sales_discount.enabled : sd.enabled === true, percent: num(sd.percent, 1, 30, cur.sales_discount.percent),
       valid_hours: num(sd.valid_hours, 1, 720, cur.sales_discount.valid_hours), per_customer_days: num(sd.per_customer_days, 1, 365, cur.sales_discount.per_customer_days), max_per_month: num(sd.max_per_month, 0, 1000, cur.sales_discount.max_per_month) }
   });

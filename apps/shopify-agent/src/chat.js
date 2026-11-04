@@ -42,6 +42,7 @@
     cfg = c || {}; if (cfg.enabled === false) { btn.remove(); win.remove(); return; }
     if (cfg.widget && cfg.widget.language && cfg.widget.language !== "auto" && ["en", "zh", "de", "fr", "it"].indexOf(cfg.widget.language) >= 0) { LANG = cfg.widget.language; t = tx(LANG); sub.textContent = t.online; foot.textContent = t.by; }
     apply();
+    try { var k = "podai_ping", n = Date.now(); if (!(n - (+localStorage.getItem(k) || 0) < 864e5)) { localStorage.setItem(k, n); ev("embed_ping"); } } catch (e) {} // app-embed heartbeat
   }).catch(function () {});
 
   function scroll() { log.scrollTop = log.scrollHeight; }
@@ -63,6 +64,7 @@
           var bt = el("div", "pc-btn"), v = el("a", null, t.view); v.href = link(p.link); v.onclick = im.onclick; bt.append(v);
           if (p.variant_id) { var a = el("a", "pc-pri", t.add); a.href = "/cart/add?id=" + encodeURIComponent(p.variant_id) + "&quantity=1&utm_source=podai&utm_medium=chat"; a.onclick = function () { ev("add_to_cart", { product_id: p.id }); }; bt.append(a); }
           b.append(bt); c.append(im, b); w.append(c);
+          try { var pu = new URL(p.link, location.origin); if (pu.origin === location.origin || /\.myshopify\.com$/.test(pu.hostname)) fetch(pu.pathname.replace(/\/$/, "") + ".js", { credentials: "same-origin" }).then(function (r) { if (r.status === 404) { c.remove(); if (!w.children.length) w.remove(); } }).catch(function () {}); } catch (e) {} // not on the Online Store → drop
         });
         log.append(w);
         if (u.note) log.append(el("div", "pc-note", u.note));

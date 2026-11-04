@@ -88,7 +88,9 @@ export function shopifyAgentRouter() {
     const out = { tracking: await trackingSources(), llm: { available: llmStatus().available } };
     try { const d = await core.graphql(req.agentShop, "{ shop { name shopPolicies { type } } }"); out.shop_name = d.shop.name; out.policies = d.shop.shopPolicies.map(p => p.type); } catch { out.policies = null; }
     try { await core.graphql(req.agentShop, "{ orders(first:1) { nodes { id } } }"); out.protected_data = "ok"; } catch (e) { out.protected_data = /access|protected|denied/i.test(e.message) ? "not_approved" : "error"; }
-    out.chat_seen = (await listForTenant("podai_conversations", req.agentTenant)).length > 0; // proxy chats arrive only when the app embed is on
+    // app embed on? the widget (only rendered by the embed) pings daily; chats / chat opens also prove it. No read_themes scope needed.
+    { const since = Date.now() - 14 * 864e5; const ev = (await listForTenant("podai_events", req.agentTenant)).filter(e => ["embed_ping", "chat_open"].includes(e.type) && Date.parse(e.at) >= since);
+      out.embed_last_seen = ev.map(e => e.at).sort().pop() || null; out.chat_seen = !!out.embed_last_seen || (await listForTenant("podai_conversations", req.agentTenant)).some(c => Date.parse(c.created_at) >= since); }
     res.json(out);
   }));
   api.get("/overview", ah(async (req, res) => {

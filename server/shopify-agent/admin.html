@@ -126,7 +126,7 @@ dialog .in{padding:22px}dialog .ft{display:flex;gap:8px;justify-content:flex-end
   <div class="glass card"><h3 data-i="se.chat"></h3>
    <div class="line"><div class="tx"><b data-i="se.en"></b><span data-i="se.ens"></span></div><label class="tog"><input type="checkbox" id="sen"><i></i></label></div>
    <div class="line"><div class="tx"><b data-i="se.llm"></b><span id="llmNote"></span></div><label class="tog"><input type="checkbox" id="sllm"><i></i></label></div>
-   <label class="f" style="margin-top:12px"><span data-i="se.gr"></span><input id="sg_en" placeholder="English"><input id="sg_zh" placeholder="中文" style="margin-top:6px"><input id="sg_de" placeholder="Deutsch" style="margin-top:6px"></label>
+   <label class="f" style="margin-top:12px"><span data-i="se.gr"></span><input id="sg_en" placeholder="English"><input id="sg_de" placeholder="Deutsch" style="margin-top:6px"><input id="sg_fr" placeholder="Français" style="margin-top:6px"><input id="sg_it" placeholder="Italiano" style="margin-top:6px"></label>
    <div class="row"><label class="f"><span data-i="se.lang"></span><select id="slang"><option value="auto"></option><option value="en">English</option><option value="zh">中文</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="it">Italiano</option></select></label>
    <label class="f"><span data-i="se.hours"></span><input id="sh" type="number" min="1" max="168"></label></div></div>
   <div class="glass card"><h3 data-i="se.look"></h3>
@@ -222,12 +222,12 @@ function prevLook(){const c=$("#scol").value;$("#sprev").style.setProperty("--ac
  $("#pgreet").textContent=$("#sg_"+(L==="de"?"de":"en")).value||t("hello");$$("#spos button").forEach(b=>b.classList.toggle("on",b.dataset.p===pos));}
 let shopName="";
 async function settings(){const s=await api("/settings");$("#sen").checked=s.enabled;$("#sllm").checked=s.llm_enabled&&s.llm_available;$("#sllm").disabled=!s.llm_available;$("#llmNote").textContent=t(s.llm_available?"llmon":"llmoff");
- ["en","zh","de"].forEach(l=>$("#sg_"+l).value=s.greeting?.[l]||"");$("#sh").value=s.human_reply_hours;const w=s.widget||{};$("#scol").value=w.color||"#2b2520";pos=w.position||"right";$("#stitle").value=w.title||"";$("#sav").value=w.avatar||"";$("#slang").value=w.language||"auto";
+ ["en","de","fr","it"].forEach(l=>$("#sg_"+l).value=s.greeting?.[l]||"");$("#sh").value=s.human_reply_hours;const w=s.widget||{};$("#scol").value=w.color||"#2b2520";pos=w.position||"right";$("#stitle").value=w.title||"";$("#sav").value=w.avatar||"";$("#slang").value=w.language||"auto";
  $("#swatch").innerHTML=SW.map(c=>`<button type="button" style="background:${c}" data-c="${c}" aria-label="${c}"></button>`).join("")+`<input type="color" id="scol" value="${esc(w.color||"#2b2520")}">`;
  $$("#swatch [data-c]").forEach(b=>b.onclick=()=>{$("#scol").value=b.dataset.c;prevLook();});$("#scol").oninput=prevLook;
  const tr=s.tracking_sources;$("#tsrc").innerHTML=tr?[...tr.carriers.map(c=>[c.name+(c.mode?` · ${c.mode}`:""),c.configured]),["51Tracking",tr.tracking51.configured]].map(([n,ok])=>`<div class="line"><div class="tx"><b>${esc(n)}</b></div><span class="badge ${ok?"b-ok":"b-warn"}">${t(ok?"cfg":"ncfg")}</span></div>`).join("")+`<div class="line"><div class="tx"><span>${t("fb")}</span></div></div>`:"";prevLook();}
 $("#spos").onclick=e=>{if(e.target.dataset.p){pos=e.target.dataset.p;prevLook();}};["#stitle","#sav","#sg_en","#sg_zh"].forEach(s=>$(s).oninput=prevLook);
-$("#ssave").onclick=()=>api("/settings",{method:"PUT",body:JSON.stringify({enabled:$("#sen").checked,llm_enabled:$("#sllm").checked,greeting:{en:$("#sg_en").value,zh:$("#sg_zh").value,de:$("#sg_de").value},human_reply_hours:Number($("#sh").value),
+$("#ssave").onclick=()=>api("/settings",{method:"PUT",body:JSON.stringify({enabled:$("#sen").checked,llm_enabled:$("#sllm").checked,greeting:{en:$("#sg_en").value,de:$("#sg_de").value,fr:$("#sg_fr").value,it:$("#sg_it").value},human_reply_hours:Number($("#sh").value),
  widget:{color:$("#scol").value,position:pos,title:$("#stitle").value,avatar:$("#sav").value,language:$("#slang").value}})}).then(()=>toast(t("saved"))).catch(e=>toast(String(e.message),1));
 // Try it — same cards as the storefront widget
 let conv=null;const log=()=>$("#chat");

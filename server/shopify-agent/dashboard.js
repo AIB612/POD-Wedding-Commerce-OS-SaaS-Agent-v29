@@ -9,7 +9,7 @@ import { graphql } from "./core.js";
 const DAY = 864e5, MIN_PER_CHAT = Number(process.env.PODAI_MIN_SAVED_PER_CHAT || 4);
 const pct = (a, b) => b ? Math.round((a / b) * 1000) / 10 : null;
 const median = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
-const EVENT_TYPES = new Set(["product_click", "add_to_cart", "chat_open"]);
+const EVENT_TYPES = new Set(["product_click", "add_to_cart", "chat_open", "embed_ping"]);
 
 /** Storefront events (product card click, add to cart via card, chat opened). No personal data stored. */
 export async function recordEvent(tenantId, b = {}) {

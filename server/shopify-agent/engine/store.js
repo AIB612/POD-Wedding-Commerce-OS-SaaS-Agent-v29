@@ -14,7 +14,7 @@ export const DEFAULT_SETTINGS = {
   failed_answers_before_handoff: 3,
   max_tokens_per_conversation: 40000,
   max_messages_per_10min: 20,
-  greeting: { en: "", zh: "", de: "" },
+  greeting: { en: "", zh: "", de: "", fr: "", it: "" },
   // POD Agent "sales discount" rule set (discounts.js checkRules). OFF by default: the chat only explains volume pricing
   // and validates codes the customer already has. When on, it may create ONE single-use promo code per customer/period.
   sales_discount: { enabled: false, percent: 5, valid_hours: 72, per_customer_days: 90, max_per_month: 20 },

@@ -89,9 +89,12 @@ export async function searchShopProducts(shop, query, { browse = false } = {}) {
   try {
     const all = (await graphql(shop, PRODUCT_Q, { q, first: browse ? 18 : 12, sort: ts.length ? "RELEVANCE" : "UPDATED_AT", rev: !ts.length })).products?.nodes || [];
     // only products published to the Online Store (a storefront URL) — others would 404 from a chat card
-    const nodes = all.filter(p => p.onlineStoreUrl).slice(0, browse ? 6 : 4);
+    // Online Store link: onlineStoreUrl when Shopify returns it (null on password-protected / dev stores), else the
+    // storefront handle URL; the widget then checks /products/<handle>.js in the visitor's session and drops 404s.
+    const base = (await shopFactsFor(shop).catch(() => null))?.url || `https://${shop}`;
+    const nodes = all.filter(p => p.status === "ACTIVE" && p.handle).slice(0, browse ? 8 : 5);
     return { ok: true, products: nodes.map(p => ({ id: p.id, name: p.title, image: p.featuredImage?.url || null, unit_price: Number(p.priceRangeV2?.minVariantPrice?.amount ?? NaN),
-      currency: p.priceRangeV2?.minVariantPrice?.currencyCode || null, max_price: Number(p.priceRangeV2?.maxVariantPrice?.amount ?? NaN), link: p.onlineStoreUrl,
+      currency: p.priceRangeV2?.minVariantPrice?.currencyCode || null, max_price: Number(p.priceRangeV2?.maxVariantPrice?.amount ?? NaN), link: p.onlineStoreUrl || `${String(base).replace(/\/$/, "")}/products/${p.handle}`,
       type: p.productType || "", collections: (p.collections?.nodes || []).map(c => c.title),
       variants: (p.variants?.nodes || []).map(v => ({ title: v.title, price: Number(v.price), available: !!v.availableForSale })),
       variant_id: String((p.variants?.nodes || []).find(v => v.availableForSale)?.id || "").split("/").pop() || null,
