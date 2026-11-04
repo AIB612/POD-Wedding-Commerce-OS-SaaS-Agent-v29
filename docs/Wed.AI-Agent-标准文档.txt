@@ -1065,7 +1065,7 @@ B.3 跳过（本版没有）
         新测试 test:shopify-agent（已加入 test:all）。
         影响条款：7（新文件）、附录 D（新增）。
 
-    __HASH__ · 2026-11-04 · 独立 Shopify App 改名为「Pod.AI」：
+    15e910a · 2026-11-04 · 独立 Shopify App 改名为「Pod.AI」：
         shopify.app.toml name = "Pod.AI"；主题扩展目录 extensions/podai-chat，
         店面 App embed 名称「Pod.AI Chat」；App Proxy 子路径 /apps/podai；
         后台标题、README、.env.example 注释同步。Wed.AI 网站品牌不变。
