@@ -1173,3 +1173,6 @@ B.3 跳过（本版没有）
         否则英文。组件界面 / 快捷回复跟随顾客语言（EN 内置，其他语言在 chat-i18n.js；chat.js 压缩到 10 KB 以内，
         源码 apps/shopify-agent/src/）。仅改 Pod.AI 文件。影响条款：附录 D。
 
+    1cfee29 · 2026-11-04 · Pod.AI 组件脚本：chat-i18n.js 改为 defer 加载（消除 Shopify ParserBlockingScript 警告），
+        chat.js 惰性读取 window.PodAIChatI18n（首次打开及每条回复按 language 刷新界面文字）。仅改 Pod.AI 文件。影响条款：附录 D。
+
