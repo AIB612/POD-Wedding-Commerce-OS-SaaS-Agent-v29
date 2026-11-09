@@ -1,6 +1,6 @@
 # Pod.AI — Shopify App Store listing kit (draft)
 
-Status: draft (decisions of 4 Nov 2026 19:22 applied), prepared on 4 Nov 2026 for review by Sherry. Nothing has been submitted to Shopify and no billing is configured.
+Status: draft · **Canonical host for Pod.AI: https://pod.swisspro.site** (wed.swisspro.site still serves the same app paths during the switch; /agent.html on wed 301s to pod). (decisions of 4 Nov 2026 19:22 applied), prepared on 4 Nov 2026 for review by Sherry. Nothing has been submitted to Shopify and no billing is configured.
 Scope: Pod.AI (the `apps/shopify-agent` app with server `server/shopify-agent`) only. The site and the site POD Agent are unchanged.
 Everything below describes features that are implemented and deployed today (Shopify app version pod-ai-8 plus the server at commit 9496d8f and later). There are no invented metrics, ratings or reviews.
 
@@ -59,8 +59,8 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 
 **Support info (approved):**
 - Support e-mail: support@swisspro.site (forwards to Gmail; mailbox to be created by Sherry).
-- Support URL: https://wed.swisspro.site/agent.html (Agent intro page).
-- Privacy policy: https://wed.swisspro.site/shopify-agent/privacy (live).
+- Support URL: https://pod.swisspro.site/agent.html (Agent intro page).
+- Privacy policy: https://pod.swisspro.site/shopify-agent/privacy (live).
 - Developer / data controller: Dropking AI (no postal address published).
 - Response time promise: "within 1 business day" (suggested).
 
@@ -98,7 +98,7 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 
 ## 2. Privacy policy
 
-- **Public URL (live):** https://wed.swisspro.site/shopify-agent/privacy (also `/shopify-agent/privacy.html`).
+- **Public URL (live):** https://pod.swisspro.site/shopify-agent/privacy (also `/shopify-agent/privacy.html`).
 - **Source:** `server/shopify-agent/privacy.html`. POD.AI brand, footer "© 2026 POD.AI".
 - **Contents:**
   - Shopify scopes and why each is used.
@@ -207,7 +207,7 @@ Purpose to select: **Customer service**. Secondary purpose: **Analytics**, for c
 1. **Process the minimum personal data required?** Yes.
    - Orders are fetched live per question and not copied.
    - Only the email the shopper types is stored, in the conversation or handoff.
-2. **Tell merchants what data you process and why?** Yes. Privacy policy at https://wed.swisspro.site/shopify-agent/privacy, plus the listing text.
+2. **Tell merchants what data you process and why?** Yes. Privacy policy at https://pod.swisspro.site/shopify-agent/privacy, plus the listing text.
 3. **Limit use to the stated purposes?** Yes. No ads, no selling, no cross-store use.
 4. **Data processing agreements with merchants?** Yes, via the privacy policy and the app terms. A DPA template is an open item; draft one before applying for Level 2.
 5. **Respect consent decisions?** Yes. No marketing; the storefront chat sets no tracking cookies (sessionStorage chat ID only).
@@ -231,7 +231,7 @@ Level 1 (email, no name/address) is enough for Pod.AI today.
 
 ## 5. App icon (approved)
 - **Official:** icon B refined — black P + warm-brown chat accent, no outer circle, light cream background (`podai-icon.png` / `icons/icon-b-official.png`). Transparent variant: `podai-icon-transparent.png`.
-- Served at https://wed.swisspro.site/shopify-agent/podai-icon.png and used in the Pod.AI admin header and privacy page.
+- Served at https://pod.swisspro.site/shopify-agent/podai-icon.png and used in the Pod.AI admin header and privacy page.
 - **Shopify Dev Dashboard / Partner listing icon upload is manual** — upload the 1200×1200 PNG in Partner Dashboard → App → Distribution / Branding. `shopify.app.toml` has no icon field; `shopify app deploy` does not set the listing icon.
 
 ## 6. Listing screenshots (1600×900)

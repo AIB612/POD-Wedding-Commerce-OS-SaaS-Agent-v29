@@ -44,9 +44,66 @@ function ipCountry(req) {
 
 export function publicRouter({ root, generatedDir }) {
   const router = express.Router();
+  const POD_HOSTS = new Set(["pod.swisspro.site", "www.pod.swisspro.site"]);
+  const WED_HOSTS = new Set(["wed.swisspro.site", "www.wed.swisspro.site"]);
+  const podHost = req => POD_HOSTS.has(String(req.hostname || "").toLowerCase());
+  const wedHost = req => WED_HOSTS.has(String(req.hostname || "").toLowerCase());
+  const POD_ORIGIN = "https://pod.swisspro.site";
+  const gaLandingSnippet = () => {
+    const id = String(process.env.PODAI_GA_ID || "").trim();
+    if (!/^G-[A-Z0-9]{6,}$/i.test(id)) return "";
+    const safe = id.toUpperCase().replace(/[^A-Z0-9-]/g, "");
+    return `<script async src="https://www.googletagmanager.com/gtag/js?id=${safe}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","${safe}",{anonymize_ip:true});</script>`;
+  };
+
+  // Pod.AI host: landing is the agent intro (not the wedding homepage).
+  router.get(["/", "/index.html"], (req, res, next) => {
+    if (!podHost(req)) return next("route");
+    let html = fs.readFileSync(path.join(root, "agent.html"), "utf8"); html = html.replace("<!--__PODAI_GA_LANDING__-->", gaLandingSnippet()); return res.setHeader("Cache-Control","no-cache"), res.type("html").send(html);
+  });
+  // Avoid duplicate Pod.AI landing on wed — keep wedding site intact.
+  router.get(["/agent", "/agent.html"], (req, res, next) => {
+    if (!wedHost(req)) return next("route");
+    return res.redirect(301, POD_ORIGIN + "/agent.html");
+  });
+  // Host-specific robots / sitemap
+  router.get("/robots.txt", (req, res, next) => {
+    if (!podHost(req)) return next("route");
+    res.type("text/plain").send(
+`User-agent: *
+Allow: /agent
+Allow: /agent.html
+Allow: /shopify-agent/privacy
+Allow: /assets/
+Allow: /shopify-agent/podai-icon.png
+Disallow: /generated/
+Disallow: /admin
+Disallow: /api/
+Sitemap: ${POD_ORIGIN}/sitemap.xml
+`);
+  });
+  router.get("/sitemap.xml", (req, res, next) => {
+    if (!podHost(req)) return next("route");
+    const urls = ["/agent.html", "/shopify-agent/privacy"];
+    const body = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+      "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
+      ...urls.map(u => `  <url><loc>${POD_ORIGIN}${u}</loc><changefreq>weekly</changefreq></url>`),
+      "</urlset>", ""].join("\n");
+    res.type("application/xml").send(body);
+  });
+
   const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/admin/login": "admin-login.html", "/admin-login.html": "admin-login.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html", "/shipping": "shipping.html", "/shipping.html": "shipping.html", "/returns": "returns.html", "/returns.html": "returns.html", "/imprint": "imprint.html", "/imprint.html": "imprint.html", "/impressum": "imprint.html", "/agent.html": "agent.html", "/agent": "agent.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
-  for (const [route, file] of Object.entries(pages)) router.get(route, (_, res) => res.sendFile(path.join(root, file), noStore));
+  const sendAgent = (_, res) => {
+    let html = fs.readFileSync(path.join(root, "agent.html"), "utf8");
+    html = html.replace("<!--__PODAI_GA_LANDING__-->", gaLandingSnippet());
+    res.setHeader("Cache-Control", "no-cache");
+    res.type("html").send(html);
+  };
+  for (const [route, file] of Object.entries(pages)) {
+    if (file === "agent.html") router.get(route, sendAgent);
+    else router.get(route, (_, res) => res.sendFile(path.join(root, file), noStore));
+  }
 
   const loginLimit = rateLimit({ bucket: "admin-login", windowMs: 60_000, max: 20 });
   router.use(["/api/admin/login", "/api/admin/password"], loginLimit);
