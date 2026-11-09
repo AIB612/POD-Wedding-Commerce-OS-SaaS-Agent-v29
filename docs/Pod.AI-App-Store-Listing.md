@@ -229,7 +229,12 @@ Level 1 (email, no name/address) is enough for Pod.AI today.
 
 ---
 
-## 5. Listing screenshots (1600×900)
+## 5. App icon (approved)
+- **Official:** icon B refined — black P + warm-brown chat accent, no outer circle, light cream background (`podai-icon.png` / `icons/icon-b-official.png`). Transparent variant: `podai-icon-transparent.png`.
+- Served at https://wed.swisspro.site/shopify-agent/podai-icon.png and used in the Pod.AI admin header and privacy page.
+- **Shopify Dev Dashboard / Partner listing icon upload is manual** — upload the 1200×1200 PNG in Partner Dashboard → App → Distribution / Branding. `shopify.app.toml` has no icon field; `shopify app deploy` does not set the listing icon.
+
+## 6. Listing screenshots (1600×900)
 These were rendered headlessly with the Pod.AI admin and widget code over mock data.
 - The live dropkingdev admin needs a Shopify login.
 - The live storefront is password-protected, so it couldn't be captured headlessly.
@@ -250,7 +255,7 @@ Files in `/workspace/wedai/report/podai-listing/`:
 
 ---
 
-## 6. 51Tracking free API application (draft — not submitted)
+## 7. 51Tracking free API application (draft — not submitted)
 Backlink: the wed.swisspro.site footer has a small dofollow link to https://www.51tracking.com with the anchor text 国际小包查询.
 - It is in the bottom legal bar of `footer.js`.
 - It is also in the static HTML of the home page, so it can be seen without JavaScript.
@@ -272,7 +277,7 @@ Form https://www.51tracking.com/apply-api — suggested values. Check the actual
 
 Review takes about 4 working days, and free access lasts 200 days (based on earlier research). Once approved, the existing TRACKING51_API_KEY on rs8 should work with v4; re-test with order #1011.
 
-## 7. Open decisions
+## 8. Open decisions
 1. Create the support@swisspro.site mailbox / forward (Sherry).
 2. Submit the 51Tracking application (§6) once the footer link is live.
 3. Billing setup after listing approval (Plan A recorded).

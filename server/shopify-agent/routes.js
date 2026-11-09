@@ -43,6 +43,7 @@ export function shopifyAgentRouter() {
   if (process.env.NODE_ENV !== "test") { const run = () => gdpr.purgeExpired().catch(e => console.error("[pod.ai] retention purge failed:", e.message)); setTimeout(run, 60e3).unref?.(); setInterval(run, 864e5).unref?.(); }
   // public privacy policy (App Store listing link)
   r.get(["/shopify-agent/privacy", "/shopify-agent/privacy.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(PRIVACY_PAGE, "utf8")));
+  r.get("/shopify-agent/podai-icon.png", (req, res) => res.set("Cache-Control", "public, max-age=86400").type("png").send(fs.readFileSync(new URL("./podai-icon.png", import.meta.url))));
   r.use("/shopify-agent", (req, res, next) => { req.tenantId = undefined; next(); }); // never trust x-tenant-id here
 
   r.post("/shopify-agent/webhooks", raw, ah(async (req, res) => {
