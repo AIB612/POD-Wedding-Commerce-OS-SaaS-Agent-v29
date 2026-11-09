@@ -3,20 +3,39 @@
 // Production should replace this module with PostgreSQL (see schema.sql) behind the same interface.
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const seedUrl = new URL("./data/saas-seed.json", import.meta.url);
+const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."); // repo root (…/pod-wedding)
 let state;
 let loading;
 let saveTimer;
 let saving = Promise.resolve();
+let persistBlocked = false; // set when a corrupt persist file must not be overwritten with seed
 
-const persistPath = () => process.env.STORE_PERSIST_PATH ? path.resolve(process.env.STORE_PERSIST_PATH) : null;
+/** Resolve STORE_PERSIST_PATH against the app root (never process.cwd()) so restarts cannot point at another file. */
+const persistPath = () => {
+  const raw = process.env.STORE_PERSIST_PATH;
+  if (!raw) return null;
+  return path.isAbsolute(raw) ? raw : path.resolve(appRoot, raw);
+};
 
 async function load() {
   const file = persistPath();
   if (file) {
     try { return JSON.parse(await fs.readFile(file, "utf8")); }
-    catch (e) { if (e.code !== "ENOENT") console.warn(`[store] could not read ${file}, falling back to seed:`, e.message); }
+    catch (e) {
+      if (e.code === "ENOENT") { /* first boot */ }
+      else {
+        // NEVER fall back to seed when a persist file exists but is unreadable — that would wipe production
+        // (Pod.AI shop tokens, chats) on the next schedulePersist. Quarantine and refuse to persist.
+        const bak = `${file}.corrupt-${Date.now()}`;
+        try { await fs.rename(file, bak); console.error(`[store] quarantined corrupt persist to ${bak}:`, e.message); }
+        catch { console.error(`[store] corrupt persist at ${file} (could not quarantine):`, e.message); }
+        persistBlocked = true;
+        throw new Error(`store_persist_corrupt:${file}`);
+      }
+    }
   }
   return JSON.parse(await fs.readFile(seedUrl, "utf8"));
 }
@@ -29,7 +48,7 @@ export async function getState() {
 
 async function writeSnapshot() {
   const file = persistPath();
-  if (!file || !state) return;
+  if (!file || !state || persistBlocked) return;
   const tmp = `${file}.${process.pid}.tmp`;
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(tmp, JSON.stringify(state), { encoding: "utf8", mode: 0o600 }); // orders, accounts, sessions: owner-only

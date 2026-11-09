@@ -16,3 +16,15 @@ test("retention purge and customer redact", async () => {
   await gdpr.customerRedact("pv.myshopify.com", { customer: { email: "anna@example.com" } });
   assert.equal((await listForTenant("podai_conversations", T)).length, 0); assert.equal((await listForTenant("podai_events", T)).length, 0);
 });
+
+test("retention purge never removes podai_shops", async () => {
+  const T = "shopagent_keep.myshopify.com";
+  await addRecord("podai_shops", { id: "keep.myshopify.com", tenant_id: T, access_token_enc: "enc", scopes: "read_products" });
+  await addRecord("podai_conversations", { id: "c_old2", tenant_id: T, last_message_at: new Date(Date.now() - 400 * 864e5).toISOString(), messages: [] });
+  const before = (await listForTenant("podai_shops", T)).length || (await listForTenant("podai_shops", "keep.myshopify.com")).length;
+  // listForTenant matches tenant_id OR id — shop id is the domain
+  const { findRecord } = await import("../../saas-store.js");
+  assert.ok(await findRecord("podai_shops", "keep.myshopify.com"));
+  await gdpr.purgeExpired();
+  assert.ok(await findRecord("podai_shops", "keep.myshopify.com"), "shop token row must survive retention purge");
+});

@@ -34,7 +34,7 @@
   function K(k,en){try{var w=window.WeddingI18n;if(w&&w.k){var v=w.k(k);if(v&&v!==k)return v}}catch(e){}return en}
   var css=".sh.topbar{position:sticky;top:0;z-index:60;width:100%;min-height:68px;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid rgba(45,36,30,.12);background:rgba(255,253,249,.86);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);font:14px/1.4 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;color:#28231f}"+
   ".sh .brand{display:flex;gap:11px;align-items:center;text-decoration:none;color:inherit;min-width:0}"+
-  ".sh .logo{width:38px;height:38px;border-radius:13px;background:#292622;color:#fff;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none}"+
+  ".sh .logo{width:38px;height:38px;border-radius:13px;overflow:hidden;background:#faf8f5;flex:none;display:block}.sh .logo img{width:100%;height:100%;object-fit:cover;display:block}"+
   ".sh .brand b{display:block;font-size:13px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;line-height:1.2}"+
   ".sh .brand b.sh-wordmark{font-size:22px;letter-spacing:-.01em;text-transform:none;font-weight:800;font-family:Georgia,'Times New Roman',serif;white-space:nowrap}.sh .brand b.sh-wordmark .sh-dot{font-style:normal;color:#b8865b}"+
   ".sh .brand span{display:block;color:#7c746c;font-size:11px;margin-top:3px;font-weight:400;line-height:1.25}"+
@@ -49,7 +49,7 @@
   ".sh-market{appearance:none;-webkit-appearance:none;border:1px solid rgba(45,36,30,.14);background:#fff url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M1 1l4 4 4-4%27 stroke=%27%2328231f%27 fill=%27none%27 stroke-width=%271.4%27/%3E%3C/svg%3E\") no-repeat right 11px center;border-radius:999px;padding:7px 28px 7px 12px;font:inherit;font-size:12px;color:#28231f;cursor:pointer}"+
   ".sh-secure{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#4f775b;font-weight:600}"+
   "@media(max-width:720px){.sh.topbar{padding:8px 12px;min-height:56px;height:auto;flex-wrap:wrap;gap:8px}.sh .brand{gap:8px}.sh .logo{width:30px;height:30px;border-radius:10px;font-size:13px}.sh .brand b{font-size:12px;white-space:nowrap;letter-spacing:.03em}.sh .brand span{display:none}.sh .topbar-row2{grid-column:1/-1;grid-row:2;display:flex;gap:6px;min-width:0}.sh-market{padding:5px 24px 5px 10px;font-size:11px;background-position:right 8px center}.sh .sh-left{gap:8px}.sh .sh-ai{padding:6px 10px 6px 9px;font-size:12px}}";
-  var ICON_AI='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18.5 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg>';
+  var ICON_AI='<img src="/assets/brand/icon-32.png" width="16" height="16" alt="" style="border-radius:4px;display:block">';
   var ICON_CART='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
   function marketSelect(){return ""}
   function _unusedMarketSelect(){var v=Market.get();return '<select class="sh-market" aria-label="Market and currency">'+Object.keys(MARKETS).map(function(id){var m=MARKETS[id];return '<option value="'+id+'"'+(id===v?' selected':'')+'>'+m.flag+' '+id+' · '+m.currency+'</option>'}).join("")+'</select>'}
@@ -65,11 +65,11 @@
     var h=document.createElement("header");h.className="sh topbar";h.setAttribute("data-variant",variant);
     if(isHome){
       // "Ask POD.AI" entry next to the brand: swaps the hero image for the inline chat panel (home-chat.js). No floating bubble.
-      h.innerHTML='<div class="sh-left"><a class="brand sh-brand" href="/" aria-label="POD.AI — home"><div><b class="sh-name sh-wordmark">POD.AI</b>'+sub+'</div></a>'+
+      h.innerHTML='<div class="sh-left"><a class="brand sh-brand" href="/" aria-label="POD.AI — home"><span class="logo" aria-hidden="true"><img src="/assets/brand/icon-32.png" width="38" height="38" alt=""></span><div><b class="sh-name sh-wordmark">POD.AI</b>'+sub+'</div></a>'+
         '<button class="sh-ai" id="shAiBtn" type="button" aria-controls="heroChat" aria-expanded="false">'+ICON_AI+'<span data-i18n="hdr.ai">Ask POD.AI</span></button></div>'+
         '<div class="actions sh-act"><div class="lang-switch" data-lang-switch></div><div class="topbar-row2 sh-slot">'+marketSelect()+'</div>'+cartBtn+'</div>';
     }else{
-      h.innerHTML='<a class="brand sh-brand" href="/" aria-label="POD.AI — home"><div><b class="sh-name sh-wordmark">POD.AI</b>'+sub+'</div></a>'+
+      h.innerHTML='<a class="brand sh-brand" href="/" aria-label="POD.AI — home"><span class="logo" aria-hidden="true"><img src="/assets/brand/icon-32.png" width="38" height="38" alt=""></span><div><b class="sh-name sh-wordmark">POD.AI</b>'+sub+'</div></a>'+
         '<div class="actions sh-act">'+
         (variant==="checkout"?'<span class="sh-secure"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i18n="co.secure">Secure checkout</span></span>':'<div class="sh-slot"></div>')+
         marketSelect()+'<div class="lang-switch" data-lang-switch></div>'+back+

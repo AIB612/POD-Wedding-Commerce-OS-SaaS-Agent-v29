@@ -17,7 +17,7 @@
   "#stage.hc-open .hero-chat{display:grid;animation:hcIn .22s ease-out}@keyframes hcIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}"+
   ".hc-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid rgba(45,36,30,.1)}"+
   ".hc-back{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(45,36,30,.14);background:#fff;border-radius:999px;padding:8px 13px;font:600 12.5px/1 inherit;font-family:inherit;color:#28231f;cursor:pointer}.hc-back:hover{border-color:#b8865b}"+
-  ".hc-id{min-width:0;flex:1}.hc-id b{display:block;font:600 19px/1.2 Georgia,'Times New Roman',serif}.hc-id span{display:block;font-size:12px;color:#7c746c;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"+
+  ".hc-id{min-width:0;flex:1;display:flex;align-items:center;gap:10px}.hc-av{width:28px;height:28px;border-radius:8px;flex:none}.hc-id b{display:block;font:600 19px/1.2 Georgia,'Times New Roman',serif}.hc-id span{display:block;font-size:12px;color:#7c746c;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"+
   ".hc-new{border:0;background:none;color:#8a6a4f;font:600 12px/1 inherit;font-family:inherit;cursor:pointer;padding:8px;text-decoration:underline;text-underline-offset:3px}"+
   ".hc-msgs{overflow:auto;padding:18px 20px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}"+
   ".hc-m{max-width:min(78%,620px);padding:11px 14px;border-radius:18px;white-space:pre-wrap;word-wrap:break-word;font-size:14px;line-height:1.55}"+
@@ -48,7 +48,7 @@
 
   var el=document.createElement("section");el.className="hero-chat";el.id="heroChat";el.setAttribute("role","region");el.setAttribute("aria-label","POD.AI assistant");el.setAttribute("data-no-translate","");
   el.innerHTML='<div class="hc-head"><button class="hc-back" type="button" data-hc="back" aria-label="Back to the scene"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span data-hck="hc.back">Back to the scene</span></button>'+
-    '<div class="hc-id"><b data-hck="hc.title">POD.AI assistant</b><span data-hck="hc.sub">Product ideas · prices &amp; shipping · order status</span></div><button class="hc-new" type="button" data-hc="new" data-hck="hc.new">New chat</button></div>'+
+    '<div class="hc-id"><img class="hc-av" src="/assets/brand/icon-32.png" width="28" height="28" alt=""><div><b data-hck="hc.title">POD.AI assistant</b><span data-hck="hc.sub">Product ideas · prices &amp; shipping · order status</span></div></div><button class="hc-new" type="button" data-hc="new" data-hck="hc.new">New chat</button></div>'+
     '<div class="hc-msgs" data-hc="msgs" aria-live="polite"></div><div class="hc-chips" data-hc="chips"></div>'+
     '<form class="hc-form" data-hc="form"><textarea rows="1" data-hc="input" maxlength="1000" aria-label="Message"></textarea><button class="hc-send" data-hc="send" type="submit" data-hck="hc.send">Send</button><div class="hc-priv" data-hck="hc.privacy">Never share card details or passwords in the chat.</div></form>';
   stage.appendChild(el);

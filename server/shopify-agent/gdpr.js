@@ -38,6 +38,7 @@ export async function shopRedact(shop) {
 }
 /** Retention (privacy policy): chats + handoffs 12 months after the last activity, storefront events 13 months, GDPR log 3 years. */
 export const RETENTION_DAYS = { podai_conversations: 365, podai_handoffs: 365, podai_events: 400, podai_gdpr: 1095 };
+/** Never deletes podai_shops / access tokens — only aged chats, handoffs, events, GDPR log. */
 export async function purgeExpired(nowMs = Date.now()) {
   const out = {};
   const at = { podai_conversations: r => r.last_message_at || r.created_at, podai_handoffs: r => r.updated_at || r.created_at, podai_events: r => r.at, podai_gdpr: r => r.at };
@@ -45,6 +46,7 @@ export async function purgeExpired(nowMs = Date.now()) {
     const cut = nowMs - days * 864e5;
     out[col] = (await removeWhere(col, r => String(r.tenant_id || "").startsWith("shopagent_") && (Date.parse(at[col](r)) || nowMs) < cut)).length;
   }
+  out.podai_shops = 0; // explicit: shop sessions are not retention-purged
   return out;
 }
 export async function uninstalled(shop) { await markUninstalled(shop); clearFactsCache(shop); return { ok: true }; }
