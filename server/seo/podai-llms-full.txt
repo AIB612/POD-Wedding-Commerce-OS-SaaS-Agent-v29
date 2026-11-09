@@ -1,0 +1,91 @@
+# Pod.AI — AI Customer Chat
+
+> Pod.AI (podai.swisspro.site) is an AI customer chat app for Shopify stores, made by Dropking AI. It answers shoppers' product, shipping and order questions from the store's real data — exact shipping quotes, order status and tracking, product recommendations and discount codes — in the customer's language, and hands the conversation to the merchant's team when it cannot help. It works without an AI/LLM key; an optional LLM only adds answers to open questions. Support: support@swisspro.site
+
+Key facts:
+- Platform: Shopify app (theme app embed on the storefront + admin dashboard in Shopify Admin).
+- Plans: Free ($0), Growth ($19/month), Pro ($49/month), billed in USD.
+- Local first: rules + shop data answer most questions; quotes are the same server quote as checkout.
+- Order lookup requires the order number and the matching e-mail address.
+- Human handoff: unanswered chats are queued in the admin with the transcript; the shopper can leave a reply e-mail.
+- Languages: English, German, French, Italian and Chinese built in; more with an optional LLM.
+- Data is separated per shop and deleted after uninstall when Shopify sends its shop-deletion (GDPR) request.
+
+## Main pages
+- [Pod.AI overview](https://podai.swisspro.site/agent.html): features, how it works, FAQ
+- [Support & resources](https://podai.swisspro.site/support): install, enable the theme embed, FAQ, contact
+- [Full text for LLMs](https://podai.swisspro.site/llms-full.txt)
+
+## Legal
+- [Privacy Policy](https://podai.swisspro.site/privacy)
+- [Terms of Service](https://podai.swisspro.site/terms)
+- [Security & Incident Response Policy](https://podai.swisspro.site/security)
+- [Data Processing Addendum](https://podai.swisspro.site/dpa)
+
+## Optional
+- [POD.AI wedding shop](https://pod.swisspro.site/): a live store using the Pod.AI assistant
+- [Sitemap](https://podai.swisspro.site/sitemap.xml)
+
+---
+
+## Overview (from https://podai.swisspro.site/agent.html)
+
+Your shop's AI assistant. Answers from real data. Quotes, orders and product ideas — instantly, in your customer's language.
+
+How it works: local first, AI only when it helps. Message → understand (intent, product, quantity, country) → if confident, answer with local tools and shop data (catalog, quote, orders, tracking, codes, FAQ); otherwise an optional AI model answers open questions (numbers still come from the tools); with no key, the best local answer plus a person.
+
+### Features
+- Hero chat: Opens in your homepage image.
+- Exact quotes: Same engine as checkout.
+- Secure orders: Order no. + e-mail, or nothing.
+- Tracking: From our YunExpress · 4PX shipments.
+- Recommendations: By occasion and budget.
+- Discount codes: Checks codes. Offers optional.
+- Human handoff: Queued in Admin with transcript.
+- Guardrails: No injection, card data or spam.
+- Knowledge: Built-in + your own Q&A.
+
+### Quick answers
+- Do I need an AI key? No. Rules + shop data answer; a key only adds open questions.
+- Are the prices exact? Yes — the same server quote as checkout.
+- Can anyone look up an order? Only with the order number and the matching e-mail.
+- What if it can't help? It hands the chat to your team in Admin.
+- Which languages? Replies in English, 中文 and Deutsch; also detects French and Italian.
+
+## Support & resources (from https://podai.swisspro.site/support)
+
+Privacy · Terms · Support · Security · DPA · Product
+Support & resources
+Pod.AI · Help for merchants
+
+### Contact
+
+E-mail support@swisspro.site — we aim to reply within 1 business day. —
+Product overview: podai.swisspro.site/agent.html
+
+### Install
+- Install Pod.AI from the App Store listing (or your test install link).
+- Open Apps → Pod.AI in the admin (embedded dashboard).
+- Complete the setup checklist on the Overview tab.
+
+### Enable the chat on your storefront
+- Go to Online Store → Customize.
+- Open App embeds.
+- Turn on Pod.AI Chat and Save.
+- Optional: set colour, position, title or greeting in the embed settings or in Apps → Pod.AI → Settings.
+
+### FAQ
+
+Do I need an AI / LLM key? — No. Product, shipping, policy and order answers work from your store data without a key. An optional LLM can answer open questions when you turn it on.
+
+Which languages are supported? — English, German, French, Italian and Chinese are built in. More languages work when an LLM is enabled.
+
+How does order lookup work? — Shoppers provide order number and e-mail. The App checks they match, then shows status and tracking when available.
+
+Where do handoffs go? — Apps → Pod.AI → Handoffs. The shopper can leave a reply e-mail; your team answers by e-mail.
+
+Is customer data shared across stores? — No. Data is separated per shop and deleted after uninstall when the platform sends its shop-deletion request. See the Privacy Policy.
+
+### Legal
+
+Privacy Policy · Terms of Service

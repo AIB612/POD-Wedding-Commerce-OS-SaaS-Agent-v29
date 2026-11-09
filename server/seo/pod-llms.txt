@@ -1,0 +1,28 @@
+# POD.AI
+
+> POD.AI (pod.swisspro.site) is an online shop and scene-based design studio for custom wedding stationery, signs and personalised gifts. Customers pick a scenario kit (for example "Wedding stationery & favours"), upload or enter their design once, and get matching invitations, table stationery, welcome signs, favours and gifts printed on demand and shipped from Switzerland across Europe. Operated by Dropking AI. Support: support@swisspro.site
+
+Key facts:
+- What it sells: print-on-demand wedding and event products — cotton paper invitations, Save the Date cards, menu cards, place cards, table number cards, acrylic welcome signs, custom gift boxes, candles, mugs, photo books, apparel and more.
+- How it works: scenario → kit → products → design → delivery. One design is applied across the whole set; per-item placement, colour and material can be fine-tuned.
+- Pricing: unit prices are shown per product and depend on quantity (volume tiers: 1–9 standard, 10–29 −5%, 30–49 −10%, 50+ −15%), material and destination currency. Prices on the site exclude VAT; shipping and tax are calculated at checkout by the same server quote shown in the cart.
+- Proofs: personalised designs get a proof by e-mail; production starts after approval (or right after payment if the customer approves the mockup at checkout).
+- Delivery: delivery time = production time (standard 3 business days) + carrier transit time by destination; tracking is provided.
+- Languages: English, Deutsch, 中文.
+- Payments shown on the site: TWINT and PayPal.
+- Also offered: a wedding website / digital invitation builder with RSVP.
+
+## Main pages
+- [Home — shop & scenario kits](https://pod.swisspro.site/): wedding & personalised gift kits with "from" prices
+- [Design studio](https://pod.swisspro.site/studio.html): all scenario kits (wedding, anniversary, new baby, corporate, creators, communities, art, holidays) and all products
+
+## Help & policies
+- [Shipping & production times](https://pod.swisspro.site/shipping): how delivery time and shipping cost are calculated, customs, tracking
+- [Returns & defects](https://pod.swisspro.site/returns): personalised items, defective/damaged items, refunds
+- [Terms of Sale](https://pod.swisspro.site/terms)
+- [Privacy Policy](https://pod.swisspro.site/privacy)
+- [Imprint](https://pod.swisspro.site/imprint)
+
+## Optional
+- [Pod.AI — AI customer chat for Shopify](https://podai.swisspro.site/): the shop assistant technology behind POD.AI, available as a Shopify app
+- [Sitemap](https://pod.swisspro.site/sitemap.xml)

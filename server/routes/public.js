@@ -69,36 +69,36 @@ export function publicRouter({ root, generatedDir }) {
     if (!wedHost(req)) return next("route");
     return res.redirect(301, POD_ORIGIN + "/agent.html");
   });
-  // Host-specific robots / sitemap
+  // Host-specific robots / sitemap / llms.txt (SEO + GEO). pod = wedding shop, podai = Pod.AI app.
+  const POD_SITE_HOSTS = new Set(["pod.swisspro.site", "www.pod.swisspro.site"]);
+  const podSiteHost = req => POD_SITE_HOSTS.has(String(req.hostname || "").toLowerCase());
+  const seoDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "seo");
+  const AI_BOTS = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "PerplexityBot", "Perplexity-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "Google-Extended", "Applebot-Extended", "CCBot"];
+  const robotsTxt = (rules, sitemap) => [["*", ...AI_BOTS].map(ua => `User-agent: ${ua}`).join("\n"), rules.join("\n"), "", `Sitemap: ${sitemap}`, ""].join("\n");
+  const sitemapXml = (origin, urls) => ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
+    ...urls.map(([u, freq, prio]) => `  <url><loc>${origin}${u}</loc><changefreq>${freq}</changefreq><priority>${prio}</priority></url>`),
+    "</urlset>", ""].join("\n");
+  const sendSeoText = file => (_, res) => res.set("Cache-Control", "public, max-age=3600").type("text/plain; charset=utf-8").send(fs.readFileSync(path.join(seoDir, file), "utf8"));
+  const PODAI_ROBOTS = robotsTxt(["Allow: /", "Disallow: /generated/", "Disallow: /admin", "Disallow: /api/", "Disallow: /shopify-agent$", "Disallow: /shopify-agent/proxy/", "Disallow: /shopify-agent/api/"], `${PODAI_ORIGIN}/sitemap.xml`);
+  const POD_ROBOTS = robotsTxt(["Allow: /", "Disallow: /generated/", "Disallow: /admin", "Disallow: /admin-app/", "Disallow: /api/admin", "Disallow: /api/account",
+    "Disallow: /account$", "Disallow: /account.html", "Disallow: /checkout$", "Disallow: /checkout.html", "Disallow: /payment-success.html", "Disallow: /proof.html"], `${POD_ORIGIN}/sitemap.xml`);
+  const POD_SITEMAP = sitemapXml(POD_ORIGIN, [["/", "daily", "1.0"], ["/studio.html", "weekly", "0.8"], ["/shipping", "monthly", "0.5"], ["/returns", "monthly", "0.4"],
+    ["/terms", "yearly", "0.3"], ["/privacy", "yearly", "0.3"], ["/imprint", "yearly", "0.2"]]);
+  const PODAI_SITEMAP = sitemapXml(PODAI_ORIGIN, [["/agent.html", "weekly", "1.0"], ["/support", "monthly", "0.7"], ["/privacy", "yearly", "0.3"], ["/terms", "yearly", "0.3"],
+    ["/security", "yearly", "0.3"], ["/dpa", "yearly", "0.3"]]);
   router.get("/robots.txt", (req, res, next) => {
-    if (!podHost(req)) return next("route");
-    res.type("text/plain").send(
-`User-agent: *
-Allow: /agent
-Allow: /agent.html
-Allow: /privacy
-Allow: /terms
-Allow: /support
-Allow: /docs
-Allow: /security
-Allow: /dpa
-Allow: /shopify-agent/privacy
-Allow: /assets/
-Disallow: /generated/
-Disallow: /admin
-Disallow: /api/
-Sitemap: ${PODAI_ORIGIN}/sitemap.xml
-`);
+    if (podHost(req)) return res.type("text/plain").send(PODAI_ROBOTS);
+    if (podSiteHost(req)) return res.type("text/plain").send(POD_ROBOTS);
+    return next("route");
   });
   router.get("/sitemap.xml", (req, res, next) => {
-    if (!podHost(req)) return next("route");
-    const urls = ["/agent.html", "/privacy", "/terms", "/support", "/security", "/dpa"];
-    const body = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
-      "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
-      ...urls.map(u => `  <url><loc>${PODAI_ORIGIN}${u}</loc><changefreq>weekly</changefreq></url>`),
-      "</urlset>", ""].join("\n");
-    res.type("application/xml").send(body);
+    if (podHost(req)) return res.type("application/xml").send(PODAI_SITEMAP);
+    if (podSiteHost(req)) return res.type("application/xml").send(POD_SITEMAP);
+    return next("route");
   });
+  router.get("/llms.txt", (req, res, next) => podHost(req) ? sendSeoText("podai-llms.txt")(req, res) : podSiteHost(req) ? sendSeoText("pod-llms.txt")(req, res) : next("route"));
+  router.get("/llms-full.txt", (req, res, next) => podHost(req) ? sendSeoText("podai-llms-full.txt")(req, res) : next("route"));
 
   // Pod.AI clean public URLs (listing forbids the word "Shopify" in linked URLs).
   // On wed these paths keep serving the wedding site pages via the map below.

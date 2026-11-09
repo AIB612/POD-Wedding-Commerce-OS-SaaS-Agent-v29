@@ -1,0 +1,27 @@
+# Pod.AI — AI Customer Chat
+
+> Pod.AI (podai.swisspro.site) is an AI customer chat app for Shopify stores, made by Dropking AI. It answers shoppers' product, shipping and order questions from the store's real data — exact shipping quotes, order status and tracking, product recommendations and discount codes — in the customer's language, and hands the conversation to the merchant's team when it cannot help. It works without an AI/LLM key; an optional LLM only adds answers to open questions. Support: support@swisspro.site
+
+Key facts:
+- Platform: Shopify app (theme app embed on the storefront + admin dashboard in Shopify Admin).
+- Plans: Free ($0), Growth ($19/month), Pro ($49/month), billed in USD.
+- Local first: rules + shop data answer most questions; quotes are the same server quote as checkout.
+- Order lookup requires the order number and the matching e-mail address.
+- Human handoff: unanswered chats are queued in the admin with the transcript; the shopper can leave a reply e-mail.
+- Languages: English, German, French, Italian and Chinese built in; more with an optional LLM.
+- Data is separated per shop and deleted after uninstall when Shopify sends its shop-deletion (GDPR) request.
+
+## Main pages
+- [Pod.AI overview](https://podai.swisspro.site/agent.html): features, how it works, FAQ
+- [Support & resources](https://podai.swisspro.site/support): install, enable the theme embed, FAQ, contact
+- [Full text for LLMs](https://podai.swisspro.site/llms-full.txt)
+
+## Legal
+- [Privacy Policy](https://podai.swisspro.site/privacy)
+- [Terms of Service](https://podai.swisspro.site/terms)
+- [Security & Incident Response Policy](https://podai.swisspro.site/security)
+- [Data Processing Addendum](https://podai.swisspro.site/dpa)
+
+## Optional
+- [POD.AI wedding shop](https://pod.swisspro.site/): a live store using the Pod.AI assistant
+- [Sitemap](https://podai.swisspro.site/sitemap.xml)
