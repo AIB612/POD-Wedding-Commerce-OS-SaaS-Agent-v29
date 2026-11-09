@@ -60,7 +60,7 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 **Support info (approved):**
 - Support e-mail: support@swisspro.site (forwards to Gmail; mailbox to be created by Sherry).
 - Support URL: https://pod.swisspro.site/agent.html (Agent intro page).
-- Privacy policy: https://pod.swisspro.site/shopify-agent/privacy (live).
+- Privacy policy: https://pod.swisspro.site/privacy (live).
 - Developer / data controller: Dropking AI (no postal address published).
 - Response time promise: "within 1 business day" (suggested).
 
@@ -98,7 +98,9 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 
 ## 2. Privacy policy
 
-- **Public URL (live):** https://pod.swisspro.site/shopify-agent/privacy (also `/shopify-agent/privacy.html`).
+- **Public URL (live):** https://pod.swisspro.site/privacy (also `/shopify-agent/privacy.html`).
+- **Also:** https://pod.swisspro.site/terms · https://pod.swisspro.site/support (alias `/docs`). Legacy `/shopify-agent/privacy|terms|support` still 200.
+- **Listing rule:** Partner validation rejects any linked URL that contains the substring "Shopify" — do not paste `/shopify-agent/...` into the listing.
 - **Source:** `server/shopify-agent/privacy.html`. POD.AI brand, footer "© 2026 POD.AI".
 - **Contents:**
   - Shopify scopes and why each is used.
@@ -207,7 +209,7 @@ Purpose to select: **Customer service**. Secondary purpose: **Analytics**, for c
 1. **Process the minimum personal data required?** Yes.
    - Orders are fetched live per question and not copied.
    - Only the email the shopper types is stored, in the conversation or handoff.
-2. **Tell merchants what data you process and why?** Yes. Privacy policy at https://pod.swisspro.site/shopify-agent/privacy, plus the listing text.
+2. **Tell merchants what data you process and why?** Yes. Privacy policy at https://pod.swisspro.site/privacy, plus the listing text.
 3. **Limit use to the stated purposes?** Yes. No ads, no selling, no cross-store use.
 4. **Data processing agreements with merchants?** Yes, via the privacy policy and the app terms. A DPA template is an open item; draft one before applying for Level 2.
 5. **Respect consent decisions?** Yes. No marketing; the storefront chat sets no tracking cookies (sessionStorage chat ID only).
@@ -283,3 +285,19 @@ Review takes about 4 working days, and free access lasts 200 days (based on earl
 5. Whether to keep the "chat-influenced revenue" metric. It needs the Analytics purpose in the questionnaire.
 6. Real screenshots on dropkingdev (store password, product images) and the app icon.
 7. 51Tracking: the paid plan or the free API application decides whether "live tracking events" is promised on the listing. Without it, carriers YunExpress/4PX plus a tracking link.
+
+
+## Resources (paste into listing)
+
+Partner dashboard → Listing → Resources (and Privacy / Support URL fields). None of these contain the word Shopify:
+
+| Field | URL |
+|-------|-----|
+| Privacy policy | https://pod.swisspro.site/privacy |
+| Terms of service | https://pod.swisspro.site/terms |
+| Support / FAQ / docs | https://pod.swisspro.site/support |
+| Docs alias | https://pod.swisspro.site/docs |
+| Product overview (optional) | https://pod.swisspro.site/agent.html |
+| Support e-mail | support@swisspro.site |
+
+Legacy paths that still work (do **not** paste into the listing): `/shopify-agent/privacy`, `/shopify-agent/terms`, `/shopify-agent/support`.

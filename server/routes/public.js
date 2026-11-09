@@ -1,6 +1,7 @@
 // Public (unauthenticated) routes: pages, storefront, checkout, proofs, invitations, discovery.
 import express from "express";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import crypto from "node:crypto";
@@ -73,9 +74,12 @@ export function publicRouter({ root, generatedDir }) {
 `User-agent: *
 Allow: /agent
 Allow: /agent.html
+Allow: /privacy
+Allow: /terms
+Allow: /support
+Allow: /docs
 Allow: /shopify-agent/privacy
 Allow: /assets/
-Allow: /shopify-agent/podai-icon.png
 Disallow: /generated/
 Disallow: /admin
 Disallow: /api/
@@ -84,13 +88,25 @@ Sitemap: ${POD_ORIGIN}/sitemap.xml
   });
   router.get("/sitemap.xml", (req, res, next) => {
     if (!podHost(req)) return next("route");
-    const urls = ["/agent.html", "/shopify-agent/privacy"];
+    const urls = ["/agent.html", "/privacy", "/terms", "/support"];
     const body = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
       "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
       ...urls.map(u => `  <url><loc>${POD_ORIGIN}${u}</loc><changefreq>weekly</changefreq></url>`),
       "</urlset>", ""].join("\n");
     res.type("application/xml").send(body);
   });
+
+  // Pod.AI clean public URLs (listing forbids the word "Shopify" in linked URLs).
+  // On wed these paths keep serving the wedding site pages via the map below.
+  const podLegalDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "shopify-agent");
+  const sendPodPage = (file) => (req, res, next) => {
+    if (!podHost(req)) return next("route");
+    const html = fs.readFileSync(path.join(podLegalDir, file), "utf8");
+    res.set("Cache-Control", "public, max-age=3600").type("html").send(html);
+  };
+  router.get(["/privacy", "/privacy.html"], sendPodPage("privacy.html"));
+  router.get(["/terms", "/terms.html"], sendPodPage("terms.html"));
+  router.get(["/support", "/support.html", "/docs", "/docs.html"], sendPodPage("support.html"));
 
   const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/admin/login": "admin-login.html", "/admin-login.html": "admin-login.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html", "/shipping": "shipping.html", "/shipping.html": "shipping.html", "/returns": "returns.html", "/returns.html": "returns.html", "/imprint": "imprint.html", "/imprint.html": "imprint.html", "/impressum": "imprint.html", "/agent.html": "agent.html", "/agent": "agent.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
