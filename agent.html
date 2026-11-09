@@ -227,10 +227,10 @@ a{color:var(--gold2)}
   <div class="laptop"><div class="lid"><div class="scr">
    <div class="bar"><b>POD.AI</b><span class="ask">✦ <span data-t="askbtn">Ask POD.AI</span></span><span class="dots"><span></span><span></span><span></span></span></div>
    <div class="chatx seq">
-    <div class="b u" style="--d:.3s" data-t="d1u">Shipping to Switzerland for 10 invitations?</div>
+    <div class="b u" style="--d:.3s" data-t="d1u">Shipping to the US for 10 invitations?</div>
     <div class="typing" style="--d:1s;--o:2s"><span></span><span></span><span></span></div>
-    <div class="b a" style="--d:2.1s" data-t="d1a">10 × Invitation to Switzerland — your options:</div>
-    <div class="qc" style="--d:2.7s"><div><small data-t="std">Standard</small><b data-q="standard">CHF 6.34</b></div><div><small data-t="exp">Express</small><b data-q="express">CHF 13.15</b></div><span class="cta" data-t="pers">Personalise &amp; order →</span></div>
+    <div class="b a" style="--d:2.1s" data-t="d1a">10 × Invitation to the US — your options:</div>
+    <div class="qc" style="--d:2.7s"><div><small data-t="std">Standard</small><b data-q="standard">$15.08</b></div><div><small data-t="exp">Express</small><b data-q="express">$31.02</b></div><span class="cta" data-t="pers">Personalise &amp; order →</span></div>
     <div class="b u" style="--d:4s" data-t="d2u">And wedding favours?</div>
     <div class="b a" style="--d:5s" data-t="d2a">Here are some ideas — tap a card to personalise it.</div>
    </div>
@@ -247,7 +247,7 @@ a{color:var(--gold2)}
 </section>
 
 <section class="stats glass rv" aria-label="Facts">
- <div class="stat"><span class="live" data-t="livel">Live</span><b data-q="standard">CHF 6.34</b><span data-t="s1">quote = checkout</span><small data-t="s1s">10 invitations → CH, standard</small></div>
+ <div class="stat"><span class="live" data-t="livel">Live</span><b data-q="standard">$15.08</b><span data-t="s1">quote = checkout</span><small data-t="s1s">10 invitations → US, standard</small></div>
  <div class="stat"><span class="live" data-t="livel">Live</span><b id="rt">— ms</b><span data-t="s2">API response</span><small data-t="s2s">measured in your browser</small></div>
  <div class="stat"><span class="live" data-t="livel">Live</span><b data-fact="local">100%</b><span data-t="s3">answered locally</span><small id="modeTxt" data-t="s3s">rules + shop data, no AI key</small></div>
  <div class="stat"><span class="fix" data-t="code">From code</span><b data-fact="langs_detected">5</b><span data-t="s4">languages detected</span><small><span data-fact="langs_replies">3</span> <span data-t="s4s">with full replies</span></small></div>
@@ -295,8 +295,8 @@ a{color:var(--gold2)}
  <div class="center rv"><span class="kick" data-t="k_ex">In action</span><h2 class="serif" data-t="h_ex">Real questions. Real numbers.</h2></div>
  <div class="ex">
   <div class="exc glass rv"><h3><span class="ico"><svg><use href="#i-calc"/></svg></span><span data-t="ex1">Shipping quote</span></h3>
-   <div class="b u" data-t="d1u">Shipping to Switzerland for 10 invitations?</div>
-   <div class="qc"><div><small data-t="std">Standard</small><b data-q="standard">CHF 6.34</b></div><div><small data-t="exp">Express</small><b data-q="express">CHF 13.15</b></div></div>
+   <div class="b u" data-t="d1u">Shipping to the US for 10 invitations?</div>
+   <div class="qc"><div><small data-t="std">Standard</small><b data-q="standard">$15.08</b></div><div><small data-t="exp">Express</small><b data-q="express">$31.02</b></div></div>
    <span class="live" data-t="ex1l">Live from the quote engine</span></div>
   <div class="exc glass rv"><h3><span class="ico"><svg><use href="#i-truck"/></svg></span><span data-t="ex2">Order tracking</span></h3>
    <div class="b u" data-t="ex2u">Where is my order?</div>
@@ -382,7 +382,7 @@ a{color:var(--gold2)}
  <div class="panel glass" data-panel="api"><div><h3 data-t="p4h">Call it from anything.</h3><p data-t="p4p">Same local-first answers as the homepage.</p></div>
   <div class="code" id="curl"><button class="copy" type="button" data-copy="curl" data-t="copy">Copy</button>curl -X POST https://pod.swisspro.site/api/pod-agent/chat \
   -H <span class="s">"Content-Type: application/json"</span> \
-  -d <span class="s">'{"message":"Shipping to Switzerland for 10 invitations","lang":"en"}'</span>
+  -d <span class="s">'{"message":"Shipping to the US for 10 invitations","lang":"en"}'</span>
 <span class="c"># → { "answer": "…", "ui": [quote card], "answered_by": "local" }</span></div></div>
  <ol class="tl">
   <li class="rv"><span class="n">1</span><div><b data-t="s0">Connect Shopify</b><span data-t="opt">optional</span></div></li>
@@ -422,9 +422,9 @@ a{color:var(--gold2)}
  eyebrow:{en:"POD.AI Agent · local-first",zh:"POD.AI Agent · 本地优先"},h1a:{en:"Your shop's <span class=\"nw\">AI assistant.</span>",zh:"<span class=\"nw\">您店铺的</span> <span class=\"nw\">AI 客服，</span>"},h1b:{en:"Answers from <span class=\"nw\">real data.</span>",zh:"<span class=\"nw\">用真实数据作答。</span>"},
  sub:{en:"Quotes, orders and product ideas — instantly, in your customer's language.",zh:"报价、订单、产品推荐——即时回答，用客户的语言。"},try:{en:"Try it now",zh:"立即试用"},int:{en:"Integrate",zh:"立即对接"},
  tk1:{en:"Quote = checkout price",zh:"报价 = 结账价"},tk2:{en:"Works without an AI key",zh:"无需 AI 密钥"},tk3:{en:"No floating bubble",zh:"无悬浮气泡"},askbtn:{en:"Ask POD.AI",zh:"AI 助手"},
- d1u:{en:"Shipping to Switzerland for 10 invitations?",zh:"10 份邀请卡寄到瑞士运费多少？"},d1a:{en:"10 × Invitation to Switzerland — your options:",zh:"10 份邀请卡寄往瑞士，可选："},std:{en:"Standard",zh:"标准"},exp:{en:"Express",zh:"快递"},pers:{en:"Personalise &amp; order →",zh:"定制下单 →"},
+ d1u:{en:"Shipping to the US for 10 invitations?",zh:"Shipping to the US for 10 invitations?"},d1a:{en:"10 × Invitation to the US — your options:",zh:"10 × Invitation to the US — your options:"},std:{en:"Standard",zh:"标准"},exp:{en:"Express",zh:"快递"},pers:{en:"Personalise &amp; order →",zh:"定制下单 →"},
  d2u:{en:"And wedding favours?",zh:"婚礼伴手礼呢？"},d2a:{en:"Here are some ideas — tap a card to personalise it.",zh:"为您推荐几款，点击卡片即可定制。"},example:{en:"Example",zh:"示例"},
- livel:{en:"Live",zh:"实时"},code:{en:"From code",zh:"来自代码"},s1:{en:"quote = checkout",zh:"报价 = 结账价"},s1s:{en:"10 invitations → CH, standard",zh:"10 份邀请卡 → 瑞士，标准"},s2:{en:"API response",zh:"接口响应"},s2s:{en:"measured in your browser",zh:"在您的浏览器实测"},
+ livel:{en:"Live",zh:"实时"},code:{en:"From code",zh:"来自代码"},s1:{en:"quote = checkout",zh:"报价 = 结账价"},s1s:{en:"10 invitations → US, standard",zh:"10 invitations → US, standard"},s2:{en:"API response",zh:"接口响应"},s2s:{en:"measured in your browser",zh:"在您的浏览器实测"},
  s3:{en:"answered locally",zh:"本地回答"},s3s:{en:"rules + shop data, no AI key",zh:"规则 + 店铺数据，未用 AI"},s4:{en:"languages detected",zh:"种语言识别"},s4s:{en:"with full replies",zh:"种完整回复"},s5:{en:"shop tools",zh:"个店铺工具"},s5s:{en:"KPIs in Admin",zh:"项后台 KPI"},
  k_how:{en:"How it works",zh:"工作原理"},h_how:{en:"Local first. AI only when it helps.",zh:"本地优先，需要时才用 AI。"},
  fl_msg:{en:"Message",zh:"客户消息"},fl_msg2:{en:"EN · 中文 · DE · FR · IT",zh:"英 · 中 · 德 · 法 · 意"},fl_und:{en:"Understand",zh:"理解"},fl_und2:{en:"intent · product · qty · country",zh:"意图 · 商品 · 数量 · 国家"},fl_conf:{en:"confidence",zh:"置信度"},
@@ -462,10 +462,10 @@ a{color:var(--gold2)}
   if(F.mode!=="rules"){set("local",L()==="zh"?"优先":"First");var m=document.getElementById("modeTxt");if(m)m.textContent=L()==="zh"?"规则优先，复杂问题用 AI":"rules first, AI for complex questions";var a=document.getElementById("ringArc");if(a)a.setAttribute("stroke-dashoffset","40")}}
  // Live quote: the same storefront quote the cart and checkout use (no chat conversation is created).
  var Q=null,P={};
- function money(c,v){return c+" "+Number(v).toFixed(2)}
+ function money(c,v){var n=Number(v).toFixed(2);return String(c).toUpperCase()==="USD"?"$"+n:c+" "+n}
  function fillQuote(){if(Q)(Q.shipping_options||[]).forEach(function(o){document.querySelectorAll('[data-q="'+o.id+'"]').forEach(function(e){e.textContent=money(Q.currency,o.amount)})});
   Object.keys(P).forEach(function(id){var e=document.querySelector('[data-p="'+id+'"]');if(e)e.textContent=(L()==="zh"?"":"from ")+P[id]+(L()==="zh"?" 起":"")})}
- function quote(cart){return fetch("/api/storefront/shipping/quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({country:"CH",currency:"CHF",cart:cart})}).then(function(r){return r.ok?r.json():null})}
+ function quote(cart){return fetch("/api/storefront/shipping/quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({country:"US",currency:"USD",cart:cart})}).then(function(r){return r.ok?r.json():null})}
  quote([{product_id:"invitation",quantity:10}]).then(function(q){if(q&&q.shipping_options){Q=q;fillQuote()}}).catch(function(){});
  ["candle","gift_box","coaster"].forEach(function(id){quote([{product_id:id,quantity:1}]).then(function(q){var it=q&&q.items&&q.items[0];if(it){P[id]=money(q.currency,it.unit_price);fillQuote()}}).catch(function(){})});
  // Live API response time: GET /api/pod-agent/status round trips from this browser (median shown, all plotted).
