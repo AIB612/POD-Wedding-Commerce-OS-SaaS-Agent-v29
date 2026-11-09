@@ -66,3 +66,20 @@ Tests: `node server/shopify-agent/test/app.test.js && node server/shopify-agent/
 - Pricing: free, or Shopify App Pricing (default for new public apps) — plans set in the submission form; no billing code needed.
 - Protected customer data approval (Level 2 for e-mail) and the data-protection questionnaire.
 - Test on a fresh dev store: install, app embed in Theme Editor without errors, uninstall/reinstall.
+
+## Protected customer data (encryption, backups, access log, incidents)
+- **Encryption at rest**: `server/shopify-agent/security/records.js` registers a persist codec for every `podai_*` collection.
+  On disk each row is `{ id, tenant_id, _enc: "pa1.…" }` (AES-256-GCM, AAD = collection:id, key HKDF-derived from
+  `PODAI_DATA_KEY` or `APP_ENCRYPTION_KEY`). In memory rows stay plain, so GDPR redact by e-mail works unchanged.
+  Plaintext rows are migrated on startup; rows that cannot be decrypted (wrong key) are kept verbatim, never dropped.
+- **Encrypted backups**: `security/backup.js`, run hourly by the app, one backup per UTC day →
+  `~/podai-backups/store-YYYYMMDD.json.gz.enc` (0600 in a 0700 dir), 14 days. Plaintext `store.json.corrupt-*` / `.bak*`
+  copies are encrypted into the same dir and deleted.
+  - list: `node server/shopify-agent/tools/restore-backup.mjs --list`
+  - backup now: `node server/shopify-agent/tools/restore-backup.mjs --backup-now`
+  - restore: `node server/shopify-agent/tools/restore-backup.mjs ~/podai-backups/store-YYYYMMDD.json.gz.enc --out /tmp/store.restored.json`,
+    then stop both apps (`pod-wedding`, `pod-ai-app`), move `data/store.json` aside, copy the restored file in (chmod 600), start both.
+- **Access log**: `security/access-log.js` appends one JSON line per access to personal data (admin views of conversations /
+  handoffs / dashboard / GDPR log, order lookups in the chat, GDPR webhooks) to `data/podai-access/access-YYYY-MM.log`
+  (actor, action, record ids; e-mail / order number only as HMAC). Kept 12 months. Merchant view: `GET /shopify-agent/api/access-log`.
+- **Policies**: https://pod.swisspro.site/security (incident response, 72 h merchant notification), https://pod.swisspro.site/dpa.

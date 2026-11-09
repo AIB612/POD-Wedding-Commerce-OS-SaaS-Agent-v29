@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Security &amp; Incident Response Policy — Pod.AI</title><meta name="description" content="How Dropking AI secures Pod.AI data and responds to security incidents.">
+<link rel="canonical" href="https://pod.swisspro.site/security"/>
+<style>
+:root{--ink:#2b2520;--mut:#6f655c;--bg:#f6f1ea;--card:#fffdf9;--line:#e7ded3;--acc:#b07a4f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif}
+header{max-width:860px;margin:0 auto;padding:40px 24px 8px;display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:12px;overflow:hidden;background:var(--bg)}.logo img{width:100%;height:100%;object-fit:cover;display:block}
+.brand{font-family:Georgia,"Times New Roman",serif;font-size:22px}.brand small{display:block;font:13px/1.2 inherit;color:var(--mut);font-family:inherit}
+main{max-width:860px;margin:16px auto 40px;padding:32px 36px;background:var(--card);border:1px solid var(--line);border-radius:20px}
+h1{font-family:Georgia,serif;font-weight:500;font-size:34px;margin:0 0 4px}h2{font-size:19px;margin:30px 0 8px}
+.mut{color:var(--mut)}table{width:100%;border-collapse:collapse;font-size:14.5px;margin:8px 0}th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}th{background:#f3ece3}
+code{background:#f3ece3;padding:1px 5px;border-radius:5px;font-size:13.5px}footer{text-align:center;color:var(--mut);font-size:13px;padding:0 0 40px}a{color:var(--acc)}
+@media(max-width:600px){main{padding:22px 18px;border-radius:0}h1{font-size:27px}}
+</style></head><body>
+<header><div class="logo"><img src="/assets/brand/mark-160.png" alt="Pod.AI" width="40" height="40"></div><div class="brand">Pod.AI<small>by POD.AI</small></div></header>
+<main>
+<nav id="pod-legal-nav" class="mut" style="font-size:13px;margin:0 0 18px"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/support">Support</a> · <a href="/security">Security</a> · <a href="/dpa">DPA</a> · <a href="/agent.html">Product</a></nav>
+<h1>Security &amp; Incident Response Policy</h1>
+<p class="mut">Pod.AI — AI customer chat for Shopify stores · Operated by Dropking AI · Last updated: 9 November 2026</p>
+<p>This policy describes how Dropking AI protects the data processed by the Pod.AI app and how we detect, handle and report security incidents, including any personal data breach affecting merchants or their customers.</p>
+
+<h2>1. Security controls</h2>
+<ul>
+<li><b>Encryption in transit:</b> HTTPS (TLS) for all storefront, admin, webhook and Shopify API traffic.</li>
+<li><b>Encryption at rest:</b> all Pod.AI records (conversations, shopper e-mails, order numbers, handoffs, events, settings) are encrypted with AES-256-GCM at the application level; shop access tokens are encrypted separately. Keys are derived (HKDF-SHA256) from a secret kept only in the server's owner-only environment file, never in source code.</li>
+<li><b>Encrypted backups:</b> daily, AES-256-GCM, stored outside web roots with owner-only permissions, retained 14 days; a documented, tested restore procedure.</li>
+<li><b>Access control and logging:</b> merchant data is reachable only with a valid Shopify session token for that shop, a Shopify app-proxy signature, or an HMAC-verified webhook. Every access to personal data is written to an append-only access log (actor, action, time, record IDs; no data contents), retained 12 months. Server administration is restricted to Dropking AI administrators.</li>
+<li><b>Data minimisation:</b> read-only Shopify scopes; orders are fetched live and not copied; card data is never stored; automatic deletion after the retention periods in the <a href="/privacy">Privacy Policy</a>.</li>
+</ul>
+
+<h2>2. Detection</h2>
+<p>We monitor application and server error logs, failed signature / session-token checks, unusual request volumes (rate limits), decryption failures, backup job results and Shopify / hosting-provider security notices. Anyone can report a suspected vulnerability or incident to <a href="mailto:support@swisspro.site">support@swisspro.site</a> (subject "SECURITY").</p>
+
+<h2>3. Severity levels</h2>
+<table><tr><th>Level</th><th>Examples</th><th>Response target</th></tr>
+<tr><td><b>Critical</b></td><td>Confirmed unauthorised access to or disclosure of personal data; leaked keys or access tokens</td><td>Triage immediately, containment within 4 hours</td></tr>
+<tr><td><b>High</b></td><td>Exploitable vulnerability without evidence of data access; prolonged outage of privacy webhooks</td><td>Within 24 hours</td></tr>
+<tr><td><b>Medium / Low</b></td><td>Hardening gaps, non-exploitable bugs, failed backups</td><td>Within 7 days</td></tr></table>
+
+<h2>4. Containment, eradication and recovery</h2>
+<ol>
+<li>Assign an incident owner and open an internal incident record (timeline, systems, data and shops affected).</li>
+<li>Contain: block the attack path, disable affected features, rotate secrets (app API secret, encryption key with re-encryption, server credentials), and invalidate affected Shopify access tokens so merchants re-authorise.</li>
+<li>Preserve evidence (logs, access log, affected files) before changes where possible.</li>
+<li>Eradicate the root cause, patch, and restore clean data from encrypted backups if needed.</li>
+<li>Verify the fix and monitor closely for recurrence.</li>
+</ol>
+
+<h2>5. Notification</h2>
+<ul>
+<li><b>Merchants:</b> if personal data of a merchant or its customers is (or is reasonably believed to be) affected, we notify each affected merchant without undue delay and at the latest within <b>72 hours</b> of becoming aware, by e-mail to the shop's contact address and in the App. The notice describes what happened, the data and customers concerned, likely consequences, the measures taken and recommended next steps. The merchant, as controller for its customer data, decides on notifying its customers and authorities; we provide all information and assistance needed.</li>
+<li><b>Shopify:</b> we notify Shopify of incidents affecting Shopify merchant or customer data within the same 72-hour window, through the Shopify Partner support channels, and follow Shopify's instructions.</li>
+<li><b>Authorities:</b> where Dropking AI is itself the controller (merchant account data), we notify the competent supervisory authority within 72 hours where required by GDPR / Swiss FADP.</li>
+</ul>
+
+<h2>6. Post-incident review</h2>
+<p>Within 14 days of closing a Critical or High incident we complete a written post-mortem: timeline, root cause, impact, what worked, and corrective actions with owners and dates. Lessons learned are reflected in this policy and our controls. Incident records are kept for at least 3 years.</p>
+
+<h2>7. Review and contact</h2>
+<p>This policy is reviewed at least once a year and after every significant incident. Responsible party: Dropking AI. Security contact: <a href="mailto:support@swisspro.site">support@swisspro.site</a>.</p>
+</main>
+<footer>© 2026 POD.AI</footer>
+</body></html>

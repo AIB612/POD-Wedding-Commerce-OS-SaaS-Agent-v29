@@ -7,7 +7,8 @@
 //   shipping    = Shopify has no generic rate API for apps outside checkout → shipping policy + "calculated at checkout"
 // No POD.AI catalog, prices or FAQ ever leak into a shop tenant.
 import crypto from "node:crypto";
-import { graphql } from "./core.js";
+import { graphql, tenantFor } from "./core.js";
+import { logAccess } from "./security/access-log.js";
 import { createHandoff } from "./engine/store.js";
 import { trackParcel } from "./tracking.js";
 
@@ -68,6 +69,7 @@ export async function findShopOrder(shop, { order_number, email }) {
   let o;
   try { o = (await graphql(shop, ORDER_Q, { q: `name:#${n}` })).orders?.nodes?.[0]; }
   catch (e) { return { ok: false, error: /access|protected|denied/i.test(e.message) ? "order_access_not_approved" : "order_lookup_failed" }; }
+  if (o) logAccess({ actor: "storefront_shopper", action: o.email && eqMail(o.email, email) ? "order_lookup" : "order_lookup_email_mismatch", shop, tenant: tenantFor(shop), order: n, via: "app_proxy_chat" });
   if (!o || !o.email || !eqMail(o.email, email)) { fails.set(k, { count: (f && Date.now() - f.at < 15 * 60_000 ? f.count : 0) + 1, at: Date.now() }); return { ok: false, error: "not_found" }; }
   fails.delete(k);
   const tracking = (o.fulfillments || []).flatMap(x => (x.trackingInfo || []).map(t => ({ company: t.company, number: t.number, url: t.url })));

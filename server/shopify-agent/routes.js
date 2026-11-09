@@ -17,6 +17,8 @@ import { dashboard, recordEvent } from "./dashboard.js";
 import { saveSettings } from "./engine/store.js";
 import { llmStatus } from "./engine/llm.js";
 import * as ga from "./ga.js";
+import { logAccess, readAccess, purgeAccessLog } from "./security/access-log.js";
+import { runBackup } from "./security/backup.js";
 
 const HEX = v => /^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v) : null;
 // storefront look, editable in the app (the theme app embed can override colour / position)
@@ -35,19 +37,24 @@ function session(req, res, next) {
   const m = /^Bearer\s+(.+)$/i.exec(req.get("authorization") || "");
   const deny = e => res.status(401).set("X-Shopify-Retry-Invalid-Session-Request", "1").json({ error: e });
   if (!m) return deny("session_token_required");
-  try { const { shop } = core.verifySession(m[1]); req.agentShop = shop; req.agentTenant = core.tenantFor(shop); req.idToken = m[1]; next(); }
+  try { const { shop, payload } = core.verifySession(m[1]); req.agentShop = shop; req.agentTenant = core.tenantFor(shop); req.idToken = m[1]; req.agentUser = `shop_staff:${payload.sub || "?"}`; next(); }
   catch (e) { deny(e.message); }
 }
 
 export function shopifyAgentRouter() {
   const r = express.Router();
-  if (process.env.NODE_ENV !== "test") { const run = () => gdpr.purgeExpired().catch(e => console.error("[pod.ai] retention purge failed:", e.message)); setTimeout(run, 60e3).unref?.(); setInterval(run, 864e5).unref?.(); }
+  if (process.env.NODE_ENV !== "test") { const run = () => gdpr.purgeExpired().catch(e => console.error("[pod.ai] retention purge failed:", e.message)); setTimeout(run, 60e3).unref?.(); setInterval(run, 864e5).unref?.();
+    // encrypted daily backup (14 days) + access-log retention (12 months); hourly check, one backup per UTC day
+    const bk = () => runBackup().then(r => r.created || r.leftovers ? console.log("[pod.ai] backup", JSON.stringify(r)) : null).catch(e => console.error("[pod.ai] backup failed:", e.message)).then(() => purgeAccessLog()).catch(() => {});
+    setTimeout(bk, 120e3).unref?.(); setInterval(bk, 3600e3).unref?.(); }
   // public privacy policy (App Store listing link)
   r.get(["/shopify-agent/privacy", "/shopify-agent/privacy.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(PRIVACY_PAGE, "utf8")));
   const TERMS_PAGE = new URL("./terms.html", import.meta.url);
   const SUPPORT_PAGE = new URL("./support.html", import.meta.url);
   r.get(["/shopify-agent/terms", "/shopify-agent/terms.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(TERMS_PAGE, "utf8")));
   r.get(["/shopify-agent/support", "/shopify-agent/support.html", "/shopify-agent/docs"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(SUPPORT_PAGE, "utf8")));
+  r.get(["/shopify-agent/security", "/shopify-agent/security.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(new URL("./security.html", import.meta.url), "utf8")));
+  r.get(["/shopify-agent/dpa", "/shopify-agent/dpa.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(new URL("./dpa.html", import.meta.url), "utf8")));
   r.get("/shopify-agent/podai-icon.png", (req, res) => res.set("Cache-Control", "public, max-age=86400").type("png").send(fs.readFileSync(new URL("./podai-icon.png", import.meta.url))));
   r.use("/shopify-agent", (req, res, next) => { req.tenantId = undefined; next(); }); // never trust x-tenant-id here
 
@@ -57,7 +64,9 @@ export function shopifyAgentRouter() {
     const shop = core.normalizeShop(req.get("x-shopify-shop-domain"));
     if (!shop) return res.status(400).type("text/plain").send("invalid shop");
     let payload = {}; try { payload = JSON.parse(body.toString("utf8") || "{}"); } catch { payload = {}; }
-    await gdpr.handle(String(req.get("x-shopify-topic") || ""), shop, payload, req.get("x-shopify-webhook-id"));
+    const topic = String(req.get("x-shopify-topic") || "");
+    const out = await gdpr.handle(topic, shop, payload, req.get("x-shopify-webhook-id"));
+    if (/^(customers|shop)\//.test(topic) && !out?.duplicate) logAccess({ actor: "shopify_gdpr_webhook", action: topic, shop, tenant: core.tenantFor(shop), email: payload.customer?.email, count: out?.conversations ?? out?.removed, via: "webhook" });
     res.status(200).type("text/plain").send("ok");
   }));
 
@@ -97,7 +106,8 @@ export function shopifyAgentRouter() {
     const row = await core.getShop(req.agentShop);
     res.json({ shop: req.agentShop, installed: !!row?.access_token_enc, exchanged: t.exchanged, scopes: row?.scopes || "" });
   }));
-  api.get("/dashboard", ah(async (req, res) => res.json(await dashboard(req.agentTenant, req.agentShop, { days: req.query.days }))));
+  const audit = (req, action, extra = {}) => logAccess({ actor: req.agentUser, action, shop: req.agentShop, tenant: req.agentTenant, via: "admin", ip: req.ip, ...extra });
+  api.get("/dashboard", ah(async (req, res) => { const d = await dashboard(req.agentTenant, req.agentShop, { days: req.query.days }); audit(req, "view_dashboard"); res.json(d); }));
   api.get("/checklist", ah(async (req, res) => {
     const out = { tracking: await trackingSources(), llm: { available: llmStatus().available } };
     try { const d = await core.graphql(req.agentShop, "{ shop { name shopPolicies { type } } }"); out.shop_name = d.shop.name; out.policies = d.shop.shopPolicies.map(p => p.type); } catch { out.policies = null; }
@@ -113,15 +123,17 @@ export function shopifyAgentRouter() {
     o.kpis = o.kpis.filter(k => !["quotes", "discounts_issued"].includes(k.id)).map(k => k.id === "recommendations" ? { ...k, label: "Product searches", value: o.tools.search_products || 0 } : k);
     res.json(o);
   }));
-  api.get("/conversations", ah(async (req, res) => res.json(await agentConversations(req.agentTenant, { limit: 50 }))));
-  api.get("/handoffs", ah(async (req, res) => res.json(await agentHandoffs(req.agentTenant, { status: req.query.status }))));
-  api.patch("/handoffs/:id", ah(async (req, res) => res.json(await patchHandoff(req.agentTenant, req.params.id, req.body))));
+  api.get("/conversations", ah(async (req, res) => { const c = await agentConversations(req.agentTenant, { limit: 50 }); audit(req, "view_conversations", { ids: c.map(x => x.id), count: c.length }); res.json(c); }));
+  api.get("/handoffs", ah(async (req, res) => { const h = await agentHandoffs(req.agentTenant, { status: req.query.status }); audit(req, "view_handoffs", { ids: h.map(x => x.id), count: h.length }); res.json(h); }));
+  api.patch("/handoffs/:id", ah(async (req, res) => { const h = await patchHandoff(req.agentTenant, req.params.id, req.body); audit(req, "update_handoff", { ids: [h.id] }); res.json(h); }));
   api.get("/knowledge", ah(async (req, res) => res.json({ custom: (await getSettings(req.agentTenant)).custom_faq }))); // no POD.AI built-ins for shops
   api.post("/knowledge", ah(async (req, res) => res.json(await upsertKnowledge(req.agentTenant, req.body))));
   api.delete("/knowledge/:id", ah(async (req, res) => res.json(await deleteKnowledge(req.agentTenant, req.params.id))));
   api.get("/settings", ah(async (req, res) => { const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours, widget: widgetOf(s), llm_enabled: s.llm_enabled !== false, llm_available: llmStatus().available, tracking_sources: await trackingSources() }); }));
   api.put("/settings", ah(async (req, res) => { const b = req.body || {}; await putAgentSettings(req.agentTenant, { enabled: b.enabled, greeting: b.greeting, human_reply_hours: b.human_reply_hours }); { const cur = await getSettings(req.agentTenant); await saveSettings(req.agentTenant, { widget: b.widget ? widgetOf({ widget: { ...widgetOf(cur), ...b.widget } }) : widgetOf(cur), llm_enabled: b.llm_enabled === undefined ? cur.llm_enabled !== false : b.llm_enabled !== false }); } clearFactsCache(req.agentShop); const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours }); }));
-  api.get("/privacy", ah(async (req, res) => res.json((await listForTenant("podai_gdpr", req.agentTenant)).slice(-50))));
+  api.get("/privacy", ah(async (req, res) => { const g = (await listForTenant("podai_gdpr", req.agentTenant)).slice(-50); audit(req, "view_gdpr_requests", { count: g.length }); res.json(g); }));
+  // who accessed personal data of this shop (no data itself); viewing it is logged too
+  api.get("/access-log", ah(async (req, res) => { const e = await readAccess({ tenant: req.agentTenant, limit: Math.min(500, Number(req.query.limit) || 200) }); audit(req, "view_access_log"); res.json(e); }));
   api.post("/preview", ah(async (req, res) => { const b = req.body || {}; const out = await handleChat({ tenantId: req.agentTenant, profile: makeProfile(req.agentShop), message: b.message, conversation_id: b.conversation_id, lang: b.lang });
     res.json({ answer: out.answer, conversation_id: out.conversation_id, ui: out.ui, handoff: out.handoff || null, answered_by: out.answered_by || null }); }));
   r.use("/shopify-agent/api", api);

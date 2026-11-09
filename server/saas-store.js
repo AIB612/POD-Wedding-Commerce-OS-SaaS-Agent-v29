@@ -12,6 +12,20 @@ let loading;
 let saveTimer;
 let saving = Promise.resolve();
 let persistBlocked = false; // set when a corrupt persist file must not be overwritten with seed
+// Optional per-collection persist codecs (encrypt-at-rest). Default: none — collections are written as-is.
+// A codec only changes how rows are serialised to / parsed from the persist file; in memory rows stay plain objects.
+//   encode(rows) -> rows to write; decode(rows) -> { rows, dirty } (dirty: plaintext rows found → rewrite encrypted)
+const codecs = new Map();
+let codecDirty = false;
+function decodeState(s) {
+  for (const [col, c] of codecs) if (Array.isArray(s?.[col])) { const r = c.decode(s[col]); s[col] = r.rows; if (r.dirty) codecDirty = true; }
+  return s;
+}
+export function registerPersistCodec(collection, codec) {
+  codecs.set(collection, codec);
+  if (state && Array.isArray(state[collection])) { const r = codec.decode(state[collection]); state[collection] = r.rows; if (r.dirty) schedulePersist(); }
+}
+const serialise = s => { if (!codecs.size) return s; const out = { ...s }; for (const [col, c] of codecs) if (Array.isArray(s[col])) out[col] = c.encode(s[col]); return out; };
 
 /** Resolve STORE_PERSIST_PATH against the app root (never process.cwd()) so restarts cannot point at another file. */
 const persistPath = () => {
@@ -42,7 +56,7 @@ async function load() {
 
 export async function getState() {
   if (state) return state;
-  loading ||= load().then(s => (state = s));
+  loading ||= load().then(s => { state = decodeState(s); if (codecDirty) { codecDirty = false; schedulePersist(); } return state; });
   return loading;
 }
 
@@ -51,7 +65,7 @@ async function writeSnapshot() {
   if (!file || !state || persistBlocked) return;
   const tmp = `${file}.${process.pid}.tmp`;
   await fs.mkdir(path.dirname(file), { recursive: true });
-  await fs.writeFile(tmp, JSON.stringify(state), { encoding: "utf8", mode: 0o600 }); // orders, accounts, sessions: owner-only
+  await fs.writeFile(tmp, JSON.stringify(serialise(state)), { encoding: "utf8", mode: 0o600 }); // orders, accounts, sessions: owner-only
   await fs.rename(tmp, file); // atomic replace: never leaves a half-written file
   await fs.chmod(file, 0o600).catch(() => {});
 }

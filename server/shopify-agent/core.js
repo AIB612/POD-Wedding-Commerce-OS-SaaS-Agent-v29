@@ -8,6 +8,7 @@
 import crypto from "node:crypto";
 import { addRecord, findRecord, updateRecord } from "../saas-store.js";
 import { encrypt, decrypt } from "../utils/crypto.js";
+import "./security/records.js"; // podai_* rows are AES-256-GCM encrypted in the persist file
 
 export const SCOPES = "read_products,read_orders,read_shipping,read_discounts,read_legal_policies";
 export const TENANT_PREFIX = "shopagent_";

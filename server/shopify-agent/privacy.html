@@ -16,9 +16,9 @@ code{background:#f3ece3;padding:1px 5px;border-radius:5px;font-size:13.5px}foote
 </style></head><body>
 <header><div class="logo"><img src="/assets/brand/mark-160.png" alt="Pod.AI" width="40" height="40"></div><div class="brand">Pod.AI<small>by POD.AI</small></div></header>
 <main>
-<nav id="pod-legal-nav" class="mut" style="font-size:13px;margin:0 0 18px"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/support">Support</a> · <a href="/agent.html">Product</a></nav>
+<nav id="pod-legal-nav" class="mut" style="font-size:13px;margin:0 0 18px"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/support">Support</a> · <a href="/security">Security</a> · <a href="/dpa">DPA</a> · <a href="/agent.html">Product</a></nav>
 <h1>Privacy Policy</h1>
-<p class="mut">Pod.AI — AI customer chat for Shopify stores · Last updated: 9 November 2026</p>
+<p class="mut">Pod.AI — AI customer chat for Shopify stores · Last updated: 9 November 2026 (encryption, backups, access log)</p>
 
 <p>Pod.AI ("the App") is a Shopify app operated by Dropking AI ("we", "us"), under the POD.AI brand. It adds a customer chat to a merchant's online store that answers questions about products, shipping, policies and orders, and passes questions it cannot answer to the merchant's team. This policy explains what data the App accesses, why, where it is stored, how long it is kept and how it is deleted.</p>
 <p>For data about their customers, the merchant is the data controller and Dropking AI acts as a processor on the merchant's behalf. For merchant account data (shop domain, settings, access token) Dropking AI is the data controller.</p>
@@ -42,7 +42,8 @@ code{background:#f3ece3;padding:1px 5px;border-radius:5px;font-size:13.5px}foote
 <p>The App does not use first-party tracking cookies of its own. It stores a random chat ID and the time of the last heartbeat in the visitor's browser storage so the conversation can continue across pages. When Google Analytics is enabled, GA may set its own cookies / storage after analytics consent; events are anonymous (no chat content or customer identifiers). We do not sell data, use it for advertising, or combine it across stores.</p>
 
 <h2>3. Where data is stored</h2>
-<p>Data is stored on our application server in Germany (Frankfurt), separated per shop. Collections used: <code>podai_conversations</code>, <code>podai_handoffs</code>, <code>podai_events</code>, <code>podai_settings</code>, <code>podai_shops</code> (the shop's access token, encrypted at rest) and <code>podai_gdpr</code> (a log of privacy requests with hashed customer identifiers). All traffic uses HTTPS. Requests from the storefront are verified with Shopify's app-proxy signature; admin requests use Shopify session tokens.</p>
+<p>Data is stored on our application server in Germany (Frankfurt), separated per shop. Collections used: <code>podai_conversations</code>, <code>podai_handoffs</code>, <code>podai_events</code>, <code>podai_settings</code>, <code>podai_shops</code> (the shop's access token, encrypted at rest) and <code>podai_gdpr</code> (a log of privacy requests with hashed customer identifiers).</p>
+<p><b>Encryption at rest.</b> Every Pod.AI record (chat messages, shopper e-mail addresses, order numbers, handoff contents, event data, settings) is encrypted with AES-256-GCM before it is written to disk, with a key held only in the server's protected environment configuration; shop access tokens are additionally encrypted on their own. <b>Encrypted backups:</b> a daily backup is encrypted (AES-256-GCM) before it is written, stored outside any web-accessible directory with owner-only permissions, and kept for 14 days. <b>Access logging:</b> every access to personal data — merchant staff viewing conversations or handoffs, order lookups in the chat, and privacy requests — is recorded in an append-only access log (who, what, when, which record IDs; never the data itself, identifiers only as keyed hashes). The access log is kept for 12 months and the merchant can review it in the App. All traffic uses HTTPS. Requests from the storefront are verified with Shopify's app-proxy signature; admin requests use Shopify session tokens.</p>
 
 <h2>4. Third parties (sub-processors)</h2>
 <table><tr><th>Service</th><th>Data sent</th><th>When</th></tr>
@@ -71,7 +72,7 @@ code{background:#f3ece3;padding:1px 5px;border-radius:5px;font-size:13.5px}foote
 <p>Customers should send access, correction or deletion requests to the store they shopped with. The merchant can also delete individual conversations through these requests. Under the GDPR and the Swiss FADP you have the right to access, rectify, erase, restrict and object to processing, and to complain to a supervisory authority.</p>
 
 <h2>7. Security</h2>
-<p>Encrypted access tokens, HMAC-verified webhooks, signed storefront requests, per-shop data separation, rate limiting, and payment-data and prompt-injection filtering in the chat.</p>
+<p>AES-256-GCM encryption of all stored App data and of backups, encrypted access tokens, an append-only personal-data access log, HMAC-verified webhooks, signed storefront requests, per-shop data separation, least-privilege read-only scopes, rate limiting, and payment-data and prompt-injection filtering in the chat. Security incidents are handled under our <a href="/security">Security &amp; Incident Response Policy</a> (affected merchants are notified without undue delay and within 72 hours). Merchants can rely on our <a href="/dpa">Data Processing Addendum</a>.</p>
 
 <h2>8. Changes and contact</h2>
 <p>This policy is published at <a href="https://pod.swisspro.site/privacy">pod.swisspro.site/privacy</a> (legacy path <code>/shopify-agent/privacy</code> still works; also reachable on wed.swisspro.site during the domain switch).</p>

@@ -78,6 +78,8 @@ Allow: /privacy
 Allow: /terms
 Allow: /support
 Allow: /docs
+Allow: /security
+Allow: /dpa
 Allow: /shopify-agent/privacy
 Allow: /assets/
 Disallow: /generated/
@@ -88,7 +90,7 @@ Sitemap: ${POD_ORIGIN}/sitemap.xml
   });
   router.get("/sitemap.xml", (req, res, next) => {
     if (!podHost(req)) return next("route");
-    const urls = ["/agent.html", "/privacy", "/terms", "/support"];
+    const urls = ["/agent.html", "/privacy", "/terms", "/support", "/security", "/dpa"];
     const body = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
       "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
       ...urls.map(u => `  <url><loc>${POD_ORIGIN}${u}</loc><changefreq>weekly</changefreq></url>`),
@@ -107,6 +109,8 @@ Sitemap: ${POD_ORIGIN}/sitemap.xml
   router.get(["/privacy", "/privacy.html"], sendPodPage("privacy.html"));
   router.get(["/terms", "/terms.html"], sendPodPage("terms.html"));
   router.get(["/support", "/support.html", "/docs", "/docs.html"], sendPodPage("support.html"));
+  router.get(["/security", "/security.html"], sendPodPage("security.html"));
+  router.get(["/dpa", "/dpa.html"], sendPodPage("dpa.html"));
 
   const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/admin/login": "admin-login.html", "/admin-login.html": "admin-login.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html", "/shipping": "shipping.html", "/shipping.html": "shipping.html", "/returns": "returns.html", "/returns.html": "returns.html", "/imprint": "imprint.html", "/imprint.html": "imprint.html", "/impressum": "imprint.html", "/agent.html": "agent.html", "/agent": "agent.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Data Processing Addendum — Pod.AI</title><meta name="description" content="Data Processing Addendum for merchants using the Pod.AI Shopify app.">
+<link rel="canonical" href="https://pod.swisspro.site/dpa"/>
+<style>
+:root{--ink:#2b2520;--mut:#6f655c;--bg:#f6f1ea;--card:#fffdf9;--line:#e7ded3;--acc:#b07a4f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif}
+header{max-width:860px;margin:0 auto;padding:40px 24px 8px;display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:12px;overflow:hidden;background:var(--bg)}.logo img{width:100%;height:100%;object-fit:cover;display:block}
+.brand{font-family:Georgia,"Times New Roman",serif;font-size:22px}.brand small{display:block;font:13px/1.2 inherit;color:var(--mut);font-family:inherit}
+main{max-width:860px;margin:16px auto 40px;padding:32px 36px;background:var(--card);border:1px solid var(--line);border-radius:20px}
+h1{font-family:Georgia,serif;font-weight:500;font-size:34px;margin:0 0 4px}h2{font-size:19px;margin:30px 0 8px}
+.mut{color:var(--mut)}table{width:100%;border-collapse:collapse;font-size:14.5px;margin:8px 0}th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}th{background:#f3ece3}
+code{background:#f3ece3;padding:1px 5px;border-radius:5px;font-size:13.5px}footer{text-align:center;color:var(--mut);font-size:13px;padding:0 0 40px}a{color:var(--acc)}
+@media(max-width:600px){main{padding:22px 18px;border-radius:0}h1{font-size:27px}}
+</style></head><body>
+<header><div class="logo"><img src="/assets/brand/mark-160.png" alt="Pod.AI" width="40" height="40"></div><div class="brand">Pod.AI<small>by POD.AI</small></div></header>
+<main>
+<nav id="pod-legal-nav" class="mut" style="font-size:13px;margin:0 0 18px"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/support">Support</a> · <a href="/security">Security</a> · <a href="/dpa">DPA</a> · <a href="/agent.html">Product</a></nav>
+<h1>Data Processing Addendum</h1>
+<p class="mut">Pod.AI — AI customer chat for Shopify stores · Last updated: 9 November 2026</p>
+<p>This Data Processing Addendum ("DPA") forms part of the <a href="/terms">Terms of Service</a> between the merchant using Pod.AI ("Merchant", controller) and Dropking AI ("Processor"). It applies to personal data of the Merchant's customers that Pod.AI processes on the Merchant's behalf (Art. 28 GDPR; Swiss FADP). By installing the App the Merchant accepts this DPA.</p>
+
+<h2>1. Subject matter and duration</h2>
+<p>Providing the Pod.AI storefront chat, order-status answers and handoffs to the Merchant's team, for as long as the App is installed, plus the deletion periods below.</p>
+<h2>2. Nature, purpose and data</h2>
+<table><tr><th>Data subjects</th><th>Data categories</th><th>Purpose</th></tr>
+<tr><td>Store visitors and customers using the chat</td><td>Chat messages, e-mail address and order number when provided, order status / tracking (read live from Shopify), language, page URL, random chat ID</td><td>Answering questions, order lookups, handing conversations to the Merchant's team</td></tr>
+<tr><td>Merchant staff</td><td>Shopify staff user ID in the access log</td><td>Access logging / security</td></tr></table>
+<h2>3. Processor obligations</h2>
+<ul>
+<li>Process personal data only on the Merchant's documented instructions (the App's configuration and these terms), never for own purposes, advertising or sale.</li>
+<li>Ensure persons with access are bound to confidentiality.</li>
+<li>Implement the technical and organisational measures in section 6.</li>
+<li>Assist the Merchant with data subject requests (Shopify <code>customers/data_request</code> and <code>customers/redact</code> are handled automatically) and with security, breach-notification and impact-assessment duties.</li>
+<li>Notify the Merchant of a personal data breach without undue delay and within 72 hours, as set out in the <a href="/security">Security &amp; Incident Response Policy</a>.</li>
+<li>Delete all Merchant data after uninstall (Shopify <code>shop/redact</code>, 48 hours after uninstall), except where law requires retention; encrypted backups expire within 14 days.</li>
+<li>Make available information necessary to demonstrate compliance and allow reasonable audits (normally by written questionnaire).</li>
+</ul>
+<h2>4. Sub-processors</h2>
+<p>The Merchant authorises the sub-processors listed in the <a href="/privacy">Privacy Policy</a> (section 4): hosting in Germany (Frankfurt), Shopify, carrier tracking APIs (tracking numbers only) and, only if the Merchant enables LLM answers, the configured LLM provider. We impose equivalent data-protection obligations on them and will announce changes on the Privacy Policy page; the Merchant may object by uninstalling the App.</p>
+<h2>5. International transfers</h2>
+<p>Data is stored in the EU (Germany). Transfers to sub-processors outside the EU/EEA/Switzerland rely on an adequacy decision or the EU Standard Contractual Clauses (with the Swiss addendum).</p>
+<h2>6. Technical and organisational measures</h2>
+<ul>
+<li>AES-256-GCM encryption at rest of all App records and of daily backups (14-day retention); TLS in transit.</li>
+<li>Per-shop data separation; access only via Shopify session tokens, app-proxy signatures or HMAC-verified webhooks; server administration restricted to Dropking AI administrators.</li>
+<li>Append-only access log of all personal-data access (12-month retention), without logging the data itself.</li>
+<li>Data minimisation: read-only scopes, live order reads (no order copies), no card data, automatic deletion after 12 months of inactivity.</li>
+<li>Incident response with 72-hour merchant notification (<a href="/security">policy</a>).</li>
+</ul>
+<h2>7. Contact</h2>
+<p>Processor: Dropking AI. Privacy and security contact: <a href="mailto:support@swisspro.site">support@swisspro.site</a>.</p>
+</main>
+<footer>© 2026 POD.AI</footer>
+</body></html>
