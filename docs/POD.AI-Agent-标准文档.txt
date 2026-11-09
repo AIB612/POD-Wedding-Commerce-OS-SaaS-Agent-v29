@@ -1204,3 +1204,7 @@ B.3 跳过（本版没有）
     3e9d7d3 · 2026-11-09 · Pod.AI 官方图标定为 B 改版（黑 P + 聊天气泡角标，无外圈，浅底；透明版另存）；
         后台/隐私页顶栏使用 /shopify-agent/podai-icon.png；上架材料与配音演示视频同步。仅改 Pod.AI 文件。影响条款：附录 D。
 
+    1f8df47 · 2026-11-09 · 存储加固（诊断 dropkingdev shop_not_installed）：STORE_PERSIST_PATH 相对路径改为相对应用根解析；
+        持久化文件损坏时隔离为 .corrupt-* 并拒绝用 seed 覆盖（此前 seed 回退会抹掉 podai_* 含店铺 token）；
+        保留期清理明确不触碰 podai_shops。另：主站品牌启用同一官方图标（见同批站点提交）。影响条款：附录 D。
+
