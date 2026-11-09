@@ -28,7 +28,7 @@
    '<nav aria-label="Help"><h4>Help</h4><ul><li><a href="/shipping">Shipping &amp; production times</a></li><li><a href="/returns">Returns &amp; defects</a></li><li><a href="/account#find-order">Find my order</a></li></ul></nav>'+
    '<nav aria-label="Legal"><h4>Legal</h4><ul><li><a href="/privacy">Privacy policy</a></li><li><a href="/terms">Terms of sale</a></li><li><a href="/returns">Returns policy</a></li><li><a href="/imprint">Imprint / Impressum</a></li></ul></nav>'+
    '<div class="sf-contact"><h4>Questions about your order?</h4><p style="margin-top:0">We answer personally, usually within one business day.</p></div>'+
-  '</div><div class="sf-bottom"><div class="sf-legal"><span>&copy; 2026 POD.AI</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/imprint">Imprint</a><a href="https://www.51tracking.com" target="_blank" style="color:#8f857a">国际小包查询</a></div>'+
+  '</div><div class="sf-bottom"><div class="sf-legal"><span>&copy; 2026 POD.AI</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/imprint">Imprint</a></div>'+
    '<span class="sf-loc" title="Market and currency (change it in the header)">'+(window.PODMarket?(PODMarket.get()+' · '+PODMarket.currency()):'CHF / EUR')+'</span>'+
    '<div class="sf-pay" aria-label="Payment methods"><span class="sf-badge sf-twint">TWINT</span><span class="sf-badge sf-pp">Pay<i>Pal</i></span></div>'+
   '</div></div></footer>';

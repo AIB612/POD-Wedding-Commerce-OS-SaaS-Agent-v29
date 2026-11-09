@@ -255,10 +255,8 @@ Files in `/workspace/wedai/report/podai-listing/`:
 
 ---
 
-## 7. 51Tracking free API application (draft — not submitted)
-Backlink: the wed.swisspro.site footer has a small dofollow link to https://www.51tracking.com with the anchor text 国际小包查询.
-- It is in the bottom legal bar of `footer.js`.
-- It is also in the static HTML of the home page, so it can be seen without JavaScript.
+## 7. 51Tracking free API application — **on hold (backlink removed)**
+Status: **on hold**. The footer dofollow backlink (国际小包查询 → 51tracking.com) was removed from `footer.js` and the home page on 2026-11-09 at Sherry's request. Do not submit the free-API application until a new backlink strategy is decided.
 
 Form https://www.51tracking.com/apply-api — suggested values. Check the actual form labels; fields may differ.
 | Field | Value |
@@ -279,7 +277,7 @@ Review takes about 4 working days, and free access lasts 200 days (based on earl
 
 ## 8. Open decisions
 1. Create the support@swisspro.site mailbox / forward (Sherry).
-2. Submit the 51Tracking application (§6) once the footer link is live.
+2. 51Tracking free API (§7): on hold — backlink removed; revisit later.
 3. Billing setup after listing approval (Plan A recorded).
 4. Protected data: confirm disk and backup encryption on the rs8 host. Write the incident-response policy and a DPA.
 5. Whether to keep the "chat-influenced revenue" metric. It needs the Analytics purpose in the questionnaire.

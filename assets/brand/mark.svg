@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="POD.AI">
+  <rect width="64" height="64" rx="14" fill="#faf8f5"/>
+  <!-- thick geometric P -->
+  <path fill="#111111" d="M16 10h22.5c9.9 0 17.5 7.1 17.5 16.2S48.4 42.4 38.5 42.4H28.2V54H16V10zm12.2 9.6v13.2h10.1c4.6 0 7.7-3.1 7.7-6.6 0-3.5-3.1-6.6-7.7-6.6H28.2z"/>
+  <!-- chat bubble tucked under the bowl -->
+  <path fill="#b07a4f" d="M34.2 43.2h10.6c2.7 0 4.9 2.1 4.9 4.7 0 2.6-2.2 4.7-4.9 4.7h-1.1l-3.2 3.4-0.5-3.4h-5.8c-2.7 0-4.9-2.1-4.9-4.7 0-2.6 2.2-4.7 4.9-4.7z"/>
+  <circle cx="36.4" cy="47.9" r="1.25" fill="#fff"/>
+  <circle cx="39.5" cy="47.9" r="1.25" fill="#fff"/>
+  <circle cx="42.6" cy="47.9" r="1.25" fill="#fff"/>
+</svg>
