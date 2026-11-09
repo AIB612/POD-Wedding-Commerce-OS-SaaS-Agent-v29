@@ -28,11 +28,12 @@ function codecFor(col) {
   const stuck = []; // undecryptable rows: kept as-is on disk
   const memo = new WeakMap(); // row object → { json, enc } (skip re-encrypting unchanged rows on every snapshot)
   return {
-    decode(rows) {
+    decode(rows) { // always the whole collection (first load, or re-load after another app process wrote the file)
       let dirty = false; const out = [];
+      stuck.length = 0;
       for (const r of rows) {
         if (!isEncryptedRow(r)) { out.push(r); dirty = true; continue; }
-        try { out.push(decryptRow(col, r)); }
+        try { const d = decryptRow(col, r); memo.set(d, { json: JSON.stringify(d), enc: r }); out.push(d); }
         catch (e) { stuck.push(r); console.error(`[pod.ai] cannot decrypt ${col}/${r.id} (key changed?) — kept encrypted`); }
       }
       return { rows: out, dirty };

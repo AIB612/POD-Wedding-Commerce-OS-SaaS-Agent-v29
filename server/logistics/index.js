@@ -14,10 +14,14 @@ import { addRecord as addRec, findRecord as findRec, findWhere as findW, listFor
 // (real carrier orders!), so they are mirrored to their own file: LOGISTICS_STATE_PATH (default ./data/logistics-state.json, mode 600).
 const LCOLS = ["logistics_settings", "logistics_rules", "carrier_shipments"];
 const statePath = () => process.env.LOGISTICS_STATE_PATH || (process.env.NODE_ENV === "test" ? "" : "./data/logistics-state.json");
-let hydrated = null, saveT = null;
+let hydrated = null, hydratedFor = null, saveT = null;
+// Re-merge whenever the store object changed: saas-store re-loads from disk when another app process wrote it, and the
+// fresh object would otherwise miss rows that so far only exist in the logistics file.
 async function hydrate() {
-  if (hydrated) return hydrated;
-  hydrated = (async () => { const f = statePath(); if (!f) return; try { const d = JSON.parse(await fs.readFile(f, "utf8")); const st = await getState();
+  const cur = await getState();
+  if (hydrated && hydratedFor === cur) return hydrated;
+  hydratedFor = cur;
+  hydrated = (async () => { const f = statePath(); if (!f) return; try { const d = JSON.parse(await fs.readFile(f, "utf8")); const st = cur;
     for (const c of LCOLS) if (Array.isArray(d[c])) { st[c] ||= []; for (const r of d[c]) if (!st[c].some(x => x.id === r.id)) st[c].push(r); } } catch (e) { if (e.code !== "ENOENT") console.warn("[logistics] state load failed", e.message); } })();
   return hydrated;
 }
