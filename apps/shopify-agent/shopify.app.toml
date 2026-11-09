@@ -13,7 +13,7 @@ automatically_update_urls_on_dev = false
 # read_orders: order status in chat (protected customer data: e-mail, Level 2 request needed)
 # read_products: products, variants, collections, metafields · read_shipping: delivery profiles/zones/rates
 # read_discounts: check a code the customer has (read-only) · read_legal_policies: refund / shipping / contact policies
-scopes = "read_products,read_orders,read_shipping,read_discounts,read_legal_policies"
+scopes = "read_products,read_orders,read_shipping,read_discounts,read_legal_policies,write_app_proxy"
 
 use_legacy_install_flow = false
 
