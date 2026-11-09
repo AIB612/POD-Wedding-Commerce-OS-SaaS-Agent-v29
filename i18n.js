@@ -556,7 +556,7 @@ const K={
 'co.hideSummary':{zh:'隐藏订单摘要',en:'Hide order summary',de:'Bestellübersicht ausblenden'},
 'co.tax':{zh:'增值税（{rate}%）',en:'VAT ({rate}%)',de:'MwSt. ({rate}%)'},
 'co.taxNone':{zh:'增值税',en:'VAT',de:'MwSt.'},
-'co.duties':{zh:'欧盟订单可能产生进口关税/税费，由收件人承担。',en:'EU orders ship from Switzerland; import duties/VAT may be charged on delivery.',de:'EU-Bestellungen werden aus der Schweiz versandt; Einfuhrabgaben können bei Lieferung anfallen.'},
+'co.duties':{zh:'订单从中国发货；签收时可能产生进口关税/税费，由收件人承担。',en:'Orders ship from China; import duties/VAT may be charged on delivery.',de:'Bestellungen werden aus China versandt; Einfuhrabgaben können bei Lieferung anfallen.'},
 'co.currencyNote':{zh:'币种：{c}',en:'Charged in {c}',de:'Abrechnung in {c}'},
 'co.serverNote':{zh:'最终金额由服务器重新计算。',en:'Final amount is recalculated securely on our server.',de:'Der Endbetrag wird sicher auf unserem Server berechnet.'},
 'co.emptyCart':{zh:'购物车是空的。',en:'Your cart is empty.',de:'Dein Warenkorb ist leer.'},

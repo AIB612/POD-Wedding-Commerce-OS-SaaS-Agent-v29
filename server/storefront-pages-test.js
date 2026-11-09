@@ -41,12 +41,18 @@ try {
   assert.match(idx, /data-vat-label/); assert.match(idx, /homeMarket\(\)/);
   result.no_chinese_sources = "pass";
 
-  // Footer: shipping, returns, imprint, visible contact e-mail; imprint uses placeholders (no invented company data).
+  // Footer: shipping, returns, imprint, visible contact e-mail.
   const ft = (await get("/footer.js")).text;
   for (const l of ["/shipping", "/returns", "/imprint", "/privacy", "/terms"]) assert.ok(ft.includes(`href="${l}"`), `footer ${l}`);
   assert.match(ft, /sf-addr/);
   const imp = (await get("/imprint")).text;
-  for (const ph of ["[Company name]", "[UID/VAT no.", "[Street and number]"]) assert.ok(imp.includes(ph), ph);
+  // Final legal text: operator named, no template notes or [placeholders], no personal data, no ODR link.
+  assert.match(imp, /Dropking AI/); assert.match(imp, /support@swisspro\.site/);
+  for (const pg of ["/imprint", "/privacy", "/terms", "/returns", "/shipping"]) {
+    const t = (await get(pg)).text, main = t.slice(t.indexOf("<main>"), t.indexOf("</main>"));
+    assert.doesNotMatch(main, /Template —|\[(Company|Owner|Name|Placeholder|Street|UID|n\])/, pg);
+    assert.doesNotMatch(main, /ec\.europa\.eu\/consumers\/odr|ship from Switzerland/, pg);
+  }
   const ret = (await get("/returns")).text; assert.match(ret, /Art\. 16\(c\)/); assert.match(ret, /defective/i);
   result.legal_pages = "pass";
 
