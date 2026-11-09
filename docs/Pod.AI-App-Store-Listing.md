@@ -1,6 +1,6 @@
 # Pod.AI — Shopify App Store listing kit (draft)
 
-Status: draft · **Canonical host for Pod.AI: https://pod.swisspro.site** (wed.swisspro.site still serves the same app paths during the switch; /agent.html on wed 301s to pod). (decisions of 4 Nov 2026 19:22 applied), prepared on 4 Nov 2026 for review by Sherry. Nothing has been submitted to Shopify and no billing is configured.
+Status: draft · **Canonical host for Pod.AI: https://pod.swisspro.site** (the only public domain since 2026-11-09; pod.swisspro.site was retired). (decisions of 4 Nov 2026 19:22 applied), prepared on 4 Nov 2026 for review by Sherry. Nothing has been submitted to Shopify and no billing is configured.
 Scope: Pod.AI (the `apps/shopify-agent` app with server `server/shopify-agent`) only. The site and the site POD Agent are unchanged.
 Everything below describes features that are implemented and deployed today (Shopify app version pod-ai-8 plus the server at commit 9496d8f and later). There are no invented metrics, ratings or reviews.
 
@@ -264,8 +264,8 @@ Form https://www.51tracking.com/apply-api — suggested values. Check the actual
 | Field | Value |
 |---|---|
 | Account / registered e-mail | the e-mail of the existing 51Tracking account (Sherry's login; not written here) |
-| Website URL | https://wed.swisspro.site |
-| Backlink page URL | https://wed.swisspro.site/ (footer, anchor "国际小包查询") |
+| Website URL | https://pod.swisspro.site |
+| Backlink page URL | https://pod.swisspro.site/ (footer, anchor "国际小包查询") |
 | Company / site name | Dropking AI — POD.AI |
 | Contact e-mail | support@swisspro.site |
 | Use case | Pod.AI, a Shopify customer-chat app: when a shopper asks "where is my order?", we query the tracking status of that single shipment and show it in the chat. |

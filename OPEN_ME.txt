@@ -1,4 +1,4 @@
-POD.AI — POD Wedding Commerce OS (live: https://wed.swisspro.site)
+POD.AI — POD Wedding Commerce OS (live: https://pod.swisspro.site)
 
 Local development
 1. cp .env.example .env

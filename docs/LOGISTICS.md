@@ -4,7 +4,7 @@
 > (AfterShip/EasyPost/Avalara connector slots, v10/v10.1 notes) describe code paths that exist but are **not configured in production**.
 > The customer chat agent's use of quotes and tracking is specified in [`POD.AI-Agent-标准文档.txt`](POD.AI-Agent-标准文档.txt).
 
-## Current live system (https://wed.swisspro.site)
+## Current live system (https://pod.swisspro.site)
 
 ### Storefront shipping price
 

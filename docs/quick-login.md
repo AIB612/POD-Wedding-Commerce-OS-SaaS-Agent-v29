@@ -1,6 +1,6 @@
 # Quick login — "Continue with Google" and "Continue with Shop"
 
-> Updated 2026-11-01 (main after 620ba20). Live status on https://wed.swisspro.site (`GET /api/auth/providers`):
+> Updated 2026-11-01 (main after 620ba20). Live status on https://pod.swisspro.site (`GET /api/auth/providers`):
 > **Google configured**, **Shop not configured** (button shown disabled). This page covers customer sign-in only;
 > the admin uses a separate password login at `/admin/login` (see `ADMIN_UX.md`).
 

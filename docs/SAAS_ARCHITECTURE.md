@@ -3,7 +3,7 @@
 > 更新：2026-11-01（对应 620ba20 之后的 main）。“当前实现”一节描述线上系统；其后的“目标链路”及各小节是设计方向，
 > 未实现的部分已标注。Agent 细节见 [`POD.AI-Agent-标准文档.txt`](POD.AI-Agent-标准文档.txt) 与 [`../AGENT_FRAMEWORK.txt`](../AGENT_FRAMEWORK.txt)。
 
-## 当前实现（线上 https://wed.swisspro.site）
+## 当前实现（线上 https://pod.swisspro.site）
 
 ```
 顾客：首页 / Studio / 结账 / 账户 / 首页“Ask POD.AI”对话 / 第三方网站 widget.js

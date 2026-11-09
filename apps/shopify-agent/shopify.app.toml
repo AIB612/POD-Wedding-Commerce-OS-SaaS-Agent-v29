@@ -2,8 +2,8 @@
 # Dev Dashboard: org DropkingAI, app "Pod.AI" (id 443599257601). Deploy: cd apps/shopify-agent && shopify app deploy
 client_id = "46d75edb5ea4339d6f66ef87e28ab37d"
 name = "Pod.AI"
-application_url = "https://pod.swisspro.site/shopify-agent"
-# Primary host: pod.swisspro.site. The same Node app still serves /shopify-agent on wed.swisspro.site during the switch.
+application_url = "https://podai.swisspro.site/shopify-agent"
+# Host: podai.swisspro.site (Pod.AI app host). /shopify-agent/* also keeps working on pod.swisspro.site as a fallback.
 embedded = true
 
 [build]
@@ -19,21 +19,21 @@ use_legacy_install_flow = false
 
 [auth]
 # Shopify-managed install + token exchange: no OAuth callback route is used.
-redirect_urls = [ "https://pod.swisspro.site/shopify-agent" ]
+redirect_urls = [ "https://podai.swisspro.site/shopify-agent" ]
 
 [webhooks]
 api_version = "2026-10"
 
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
-  uri = "https://pod.swisspro.site/shopify-agent/webhooks"
+  uri = "https://podai.swisspro.site/shopify-agent/webhooks"
 
   [[webhooks.subscriptions]]
   compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
-  uri = "https://pod.swisspro.site/shopify-agent/webhooks"
+  uri = "https://podai.swisspro.site/shopify-agent/webhooks"
 
 [app_proxy]
-url = "https://pod.swisspro.site/shopify-agent/proxy"
+url = "https://podai.swisspro.site/shopify-agent/proxy"
 subpath = "podai"
 prefix = "apps"
 

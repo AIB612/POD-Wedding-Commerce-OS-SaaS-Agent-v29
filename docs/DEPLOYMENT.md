@@ -2,7 +2,7 @@
 
 > 更新：2026-11-01（对应 620ba20 之后的 main）。第一节是**当前生产部署**；后面的拓扑、Docker、Render 为备选方案，线上未使用。
 
-## 当前生产部署（https://wed.swisspro.site）
+## 当前生产部署（https://pod.swisspro.site）
 
 | 项 | 值 |
 |---|---|
@@ -10,7 +10,7 @@
 | Node | 22（`~/nodevenv/pod-wedding/22`；`package.json` 要求 ≥ 20） |
 | 应用目录 | `~/pod-wedding`（git 工作副本，跟踪 `main`） |
 | 启动文件 | `server/cpanel-start.cjs`（CommonJS 包装，`import("./app.js")`） |
-| 域名配置 | `~/wed.swisspro.site/.htaccess`：`PassengerAppRoot`、`PassengerNodejs`、`PassengerStartupFile` |
+| 域名配置 | `~/pod.swisspro.site/.htaccess`：`PassengerAppRoot`、`PassengerNodejs`、`PassengerStartupFile` |
 | 环境变量 | `~/pod-wedding/.env`（`dotenv` 读取，不入库；模板 `.env.example`） |
 | 数据 | `~/pod-wedding/data/`：`store.json`、`logistics-state.json`、`app.db`、`admin-auth.json`、`labels/`（不入库） |
 | 日志 | `~/pod-wedding/stderr.log` |
@@ -99,7 +99,7 @@ docker run --env-file .env -p 3000:3000 \
 
 ## Shopify 配置步骤
 
-线上使用 Shopify App（`shopify.app.toml`，`application_url = https://wed.swisspro.site`，回调 `/api/shopify/app/callback`，`.env` 填 `SHOPIFY_API_KEY` / `SHOPIFY_API_SECRET`），在 Admin → Shopify 分区连接店铺（`/api/shopify/app/status`、`/api/shopify/app/connect`）。以下是旧的多店 OAuth 流程（`/api/shopify/oauth/*`，仍保留）：
+线上使用 Shopify App（`shopify.app.toml`，`application_url = https://pod.swisspro.site`，回调 `/api/shopify/app/callback`，`.env` 填 `SHOPIFY_API_KEY` / `SHOPIFY_API_SECRET`），在 Admin → Shopify 分区连接店铺（`/api/shopify/app/status`、`/api/shopify/app/connect`）。以下是旧的多店 OAuth 流程（`/api/shopify/oauth/*`，仍保留）：
 
 1. Shopify Dev Dashboard 创建 App。
 2. Allowed redirection URL 添加：

@@ -2,7 +2,7 @@
 POD Wedding Commerce OS（POD.AI）— 架构说明与优化方案
 ================================================================================
 更新时间：2026-11-01 · 对应代码：620ba20 之后的 main
-线上：https://wed.swisspro.site（分支 feature/home-en-images = main）
+线上：https://pod.swisspro.site（分支 feature/home-en-images = main）
 
   相关文档：
     docs/POD.AI-Agent-标准文档.txt   客户聊天 Agent 权威文档

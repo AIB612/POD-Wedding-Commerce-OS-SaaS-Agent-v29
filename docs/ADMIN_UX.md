@@ -2,7 +2,7 @@
 
 > 更新：2026-11-01（对应 620ba20 之后的 main）。“当前 Admin”一节描述线上实际情况；其余章节是交互 / 视觉规范与早期版本记录。
 
-## 当前 Admin（线上 https://wed.swisspro.site/admin）
+## 当前 Admin（线上 https://pod.swisspro.site/admin）
 
 - 页面：零构建 `admin.html` + `admin-sections.js`（承运商、价目表、费用与税、优惠码、Shopify、AI 客服等分区）。React 版 `admin-app/` 未构建上线（`/admin-app/` 返回 404）。
 - 登录：`/admin/login` 用户名 + 密码（`server/admin-auth.js`；scrypt 哈希来自 `ADMIN_PASSWORD_HASH`，后台改密码后存 `data/admin-auth.json`），

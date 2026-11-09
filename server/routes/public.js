@@ -45,11 +45,13 @@ function ipCountry(req) {
 
 export function publicRouter({ root, generatedDir }) {
   const router = express.Router();
-  const POD_HOSTS = new Set(["pod.swisspro.site", "www.pod.swisspro.site"]);
+  // Pod.AI (Shopify app) host-only behaviour lives on podai.swisspro.site; pod.swisspro.site is the wedding site (as wed was).
+  const POD_HOSTS = new Set(["podai.swisspro.site", "www.podai.swisspro.site"]);
   const WED_HOSTS = new Set(["wed.swisspro.site", "www.wed.swisspro.site"]);
   const podHost = req => POD_HOSTS.has(String(req.hostname || "").toLowerCase());
   const wedHost = req => WED_HOSTS.has(String(req.hostname || "").toLowerCase());
   const POD_ORIGIN = "https://pod.swisspro.site";
+  const PODAI_ORIGIN = "https://podai.swisspro.site";
   const gaLandingSnippet = () => {
     const id = String(process.env.PODAI_GA_ID || "").trim();
     if (!/^G-[A-Z0-9]{6,}$/i.test(id)) return "";
@@ -57,7 +59,7 @@ export function publicRouter({ root, generatedDir }) {
     return `<script async src="https://www.googletagmanager.com/gtag/js?id=${safe}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","${safe}",{anonymize_ip:true});</script>`;
   };
 
-  // Pod.AI host: landing is the agent intro (not the wedding homepage).
+  // Pod.AI host (podai.swisspro.site): landing is the agent intro (not the wedding homepage).
   router.get(["/", "/index.html"], (req, res, next) => {
     if (!podHost(req)) return next("route");
     let html = fs.readFileSync(path.join(root, "agent.html"), "utf8"); html = html.replace("<!--__PODAI_GA_LANDING__-->", gaLandingSnippet()); return res.setHeader("Cache-Control","no-cache"), res.type("html").send(html);
@@ -85,7 +87,7 @@ Allow: /assets/
 Disallow: /generated/
 Disallow: /admin
 Disallow: /api/
-Sitemap: ${POD_ORIGIN}/sitemap.xml
+Sitemap: ${PODAI_ORIGIN}/sitemap.xml
 `);
   });
   router.get("/sitemap.xml", (req, res, next) => {
@@ -93,7 +95,7 @@ Sitemap: ${POD_ORIGIN}/sitemap.xml
     const urls = ["/agent.html", "/privacy", "/terms", "/support", "/security", "/dpa"];
     const body = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
       "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
-      ...urls.map(u => `  <url><loc>${POD_ORIGIN}${u}</loc><changefreq>weekly</changefreq></url>`),
+      ...urls.map(u => `  <url><loc>${PODAI_ORIGIN}${u}</loc><changefreq>weekly</changefreq></url>`),
       "</urlset>", ""].join("\n");
     res.type("application/xml").send(body);
   });

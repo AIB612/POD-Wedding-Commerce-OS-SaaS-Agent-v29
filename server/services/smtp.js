@@ -41,7 +41,7 @@ export async function sendSmtp({ to, subject, text, html }, env = process.env) {
   const cmd = async (line, ok) => { if (line != null) sock.write(line + "\r\n"); const r = await rd.next(); if (!ok.includes(r.code)) throw new Error(`smtp_${r.code}: ${r.text.split("\n").pop().slice(4, 160)}`); return r; };
   try {
     await cmd(null, [220]);
-    const ehloName = env.SMTP_EHLO_NAME || "wed.swisspro.site";
+    const ehloName = env.SMTP_EHLO_NAME || "pod.swisspro.site";
     let ehlo = await cmd(`EHLO ${ehloName}`, [250]);
     if (!secure) {
       if (/STARTTLS/i.test(ehlo.text)) {

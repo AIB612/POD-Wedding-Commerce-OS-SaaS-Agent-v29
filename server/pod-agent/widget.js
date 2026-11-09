@@ -1,7 +1,7 @@
 /**
  * POD.AI Agent widget — embed the customer chat on any website (same API as the homepage panel).
  *
- *   <script src="https://wed.swisspro.site/pod-agent/widget.js" data-lang="en" async></script>
+ *   <script src="https://pod.swisspro.site/pod-agent/widget.js" data-lang="en" async></script>
  *
  * Attributes: data-lang (en | zh | de; default = page language), data-position (bottom-right | bottom-left),
  * data-api (API origin; default = the origin this script is loaded from), data-country (ISO-2 market hint).

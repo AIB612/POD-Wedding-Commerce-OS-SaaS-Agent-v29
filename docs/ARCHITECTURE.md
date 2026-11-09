@@ -1,6 +1,6 @@
 # Architecture
 
-更新：2026-11-01（对应 620ba20 之后的 main，线上 https://wed.swisspro.site）。
+更新：2026-11-01（对应 620ba20 之后的 main，线上 https://pod.swisspro.site）。
 
 ## 当前线上系统（一句话）
 

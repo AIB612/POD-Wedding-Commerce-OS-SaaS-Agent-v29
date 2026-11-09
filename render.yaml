@@ -10,7 +10,7 @@ services:
     startCommand: node server/app.js
     healthCheckPath: /api/health
     domains:
-      - wed.swisspro.site
+      - pod.swisspro.site
     # Render injects PORT; the server listens on process.env.PORT on 0.0.0.0.
     # Persist runtime state on a disk (free/ephemeral instances lose it on every deploy).
     disk:
@@ -23,13 +23,13 @@ services:
       - key: NODE_ENV
         value: production
       - key: PUBLIC_BASE_URL
-        value: https://wed.swisspro.site
+        value: https://pod.swisspro.site
       - key: TRUST_PROXY
         value: "true"
       - key: STORE_PERSIST_PATH
         value: /var/data/runtime-state.json
       - key: CORS_ORIGINS
-        value: https://wed.swisspro.site
+        value: https://pod.swisspro.site
       # --- Hard-required in production (server refuses to start without them) ---
       - key: ADMIN_API_KEY
         sync: false
@@ -54,7 +54,7 @@ services:
       - key: SHOPIFY_CLIENT_SECRET
         sync: false
       - key: SHOPIFY_REDIRECT_URI
-        value: https://wed.swisspro.site/api/shopify/oauth/callback
+        value: https://pod.swisspro.site/api/shopify/oauth/callback
       # --- Payments ---
       - key: PAYPAL_ENV
         value: live

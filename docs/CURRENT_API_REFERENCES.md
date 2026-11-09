@@ -4,7 +4,7 @@
 > the lists below it are references for adapters that exist in code but are not configured in production
 > (see `API_CREDENTIALS_MATRIX.md`). Agent behaviour: [`POD.AI-Agent-标准文档.txt`](POD.AI-Agent-标准文档.txt).
 
-## Used by the live site (https://wed.swisspro.site)
+## Used by the live site (https://pod.swisspro.site)
 
 | Service | Endpoint used in code | Code |
 |---|---|---|

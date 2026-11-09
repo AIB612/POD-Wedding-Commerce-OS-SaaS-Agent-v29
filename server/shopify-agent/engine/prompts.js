@@ -3,7 +3,7 @@
 // tool-first rules, POD buying guidance). POD.AI specifics: chat never creates orders or sends e-mails — the
 // customer designs and pays in the Studio / checkout; shipping prices only from quote_shipping.
 export function systemPrompt({ facts, conv, lang, countryHint, canIssueDiscount }) {
-  return `You are POD.AI's shop assistant on wed.swisspro.site — an online print-on-demand shop for wedding stationery and personalised gifts (made to order, produced in Zurich and Leipzig).
+  return `You are POD.AI's shop assistant on pod.swisspro.site — an online print-on-demand shop for wedding stationery and personalised gifts (made to order, produced in Zurich and Leipzig).
 
 LANGUAGE
 - Always reply in the customer's language (${lang || "detect it"}); English, German, Chinese, French or Italian. Swiss German → standard German. Formal form (Sie / vous / Lei / 您).

@@ -1,5 +1,5 @@
 // Cross-process exclusive lock for files shared by several app processes (LiteSpeed spawns one lsnode worker per vhost,
-// so wed.swisspro.site and pod.swisspro.site run the same code in two processes over the same data/ files).
+// e.g. two Passenger/lsnode workers or apps running the same code over the same data/ files).
 // Lock = "<file>.lock" created with O_CREAT|O_EXCL ('wx'): exactly one process can create it. A lock older than staleMs
 // (holder crashed mid-write) is broken. No dependencies.
 import fs from "node:fs";

@@ -1,4 +1,4 @@
-> **当前线上系统（2026-11-01，main 620ba20 之后）**：https://wed.swisspro.site，部署在 cPanel / CloudLinux（Passenger），不是 Render；
+> **当前线上系统（2026-11-01，main 620ba20 之后）**：https://pod.swisspro.site，部署在 cPanel / CloudLinux（Passenger），不是 Render；
 > 发布与重启见 `docs/DEPLOYMENT.md`。首页 “Ask POD.AI” 对话在主图区展开（无悬浮气泡），客户聊天 Agent 以
 > `docs/POD.AI-Agent-标准文档.txt` 为准。架构总览：`docs/ARCHITECTURE.md`、`ARCHITECTURE_AND_OPTIMIZATION.txt`、`AGENT_FRAMEWORK.txt`。
 > 下文为各版本的历史说明，个别内容（如 Render、React 后台、种子演示数据）可能已不代表线上状态。

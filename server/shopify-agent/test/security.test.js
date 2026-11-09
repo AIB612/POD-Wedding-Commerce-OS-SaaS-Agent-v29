@@ -121,7 +121,7 @@ try {
   // 7. public pages
   for (const p of ["/shopify-agent/security", "/shopify-agent/dpa"]) { const r = await realFetch(base + p); assert.equal(r.status, 200, p); assert.match(await r.text(), /Dropking AI/); }
   const http = await import("node:http");
-  const hostGet = p => new Promise((ok, no) => http.get({ host: "127.0.0.1", port: server.address().port, path: p, headers: { Host: "pod.swisspro.site" } }, r => { r.resume(); ok(r.statusCode); }).on("error", no));
+  const hostGet = p => new Promise((ok, no) => http.get({ host: "127.0.0.1", port: server.address().port, path: p, headers: { Host: "podai.swisspro.site" } }, r => { r.resume(); ok(r.statusCode); }).on("error", no));
   for (const p of ["/security", "/dpa", "/privacy"]) assert.equal(await hostGet(p), 200, p);
   const priv = await (await realFetch(`${base}/shopify-agent/privacy`)).text();
   assert.match(priv, /encrypt/i); assert.match(priv, /\/security/); assert.match(priv, /access log/i);

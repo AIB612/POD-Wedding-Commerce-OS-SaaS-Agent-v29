@@ -1,7 +1,7 @@
 # Pod.AI — standalone Shopify app (App Store candidate)
 
 Only the POD Agent customer chat, packaged for any Shopify shop. Separate Partner app from "POD Wedding Studio".
-Server code lives in the main repo (`server/shopify-agent/`, deployed with the site on wed.swisspro.site);
+Server code lives in the main repo (`server/shopify-agent/`, deployed with the site; Pod.AI host podai.swisspro.site, also reachable under /shopify-agent on pod.swisspro.site);
 this folder holds the Shopify CLI project: `shopify.app.toml` + the theme app extension.
 
 | Part | Where | How it works |
@@ -82,7 +82,7 @@ Tests: `node server/shopify-agent/test/app.test.js && node server/shopify-agent/
 - **Access log**: `security/access-log.js` appends one JSON line per access to personal data (admin views of conversations /
   handoffs / dashboard / GDPR log, order lookups in the chat, GDPR webhooks) to `data/podai-access/access-YYYY-MM.log`
   (actor, action, record ids; e-mail / order number only as HMAC). Kept 12 months. Merchant view: `GET /shopify-agent/api/access-log`.
-- **Policies**: https://pod.swisspro.site/security (incident response, 72 h merchant notification), https://pod.swisspro.site/dpa.
+- **Policies**: https://podai.swisspro.site/security (incident response, 72 h merchant notification), https://podai.swisspro.site/dpa.
 
 ## Access tokens (expiring offline tokens)
 Shopify rejects non-expiring offline tokens for new public apps (`403 Non-expiring access tokens are no longer accepted`).

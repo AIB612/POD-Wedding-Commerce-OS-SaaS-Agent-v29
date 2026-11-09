@@ -1,7 +1,7 @@
 ======================================================================
   POD.AI Agent（站内集成版）—— 完整标准文档（本地优先 + 云模型可选）
   文档版本 1.2 · 2026-11-01 · 对应代码提交 21ca881
-  适用：wed.swisspro.site（仓库 AIB612/POD-Wedding-Commerce-OS-SaaS-Agent-v29，
+  适用：pod.swisspro.site（仓库 AIB612/POD-Wedding-Commerce-OS-SaaS-Agent-v29，
         分支 feature/home-en-images = main）
 ======================================================================
 
@@ -49,7 +49,7 @@
 ======================================================================
 
 1.1 定义
-    POD.AI 网站（wed.swisspro.site）内置的客户服务 Agent。访客在首页点击
+    POD.AI 网站（pod.swisspro.site）内置的客户服务 Agent。访客在首页点击
     POD.AI 标志旁的“Ask POD.AI / AI 助手”，首页主图区变成对话面板。
     它用客户的语言（英 / 中 / 德；法、意见 1.2）回答问题、推荐商品、报价
     （商品价 + 运费 + 预计送达）、查询订单和物流、校验优惠码，并在需要时
@@ -71,7 +71,7 @@
     · 语言：中/英/德 回复模板齐全；法语、意大利语可被识别，护栏/转人工/
       错误提示有法、意版本，其余回复模板回落到英文（见 2.1 F10）。
     · 后台：Admin “AI 客服 / Chat agent”，管理员登录后可用。
-    · 嵌入：任何网站加一行 <script src="https://wed.swisspro.site/pod-agent/
+    · 嵌入：任何网站加一行 <script src="https://pod.swisspro.site/pod-agent/
       widget.js" async> 即出现 POD.AI 对话按钮（同一 /api/pod-agent/chat）。
 
 1.3 边界（不做什么）—— 由代码强制，不依赖 AI 自觉
@@ -479,9 +479,9 @@
     llm_tool_loop "mocked provider ok, fallback ok"。
 
 6.2 手动验证清单（线上）
-    □ https://wed.swisspro.site/ 点“Ask POD.AI”：主图区变对话，无悬浮气泡；
+    □ https://pod.swisspro.site/ 点“Ask POD.AI”：主图区变对话，无悬浮气泡；
       Esc / 返回按钮恢复主图；手机和矮窗口下输入框始终可见
-    □ https://wed.swisspro.site/?ask=1 自动打开对话
+    □ https://pod.swisspro.site/?ask=1 自动打开对话
     □ 问“Shipping to Switzerland for 10 invitations”：报价卡片的标准/快递价
       与购物车结账相同
     □ 问“10 份邀请卡寄到瑞士运费多少”：中文回复
@@ -490,12 +490,12 @@
     □ 说“talk to a person”：转人工；Admin Handoffs 出现该记录；Resolve 后
       AI 恢复
     □ 问开放问题（如“why…”）：无密钥时给本地答案 + “Talk to a person”
-    □ https://wed.swisspro.site/api/pod-agent/status 返回
+    □ https://pod.swisspro.site/api/pod-agent/status 返回
       {"ok":true,"strategy":"local_first","mode":"rules",
        "confidence_threshold":0.6,"kpis":15,"tools":10,
        "languages":{"detected":["en","zh","de","fr","it"],
                     "replies":["en","zh","de"]}}
-    □ https://wed.swisspro.site/agent.html：数字与 status 一致；“立即试用”
+    □ https://pod.swisspro.site/agent.html：数字与 status 一致；“立即试用”
       跳到首页并打开对话、输入框可见（桌面与手机）；无控制台错误
     □ /pod-agent/widget.js 200；/pod-agent/README.md、
       /pod-agent/customer/agent.js 404
@@ -1146,7 +1146,7 @@ B.3 跳过（本版没有）
         后台登录、邮件模板、站内 Agent 名称与问候语、Pod.AI 应用文字与 README、全部文档；
         本文档更名为 docs/POD.AI-Agent-标准文档.txt。公开页面 / 页脚 / 法律页面 / 文档
         移除个人姓名与邮寄地址（需要名称处统一为 POD.AI）；页脚底行固定为“© 2026 POD.AI”。
-        不变：域名 wed.swisspro.site、路由、API 路径、环境变量名、数据键 / ID
+        不变：域名 pod.swisspro.site、路由、API 路径、环境变量名、数据键 / ID
         （如 WEDAI- 订单前缀、WedAIWidget、wedai-* 文件名 / 缓存键）、
         data/logistics-state.json 发件人名称。影响条款：全文品牌名称。
 
