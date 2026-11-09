@@ -48,7 +48,7 @@
 
   var el=document.createElement("section");el.className="hero-chat";el.id="heroChat";el.setAttribute("role","region");el.setAttribute("aria-label","POD.AI assistant");el.setAttribute("data-no-translate","");
   el.innerHTML='<div class="hc-head"><button class="hc-back" type="button" data-hc="back" aria-label="Back to the scene"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span data-hck="hc.back">Back to the scene</span></button>'+
-    '<div class="hc-id"><img class="hc-av" src="/assets/brand/mark.svg?v=20261109d" width="32" height="32" alt=""><div><b data-hck="hc.title">POD.AI assistant</b><span data-hck="hc.sub">Product ideas · prices &amp; shipping · order status</span></div></div><button class="hc-new" type="button" data-hc="new" data-hck="hc.new">New chat</button></div>'+
+    '<div class="hc-id"><img class="hc-av" src="/assets/brand/mark-160.png?v=20261109e" width="32" height="32" alt=""><div><b data-hck="hc.title">POD.AI assistant</b><span data-hck="hc.sub">Product ideas · prices &amp; shipping · order status</span></div></div><button class="hc-new" type="button" data-hc="new" data-hck="hc.new">New chat</button></div>'+
     '<div class="hc-msgs" data-hc="msgs" aria-live="polite"></div><div class="hc-chips" data-hc="chips"></div>'+
     '<form class="hc-form" data-hc="form"><textarea rows="1" data-hc="input" maxlength="1000" aria-label="Message"></textarea><button class="hc-send" data-hc="send" type="submit" data-hck="hc.send">Send</button><div class="hc-priv" data-hck="hc.privacy">Never share card details or passwords in the chat.</div></form>';
   stage.appendChild(el);

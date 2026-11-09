@@ -6,7 +6,7 @@
   '.sf-in{max-width:1200px;margin:0 auto;padding:56px 28px 28px}'+
   '.sf-top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr 1.4fr;gap:28px}'+
   '.sf-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;color:#fff}'+
-  '.sf-logo{width:38px;height:38px;border-radius:13px;background:#f8f4ef;color:#292622;display:grid;place-items:center;font-weight:800}'+
+  '.sf-logo{width:38px;height:38px;border-radius:13px;overflow:hidden;flex:none;display:block;background:#faf8f5}.sf-logo img{width:38px;height:38px;display:block;object-fit:contain}'+
   '.sf p{margin:12px 0 0;color:#b9afa4;font-size:13px}'+
   '.sf h4{margin:0 0 14px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#fff}'+
   '.sf ul{list-style:none;margin:0;padding:0}.sf li{margin:0 0 10px}'+
@@ -22,7 +22,7 @@
   '@media(max-width:520px){.sf-in{padding:40px 20px 24px}.sf-bottom{flex-direction:column;align-items:flex-start}}';
   var y=new Date().getFullYear(),MAIL=''; /* contact e-mail shown in the footer (single place to change) */
   var html='<footer class="sf" role="contentinfo"><div class="sf-in"><div class="sf-top">'+
-   '<div class="sf-col-brand"><div class="sf-brand"><span class="sf-logo">P</span>POD.AI</div><p>Matching wedding invitations, welcome signs, favours and gifts — designed in one studio, printed on demand and shipped from Switzerland across Europe.</p></div>'+
+   '<div class="sf-col-brand"><div class="sf-brand"><span class="sf-logo"><img src="/assets/brand/mark-160.png?v=20261109e" width="38" height="38" alt=""></span>POD.AI</div><p>Matching wedding invitations, welcome signs, favours and gifts — designed in one studio, printed on demand and shipped from Switzerland across Europe.</p></div>'+
    '<nav aria-label="Shop"><h4>Shop</h4><ul><li><a href="/">Home</a></li><li><a href="/checkout">Cart &amp; checkout</a></li></ul></nav>'+
    '<nav aria-label="Create"><h4>Create</h4><ul><li><a href="/studio.html">Design studio</a></li><li><a href="/account">My designs &amp; orders</a></li><li><a href="/agent.html">Agent</a></li></ul></nav>'+
    '<nav aria-label="Help"><h4>Help</h4><ul><li><a href="/shipping">Shipping &amp; production times</a></li><li><a href="/returns">Returns &amp; defects</a></li><li><a href="/account#find-order">Find my order</a></li></ul></nav>'+
