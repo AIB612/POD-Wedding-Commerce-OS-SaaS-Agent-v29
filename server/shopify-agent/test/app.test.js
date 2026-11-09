@@ -37,7 +37,10 @@ globalThis.fetch = async (url, init = {}) => {
   const m = u.match(/^https:\/\/([a-z0-9-]+\.myshopify\.com)\/admin\/(.*)$/);
   if (!m) return realFetch(url, init);
   const shop = m[1], body = JSON.parse(init.body || "{}"), json = d => new Response(JSON.stringify(d), { status: 200, headers: { "Content-Type": "application/json" } });
-  if (m[2] === "oauth/access_token") { assert.equal(body.client_id, "agentkey"); assert.match(body.grant_type, /token-exchange/); return json({ access_token: `tok_${shop}`, scope: core.SCOPES }); }
+  if (m[2] === "oauth/access_token") { assert.equal(body.client_id, "agentkey");
+    if (body.grant_type === "refresh_token") { assert.equal(body.refresh_token, `rt_${shop}`); return json({ access_token: `tok_${shop}`, scope: core.SCOPES, expires_in: 3600, refresh_token: `rt_${shop}`, refresh_token_expires_in: 7776000 }); }
+    assert.match(body.grant_type, /token-exchange/); assert.equal(body.expiring, "1", "expiring offline tokens (required for public apps)");
+    return json({ access_token: `tok_${shop}`, scope: core.SCOPES, expires_in: 3600, refresh_token: `rt_${shop}`, refresh_token_expires_in: 7776000 }); }
   assert.equal(init.headers["X-Shopify-Access-Token"], `tok_${shop}`, "token of the same shop");
   gql.push({ shop, q: body.query.slice(0, 30), v: body.variables });
   const s = SHOPS[shop];

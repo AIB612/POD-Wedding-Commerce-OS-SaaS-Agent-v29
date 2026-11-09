@@ -3,6 +3,9 @@
 // order numbers, handoff contents, event payloads, settings, shop scopes) is inside the blob. In memory rows stay plain, so
 // lookups (GDPR customers/redact by e-mail, retention by date) work unchanged. Plaintext rows found on load are re-written
 // encrypted (migration). A row that cannot be decrypted (wrong key) is kept verbatim and written back unchanged — never lost.
+import fsp from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { registerPersistCodec } from "../../saas-store.js";
 import { seal, open } from "./keys.js";
 
@@ -41,6 +44,12 @@ function codecFor(col) {
       return out.concat(stuck.filter(r => !live.has(r.id)));
     }
   };
+}
+/** Row as currently persisted on disk (another app process may have written a newer version). null if absent/unreadable. */
+export async function readPersistedRow(col, id) {
+  const raw = process.env.STORE_PERSIST_PATH; if (!raw) return null;
+  const file = path.isAbsolute(raw) ? raw : path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", raw);
+  try { const r = (JSON.parse(await fsp.readFile(file, "utf8"))[col] || []).find(x => x.id === id); return r ? (isEncryptedRow(r) ? decryptRow(col, r) : r) : null; } catch { return null; }
 }
 let installed = false;
 export function installRecordEncryption() {

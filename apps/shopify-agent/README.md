@@ -83,3 +83,9 @@ Tests: `node server/shopify-agent/test/app.test.js && node server/shopify-agent/
   handoffs / dashboard / GDPR log, order lookups in the chat, GDPR webhooks) to `data/podai-access/access-YYYY-MM.log`
   (actor, action, record ids; e-mail / order number only as HMAC). Kept 12 months. Merchant view: `GET /shopify-agent/api/access-log`.
 - **Policies**: https://pod.swisspro.site/security (incident response, 72 h merchant notification), https://pod.swisspro.site/dpa.
+
+## Access tokens (expiring offline tokens)
+Shopify rejects non-expiring offline tokens for new public apps (`403 Non-expiring access tokens are no longer accepted`).
+`core.js` requests `expiring=1` on token exchange, stores the 1 h access token + 90-day refresh token (both encrypted),
+refreshes 5 min before expiry (or once after a 401), and migrates a stored legacy token once via token exchange
+(`subject_token_type=…offline-access-token`). A failed refresh never marks the shop uninstalled; opening the app re-exchanges.
