@@ -16,6 +16,49 @@
   function post(path, body) { return fetch(P + path, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify(body) }); }
   function ev(type, extra) { try { post("/event", Object.assign({ type: type, conversation_id: conv }, extra || {})).catch(function () {}); } catch (e) {} }
 
+  // GA4 (optional): measurement ID from /config.ga_id. Anonymous events only; respect Shopify Customer Privacy.
+  var gaId = "", gaLoaded = false;
+  function analyticsAllowed(cb) {
+    try {
+      var cp = window.Shopify && Shopify.customerPrivacy;
+      if (cp && typeof cp.analyticsProcessingAllowed === "function") return cb(!!cp.analyticsProcessingAllowed());
+      if (window.Shopify && Shopify.loadFeatures) {
+        Shopify.loadFeatures([{ name: "consent-tracking-api", version: "0.1" }], function () {
+          try { var c2 = Shopify.customerPrivacy; cb(c2 && typeof c2.analyticsProcessingAllowed === "function" ? !!c2.analyticsProcessingAllowed() : true); }
+          catch (e) { cb(true); }
+        });
+        return;
+      }
+    } catch (e) {}
+    cb(true); // no privacy API → allow (many themes without banner)
+  }
+  function ensureGa(cb) {
+    if (!gaId) return;
+    analyticsAllowed(function (ok) {
+      if (!ok) return;
+      if (!gaLoaded) {
+        gaLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { dataLayer.push(arguments); };
+        var sc = document.createElement("script"); sc.async = true; sc.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(gaId);
+        document.head.appendChild(sc);
+        gtag("js", new Date());
+        gtag("config", gaId, { anonymize_ip: true, send_page_view: false });
+      }
+      if (cb) cb();
+    });
+  }
+  function gaEv(name, params) {
+    if (!gaId) return;
+    ensureGa(function () {
+      try {
+        var p = Object.assign({}, params || {});
+        delete p.email; delete p.message; delete p.text; delete p.conversation_id; delete p.customer;
+        gtag("event", String(name).slice(0, 40), p);
+      } catch (e) {}
+    });
+  }
+
   var btn = el("button", "pc-l"), win = el("div", "pc-w"), head = el("div", "pc-h"), av = el("div", "pc-av"), tt = el("div", "pc-t"), name = el("b"), sub = el("small", null, t.online), x = el("button");
   var log = el("div", "pc-log"), form = el("form", "pc-f"), ta = el("textarea"), send = el("button"), foot = el("div", "pc-ft", t.by), live = el("div", "pc-sr");
   btn.type = "button"; btn.setAttribute("aria-label", t.open); btn.setAttribute("aria-expanded", "false"); btn.setAttribute("aria-controls", "pc-win");
@@ -40,6 +83,7 @@
   document.body.append(btn, win);
   fetch(P + "/config", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (c) {
     cfg = c || {}; if (cfg.enabled === false) { btn.remove(); win.remove(); return; }
+    if (cfg.ga_id && /^G-[A-Z0-9]+$/i.test(cfg.ga_id)) gaId = String(cfg.ga_id).toUpperCase();
     if (cfg.widget && cfg.widget.language && cfg.widget.language !== "auto" && ["en", "zh", "de", "fr", "it"].indexOf(cfg.widget.language) >= 0) { LANG = cfg.widget.language; t = tx(LANG); sub.textContent = t.online; foot.textContent = t.by; }
     apply();
     try { var k = "podai_ping", n = Date.now(); if (!(n - (+localStorage.getItem(k) || 0) < 864e5)) { localStorage.setItem(k, n); ev("embed_ping"); } } catch (e) {} // app-embed heartbeat
@@ -58,11 +102,11 @@
         u.items.forEach(function (p) {
           if (!p.link) return; // not on the Online Store → no card
           var c = el("div", "pc-pc"); c.setAttribute("role", "listitem");
-          var im = el("a", "pc-img"); im.href = link(p.link); im.tabIndex = -1; im.onclick = function () { ev("product_click", { product_id: p.id }); };
+          var im = el("a", "pc-img"); im.href = link(p.link); im.tabIndex = -1; im.onclick = function () { ev("product_click", { product_id: p.id }); gaEv("product_clicked"); };
           if (p.image) { var i = el("img"); i.src = p.image + (p.image.indexOf("?") < 0 ? "?width=320" : ""); i.alt = p.name; i.loading = "lazy"; i.width = 156; i.height = 156; im.append(i); }
           var b = el("div", "pc-b"); b.append(el("b", null, p.name), el("span", "pc-p", money(p.unit_price, p.currency)));
           var bt = el("div", "pc-btn"), v = el("a", null, t.view); v.href = link(p.link); v.onclick = im.onclick; bt.append(v);
-          if (p.variant_id) { var a = el("a", "pc-pri", t.add); a.href = "/cart/add?id=" + encodeURIComponent(p.variant_id) + "&quantity=1&utm_source=podai&utm_medium=chat"; a.onclick = function () { ev("add_to_cart", { product_id: p.id }); }; bt.append(a); }
+          if (p.variant_id) { var a = el("a", "pc-pri", t.add); a.href = "/cart/add?id=" + encodeURIComponent(p.variant_id) + "&quantity=1&utm_source=podai&utm_medium=chat"; a.onclick = function () { ev("add_to_cart", { product_id: p.id }); gaEv("add_to_cart"); }; bt.append(a); }
           b.append(bt); c.append(im, b); w.append(c);
           try { var pu = new URL(p.link, location.origin); if (pu.origin === location.origin || /\.myshopify\.com$/.test(pu.hostname)) fetch(pu.pathname.replace(/\/$/, "") + ".js", { credentials: "same-origin" }).then(function (r) { if (r.status === 404) { c.remove(); if (!w.children.length) w.remove(); } }).catch(function () {}); } catch (e) {} // not on the Online Store → drop
         });
@@ -70,11 +114,13 @@
         if (u.note) log.append(el("div", "pc-note", u.note));
       }
       if (u.type === "handoff") {
+        gaEv("handoff_shown");
         if (u.email) { var hr = el("div", "pc-hf pc-hr"), sp = el("span", null, t.reply.replace("{e}", u.email)), ch = el("button", "pc-sm", t.change); ch.type = "button"; ch.style.flex = "0 0 auto";
           ch.onclick = function () { hr.remove(); emailForm(); }; hr.append(sp, ch); log.append(hr); }
         else emailForm();
       }
       if (u.type === "order" && u.order) {
+        gaEv("order_lookup");
         var o = u.order, oc = el("div", "pc-oc"), r1 = el("div", "pc-r1"), f = String(o.cancelled ? "cancelled" : o.fulfillment || "").toLowerCase().replace(/_/g, " ");
         var bd = el("span", "pc-bd" + (/^fulfilled|delivered/.test(f) ? " ok" : ""), f); r1.append(el("b", null, o.name), bd); oc.append(r1);
         oc.append(el("div", "pc-mu", (o.items || []).map(function (i) { return i.quantity + "× " + i.title; }).join(", ")));
@@ -96,7 +142,7 @@
   }
   function ask(text, silent, isEmail) {
     text = String(text || "").trim(); if (!text || busy) return; busy = true; send.disabled = true;
-    if (!silent) msg("pc-u", text);
+    if (!silent) { msg("pc-u", text); if (!isEmail) gaEv("message_sent"); }
     var ty = el("div", "pc-ty"); ty.innerHTML = "<i></i><i></i><i></i>"; ty.setAttribute("aria-label", "…"); log.append(ty); scroll();
     post("/chat", { message: text, conversation_id: conv, lang: LANG, page: location.pathname })
       .then(function (r) { return r.json(); })
@@ -113,7 +159,7 @@
   function toggle(on) {
     on = on == null ? !win.classList.contains("pc-on") : on;
     win.classList.toggle("pc-on", on); btn.setAttribute("aria-expanded", String(on)); btn.setAttribute("aria-label", on ? t.close : t.open);
-    if (on && !opened) { t = tx(LANG); sub.textContent = t.online; foot.textContent = t.by; opened = true; ev("chat_open");
+    if (on && !opened) { t = tx(LANG); sub.textContent = t.online; foot.textContent = t.by; opened = true; ev("chat_open"); gaEv("chat_opened");
       var g = cfg.greeting && cfg.greeting[LANG]; msg("pc-a", d.greeting || g || t.hi); chips(t.chips); }
     if (on) setTimeout(function () { if (window.innerWidth > 520) ta.focus(); }, 250); else btn.focus();
     if (window.innerWidth <= 520) document.documentElement.style.overflow = on ? "hidden" : "";

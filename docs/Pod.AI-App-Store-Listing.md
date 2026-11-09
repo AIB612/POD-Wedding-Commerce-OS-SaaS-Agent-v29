@@ -177,7 +177,7 @@ So conversations, and optionally tracking lookups, are the fair unit.
 | Free | $0 | $0 | 50 |
 | Growth | $19/mo | $182.40/yr ($15.20/mo) | 500 |
 | Pro | $49/mo | $470.40/yr ($39.20/mo) | 2,500 |
-14-day free trial on Growth and Pro. Overage $1.50 per extra 100 conversations (capped). **Billing is NOT configured** — set up via Shopify Billing API / managed pricing only after the listing is approved.
+14-day free trial on Growth and Pro. Overage $1.50 per extra 100 conversations (capped). **Billing is NOT configured.** For Plan A use **Shopify App Pricing** in the Partner Dashboard (default for new public apps; no Billing API code required). Billing API is legacy. Configure Free/Growth/Pro before paid-plan review (requirement 1.2).
 
 ### Former open decisions for pricing (resolved above)
 - Which option to use.

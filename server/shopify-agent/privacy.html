@@ -16,7 +16,7 @@ code{background:#f3ece3;padding:1px 5px;border-radius:5px;font-size:13.5px}foote
 <header><div class="logo"><img src="/shopify-agent/podai-icon.png" alt="Pod.AI" width="40" height="40"></div><div class="brand">Pod.AI<small>by POD.AI</small></div></header>
 <main>
 <h1>Privacy Policy</h1>
-<p class="mut">Pod.AI — AI customer chat for Shopify stores · Last updated: 4 November 2026</p>
+<p class="mut">Pod.AI — AI customer chat for Shopify stores · Last updated: 9 November 2026</p>
 
 <p>Pod.AI ("the App") is a Shopify app operated by Dropking AI ("we", "us"), under the POD.AI brand. It adds a customer chat to a merchant's online store that answers questions about products, shipping, policies and orders, and passes questions it cannot answer to the merchant's team. This policy explains what data the App accesses, why, where it is stored, how long it is kept and how it is deleted.</p>
 <p>For data about their customers, the merchant is the data controller and Dropking AI acts as a processor on the merchant's behalf. For merchant account data (shop domain, settings, access token) Dropking AI is the data controller.</p>
@@ -37,7 +37,7 @@ code{background:#f3ece3;padding:1px 5px;border-radius:5px;font-size:13.5px}foote
 <li><b>Handoffs</b>: when the App passes a conversation to the merchant's team, the handoff record holds the reason, a short summary, the customer's messages and their e-mail for the reply.</li>
 <li><b>Anonymous storefront events</b>: chat opened, product card clicked, add to cart via a card, and a daily "chat installed" heartbeat. These contain no personal data.</li>
 </ul>
-<p>The App does not use cookies for tracking. It stores a random chat ID and the time of the last heartbeat in the visitor's browser storage so the conversation can continue across pages. We do not sell data, use it for advertising, or combine it across stores.</p>
+<p>The App does not use first-party tracking cookies of its own. It stores a random chat ID and the time of the last heartbeat in the visitor's browser storage so the conversation can continue across pages. When Google Analytics is enabled, GA may set its own cookies / storage after analytics consent; events are anonymous (no chat content or customer identifiers). We do not sell data, use it for advertising, or combine it across stores.</p>
 
 <h2>3. Where data is stored</h2>
 <p>Data is stored on our application server in Germany (Frankfurt), separated per shop. Collections used: <code>podai_conversations</code>, <code>podai_handoffs</code>, <code>podai_events</code>, <code>podai_settings</code>, <code>podai_shops</code> (the shop's access token, encrypted at rest) and <code>podai_gdpr</code> (a log of privacy requests with hashed customer identifiers). All traffic uses HTTPS. Requests from the storefront are verified with Shopify's app-proxy signature; admin requests use Shopify session tokens.</p>
@@ -47,7 +47,8 @@ code{background:#f3ece3;padding:1px 5px;border-radius:5px;font-size:13.5px}foote
 <tr><td>Shopify</td><td>API requests for the data above</td><td>Always</td></tr>
 <tr><td>Carrier tracking APIs (e.g. YunExpress, 4PX)</td><td>Tracking number only</td><td>When a customer asks about a shipped order and the carrier is supported</td></tr>
 <tr><td>51Tracking</td><td>Tracking number and carrier code only</td><td>Fallback parcel tracking, if enabled</td></tr>
-<tr><td>Large language model provider (optional; e.g. OpenAI, xAI or DeepSeek, as configured)</td><td>The customer's message, recent chat context and the store's public product / policy facts needed to answer</td><td>Only if an LLM is configured and the merchant has "LLM answers" switched on. Otherwise answers come from built-in rules and the store's own data.</td></tr></table>
+<tr><td>Large language model provider (optional; e.g. OpenAI, xAI or DeepSeek, as configured)</td><td>The customer's message, recent chat context and the store's public product / policy facts needed to answer</td><td>Only if an LLM is configured and the merchant has "LLM answers" switched on. Otherwise answers come from built-in rules and the store's own data.</td></tr><tr><td>Google Analytics 4 (optional)</td><td>Anonymous event names only (e.g. chat opened, settings saved). No message text, e-mail, name, order number or conversation ID. IP anonymized.</td><td>Only when a measurement ID is configured on the server (<code>PODAI_GA_ID</code>). Storefront loads GA only after analytics consent via Shopify's Customer Privacy API when the store has a cookie banner.</td></tr>
+</table>
 <p>No customer e-mail addresses or names are sent to carriers or 51Tracking. The App does not send e-mails to customers.</p>
 
 <h2>5. Retention</h2>

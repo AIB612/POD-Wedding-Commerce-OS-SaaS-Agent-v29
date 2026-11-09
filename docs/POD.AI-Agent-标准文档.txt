@@ -1216,3 +1216,6 @@ B.3 跳过（本版没有）
     __HASH__ · 2026-11-09 · 品牌标记改回原批准 P（podai-icon）+ 当前圆角奶油底；去掉几何重绘版；高清 PNG 4x 用于顶栏/聊天/Agent。
         影响条款：附录 D。
 
+    __HASH__ · 2026-11-09 · Pod.AI GA4 可选（PODAI_GA_ID / PODAI_LISTING_GA_ID）；隐私政策补充 GA；上架 upload pack 已备。计费走 Shopify App Pricing。
+        影响条款：附录 D。
+

@@ -16,6 +16,7 @@ import { trackingSources } from "./tracking.js";
 import { dashboard, recordEvent } from "./dashboard.js";
 import { saveSettings } from "./engine/store.js";
 import { llmStatus } from "./engine/llm.js";
+import * as ga from "./ga.js";
 
 const HEX = v => /^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v) : null;
 // storefront look, editable in the app (the theme app embed can override colour / position)
@@ -70,7 +71,7 @@ export function shopifyAgentRouter() {
     if (!(await core.isInstalled(v.shop))) { res.status(404).json({ error: "shop_not_installed" }); return null; } return v.shop; };
   r.get("/shopify-agent/proxy/config", notConfigured, ah(async (req, res) => { const shop = await proxyShop(req, res); if (!shop) return;
     const s = await getSettings(core.tenantFor(shop));
-    res.set("Cache-Control", "public, max-age=60").json({ enabled: s.enabled, greeting: s.greeting, widget: widgetOf(s), reply_hours: s.human_reply_hours }); }));
+    res.set("Cache-Control", "public, max-age=60").json({ enabled: s.enabled, greeting: s.greeting, widget: widgetOf(s), reply_hours: s.human_reply_hours, ga_id: ga.measurementId() || undefined }); }));
   r.post("/shopify-agent/proxy/event", notConfigured, json, ah(async (req, res) => { const shop = await proxyShop(req, res); if (!shop) return;
     res.json(await recordEvent(core.tenantFor(shop), req.body || {})); }));
 
@@ -78,7 +79,11 @@ export function shopifyAgentRouter() {
     const shop = core.normalizeShop(req.query.shop);
     if (!shop) return res.status(400).type("text/plain").send("Open this app from your Shopify admin.");
     core.setEmbeddedFrameHeaders(res, shop);
-    res.set("Cache-Control", "no-store").type("html").send(fs.readFileSync(PAGE, "utf8").replace("__API_KEY__", attr(core.config().apiKey)));
+    res.set("Cache-Control", "no-store").type("html").send(
+      fs.readFileSync(PAGE, "utf8")
+        .replace("__API_KEY__", attr(core.config().apiKey))
+        .replace("<!--__PODAI_GA__-->", ga.adminSnippet())
+    );
   });
 
   const api = express.Router();
