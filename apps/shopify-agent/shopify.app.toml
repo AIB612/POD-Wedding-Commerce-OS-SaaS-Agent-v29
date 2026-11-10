@@ -23,19 +23,20 @@ redirect_urls = [ "https://podai.swisspro.site/shopify-agent" ]
 
 [webhooks]
 api_version = "2026-10"
+# Webhooks stay on pod.swisspro.site/shopify-agent/webhooks (same Node app as podai.*; matches the released versions).
 
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
-  uri = "https://podai.swisspro.site/shopify-agent/webhooks"
+  uri = "https://pod.swisspro.site/shopify-agent/webhooks"
 
   # Billing (Managed Pricing): plan changes → the server re-reads the plan (it also re-checks every 10 min without it).
   [[webhooks.subscriptions]]
   topics = [ "app_subscriptions/update" ]
-  uri = "https://podai.swisspro.site/shopify-agent/webhooks"
+  uri = "https://pod.swisspro.site/shopify-agent/webhooks"
 
   [[webhooks.subscriptions]]
   compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
-  uri = "https://podai.swisspro.site/shopify-agent/webhooks"
+  uri = "https://pod.swisspro.site/shopify-agent/webhooks"
 
 [app_proxy]
 url = "https://podai.swisspro.site/shopify-agent/proxy"
