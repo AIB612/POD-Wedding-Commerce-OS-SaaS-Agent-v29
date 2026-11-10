@@ -262,7 +262,9 @@ try {
     }
     const std = qd.shipping_options.find(o => o.id === "standard"), stdA = qa.shipping_options.find(o => o.id === "standard");
     assert.equal(std.delivery.production_days, stdA.delivery.production_days + 2, "proof buffer adds 2 business days");
-    assert.equal(stdA.delivery.production_days, 2, "tee + mug from the Zürich facility (2 days)");
+    assert.equal(stdA.delivery.production_days, 3, "tee + mug: 3 business days production (China, YunExpress / 4PX)");
+    assert.equal(stdA.delivery.production_days + stdA.carrier_days[0], 7, "earliest total 7 business days");
+    assert.equal(stdA.delivery.production_days + stdA.carrier_days[1], 15, "latest total 15 business days");
     assert.ok(qd.shipping_options.find(o => o.id === "express").delivery.to <= std.delivery.to);
     assert.ok((await findRecord("orders", co.order_id)).delivery_estimate.from);
     for (const f of ["cart.js", "checkout.js", "payment-success.html", "account-app.js"]) assert.match(fs.readFileSync(path.join(root, f), "utf8"), /PODDates/, f);
@@ -329,7 +331,7 @@ try {
     assert.equal((await anon("/api/saas/fees")).status, 401);
     const f0 = await (await admin("/api/saas/fees")).json();
     assert.equal(f0.prices_include_vat, false); assert.equal(f0.tax.zones.zone_ch, 0.081); assert.equal(f0.packaging.insert_card.CHF, 0);
-    assert.deepEqual(f0.shipping.zone_ch.standard.days, [2, 4]);
+    assert.deepEqual(f0.shipping.zone_ch.standard.days, [4, 12]);
     const before = await (await quote({ cart: cartLines, country: "CH" })).json();
     assert.equal(before.packaging_amount, 0, "packaging seeded at 0 → nothing changes");
     const put = b => admin("/api/saas/fees", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });

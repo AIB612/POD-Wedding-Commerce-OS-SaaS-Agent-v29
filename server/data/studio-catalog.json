@@ -43,7 +43,7 @@
       "city": "China (YunExpress / 4PX)",
       "country": "CH",
       "region": "CH",
-      "days": 2
+      "days": 3
     },
     {
       "id": "f_de",
@@ -57,7 +57,7 @@
       "city": "China (YunExpress / 4PX)",
       "country": "LV",
       "region": "EU",
-      "days": 4
+      "days": 3
     },
     {
       "id": "f_us",
@@ -74,7 +74,7 @@
   },
   "cross_border": {
     "near": {
-      "days": 3,
+      "days": 0,
       "cost_eur": 2.5,
       "regions": [
         "CH",
@@ -82,7 +82,7 @@
       ]
     },
     "far": {
-      "days": 7,
+      "days": 0,
       "cost_eur": 6.5
     }
   },
@@ -11618,7 +11618,7 @@
       "CH": {
         "base": 6.5,
         "per_kg": 1.2,
-        "days": 2
+        "days": 4
       },
       "EU": {
         "base": 12,
@@ -11628,14 +11628,14 @@
       "US": {
         "base": 22,
         "per_kg": 8,
-        "days": 7
+        "days": 4
       }
     },
     "EU": {
       "EU": {
         "base": 4.9,
         "per_kg": 1,
-        "days": 3
+        "days": 4
       },
       "CH": {
         "base": 9.5,
@@ -11645,24 +11645,24 @@
       "US": {
         "base": 15,
         "per_kg": 6,
-        "days": 7
+        "days": 4
       }
     },
     "US": {
       "US": {
         "base": 5.5,
         "per_kg": 1.5,
-        "days": 3
+        "days": 4
       },
       "EU": {
         "base": 16,
         "per_kg": 7,
-        "days": 8
+        "days": 4
       },
       "CH": {
         "base": 18,
         "per_kg": 8,
-        "days": 8
+        "days": 4
       }
     }
   },

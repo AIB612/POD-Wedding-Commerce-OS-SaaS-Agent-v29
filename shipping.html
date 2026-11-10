@@ -73,7 +73,7 @@ th{background:#f3ece4;font-weight:700;font-size:13px}tr:last-child td{border-bot
 </ol></nav></details>
 <article>
 <section><h2 id="s1">1. How delivery time is calculated</h2>
-<p>Every item is printed on demand for you and shipped from China via YunExpress or 4PX. Your delivery time is <b>production time + carrier transit time</b>, counted in business days (Monday–Friday, excluding public holidays). The exact estimate for your address is shown in the cart and at checkout before you pay.</p>
+<p>Every item is printed on demand for you and shipped from China via YunExpress or 4PX. Your delivery time is <b>production time + carrier transit time</b>, counted in business days (Monday–Friday, excluding public holidays). In total, delivery usually takes <b><span id="totalDays">7–15</span> business days</b> to all regions. The exact estimate for your address is shown in the cart and at checkout before you pay.</p>
 <ul><li><b>Proof first (default for personalised designs):</b> production starts after you approve your proof. We e-mail you a link as soon as it is ready.</li><li><b>Approve mockup at checkout:</b> production starts right after payment.</li></ul>
 </section>
 <section><h2 id="s2">2. Production time</h2>
@@ -102,6 +102,7 @@ th{background:#f3ece4;font-weight:700;font-size:13px}tr:last-child td{border-bot
 <script>(async function(){var N={zone_ch:"Switzerland & Liechtenstein",zone_de:"Germany",zone_eu:"Other EU countries",zone_uk:"United Kingdom",zone_us:"United States",zone_world:"Rest of world"};
 var d=function(a){return a&&a.length?(a[0]===a[1]?a[0]:a[0]+"–"+a[1])+" days":"—"};
 try{var f=await (await fetch("/api/storefront/fees")).json();document.getElementById("prodDays").textContent=f.production_days;
+var lo=Infinity,hi=0;Object.values(f.transit_days||{}).forEach(function(t){(t.standard||[]).concat(t.express||[]).forEach(function(n){lo=Math.min(lo,n);hi=Math.max(hi,n)})});if(hi){var p=Number(f.production_days)||0;document.getElementById("totalDays").textContent=(p+lo)===(p+hi)?(p+lo):(p+lo)+"–"+(p+hi)}
 document.querySelectorAll("[data-vat-label]").forEach(function(e){e.textContent=f.prices_include_vat?"incl. VAT":"excl. VAT"});
 var rows=Object.keys(f.transit_days||{}).filter(function(z){return N[z]}).map(function(z){var t=f.transit_days[z];return "<tr><td>"+N[z]+"</td><td>"+d(t.standard)+"</td><td>"+d(t.express)+"</td></tr>"});
 document.querySelector("#transitTable tbody").innerHTML=rows.join("")||'<tr><td colspan="3">See checkout for your estimate.</td></tr>'}catch(e){document.querySelector("#transitTable tbody").innerHTML='<tr><td colspan="3">See checkout for your estimate.</td></tr>'}})();</script>

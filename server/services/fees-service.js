@@ -19,8 +19,9 @@ const METHODS = ["standard", "express"];
 const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
 const r4 = n => Math.round((Number(n) || 0) * 10000) / 10000;
 // Carrier transit (business days) after production, per zone family.
-const CARRIER_DAYS = { zone_ch: { standard: [2, 4], express: [1, 2] }, zone_de: { standard: [3, 5], express: [1, 3] }, zone_eu: { standard: [3, 6], express: [2, 3] },
-  zone_uk: { standard: [4, 7], express: [2, 4] }, zone_us: { standard: [5, 9], express: [3, 5] }, zone_world: { standard: [6, 12], express: [3, 6] } };
+// China dispatch via YunExpress / 4PX: 4–12 business days transit + 3 production = 7–15 business days, all regions.
+const CN_DAYS = { standard: [4, 12], express: [4, 12] };
+const CARRIER_DAYS = { zone_ch: CN_DAYS, zone_de: CN_DAYS, zone_eu: CN_DAYS, zone_uk: CN_DAYS, zone_us: CN_DAYS, zone_world: CN_DAYS };
 
 export function seedFees() {
   const rate = c => Number(pricing.storefront_currencies?.[c]?.rate) || 1;
@@ -29,7 +30,7 @@ export function seedFees() {
     tax[z.id] = Number(z.tax_rate || 0);
     shipping[z.id] = { name: z.name, countries: z.countries };
     for (const m of METHODS) {
-      shipping[z.id][m] = { days: CARRIER_DAYS[z.id]?.[m] || (m === "express" ? [3, 6] : [6, 12]) };
+      shipping[z.id][m] = { days: [...(CARRIER_DAYS[z.id]?.[m] || CN_DAYS.standard)] };
       for (const c of FEE_CURRENCIES) shipping[z.id][m][c] = { base: r2(z[`${m}_base`] * rate(c)), per_kg: r4(z[`${m}_per_kg`] * rate(c)), free_over: m === "standard" ? r2(z.free_shipping_threshold * rate(c)) : null };
     }
   }
@@ -63,7 +64,7 @@ export function shippingAmount(zoneId, method, currency, { weight_kg, subtotal }
   if (z.free_over != null && Number(z.free_over) > 0 && subtotal >= Number(z.free_over)) return { amount: 0, free: true };
   return { amount: r2(Number(z.base) + weight_kg * Number(z.per_kg || 0)), free: false };
 }
-export function carrierDays(zoneId, method) { return getFees().shipping?.[zoneId]?.[method]?.days || (method === "express" ? [3, 6] : [6, 12]); }
+export function carrierDays(zoneId, method) { return getFees().shipping?.[zoneId]?.[method]?.days || [...CN_DAYS.standard]; }
 /** Effective CHF→X rates for the storefront (and Shopify, which adds SHOPIFY_FX_RATES): seed < last stored admin table
  * (fees.fx_rates) < daily market rates (fx-service) < explicit admin overrides (fees.fx_overrides). */
 export function effectiveFx({ env } = {}) {

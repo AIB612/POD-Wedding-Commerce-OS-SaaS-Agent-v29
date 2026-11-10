@@ -7,7 +7,7 @@ Key facts:
 - How it works: scenario → kit → products → design → delivery. One design is applied across the whole set; per-item placement, colour and material can be fine-tuned.
 - Pricing: unit prices are shown per product and depend on quantity (volume tiers: 1–9 standard, 10–29 −5%, 30–49 −10%, 50+ −15%), material and destination currency. Prices on the site exclude VAT; shipping and tax are calculated at checkout by the same server quote shown in the cart.
 - Proofs: personalised designs get a proof by e-mail; production starts after approval (or right after payment if the customer approves the mockup at checkout).
-- Delivery: delivery time = production time (standard 3 business days) + carrier transit time by destination; tracking is provided.
+- Delivery: 7–15 business days to all regions (production, standard 3 business days, + international transit from China via YunExpress / 4PX); tracking is provided.
 - Languages: English, Deutsch, 中文.
 - Payments shown on the site: TWINT and PayPal.
 - Also offered: a wedding website / digital invitation builder with RSVP.

@@ -63,6 +63,14 @@ const FAQ = [
 const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
 const fmtDays = ([a, b]) => (a === b ? `${a}` : `${a}–${b}`);
 
+/** Total business days door to door (production + fastest/slowest carrier transit over all zones), e.g. "7–15". */
+function totalDays(prod) {
+  const all = ["zone_ch", "zone_de", "zone_eu", "zone_uk", "zone_us", "zone_world"].flatMap(z => [...carrierDays(z, "standard"), ...carrierDays(z, "express")]).map(Number).filter(Number.isFinite);
+  if (!all.length) return "7–15";
+  const lo = prod + Math.min(...all), hi = prod + Math.max(...all);
+  return lo === hi ? String(lo) : `${lo}–${hi}`;
+}
+
 /** Live facts from the shop settings (never hard-coded in prompts). */
 export async function shopFacts(tenantId) {
   const cat = studioCatalog(), fees = getFees();
@@ -71,7 +79,8 @@ export async function shopFacts(tenantId) {
   let pay = null; try { pay = await paymentMethods(tenantId); } catch { pay = null; }
   const methods = [pay?.twint?.configured ? "TWINT" : null, pay?.paypal?.configured ? "PayPal (incl. cards)" : null].filter(Boolean);
   return {
-    production_days: { CH: fac.CH ?? 2, EU: fac.EU ?? 3 },
+    production_days: { CH: fac.CH ?? 3, EU: fac.EU ?? 3 },
+    delivery_days: totalDays(Number(fees.default_production_days) || Math.min(fac.CH ?? 3, fac.EU ?? 3)),
     proof_buffer_days: Number(cat.proof_buffer_days || 0),
     carrier_days: Object.fromEntries(["zone_ch", "zone_de", "zone_eu", "zone_uk", "zone_us", "zone_world"].map(z => [z, { standard: fmtDays(carrierDays(z, "standard")), express: fmtDays(carrierDays(z, "express")) }])),
     prices_include_vat: pricesIncludeVat(),
@@ -83,15 +92,14 @@ export async function shopFacts(tenantId) {
 
 /** Dynamic FAQ entries built from the facts above (delivery time, VAT, payment, free shipping). */
 function dynamicEntries(f) {
-  const ch = f.carrier_days.zone_ch, eu = f.carrier_days.zone_eu, de = f.carrier_days.zone_de;
   const vat = f.prices_include_vat;
   const free = f.free_standard_shipping_over;
   return [
     { id: "delivery_time", tags: ["delivery", "long", "time", "arrive", "when", "days", "production", "多久", "几天", "时间", "到货", "送达", "生产", "lieferzeit", "dauert", "wann", "produktion"],
       q: { en: "How long does delivery take?", zh: "多久能收到？", de: "Wie lange dauert die Lieferung?" },
-      a: { en: `Delivery time = production + carrier transit, in business days. Production: ${f.production_days.CH} days (orders to Switzerland) / ${f.production_days.EU} days (orders to the EU), made to order and shipped from China via YunExpress or 4PX, plus about ${f.proof_buffer_days} days if you review a proof first. Transit: Switzerland ${ch.standard} days standard or ${ch.express} express; Germany ${de.standard} / ${de.express}; rest of the EU ${eu.standard} / ${eu.express}. Your exact dates are shown in the cart and at checkout.`,
-           zh: `送达时间 = 生产时间 + 运输时间（工作日）。生产：寄往瑞士 ${f.production_days.CH} 天 / 寄往欧盟 ${f.production_days.EU} 天，按单定制并通过云途或递四方从中国发货；如需先确认效果图，另加约 ${f.proof_buffer_days} 天。运输：瑞士标准 ${ch.standard} 天、快递 ${ch.express} 天；德国 ${de.standard} / ${de.express} 天；其他欧盟国家 ${eu.standard} / ${eu.express} 天。购物车和结账页会显示具体日期。`,
-           de: `Lieferzeit = Produktion + Versand (Werktage). Produktion: ${f.production_days.CH} Tage (Lieferung Schweiz) / ${f.production_days.EU} Tage (Lieferung EU), gefertigt auf Bestellung und mit YunExpress oder 4PX aus China versandt, plus ca. ${f.proof_buffer_days} Tage bei Korrekturabzug. Versand: Schweiz ${ch.standard} Tage Standard bzw. ${ch.express} Express; Deutschland ${de.standard} / ${de.express}; übrige EU ${eu.standard} / ${eu.express}. Die genauen Daten sehen Sie im Warenkorb und an der Kasse.` } },
+      a: { en: `Delivery takes about ${f.delivery_days} business days to all regions (Switzerland, the EU and worldwide): about ${f.production_days.CH} business days of production (made to order) plus international transit from China via YunExpress or 4PX, and about ${f.proof_buffer_days} more days if you review a proof first. Your exact dates are shown in the cart and at checkout before you pay, and you get a tracking number as soon as the parcel ships.`,
+           zh: `送达时间约 ${f.delivery_days} 个工作日，适用于所有地区（瑞士、欧盟及其他国家）：按单定制生产约 ${f.production_days.CH} 个工作日，再通过云途或递四方从中国国际运输；如需先确认效果图，另加约 ${f.proof_buffer_days} 天。购物车和结账页会在付款前显示具体日期，发货后会发送追踪号。`,
+           de: `Die Lieferung dauert etwa ${f.delivery_days} Werktage in alle Regionen (Schweiz, EU und weltweit): ca. ${f.production_days.CH} Werktage Produktion (auf Bestellung) plus internationaler Versand aus China mit YunExpress oder 4PX, bei Korrekturabzug ca. ${f.proof_buffer_days} Tage mehr. Die genauen Daten sehen Sie vor dem Bezahlen im Warenkorb und an der Kasse; nach dem Versand erhalten Sie eine Sendungsnummer.` } },
     { id: "vat", tags: ["vat", "tax", "mwst", "incl", "excl", "增值税", "含税", "税", "steuer"],
       q: { en: "Are prices including VAT?", zh: "价格含税吗？", de: "Sind die Preise inkl. MwSt.?" },
       a: vat ? { en: "Prices include VAT for your delivery country; the VAT share is shown at checkout.", zh: "价格已含收货国家的增值税，税额在结账时列出。", de: "Die Preise enthalten die MwSt. Ihres Lieferlandes; der Anteil wird an der Kasse ausgewiesen." }
