@@ -4,7 +4,7 @@
 //  ⑤ handed-off chats stay with the team  ⑥ classify (rules; LLM classifier only on the LLM path)  ⑦ guardrails → handoff queue
 //  ⑧ route (router.js): local rule engine + shop data first; LLM only for complex / unmatched questions when a key exists  ⑨ store + stats (answered_by)
 import { classifyRules, detectLanguage } from "./nlu.js";
-import { handoffCheck, holdingMessage, errorMessage, injectionMessage, paymentDataMessage, INJECTION_RE, containsPaymentData, redact } from "./guardrails.js";
+import { HUMAN_RE, handoffCheck, holdingMessage, errorMessage, injectionMessage, paymentDataMessage, INJECTION_RE, containsPaymentData, redact } from "./guardrails.js";
 import { getSettings, findOrCreateConversation, saveConversation, recentUserMessages, createHandoff, appendToHandoff, handoffStillOpen } from "./store.js";
 import { llmStatus, runToolLoop, chatJson, answerOpenQuestion } from "./llm.js";
 import { CLASSIFIER_SYSTEM } from "./prompts.js";
@@ -80,6 +80,13 @@ Object.assign(T.thanks, { fr: "Avec plaisir ! Autre chose ?", it: "Prego! Posso 
 T.mutedShort = { en: "I can't answer that one myself — I've added it to your request for our team.", zh: "这个问题我无法直接回答，已补充到您给团队的请求中。", de: "Das kann ich nicht selbst beantworten – ich habe es Ihrer Anfrage an unser Team hinzugefügt.", fr: "Je ne peux pas répondre moi-même — je l'ai ajouté à votre demande pour l'équipe.", it: "Non posso rispondere io — l'ho aggiunto alla sua richiesta per il team." };
 T.backToAi = { en: "Back to AI", zh: "返回 AI 助手", de: "Zurück zur KI", fr: "Retour à l'IA", it: "Torna all'IA" };
 T.aiBack = { en: "Sure — I'm back. What can I help you with?", zh: "好的，AI 助手回来了。有什么可以帮您？", de: "Gerne – ich bin wieder da. Wie kann ich helfen?", fr: "Très bien — je suis de retour. Comment puis-je vous aider ?", it: "Certo — sono tornato. Come posso aiutarla?" };
+// Pod.AI billing: monthly chat limit of the plan reached → no new AI conversation; the customer can still reach the team
+T.planLimit = { en: "Sorry, our chat assistant isn't available right now. Our team is happy to help — tap below to leave your message and e-mail address.",
+  zh: "抱歉，在线助手暂时无法使用。我们的团队很乐意为您服务——点击下方留下您的问题和邮箱。",
+  de: "Entschuldigung, unser Chat-Assistent ist gerade nicht verfügbar. Unser Team hilft gerne – tippen Sie unten, um Ihre Nachricht und E-Mail-Adresse zu hinterlassen.",
+  fr: "Désolé, notre assistant n'est pas disponible pour le moment. Notre équipe vous aidera volontiers — touchez ci-dessous pour laisser votre message et votre e-mail.",
+  it: "Ci scusi, il nostro assistente non è disponibile al momento. Il nostro team la aiuterà volentieri — tocchi qui sotto per lasciare il suo messaggio e la sua e-mail." };
+T.talkHuman = { en: "Talk to a person", zh: "转人工", de: "Mit einem Menschen sprechen", fr: "Parler à une personne", it: "Parlare con una persona" };
 const BACK_RE = /^\s*(back to (the )?(ai|bot|assistant)|end (the )?handoff|zurück zur ki|retour à l'ia|torna all'ia|返回\s*ai(\s*助手)?|回到\s*ai|继续\s*ai)\s*[.!。！]?\s*$/i;
 const L = (key, lang) => { const e = T[key]; return e[lang] || e.en; };
 const CHIPS = {
@@ -98,15 +105,19 @@ const chips = (lang, list) => ({ type: "chips", items: list || CHIPS[lang] || CH
  * input: { message, conversation_id?, lang? (UI language), country? (visitor market country), page? }
  * Returns { answer, reply, conversation_id, language, intent, ui, handoff, mode, tools_used }.
  */
-export async function handleChat({ tenantId = "tenant_demo", message, conversation_id, lang: uiLang, country, page, profile } = {}) {
+// gate (optional, storefront billing): { canStart, llm, onStart(conv) } — canStart=false: monthly chat limit reached (no new AI chat),
+// llm=false: plan without LLM (rules + shop data only), onStart: counts a newly started conversation.
+export async function handleChat({ tenantId = "tenant_demo", message, conversation_id, lang: uiLang, country, page, profile, gate } = {}) {
   const settings = await getSettings(tenantId);
   const hint = LANGS.includes(String(uiLang || "").slice(0, 2)) ? String(uiLang).slice(0, 2) : "en";
   let text = String(message || "").trim().slice(0, 1000);
   // Pod.AI admin switch: LLM off → rules + shop data only
-  const llm = settings.llm_enabled === false ? { ...llmStatus(), available: false, mode: "rules" } : llmStatus();
+  const llm = settings.llm_enabled === false || gate?.llm === false ? { ...llmStatus(), available: false, mode: "rules" } : llmStatus();
   if (!text) return { answer: "", reply: "", skipped: "empty_message", ui: [] };
   if (!settings.enabled) return { answer: L("disabled", hint), reply: L("disabled", hint), ui: [], mode: "disabled" };
   const conv = await findOrCreateConversation(tenantId, conversation_id, { lang: hint, page: page ? String(page).slice(0, 200) : null });
+  if (gate && !conv.messages.length && !conv.over_limit) { if (gate.canStart === false) conv.over_limit = true; else await gate.onStart?.(conv); }
+  else if (gate && conv.over_limit && gate.canStart !== false && !conv.handoff_id) { conv.over_limit = false; await gate.onStart?.(conv); } // new month / upgraded
   const ctx = { tenantId, settings, conv, ui: [], toolLog: [], llm, countryHint: /^[A-Z]{2}$/.test(String(country || "")) ? String(country) : null, handoff: null, unanswered: false, profile };
   const lang = /^[\s\S]{0,6}$/.test(text) && !/[\u3400-\u9fff]/.test(text) ? (conv.language || hint) : detectLanguage(text, hint);
   ctx.lang = conv.language = lang;
@@ -132,7 +143,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
   // ⑤ already with the team → add the message to the handoff, AI stays quiet
   const cls = classifyRules(text, { hint: lang });
   const withTeam = await handoffStillOpen(conv);
-  if (withTeam && BACK_RE.test(text)) { conv.status = "open"; return finish(L("aiBack", lang), { intent: "back_to_ai", answered_by: "local", route: { path: "local", reason: "back_to_ai", confidence: 1 } }); }
+  if (withTeam && BACK_RE.test(text) && !conv.over_limit) { conv.status = "open"; return finish(L("aiBack", lang), { intent: "back_to_ai", answered_by: "local", route: { path: "local", reason: "back_to_ai", confidence: 1 } }); }
   // an e-mail only message while with the team → reply address for the handoff
   if (withTeam && cls.email && cls.intent === "contact_info") {
     await appendToHandoff(conv, { text, email: cls.email }); conv.slots.email = cls.email; ctx.handoff = "pending";
@@ -143,9 +154,22 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
   const toTeam = async () => {
     ctx.ui.length = 0; ctx.unanswered = false;
     await appendToHandoff(conv, { text, email: cls.email }); if (cls.email) conv.slots.email = cls.email; ctx.handoff = "pending";
-    ctx.ui.push(chips(lang, [L("backToAi", lang)]));
+    if (!conv.over_limit) ctx.ui.push(chips(lang, [L("backToAi", lang)]));
     return finish(L("mutedShort", lang), { intent: "muted", muted: true, answered_by: "local", route: { path: "local", reason: "with_team", confidence: 1 } });
   };
+
+  // plan limit reached: no AI answer; the customer may ask for a person (button) or leave an e-mail → handoff queue
+  if (conv.over_limit) {
+    if (withTeam) return toTeam();
+    if (cls.email || HUMAN_RE.test(text) || text === L("talkHuman", lang)) {
+      if (cls.email) conv.slots.email = cls.email;
+      const h = await createHandoff(tenantId, conv, { reason: "plan chat limit reached", summary: "Monthly chat limit of the Pod.AI plan reached; the AI did not answer.", email: cls.email || conv.slots?.email || null });
+      ctx.handoff = h.reason; ctx.ui.push({ type: "handoff", email: maskEmail(h.customer_email) });
+      return finish(holdingMessage({ humanReplyHours: settings.human_reply_hours }, lang, { needEmail: !h.customer_email }), { intent: "handoff", answered_by: "local", plan_limit: true, route: { path: "local", reason: "plan_limit", confidence: 1 } });
+    }
+    ctx.ui.push(chips(lang, [L("talkHuman", lang)]));
+    return finish(L("planLimit", lang), { intent: "plan_limit", plan_limit: true, answered_by: "local", route: { path: "local", reason: "plan_limit", confidence: 1 } });
+  }
 
   try {
     ctx.facts = await profile.facts(ctx);

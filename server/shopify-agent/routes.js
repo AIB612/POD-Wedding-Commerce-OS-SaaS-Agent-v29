@@ -2,7 +2,7 @@
 //   GET  /shopify-agent                    embedded admin (App Bridge; KPIs, knowledge, handoffs, settings)
 //   GET|POST /shopify-agent/api/*          admin JSON API — Authorization: Bearer <session token> (shop from the token only)
 //   POST /shopify-agent/proxy/chat         storefront chat via App Proxy (/apps/podai/chat), Shopify signature required
-//   POST /shopify-agent/webhooks           app/uninstalled + GDPR topics (HMAC on the raw body)
+//   POST /shopify-agent/webhooks           app/uninstalled, app_subscriptions/update (billing) + GDPR topics (HMAC on the raw body)
 import express from "express";
 import fs from "node:fs";
 const ah = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -19,6 +19,7 @@ import { llmStatus } from "./engine/llm.js";
 import * as ga from "./ga.js";
 import { logAccess, readAccess, purgeAccessLog } from "./security/access-log.js";
 import { runBackup } from "./security/backup.js";
+import * as billing from "./billing.js";
 
 const HEX = v => /^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v) : null;
 // storefront look, editable in the app (the theme app embed can override colour / position)
@@ -65,6 +66,8 @@ export function shopifyAgentRouter() {
     if (!shop) return res.status(400).type("text/plain").send("invalid shop");
     let payload = {}; try { payload = JSON.parse(body.toString("utf8") || "{}"); } catch { payload = {}; }
     const topic = String(req.get("x-shopify-topic") || "");
+    if (topic === "app_subscriptions/update" || topic === "app/uninstalled") billing.invalidate(shop); // plan changed → re-read on the next chat
+    if (topic === "app_subscriptions/update") return res.status(200).type("text/plain").send("ok");
     const out = await gdpr.handle(topic, shop, payload, req.get("x-shopify-webhook-id"));
     if (/^(customers|shop)\//.test(topic) && !out?.duplicate) logAccess({ actor: "shopify_gdpr_webhook", action: topic, shop, tenant: core.tenantFor(shop), email: payload.customer?.email, count: out?.conversations ?? out?.removed, via: "webhook" });
     res.status(200).type("text/plain").send("ok");
@@ -75,7 +78,8 @@ export function shopifyAgentRouter() {
     if (!v.ok) return res.status(401).json({ error: v.error });
     if (!(await core.isInstalled(v.shop))) return res.status(404).json({ error: "shop_not_installed" });
     const b = req.body || {};
-    const out = await handleChat({ tenantId: core.tenantFor(v.shop), profile: makeProfile(v.shop), message: b.message, conversation_id: b.conversation_id, lang: b.lang, page: b.page });
+    const gate = await billing.chatGate(v.shop).catch(e => { console.error("[pod.ai] plan check failed:", e.message); return undefined; }); // plan limits (Managed Pricing)
+    const out = await handleChat({ tenantId: core.tenantFor(v.shop), profile: makeProfile(v.shop), message: b.message, conversation_id: b.conversation_id, lang: b.lang, page: b.page, gate });
     res.set("Cache-Control", "no-store").json({ answer: out.answer, conversation_id: out.conversation_id, language: out.language, ui: out.ui, handoff: out.handoff || null, answered_by: out.answered_by || null });
   }));
 
@@ -129,12 +133,15 @@ export function shopifyAgentRouter() {
   api.get("/knowledge", ah(async (req, res) => res.json({ custom: (await getSettings(req.agentTenant)).custom_faq }))); // no POD.AI built-ins for shops
   api.post("/knowledge", ah(async (req, res) => res.json(await upsertKnowledge(req.agentTenant, req.body))));
   api.delete("/knowledge/:id", ah(async (req, res) => res.json(await deleteKnowledge(req.agentTenant, req.params.id))));
-  api.get("/settings", ah(async (req, res) => { const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours, widget: widgetOf(s), llm_enabled: s.llm_enabled !== false, llm_available: llmStatus().available, tracking_sources: await trackingSources() }); }));
+  // plan + chats this month + Shopify-hosted plan page (Managed Pricing); ?refresh=1 re-reads the subscription
+  api.get("/billing", ah(async (req, res) => res.set("Cache-Control", "no-store").json(await billing.billingSummary(req.agentShop, { force: req.query.refresh === "1" }))));
+  api.get("/settings", ah(async (req, res) => { const s = await getSettings(req.agentTenant); const plan = await billing.getPlan(req.agentShop); res.json({ plan_llm: plan.llm, plan: plan.handle, enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours, widget: widgetOf(s), llm_enabled: s.llm_enabled !== false, llm_available: llmStatus().available, tracking_sources: await trackingSources() }); }));
   api.put("/settings", ah(async (req, res) => { const b = req.body || {}; await putAgentSettings(req.agentTenant, { enabled: b.enabled, greeting: b.greeting, human_reply_hours: b.human_reply_hours }); { const cur = await getSettings(req.agentTenant); await saveSettings(req.agentTenant, { widget: b.widget ? widgetOf({ widget: { ...widgetOf(cur), ...b.widget } }) : widgetOf(cur), llm_enabled: b.llm_enabled === undefined ? cur.llm_enabled !== false : b.llm_enabled !== false }); } clearFactsCache(req.agentShop); const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours }); }));
   api.get("/privacy", ah(async (req, res) => { const g = (await listForTenant("podai_gdpr", req.agentTenant)).slice(-50); audit(req, "view_gdpr_requests", { count: g.length }); res.json(g); }));
   // who accessed personal data of this shop (no data itself); viewing it is logged too
   api.get("/access-log", ah(async (req, res) => { const e = await readAccess({ tenant: req.agentTenant, limit: Math.min(500, Number(req.query.limit) || 200) }); audit(req, "view_access_log"); res.json(e); }));
-  api.post("/preview", ah(async (req, res) => { const b = req.body || {}; const out = await handleChat({ tenantId: req.agentTenant, profile: makeProfile(req.agentShop), message: b.message, conversation_id: b.conversation_id, lang: b.lang });
+  api.post("/preview", ah(async (req, res) => { const b = req.body || {}; const plan = await billing.getPlan(req.agentShop); // "Try it" follows the plan's LLM rule; not counted as a chat
+    const out = await handleChat({ tenantId: req.agentTenant, profile: makeProfile(req.agentShop), message: b.message, conversation_id: b.conversation_id, lang: b.lang, gate: { canStart: true, llm: plan.llm } });
     res.json({ answer: out.answer, conversation_id: out.conversation_id, ui: out.ui, handoff: out.handoff || null, answered_by: out.answered_by || null }); }));
   r.use("/shopify-agent/api", api);
   r.use("/shopify-agent", (_, res) => res.status(404).json({ error: "not_found" }));
