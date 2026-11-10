@@ -67,10 +67,10 @@ code{background:#f3ece3;padding:1px 5px;border-radius:5px;font-size:13.5px}foote
 <table><tr><th>Service</th><th>Data sent</th><th>When</th></tr>
 <tr><td>Shopify</td><td>API requests for the data above</td><td>Always</td></tr>
 <tr><td>Carrier tracking APIs (e.g. YunExpress, 4PX)</td><td>Tracking number only</td><td>When a customer asks about a shipped order and the carrier is supported</td></tr>
-<tr><td>51Tracking</td><td>Tracking number and carrier code only</td><td>Fallback parcel tracking, if enabled</td></tr>
+<tr><td>Parcel tracking service (tracking aggregator)</td><td>Tracking number and carrier code only</td><td>Fallback parcel tracking, if enabled</td></tr>
 <tr><td>Large language model provider (optional; e.g. OpenAI, xAI or DeepSeek, as configured)</td><td>The customer's message, recent chat context and the store's public product / policy facts needed to answer</td><td>Only if an LLM is configured and the merchant has "LLM answers" switched on. Otherwise answers come from built-in rules and the store's own data.</td></tr><tr><td>Google Analytics 4 (optional)</td><td>Anonymous event names only (e.g. chat opened, settings saved). No message text, e-mail, name, order number or conversation ID. IP anonymized.</td><td>Only when a measurement ID is configured on the server (<code>PODAI_GA_ID</code>). Storefront loads GA only after analytics consent via Shopify's Customer Privacy API when the store has a cookie banner.</td></tr>
 </table>
-<p>No customer e-mail addresses or names are sent to carriers or 51Tracking. The App does not send e-mails to customers.</p>
+<p>No customer e-mail addresses or names are sent to carriers or tracking services. The App does not send e-mails to customers.</p>
 
 <h2>5. Retention</h2>
 <ul>
