@@ -10,7 +10,15 @@ export function securityHeaders(req, res, next) {
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  // HSTS only on HTTPS (behind the hosting proxy: X-Forwarded-Proto / X-Forwarded-SSL); never on plain HTTP or localhost.
+  if (isHttps(req)) res.setHeader("Strict-Transport-Security", "max-age=31536000");
   next();
+}
+
+export function isHttps(req) {
+  if (req.secure) return true;
+  const proto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
+  return proto === "https" || String(req.headers["x-forwarded-ssl"] || "").toLowerCase() === "on" || String(req.headers["front-end-https"] || "").toLowerCase() === "on";
 }
 
 /** Small in-memory fixed-window rate limiter (per IP + bucket).

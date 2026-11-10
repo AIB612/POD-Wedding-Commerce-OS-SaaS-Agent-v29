@@ -110,6 +110,14 @@ try {
   // 10. Import preview tokens are tenant-bound and expire
   assert.equal((await realFetch(base + "/api/saas/data/import/commit", { method: "POST", headers: { "Content-Type": "application/json", "x-admin-api-key": "k" }, body: JSON.stringify({ approved: true, preview_token: "nope" }) })).status, 400);
   result.import_token_guard = "pass";
+
+  // 11. HSTS only on HTTPS (proxy header), never on plain HTTP; public payment methods without env var names
+  const plain = await realFetch(base + "/api/payments/methods");
+  assert.equal(plain.headers.get("strict-transport-security"), null, "no HSTS over plain HTTP");
+  assert.doesNotMatch(await plain.text(), /TWINT_|missing/, "no env var names in public JSON");
+  const tls = await realFetch(base + "/api/payments/methods", { headers: { "X-Forwarded-Proto": "https" } });
+  assert.equal(tls.headers.get("strict-transport-security"), "max-age=31536000");
+  result.hsts_and_public_methods = "pass";
 } finally {
   server.close(); globalThis.fetch = realFetch; fs.rmSync(tmp, { recursive: true, force: true });
 }

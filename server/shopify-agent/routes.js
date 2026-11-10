@@ -13,6 +13,10 @@ import { handleChat } from "./engine/agent.js";
 import { agentOverview, agentConversations, agentHandoffs, patchHandoff, getSettings, putAgentSettings, upsertKnowledge, deleteKnowledge } from "./engine/kpis.js";
 import { listForTenant } from "../saas-store.js";
 import { trackingSources } from "./tracking.js";
+// Merchant-facing view of the tracking setup: no env var names, no third-party service names.
+const merchantTrackingSources = async () => { const t = await trackingSources();
+  return { order: ["carrier_api", "tracking_service", "shopify_tracking_url"], carriers: t.carriers.map(({ id, name, mode, configured }) => ({ id, name, mode, configured })),
+    tracking_service: { configured: !!t.tracking51?.configured }, cache_minutes: t.cache_minutes }; };
 import { dashboard, recordEvent } from "./dashboard.js";
 import { saveSettings } from "./engine/store.js";
 import { llmStatus } from "./engine/llm.js";
@@ -113,7 +117,7 @@ export function shopifyAgentRouter() {
   const audit = (req, action, extra = {}) => logAccess({ actor: req.agentUser, action, shop: req.agentShop, tenant: req.agentTenant, via: "admin", ip: req.ip, ...extra });
   api.get("/dashboard", ah(async (req, res) => { const d = await dashboard(req.agentTenant, req.agentShop, { days: req.query.days }); audit(req, "view_dashboard"); res.json(d); }));
   api.get("/checklist", ah(async (req, res) => {
-    const out = { tracking: await trackingSources(), llm: { available: llmStatus().available } };
+    const out = { tracking: await merchantTrackingSources(), llm: { available: llmStatus().available } };
     try { const d = await core.graphql(req.agentShop, "{ shop { name shopPolicies { type } } }"); out.shop_name = d.shop.name; out.policies = d.shop.shopPolicies.map(p => p.type); } catch { out.policies = null; }
     try { await core.graphql(req.agentShop, "{ orders(first:1) { nodes { id } } }"); out.protected_data = "ok"; } catch (e) { out.protected_data = /access|protected|denied/i.test(e.message) ? "not_approved" : "error"; }
     // app embed on? the widget (only rendered by the embed) pings daily; chats / chat opens also prove it. No read_themes scope needed.
@@ -123,6 +127,8 @@ export function shopifyAgentRouter() {
   }));
   api.get("/overview", ah(async (req, res) => {
     const o = await agentOverview(req.agentTenant, { days: Math.min(365, Number(req.query.days) || 30) });
+    if (o.llm) delete o.llm.missing; // merchants never see server env var names
+    for (const k of Object.keys(o)) if (Array.isArray(o[k])) o[k] = JSON.parse(JSON.stringify(o[k]).replace(/ \(missing: [^)]*\)/g, "").replace(/Add the key \+ model to the server \.env and restart/g, "Optional: an AI provider can be enabled by Pod.AI"));
     // shop tenants: product search instead of the POD.AI recommender; no chat quotes / discount codes in this app
     o.kpis = o.kpis.filter(k => !["quotes", "discounts_issued"].includes(k.id)).map(k => k.id === "recommendations" ? { ...k, label: "Product searches", value: o.tools.search_products || 0 } : k);
     res.json(o);
@@ -135,7 +141,7 @@ export function shopifyAgentRouter() {
   api.delete("/knowledge/:id", ah(async (req, res) => res.json(await deleteKnowledge(req.agentTenant, req.params.id))));
   // plan + chats this month + Shopify-hosted plan page (Managed Pricing); ?refresh=1 re-reads the subscription
   api.get("/billing", ah(async (req, res) => res.set("Cache-Control", "no-store").json(await billing.billingSummary(req.agentShop, { force: req.query.refresh === "1" }))));
-  api.get("/settings", ah(async (req, res) => { const s = await getSettings(req.agentTenant); const plan = await billing.getPlan(req.agentShop); res.json({ plan_llm: plan.llm, plan: plan.handle, enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours, widget: widgetOf(s), llm_enabled: s.llm_enabled !== false, llm_available: llmStatus().available, tracking_sources: await trackingSources() }); }));
+  api.get("/settings", ah(async (req, res) => { const s = await getSettings(req.agentTenant); const plan = await billing.getPlan(req.agentShop); res.json({ plan_llm: plan.llm, plan: plan.handle, enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours, widget: widgetOf(s), llm_enabled: s.llm_enabled !== false, llm_available: llmStatus().available, tracking_sources: await merchantTrackingSources() }); }));
   api.put("/settings", ah(async (req, res) => { const b = req.body || {}; await putAgentSettings(req.agentTenant, { enabled: b.enabled, greeting: b.greeting, human_reply_hours: b.human_reply_hours }); { const cur = await getSettings(req.agentTenant); await saveSettings(req.agentTenant, { widget: b.widget ? widgetOf({ widget: { ...widgetOf(cur), ...b.widget } }) : widgetOf(cur), llm_enabled: b.llm_enabled === undefined ? cur.llm_enabled !== false : b.llm_enabled !== false }); } clearFactsCache(req.agentShop); const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours }); }));
   api.get("/privacy", ah(async (req, res) => { const g = (await listForTenant("podai_gdpr", req.agentTenant)).slice(-50); audit(req, "view_gdpr_requests", { count: g.length }); res.json(g); }));
   // who accessed personal data of this shop (no data itself); viewing it is logged too

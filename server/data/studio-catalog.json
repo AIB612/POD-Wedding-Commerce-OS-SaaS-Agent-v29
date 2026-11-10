@@ -40,28 +40,28 @@
   "facilities": [
     {
       "id": "f_ch",
-      "city": "Zürich",
+      "city": "China (YunExpress / 4PX)",
       "country": "CH",
       "region": "CH",
       "days": 2
     },
     {
       "id": "f_de",
-      "city": "Leipzig",
+      "city": "China (YunExpress / 4PX)",
       "country": "DE",
       "region": "EU",
       "days": 3
     },
     {
       "id": "f_lv",
-      "city": "Riga",
+      "city": "China (YunExpress / 4PX)",
       "country": "LV",
       "region": "EU",
       "days": 4
     },
     {
       "id": "f_us",
-      "city": "Charlotte",
+      "city": "China (YunExpress / 4PX)",
       "country": "US",
       "region": "US",
       "days": 3

@@ -111,6 +111,12 @@ try {
   assert.doesNotMatch(r.json.answer, /tax/i); assert.equal(cards.note, "Prices include tax.", "tax hint as card footnote"); const it = cards.items[0];
   assert.deepEqual(it.variants, [{ title: "S", price: 19.5, available: true }, { title: "XL", price: 24, available: false }]); assert.deepEqual(it.collections, ["Summer"]);
   assert.deepEqual(it.details, [{ key: "material", value: "Organic cotton" }]); assert.equal(it.max_price, 24);
+  // common product wordings (EN / DE / FR / IT / ZH): browse requests list the catalog, "t-shirts" finds the "Tee"
+  for (const [msg, lang] of [["What products do you sell?", "en"], ["Do you have t-shirts?", "en"], ["Do you sell tees?", "en"], ["Quels produits vendez-vous ?", "fr"], ["Habt ihr T-Shirts?", "de"],
+    ["Welche Produkte habt ihr?", "de"], ["Avete magliette?", "it"], ["Che prodotti vendete?", "it"], ["你们有T恤吗？", "zh"], ["你们卖什么？", "zh"]]) {
+    const x = await proxy(A, msg, undefined, lang);
+    assert.ok(x.json.ui.some(u => u.type === "products" && u.items[0]?.name === "Mountain Tee"), `${msg} → ${x.json.answer}`);
+  }
   r = await proxy(A, "Where is my order #1001?", conv); assert.match(r.json.answer, /e-mail/i);
   r = await proxy(A, "wrong@example.com", conv); assert.match(r.json.answer, /couldn't find/);
   r = await proxy(A, "Where is my order #1001? buyer@example.com", conv);
@@ -207,6 +213,7 @@ try {
   assert.equal(db.days, 7); assert.equal(db.primary.length, 6); assert.ok(db.primary.some(k => k.id === "product_clicks" && k.value >= 1) || db.primary.some(k => k.id === "influenced_revenue"));
   assert.ok(Array.isArray(db.heatmap) && db.heatmap.length === 7 && db.sla && db.answer_paths);
   assert.equal((await adm(B, "/checklist")).status, 200);
+  for (const p of ["/checklist", "/settings", "/overview"]) { const x = await adm(A, p); assert.equal(x.status, 200); assert.doesNotMatch(x.text, /51track|_API_KEY|_APP_SECRET|_APP_KEY|\.env\b/i, `${p}: no env var / third-party names`); }
   assert.equal((await adm(B, "/settings", { method: "PUT", body: { llm_enabled: true } })).status, 200);
   result.ui_v2 = "pass";
 

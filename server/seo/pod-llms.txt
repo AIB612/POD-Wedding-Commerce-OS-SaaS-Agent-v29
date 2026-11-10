@@ -1,6 +1,6 @@
 # POD.AI
 
-> POD.AI (pod.swisspro.site) is an online shop and scene-based design studio for custom wedding stationery, signs and personalised gifts. Customers pick a scenario kit (for example "Wedding stationery & favours"), upload or enter their design once, and get matching invitations, table stationery, welcome signs, favours and gifts printed on demand and shipped from Switzerland across Europe. Operated by Dropking AI. Support: support@swisspro.site
+> POD.AI (pod.swisspro.site) is an online shop and scene-based design studio for custom wedding stationery, signs and personalised gifts. Customers pick a scenario kit (for example "Wedding stationery & favours"), upload or enter their design once, and get matching invitations, table stationery, welcome signs, favours and gifts printed on demand and shipped from China via YunExpress or 4PX. Operated by Dropking AI. Support: support@swisspro.site
 
 Key facts:
 - What it sells: print-on-demand wedding and event products — cotton paper invitations, Save the Date cards, menu cards, place cards, table number cards, acrylic welcome signs, custom gift boxes, candles, mugs, photo books, apparel and more.

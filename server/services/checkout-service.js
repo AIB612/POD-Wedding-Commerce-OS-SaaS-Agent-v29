@@ -330,7 +330,7 @@ async function saveDraftOrder({ tenantId, user, email, address, quote, provider,
 export async function paymentMethods(tenantId) {
   return {
     paypal: { configured: paypalConfigured(await paypalCreds(tenantId)), currencies: ["CHF", "EUR", "USD"] },
-    twint: { configured: twintConfigured(), currencies: ["CHF"], ...twintStatus() }
+    twint: (({ missing, ...t }) => ({ configured: twintConfigured(), currencies: ["CHF"], ...t }))(twintStatus()) // public: no env var names
   };
 }
 

@@ -81,10 +81,35 @@ const PRODUCT_Q = `query($q: String!, $first: Int!, $sort: ProductSortKeys!, $re
   priceRangeV2 { minVariantPrice { amount currencyCode } maxVariantPrice { amount currencyCode } } collections(first: 3) { nodes { title } }
   variants(first: 5) { nodes { id title price availableForSale } } metafields(first: 5) { nodes { namespace key value type } } } } }`;
 /** Generic "show me products / what do you sell / bestsellers" requests (EN / DE / FR / ZH). */
-export const BROWSE_RE = /(\b(show|see|list|browse)\b.{0,20}\b(products?|items?|things|collection|catalog(ue)?|range|stuff)\b|what (do|can) (you|i) (sell|buy|offer|have)|what('s| is) (for sale|in stock|available)|\b(your|all) (products|items)\b|best ?sellers?|top sellers?|most popular|popular (products|items)|new arrivals|what'?s new|\bcatalog(ue)?\b|\b(produkte|sortiment|angebot)\b|was (verkauft|habt|haben) (ihr|sie)|zeig(en sie)? (mir )?.{0,10}(produkte|artikel)|meistverkauft|beliebteste|vos produits|montrez(-moi)? (vos |des )?produits|\b(prodotti|catalogo)\b|cosa vendete|mostrami .{0,12}prodotti|qu'est-ce que vous vendez|有什么(商品|产品|卖)|卖什么|看看(商品|产品)|商品列表|所有商品|热卖|畅销|爆款|新品|推荐.{0,4}(商品|产品))/i;
-const NOT_A_WORD = /^(do|have|sell|buy|price|prices|cost|kostet|preis|any|some|product|products|item|items|shop|store|you|recommend|looking|need|want|show|see|list|browse|all|your|me|bestseller|bestsellers|best|sellers|popular|new|arrivals|catalog|catalogue|things|stuff|produkte|zeig|zeigen|mir|artikel|sortiment)$/;
+export const BROWSE_RE = /(what (kind|sort|type)s? of (products?|items?|things) (do|can) you|what (products?|items?|things) (do|can|does) (you|the shop|the store) (sell|offer|have|carry|stock)|what do you (sell|offer|carry|stock)|what('s| is) in (your|the) (shop|store)|welche (produkte|artikel|sachen|waren) (habt|haben|verkauft|verkaufen|bietet|bieten|gibt)|was (bietet|verkauft|habt|haben|gibt es)\b.{0,12}(ihr|sie|bei euch|bei ihnen|im shop)|quel(le)?s? (produits|articles)|que vendez|qu'?est-ce que vous (vendez|proposez|avez)|vous vendez quoi|(che|quali) (prodotti|articoli)|che cosa vendete|cosa avete|你们卖|卖哪些|有哪些(商品|产品|东西)|都有什么(商品|产品|东西)|有啥(商品|产品|东西)|\b(show|see|list|browse)\b.{0,20}\b(products?|items?|things|collection|catalog(ue)?|range|stuff)\b|what (do|can) (you|i) (sell|buy|offer|have)|what('s| is) (for sale|in stock|available)|\b(your|all) (products|items)\b|best ?sellers?|top sellers?|most popular|popular (products|items)|new arrivals|what'?s new|\bcatalog(ue)?\b|\b(produkte|sortiment|angebot)\b|was (verkauft|habt|haben) (ihr|sie)|zeig(en sie)? (mir )?.{0,10}(produkte|artikel)|meistverkauft|beliebteste|vos produits|montrez(-moi)? (vos |des )?produits|\b(prodotti|catalogo)\b|cosa vendete|mostrami .{0,12}prodotti|qu'est-ce que vous vendez|有什么(商品|产品|卖)|卖什么|看看(商品|产品)|商品列表|所有商品|热卖|畅销|爆款|新品|推荐.{0,4}(商品|产品))/i;
+const NOT_A_WORD = /^(do|have|sell|buy|price|prices|cost|kostet|preis|any|some|product|products|item|items|shop|store|you|recommend|looking|need|want|show|see|list|browse|all|your|me|bestseller|bestsellers|best|sellers|popular|new|arrivals|catalog|catalogue|things|stuff|produkte|zeig|zeigen|mir|artikel|sortiment|habt|haben|hast|ihr|euch|gibt|es|verkauft|verkaufen|welche|auch|avez|vous|vendez|quels|quelles|des|les|une|un|est|ce|que|qui|avete|vendete|quali|che|cosa|dei|delle|degli|il|la|le|lo|gli|any|got|carry|sold|anything|something|like|offer|is|there|are|they)$/;
+// Light synonym + singular/plural matching for product search (EN / DE / FR / IT / ZH), e.g. "t-shirts" → tee / t-shirt.
+const SYNONYMS = [
+  [/\bt[\s-]?shirts?\b|\btees?\b|\bmagliett[ae]\b|\bshirts?\b|t恤|短袖/gi, ["tee", "t-shirt", "tshirt", "shirt"]],
+  [/\bhood(ie|y)s?\b|\bsweat ?shirts?\b|\bpullis?\b|\bpullovers?\b|\bfelpe?a?\b|卫衣|帽衫/gi, ["hoodie", "sweatshirt", "pullover"]],
+  [/\bmugs?\b|\bcups?\b|\btassen?\b|\bbechers?\b|\btasses?\b|\btazz[ae]\b|杯子|马克杯|水杯/gi, ["mug", "cup"]],
+  [/\b(tote ?)?bags?\b|\btaschen?\b|\bbeutel\b|\bsacs?\b|\bborse?a?\b|包包|袋子|帆布袋|手提袋/gi, ["bag", "tote"]],
+  [/\bhats?\b|\bcaps?\b|\bmützen?\b|\bkappen?\b|\bcasquettes?\b|\bchapeaux?\b|\bcappell[oi]\b|帽子|棒球帽/gi, ["hat", "cap"]],
+  [/\bposters?\b|\bprints?\b|\baffiches?\b|海报/gi, ["poster", "print"]],
+  [/\bcards?\b|\bkarten?\b|\bcartes?\b|\bbiglietti?o?\b|卡片|贺卡/gi, ["card"]],
+  [/\bcandles?\b|\bkerzen?\b|\bbougies?\b|\bcandel[ae]\b|蜡烛/gi, ["candle"]],
+  [/\bphone ?cases?\b|\bhandyh(ü|ue)llen?\b|\bcoques?\b|手机壳/gi, ["case", "phonecase"]],
+  [/\bsocks?\b|\bsocken\b|\bchaussettes?\b|\bcalz(e|ini)\b|袜子/gi, ["sock"]]
+];
+const singular = t => t.length > 4 && /ies$/.test(t) ? t.slice(0, -3) + "y" : t.length > 4 && /(ses|xes|ches|shes)$/.test(t) ? t.slice(0, -2) : t.length > 3 && /[^s]s$/.test(t) ? t.slice(0, -1) : t;
+const ZH_FILLER = /(请问|你们|您们|我想|我要|想要|有没有|有吗|有没|卖不卖|卖吗|什么|哪些|一下|可以|吗|呢|吧|的|有|卖|买|看看|找|要|么|啊|？|\?)/g;
+export function productTerms(query) {
+  let text = String(query || "");
+  const extra = [];
+  for (const [re, syn] of SYNONYMS) if ((re.lastIndex = 0, re.test(text))) { extra.push(...syn); text = text.replace(re, " "); }
+  text = text.replace(/[\u3400-\u9fff]+/g, m => ` ${m.replace(ZH_FILLER, " ")} `); // keep CJK nouns, drop question words
+  const base = terms(text).filter(t => !NOT_A_WORD.test(t) && !(/^[a-z]$/.test(t))).slice(0, 4);
+  const out = [...extra];
+  for (const t of base) { out.push(t); const s = singular(t); if (s !== t) out.push(s); }
+  return [...new Set(out)].slice(0, 10);
+}
 export async function searchShopProducts(shop, query, { browse = false } = {}) {
-  const ts = browse ? [] : terms(query).filter(t => !NOT_A_WORD.test(t)).slice(0, 4);
+  const ts = browse ? [] : productTerms(query);
   if (!ts.length && !browse) return { ok: true, products: [] };
   // browse: newest active products first (Shopify's product query has no best-selling sort)
   const q = ts.length ? `(${ts.map(t => `title:*${t.replace(/[^\p{L}\p{N}-]/gu, "")}*`).join(" OR ")}) AND status:active` : "status:active";
