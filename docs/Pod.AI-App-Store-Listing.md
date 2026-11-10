@@ -29,7 +29,7 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 5. See the impact: dashboard with conversations, AI resolution rate, hours saved, self-served order lookups, chat-influenced revenue and first-response time.
 
 **Feature list (≤ 80 chars each):**
-- Order status and live parcel tracking card (carrier APIs, 51Tracking, link)  [76]
+- Order status card with carrier, tracking number and tracking link  [67]
 - Product cards with image, price, View and Add to cart  [53]
 - Shipping cost and delivery answers from your Shopify shipping zones  [67]
 - Policy answers (shipping, refunds, privacy) from Settings → Policies  [69]
@@ -48,7 +48,7 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 2. Storefront products: "Shoppers browse your products in chat and add to cart in one tap"
 3. Handoffs: "Questions the AI can't answer land in your team queue with the reply e-mail"
 4. Settings: "Match your brand: colour, position, greeting in EN / DE / FR / IT, LLM on/off"
-5. Order tracking: "Where is my order? Status and live tracking without a support ticket"
+5. Order tracking: "Where is my order? Order status and tracking links in chat, no ticket needed"
 6. Multilingual: "Answers in your customer's language: here, German"
 
 **Search terms (max 5 on the listing; extras for SEO copy):**
@@ -106,7 +106,7 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
   - Shopify scopes and why each is used.
   - Customer data collected in the chat.
   - Storage in the `podai_*` collections.
-  - Third parties: Shopify, carrier APIs, 51Tracking, and the optional LLM.
+  - Third parties: Shopify, carrier tracking APIs / a tracking aggregator (tracking number only), and the optional LLM.
   - Retention.
   - GDPR webhooks.
   - Security.
@@ -140,17 +140,16 @@ Public prices, checked on 4 Nov 2026 via tidio.com, the Shopify App Store, willd
 ### Pod.AI cost drivers
 - **Rule engine with shop data:** costs us almost nothing per chat.
 - **LLM answers:** cost tokens.
-- **51Tracking:** a paid API, billed per tracked number.
 
-So conversations, and optionally tracking lookups, are the fair unit.
+So conversations are the fair unit.
 
 ### Option A — simple flat tiers (recommended for launch)
 
-| Plan | Price | Conversations / mo | Included |
+| Plan | Price | Chats / month | Included |
 |---|---|---|---|
-| Free | $0 | 50 | All rule-based answers, order lookup with tracking link, products, policies, handoff queue, dashboard |
-| Growth | $19/mo | 500 | + live parcel tracking events, custom knowledge, branding options |
-| Pro | $49/mo | 2,500 | + LLM answers for open questions, priority support |
+| Free | $0 | 50 chats/month | Rules + shop data: order lookup with tracking link, products, policies, handoff queue, dashboard |
+| Growth | $19/mo | 500 chats/month | Same as Free (rules + shop data), more chats |
+| Pro | $49/mo | 2,500 chats/month | + LLM answers for complex questions |
 
 - Overage: $1.50 per extra 100 conversations, with a capped usage charge.
 - 14-day free trial on the paid plans.
@@ -165,7 +164,6 @@ So conversations, and optionally tracking lookups, are the fair unit.
 - **Usage:**
   - $0.03 per extra conversation.
   - $0.10 per LLM-answered conversation.
-  - $0.02 per live tracking lookup.
 - **Rationale:** cost tracks our real costs closely. The downside is that it is harder for merchants to predict.
 
 ### Option C — outcome-based (later)
@@ -174,11 +172,11 @@ So conversations, and optionally tracking lookups, are the fair unit.
 - **Rationale:** it matches the dashboard's "AI resolution rate" metric and is an attractive story. It needs stable resolution measurement first.
 
 ### Decision (approved 4 Nov 2026): Option A, USD
-| Plan | Monthly | Annual (20% off) | Conversations / mo |
+| Plan | Monthly | Annual (20% off) | Chats / month | Included |
 |---|---|---|---|
-| Free | $0 | $0 | 50 |
-| Growth | $19/mo | $182.40/yr ($15.20/mo) | 500 |
-| Pro | $49/mo | $470.40/yr ($39.20/mo) | 2,500 |
+| Free | $0 | $0 | 50 | Rules + shop data |
+| Growth | $19/mo | $182.40/yr ($15.20/mo) | 500 | Rules + shop data |
+| Pro | $49/mo | $470.40/yr ($39.20/mo) | 2,500 | Rules + shop data + LLM for complex questions |
 14-day free trial on Growth and Pro. Overage $1.50 per extra 100 conversations (capped). **Billing is NOT configured.** For Plan A use **Shopify App Pricing** in the Partner Dashboard (default for new public apps; no Billing API code required). Billing API is legacy. Configure Free/Growth/Pro before paid-plan review (requirement 1.2).
 
 ### Former open decisions for pricing (resolved above)
@@ -257,34 +255,12 @@ Files in `/workspace/wedai/report/podai-listing/`:
 
 ---
 
-## 7. 51Tracking free API application — **on hold (backlink removed)**
-Status: **on hold**. The footer dofollow backlink (国际小包查询 → 51tracking.com) was removed from `footer.js` and the home page on 2026-11-09 at Sherry's request. Do not submit the free-API application until a new backlink strategy is decided.
-
-Form https://www.51tracking.com/apply-api — suggested values. Check the actual form labels; fields may differ.
-| Field | Value |
-|---|---|
-| Account / registered e-mail | the e-mail of the existing 51Tracking account (Sherry's login; not written here) |
-| Website URL | https://pod.swisspro.site |
-| Backlink page URL | https://pod.swisspro.site/ (footer, anchor "国际小包查询") |
-| Company / site name | Dropking AI — POD.AI |
-| Contact e-mail | support@swisspro.site |
-| Use case | Pod.AI, a Shopify customer-chat app: when a shopper asks "where is my order?", we query the tracking status of that single shipment and show it in the chat. |
-| Expected volume | < 1,000 tracking numbers / month (small Shopify merchants, launch phase) |
-| Carriers | YunExpress, 4PX, China Post / EMS, Swiss Post, DHL, other international small-parcel carriers |
-| API version | v4 (`/v4/trackings/create` + `/v4/trackings/get`) |
-| Server IP (if asked) | 57.129.90.15 |
-| Description (CN, optional) | 我们是 Shopify 应用 Pod.AI（Dropking AI 开发），在店铺客服聊天中为顾客查询其订单的物流状态。每次仅查询顾客本人订单的单号，预计每月少于 1000 个单号。网站页脚已添加 51Tracking 友情链接（国际小包查询）。 |
-
-Review takes about 4 working days, and free access lasts 200 days (based on earlier research). Once approved, the existing TRACKING51_API_KEY on rs8 should work with v4; re-test with order #1011.
-
-## 8. Open decisions
+## 7. Open decisions
 1. Create the support@swisspro.site mailbox / forward (Sherry).
-2. 51Tracking free API (§7): on hold — backlink removed; revisit later.
-3. Billing setup after listing approval (Plan A recorded).
-4. Protected data: confirm disk and backup encryption on the rs8 host. Write the incident-response policy and a DPA.
-5. Whether to keep the "chat-influenced revenue" metric. It needs the Analytics purpose in the questionnaire.
-6. Real screenshots on dropkingdev (store password, product images) and the app icon.
-7. 51Tracking: the paid plan or the free API application decides whether "live tracking events" is promised on the listing. Without it, carriers YunExpress/4PX plus a tracking link.
+2. Billing setup after listing approval (Plan A recorded).
+3. Protected data: confirm disk and backup encryption on the rs8 host. Write the incident-response policy and a DPA.
+4. Whether to keep the "chat-influenced revenue" metric. It needs the Analytics purpose in the questionnaire.
+5. Real screenshots on dropkingdev (store password, product images) and the app icon.
 
 
 ## Resources (paste into listing)

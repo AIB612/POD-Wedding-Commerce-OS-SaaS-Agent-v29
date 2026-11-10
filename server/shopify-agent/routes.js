@@ -53,13 +53,13 @@ export function shopifyAgentRouter() {
     const bk = () => runBackup().then(r => r.created || r.leftovers ? console.log("[pod.ai] backup", JSON.stringify(r)) : null).catch(e => console.error("[pod.ai] backup failed:", e.message)).then(() => purgeAccessLog()).catch(() => {});
     setTimeout(bk, 120e3).unref?.(); setInterval(bk, 3600e3).unref?.(); }
   // public privacy policy (App Store listing link)
-  r.get(["/shopify-agent/privacy", "/shopify-agent/privacy.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(PRIVACY_PAGE, "utf8")));
+  r.get(["/shopify-agent/privacy", "/shopify-agent/privacy.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(ga.withPublicGa(fs.readFileSync(PRIVACY_PAGE, "utf8"))));
   const TERMS_PAGE = new URL("./terms.html", import.meta.url);
   const SUPPORT_PAGE = new URL("./support.html", import.meta.url);
-  r.get(["/shopify-agent/terms", "/shopify-agent/terms.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(TERMS_PAGE, "utf8")));
-  r.get(["/shopify-agent/support", "/shopify-agent/support.html", "/shopify-agent/docs"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(SUPPORT_PAGE, "utf8")));
-  r.get(["/shopify-agent/security", "/shopify-agent/security.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(new URL("./security.html", import.meta.url), "utf8")));
-  r.get(["/shopify-agent/dpa", "/shopify-agent/dpa.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(fs.readFileSync(new URL("./dpa.html", import.meta.url), "utf8")));
+  r.get(["/shopify-agent/terms", "/shopify-agent/terms.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(ga.withPublicGa(fs.readFileSync(TERMS_PAGE, "utf8"))));
+  r.get(["/shopify-agent/support", "/shopify-agent/support.html", "/shopify-agent/docs"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(ga.withPublicGa(fs.readFileSync(SUPPORT_PAGE, "utf8"))));
+  r.get(["/shopify-agent/security", "/shopify-agent/security.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(ga.withPublicGa(fs.readFileSync(new URL("./security.html", import.meta.url), "utf8"))));
+  r.get(["/shopify-agent/dpa", "/shopify-agent/dpa.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(ga.withPublicGa(fs.readFileSync(new URL("./dpa.html", import.meta.url), "utf8"))));
   r.get("/shopify-agent/podai-icon.png", (req, res) => res.set("Cache-Control", "public, max-age=86400").type("png").send(fs.readFileSync(new URL("./podai-icon.png", import.meta.url))));
   r.use("/shopify-agent", (req, res, next) => { req.tenantId = undefined; next(); }); // never trust x-tenant-id here
 

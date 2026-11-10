@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { measurementId, listingMeasurementId, adminSnippet, isValidId } from "../ga.js";
+import { measurementId, listingMeasurementId, adminSnippet, isValidId, withPublicGa, LANDING_GA_ID } from "../ga.js";
 
 test("measurementId validates G- IDs and ignores junk", () => {
   assert.equal(measurementId({ PODAI_GA_ID: "G-ABC123XY" }), "G-ABC123XY");
@@ -54,4 +54,12 @@ test("storefront chat source fires anonymous GA event helpers", async () => {
   }
   assert.match(js, /analyticsProcessingAllowed/);
   assert.doesNotMatch(js, /gtag\("event"[^)]*message/);
+});
+
+test("public Pod.AI pages get the GA tag once (PODAI_GA_ID, else the landing page ID)", () => {
+  const page = "<html><head><title>x</title></head><body></body></html>";
+  const a = withPublicGa(page, {});
+  assert.match(a, new RegExp(`gtag/js\\?id=${LANDING_GA_ID}`)); assert.equal(a.split("googletagmanager").length - 1, 1);
+  assert.match(withPublicGa(page, { PODAI_GA_ID: "G-ABC123XY" }), /id=G-ABC123XY/);
+  assert.equal(withPublicGa(a, { PODAI_GA_ID: "G-ABC123XY" }), a, "no double tag");
 });

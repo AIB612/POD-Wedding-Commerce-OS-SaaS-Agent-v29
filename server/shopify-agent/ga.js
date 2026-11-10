@@ -21,4 +21,16 @@ export function adminSnippet(id = measurementId()) {
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","${safe}",{anonymize_ip:true,send_page_view:false});window.__PODAI_GA="${safe}";</script>`;
 }
 
+/** GA tag for the public Pod.AI pages (privacy, terms, support/docs, security, DPA): PODAI_GA_ID when set,
+ *  otherwise the same property as the podai landing page (agent.html). */
+export const LANDING_GA_ID = "G-GED5TST3DP";
+export function publicPageSnippet(env = process.env) {
+  const safe = (measurementId(env) || LANDING_GA_ID).replace(/[^A-Z0-9-]/gi, "");
+  return `<script async src="https://www.googletagmanager.com/gtag/js?id=${safe}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","${safe}",{anonymize_ip:true});</script>`;
+}
+/** Insert the public-page GA tag before the first </head> (once). */
+export function withPublicGa(html, env = process.env) {
+  return html.includes("googletagmanager.com/gtag/js") ? html : html.replace("</head>", publicPageSnippet(env) + "</head>");
+}
+
 export function isValidId(id) { return ID_RE.test(String(id || "").trim()); }
