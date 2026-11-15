@@ -51,7 +51,7 @@ export const colorFamily = text => (WORD_FAMILY.find(([re]) => re.test(text)) ||
 
 // ---- Phrase pools ----
 const P = {
-  yes: { en: ["Yes, we do!", "We sure do.", "Yes — happy to help with that.", "Absolutely."], de: ["Ja, haben wir!", "Ja, gerne.", "Klar, das gibt es bei uns."], fr: ["Oui, bien sûr !", "Oui, nous en proposons.", "Absolument."], it: ["Sì, certo!", "Sì, li abbiamo.", "Assolutamente sì."], zh: ["有的！", "当然有。", "有，我们可以做。"] },
+  yes: { en: ["Yes, we do!", "We sure do.", "Yes, of course.", "Absolutely."], de: ["Ja, haben wir!", "Ja, gerne.", "Klar, das gibt es bei uns."], fr: ["Oui, bien sûr !", "Oui, nous en proposons.", "Absolument."], it: ["Sì, certo!", "Sì, li abbiamo.", "Assolutamente sì."], zh: ["有的！", "当然有。", "有，我们可以做。"] },
   next: { en: ["Want a shipping quote, or shall I open it in the Studio for you?", "Should I calculate shipping to your country?", "Would you like to see sizes, colours or a shipping quote?"],
     de: ["Soll ich Ihnen den Versand berechnen oder es im Studio öffnen?", "Möchten Sie einen Versandpreis für Ihr Land?"],
     fr: ["Voulez-vous un devis de livraison, ou l'ouvrir dans le Studio ?", "Je calcule les frais de port pour votre pays ?"],
@@ -117,10 +117,10 @@ export function attrReply(kind, raw, p, { lang, seed, colorWord }) {
     const labels = names.map(c => colorLabel(c, lang)), list = join(labels, lang);
     if (colorWord) {
       const fam = colorFamily(colorWord), hits = names.filter(c => (FAMILY[fam] || []).includes(c));
-      if (hits.length) return pick(COLOR_YES, lang)(n, join(hits.map(c => colorLabel(c, lang)), lang)) + " " + phrase("next", lang, seed);
+      if (hits.length) return pick(COLOR_YES, lang)(n, join(hits.map(c => colorLabel(c, lang)), lang)) + " " + pick(SIZES_NEXT, lang);
       return pick(COLOR_NO, lang)(n, colorWord.toLowerCase(), list);
     }
-    return pick(COLORS, lang)(n, list) + " " + phrase("next", lang, seed);
+    return pick(COLORS, lang)(n, list) + " " + pick(SIZES_NEXT, lang);
   }
   if (kind === "technique" && raw.technique) return pick(TECH, lang)(n, raw.technique) + " " + phrase("more", lang, seed);
   if (kind === "eco" && (raw.eco_tags || []).length) return pick(ECO, lang)(n, raw.eco_tags.join(", ")) + " " + phrase("more", lang, seed);
