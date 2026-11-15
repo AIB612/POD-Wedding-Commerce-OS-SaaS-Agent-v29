@@ -2,11 +2,11 @@
 // we create a ticket POD-T-XXXXXX in the existing handoff queue (collection agent_handoffs, Admin → Chat agent → Tickets),
 // e-mail the full transcript to the support inbox (Reply-To = customer) and optionally a confirmation to the customer.
 // Env (names only): SUPPORT_EMAIL (default support@swisspro.site), SUPPORT_NOTIFY_EMAILS (extra internal recipients, comma
-// separated), TICKET_CONFIRM_EMAIL (default true), TEST_EMAIL_ALLOWLIST (outside production, mail only goes to these).
+// separated), TICKET_CONFIRM_EMAIL (default true; skipped while mail leaves from a personal free-mail sender), TEST_EMAIL_ALLOWLIST (outside production, mail only goes to these).
 import crypto from "node:crypto";
 import { addRecord, findRecord, listForTenant, updateRecord } from "../../saas-store.js";
 import { HttpError } from "../../http/middleware.js";
-import { now, validEmail, emailList as list, newTicketId, confirmText, sendTicketMails } from "../../shared/tickets-core.js";
+import { now, validEmail, emailList as list, newTicketId, confirmText, sendTicketMails, personalSender } from "../../shared/tickets-core.js";
 export { validEmail, allowedRecipient, confirmText, transcriptText, newTicketId, sendTicketMails } from "../../shared/tickets-core.js";
 
 /** Validate the public form body. Throws HttpError(400). Returns cleaned fields; `spam` = honeypot filled. */
@@ -45,7 +45,7 @@ export async function createSiteTicket(tenantId, body, { currencyForCountry } = 
   if (c) await updateRecord("agent_conversations", c.id, { ticket_id, handoff_id: row.id, slots: { ...(c.slots || {}), email: f.email } });
   const env = process.env;
   const log = await sendTicketMails({ tenantId, ticket: row, brand: "POD.AI", support: env.SUPPORT_EMAIL || "support@swisspro.site", extra: list(env.SUPPORT_NOTIFY_EMAILS),
-    confirm: env.TICKET_CONFIRM_EMAIL !== "false", hours, adminUrl: `${(env.PUBLIC_BASE_URL || "https://pod.swisspro.site").replace(/\/$/, "")}/admin.html#chatagent` });
+    confirm: env.TICKET_CONFIRM_EMAIL !== "false" && !personalSender(env), hours, adminUrl: `${(env.PUBLIC_BASE_URL || "https://pod.swisspro.site").replace(/\/$/, "")}/admin.html#chatagent` });
   await updateRecord("agent_handoffs", row.id, { email_log: log });
   return { ok: true, ticket_id, message: confirmText(f.lang, ticket_id, f.email, hours) };
 }

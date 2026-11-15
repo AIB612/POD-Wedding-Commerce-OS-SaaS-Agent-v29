@@ -74,6 +74,8 @@ try {
     let n = R.parseNeeds("Wir brauchen Gastgeschenke für 80 Gäste, Budget insgesamt 300 Euro"); assert.deepEqual([n.pool, n.quantity, n.budget_total, n.budget_cur], ["favours", 80, 300, "EUR"]); assert.equal(R.perItemBudget(n), 3.75);
     n = R.parseNeeds("Geschenkideen für das Brautpaar"); assert.equal(n.pool, "couple", "kid ≠ Geschenkideen");
     n = R.parseNeeds("cadeaux pour mes demoiselles d'honneur en bleu, style champêtre"); assert.deepEqual([n.pool, n.color, n.style], ["bridesmaids", "blue", "eco"]);
+    n = R.parseNeeds("Gift ideas for my bridesmaids under 25 CHF", { budget: 25, quantity: 25 }); assert.deepEqual([n.quantity, n.budget, n.budget_cur], [null, 25, "CHF"], "the budget number is not a quantity");
+    n = R.parseNeeds("推荐一些伴娘礼物，预算25瑞郎", { budget: 25, quantity: 25 }); assert.deepEqual([n.quantity, n.budget_cur], [null, "CHF"]);
     assert.equal(R.parseNeeds("Can you recommend something?").style, null, "no 'eco' inside 'recommend'");
     assert.ok(R.isRecoFollowUp("for 80 guests", { shown: ["candle"] }) && R.isRecoFollowUp("更便宜的", { shown: ["x"] }) && !R.isRecoFollowUp("where is my order?", { shown: ["x"] }));
     const ids = new Set(studioCatalog().products.map(p => p.id));
@@ -147,6 +149,7 @@ try {
     assert.equal(sent[0].to, "qa-inbox@example.com"); assert.ok(sent[0].subject.includes(t.json.ticket_id));
     assert.deepEqual(tk.email_log.map(l => `${l.kind}:${l.status}`).sort(), ["customer:skipped_test_mode", "team:not_configured", "team:skipped_test_mode"]);
     assert.ok(!allowedRecipient("anna@example.com", { TEST_EMAIL_ALLOWLIST: "qa-inbox@example.com" }) && allowedRecipient("anna@example.com", { NODE_ENV: "production" }));
+    { const { personalSender } = await import("./shared/tickets-core.js"); assert.ok(personalSender({ FROM_EMAIL: "someone@gmail.com", SENDGRID_API_KEY: "x" }), "no customer mail from a personal Gmail sender"); assert.ok(!personalSender({ FROM_EMAIL: "support@swisspro.site" })); }
     assert.match(transcriptText(tk.messages), /Customer: Can I get 120 invitations/);
     assert.throws(() => cleanTicketBody({ email: "a@b.co" }), /confirm/);
     let a2 = await call(`/api/saas/agent/handoffs/${tk.id}`, { method: "PUT", body: { status: "pending", add_note: "called back" }, admin: true }); assert.equal(a2.json.status, "pending"); assert.equal(a2.json.notes[0].text, "called back");

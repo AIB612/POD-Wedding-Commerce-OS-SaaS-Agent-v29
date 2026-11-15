@@ -32,6 +32,12 @@ const CONFIRM = {
   it: (id, e, h) => `Grazie! Il suo numero di ticket è ${id}. Il nostro team risponderà a ${e} entro ${h} ore.`,
   zh: (id, e, h) => `谢谢！您的工单号是 ${id}。我们的团队会在 ${h} 小时内回复到 ${e}。`
 };
+/** True when the sender address is a personal free-mail mailbox (Gmail etc., also as a SendGrid single sender) —
+ * then customers must not receive mail from it (it would expose that address). Team mail is unaffected. */
+export function personalSender(env = process.env) {
+  const from = String(env.FROM_EMAIL || env.SMTP_USER || "");
+  return /@(gmail|googlemail|outlook|hotmail|live|yahoo|icloud|me|gmx|web|qq|163|126|proton|protonmail)\./i.test(from);
+}
 export const confirmText = (lang, id, email, hours = 24) => (CONFIRM[lang] || CONFIRM.en)(id, email, hours);
 const MAIL_SUBJ = { en: "Your request", de: "Ihre Anfrage", fr: "Votre demande", it: "La sua richiesta", zh: "您的咨询" };
 

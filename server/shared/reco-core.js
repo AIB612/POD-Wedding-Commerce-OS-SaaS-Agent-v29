@@ -46,15 +46,16 @@ export const colorRe = c => COLOR_WORDS.find(([k]) => k === c)?.[1] || null;
 /** Budget / total / currency / guests / refine / deadline from one message (cls: classifier result with budget, quantity). */
 export function parseCommon(text, cls = {}) {
   const t = String(text || ""), g = t.match(QTY_GUESTS_RE);
-  const quantity = g ? Number(g[1]) : (cls.quantity || null);
   let budget = cls.budget || null, budget_total = null;
+  // The rule classifier reads "under 25 CHF" as both budget 25 and quantity 25 — a number that is the budget is not a quantity.
+  const quantity = g ? Number(g[1]) : (cls.quantity && cls.quantity !== cls.budget ? cls.quantity : null);
   if (budget && TOTAL_RE.test(t)) { budget_total = budget; budget = null; }
   else if (!budget && TOTAL_RE.test(t)) {
-    const c = t.match(/(?:chf|eur|€|usd|\$|fr\.)\s*(\d{2,6}(?:[.,]\d{1,2})?)|(\d{2,6}(?:[.,]\d{1,2})?)\s*(?:chf|eur|euros?|€|usd|\$|fr\.|franken|francs?|franchi|元|块)/i);
+    const c = t.match(/(?:chf|eur|€|usd|\$|fr\.)\s*(\d{2,6}(?:[.,]\d{1,2})?)|(\d{2,6}(?:[.,]\d{1,2})?)\s*(?:chf|eur|euros?|€|usd|\$|fr\.|franken|francs?|franchi|瑞郎|欧元|元|块)/i);
     const w = t.match(new RegExp(TOTAL_RE.source + "[^\\d]{0,20}(\\d{2,6})", "i"));
     const v = c ? (c[1] || c[2]) : w ? w[w.length - 1] : null; if (v) budget_total = Number(String(v).replace(",", "."));
   }
-  const curM = (budget || budget_total) ? t.match(/(chf|fr\.|franken|francs?|franchi)|(eur|euros?|€)|(usd|\$|dollars?)|(元|块|rmb|cny|人民币)/i) : null;
+  const curM = (budget || budget_total) ? t.match(/(chf|fr\.|franken|francs?|franchi|瑞郎|瑞士法郎)|(eur|euros?|€|欧元)|(usd|\$|dollars?|美元)|(元|块|rmb|cny|人民币)/i) : null;
   const budget_cur = curM ? (curM[1] ? "CHF" : curM[2] ? "EUR" : curM[3] ? "USD" : "CNY") : null;
   const refine = CHEAPER_RE.test(t) ? "cheaper" : PRICIER_RE.test(t) ? "pricier" : MORE_RE.test(t) ? "more" : null;
   const qtyOnly = !!g && t.replace(QTY_GUESTS_RE, "").replace(/\b(and|for|und|für|et|pour|e|per|y|para|what about|how about)\b|[?？!.,。给要]/gi, "").trim().length < 3;

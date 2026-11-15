@@ -29,7 +29,7 @@ export function buildMessage({ from, fromName, to, replyTo, subject, text, html,
 
 export async function sendSmtp({ to, replyTo, subject, text, html }, env = process.env) {
   const host = env.SMTP_HOST, port = Number(env.SMTP_PORT || 587), secure = env.SMTP_SECURE ? env.SMTP_SECURE === "true" : port === 465;
-  const from = env.FROM_EMAIL || env.SMTP_USER, user = env.SMTP_USER, pass = env.SMTP_PASS, timeout = Number(env.SMTP_TIMEOUT_MS || 20000);
+  const fromName = env.FROM_NAME || "POD.AI", from = env.FROM_EMAIL || env.SMTP_USER, user = env.SMTP_USER, pass = env.SMTP_PASS, timeout = Number(env.SMTP_TIMEOUT_MS || 20000);
   if (!host || !from) throw new Error("smtp_not_configured");
   if (/[\r\n<>]/.test(to) || /[\r\n<>]/.test(from)) throw new Error("smtp_invalid_address");
   const tlsOpts = { servername: host, rejectUnauthorized: env.SMTP_TLS_REJECT_UNAUTHORIZED !== "false" };
@@ -56,7 +56,7 @@ export async function sendSmtp({ to, replyTo, subject, text, html }, env = proce
       else { await cmd("AUTH LOGIN", [334]); await cmd(Buffer.from(user).toString("base64"), [334]); await cmd(Buffer.from(pass || "").toString("base64"), [235]); }
     }
     await cmd(`MAIL FROM:<${from}>`, [250]); await cmd(`RCPT TO:<${to}>`, [250, 251]); await cmd("DATA", [354]);
-    const msg = buildMessage({ from, fromName: env.FROM_NAME, to, replyTo, subject, text, html }).replace(/\r\n\./g, "\r\n..");
+    const msg = buildMessage({ from, fromName, to, replyTo, subject, text, html }).replace(/\r\n\./g, "\r\n..");
     const r = await cmd(msg + "\r\n.", [250]);
     sock.write("QUIT\r\n"); sock.end();
     return { provider: "smtp", status: "sent", code: r.code };

@@ -40,3 +40,8 @@ test("nothing under the budget → honest + cheapest real options; impossible co
   let r = await session("en")("gift ideas under 5"); assert.match(r.answer, /Nothing is under CHF 5/); assert.equal(r.cards[0].name, "Wedding Guest Tote");
   r = await session("en")("a gift in orange"); assert.match(r.answer, /don't see orange/);
 });
+
+test("a budget number is not read as a quantity", () => {
+  const n = podaiNeeds("gift ideas under 25 CHF", { budget: 25, quantity: 25 });
+  assert.equal(n.quantity, null); assert.equal(n.budget, 25);
+});
