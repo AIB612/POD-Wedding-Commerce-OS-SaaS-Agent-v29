@@ -3,7 +3,7 @@ import { ah, rateLimit } from "../http/middleware.js";
 import { dashboard, login, logoutToken, publicUser, register, requestEmailCode, verifyEmailCode } from "../services/account-service.js";
 import { requireUser } from "../auth.js";
 import { listRsvps, rsvpCsv } from "../services/rsvp-service.js";
-import { providerStatus, startLogin, finishLogin, STATE_COOKIE } from "../services/oauth-login-service.js";
+import { providerStatus, startLogin, finishLogin, STATE_COOKIE, safeReturn, redirectUri } from "../services/oauth-login-service.js";
 import { baseUrl } from "../config.js";
 import * as portal from "../services/account-portal-service.js";
 
@@ -38,7 +38,9 @@ export function accountRouter(){
   r.get(`/api/auth/${p}/callback`,lim,ah(async(req,res)=>{
    res.clearCookie(STATE_COOKIE,clearOpts(stateOpts()));res.setHeader("Cache-Control","no-store");
    try{const x=await finishLogin(p,{tenantId:req.tenantId,query:req.query,cookie:readCookie(req,STATE_COOKIE)});setSession(res,x.token);const sep=x.returnTo.includes("?")?"&":"?";res.redirect(`${x.returnTo}${sep}signed_in=${p}`);}
-   catch(e){const code=/^[a-z_]+$/.test(e.message||"")?e.message:"login_failed";if(!e.status||(e.status>=500&&e.message!=="not_configured"))console.error(`[auth] ${p} callback failed:`,e.message);res.redirect(`/?login_error=${encodeURIComponent(code)}`);}
+   catch(e){const code=/^[a-z_]+$/.test(e.message||"")?e.message:"login_failed";if(!e.status||(e.status>=500&&e.message!=="not_configured"))console.error(`[auth] ${p} callback failed:`,e.message);
+    // Back to the page the visitor started from (from the signed state), with a friendly message instead of a raw error.
+    const back=safeReturn(e.returnTo||"/").replace(/([?&])(signed_in|login_error)=[^&]*/g,"$1").replace(/[?&]$/,"");res.redirect(`${back}${back.includes("?")?"&":"?"}login_error=${encodeURIComponent(code)}`);}
   }));
  }
  // Checkout prefill for the signed-in customer (own data only).

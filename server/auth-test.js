@@ -86,6 +86,13 @@ try {
   }
   const expired = svc.sealState({ p: "google", state: "s".repeat(32), nonce: "n", verifier: "v", r: "/", exp: Date.now() - 1 });
   assert.equal((await cb("google", { code: "c", state: "s".repeat(32) }, expired)).headers.get("location"), "/?login_error=invalid_state");
+  // Provider error (e.g. user cancelled on Google) → back to the starting page with a friendly code, never a raw error.
+  const denied = await cb("google", { error: "access_denied", state: g.state }, g.cookie);
+  assert.equal(denied.status, 302); assert.equal(denied.headers.get("location"), "/checkout.html?step=1&login_error=access_denied");
+  assert.equal((await cb("google", { error: "access_denied" }, null)).headers.get("location"), "/?login_error=access_denied");
+  process.env.GOOGLE_REDIRECT_URI = "https://shop.example.com/api/auth/google/callback/";
+  assert.equal(svc.redirectUri("google"), "https://shop.example.com/api/auth/google/callback", "redirect URI is fixed config, trailing slash trimmed");
+  delete process.env.GOOGLE_REDIRECT_URI;
   result.callback_state_checks = "pass";
 
   // 5. Real ID-token verification (mocked JWKS): signature, iss, aud, exp, nonce.

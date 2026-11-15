@@ -31,7 +31,9 @@ export function providerStatus() {
     shop: { configured: secret && !!shopDomain() && !!env("SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID") },
   };
 }
-export const redirectUri = p => (p === "google" ? env("GOOGLE_REDIRECT_URI") : env("SHOPIFY_CUSTOMER_ACCOUNT_REDIRECT_URI")) || `${baseUrl()}/api/auth/${p}/callback`;
+// Fixed, config-driven redirect URI (never derived from request Host / X-Forwarded-* headers). It must match one of the
+// "Authorized redirect URIs" of the OAuth client in Google Cloud Console character for character (https, no www, no trailing slash).
+export const redirectUri = p => ((p === "google" ? env("GOOGLE_REDIRECT_URI") : env("SHOPIFY_CUSTOMER_ACCOUNT_REDIRECT_URI")) || `${baseUrl()}/api/auth/${p}/callback`).replace(/\/+$/, "");
 
 // ---------- signed state cookie (state + nonce + PKCE verifier + return path) ----------
 const sign = (data, secret) => crypto.createHmac("sha256", secret).update(data).digest("base64url");
@@ -136,9 +138,15 @@ export async function startLogin(provider, { returnTo, locale } = {}) {
 export async function finishLogin(provider, { tenantId, query, cookie }) {
   if (!providerStatus()[provider]?.configured) throw new HttpError(503, "not_configured");
   const st = openState(cookie);
+  // Provider-side errors (user cancelled, consent refused…) are reported as such even if the state cookie is gone.
+  if (query.error) throw Object.assign(new HttpError(400, "access_denied"), { returnTo: st?.r });
   if (!st || st.p !== provider || !safeEq(st.state, query.state)) throw new HttpError(400, "invalid_state");
-  if (query.error) throw new HttpError(400, "access_denied");
   if (!query.code) throw new HttpError(400, "missing_code");
+  try { return await completeLogin(provider, { tenantId, query, st }); }
+  catch (e) { if (e && typeof e === "object" && !e.returnTo) e.returnTo = st.r; throw e; }
+}
+
+async function completeLogin(provider, { tenantId, query, st }) {
   const tok = await hooks.exchangeCode(provider, { code: String(query.code), verifier: st.verifier });
   const claims = await hooks.verifyIdToken(provider, tok.id_token, { nonce: st.nonce });
   let profile = { sub: String(claims.sub || ""), email: String(claims.email || "").toLowerCase(), name: claims.name || [claims.given_name, claims.family_name].filter(Boolean).join(" "), picture: claims.picture || "", address: null };

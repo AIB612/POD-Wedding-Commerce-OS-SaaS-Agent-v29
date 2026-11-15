@@ -8,7 +8,11 @@ validateConfig();
 const app = await createApp();
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || "0.0.0.0";
-const server = app.listen(port, host, () => console.log(`Wedding Commerce OS running on ${baseUrl()}`));
+const server = app.listen(port, host, async () => {
+  console.log(`Wedding Commerce OS running on ${baseUrl()}`);
+  // Non-secret: the exact redirect URI that must be listed under "Authorized redirect URIs" of the Google OAuth client.
+  try { const o = await import("./services/oauth-login-service.js"); if (o.providerStatus().google.configured) console.log(`[auth] Google login redirect_uri: ${o.redirectUri("google")}`); } catch { /* optional */ }
+});
 startSchedulers();
 
 // Graceful shutdown: stop accepting connections, flush pending store writes, then exit.
