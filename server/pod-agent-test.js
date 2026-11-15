@@ -76,6 +76,7 @@ try {
     m = await chat("is shipping free?", { country: "US", conversation_id: cid }); assert.deepEqual([...new Set(cur(m))], ["USD"]);
     m = await chat("is shipping free?", { country: "CH" }); assert.match(m.json.answer, /CHF 108\b/); assert.ok(!/EUR|USD|107\.88/.test(m.json.answer));
     m = await chat("is shipping free?", { country: "DE" }); assert.match(m.json.answer, /EUR 143\b/); assert.ok(!/CHF|142\.87/.test(m.json.answer)); }
+  { const t = await chat("is shiping fre?", { country: "CH" }); assert.match(t.json.answer, /free from CHF 108/, "typo-fixed knowledge search"); }
   result.one_currency_per_market = "pass";
 
   // Guardrails: injection and card data are refused, card numbers are not stored.

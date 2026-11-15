@@ -9,6 +9,7 @@ import { paymentMethods } from "../../services/checkout-service.js";
 import { currencyForCountry } from "../../services/pricing-service.js";
 import { FAQ_FR_IT, dynamicFrIt } from "./i18n-fr-it.js";
 import { BM25 } from "../../shared/local-rag.js";
+import { fixTypos } from "./nlu.js";
 
 const FAQ = [
   { id: "what_we_sell", tags: ["products", "sell", "offer", "range", "什么", "卖", "产品", "sortiment", "angebot"],
@@ -196,7 +197,9 @@ export async function allEntries(tenantId, custom = [], country = null) { return
 export async function searchKnowledge(tenantId, query, lang = "en", { limit = 3, custom = [], country = null } = {}) {
   const docs = await allEntries(tenantId, custom, country);
   const index = new BM25(docs.map(d => ({ id: d.id, entry: d, fields: { q: Object.values(d.q).join(" "), tags: d.tags.join(" "), a: Object.values(d.a).join(" ") } })), { weights: { q: 3, tags: 3, a: 0.6 } });
-  return index.search(query, { limit: limit + 2 }).map(h => {
+  // Shop-vocabulary typo fixes first ("shiping fre" → "shipping free"), so a misspelt word is not matched to a near neighbour ("ships").
+  const fixed = fixTypos(query).text || query;
+  return index.search(fixed, { limit: limit + 2 }).map(h => {
     const d = h.doc.entry, coverage = h.terms ? h.matched / h.terms : 0;
     const score = Math.round((h.norm * 4 + coverage * 2 + (d.custom && h.norm > 0.2 ? 1 : 0)) * 100) / 100;
     return { id: d.id, question: d.q[lang] || d.q.en, answer: d.a[lang] || d.a.en, score, norm: Math.round(h.norm * 100) / 100, ...(d.custom ? { custom: true } : {}) };

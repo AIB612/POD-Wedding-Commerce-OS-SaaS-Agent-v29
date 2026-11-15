@@ -808,6 +808,7 @@ const K={
 'hc.track':{zh:'查看物流',en:'Track parcel',de:'Sendung verfolgen'},'hc.order':{zh:'订单',en:'Order',de:'Bestellung'},
 'hc.retry':{zh:'重试',en:'Try again',de:'Erneut versuchen'},
 'hc.offline':{zh:'您似乎已离线，请检查网络后重试。',en:'You seem to be offline — check your connection and try again.',de:'Sie scheinen offline zu sein – bitte Verbindung prüfen und erneut versuchen.'},
+'hc.slow':{zh:'您发送得有点快——请稍等几秒再试。',en:'You\'re sending messages quickly — please wait a few seconds, then try again.',de:'Sie senden gerade sehr schnell – bitte warten Sie ein paar Sekunden und versuchen Sie es erneut.',fr:'Vous envoyez des messages très vite — patientez quelques secondes, puis réessayez.',it:'Sta inviando messaggi molto velocemente — attenda qualche secondo e riprovi.'},
 'pay.delivery':{en:'Estimated delivery'},
 'acct.so.title':{en:'Sign in to your account'},
 'acct.so.text':{en:'See your orders, saved designs and addresses. One tap, no password.'}

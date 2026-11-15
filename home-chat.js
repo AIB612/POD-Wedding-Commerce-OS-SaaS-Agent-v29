@@ -123,18 +123,18 @@
   function greet(){msgs.textContent="";if(!S.msgs.length){var g=glang();addMsg({role:"assistant",text:HELLO[g]||K("hc.hello","Hi! I'm the POD.AI assistant.")},false);setChips(CHIPS[g]||CHIPS.en)}else{S.msgs.forEach(function(m){addMsg(m,false)});var last=S.msgs[S.msgs.length-1];setChips(last&&last.chips||[])}}
   function country(){try{return window.PODMarket&&PODMarket.country()||""}catch(e){return ""}}
   function typing(){var t=h("div","hc-m a typing hc-in");t.setAttribute("role","status");t.setAttribute("aria-label",K("hc.thinking","Checking…"));for(var i=0;i<3;i++)t.appendChild(document.createElement("i"));msgs.appendChild(t);toBottom(true);return t}
-  function fail(text,t){t.remove();var d=addMsg({role:"assistant",err:true,text:navigator.onLine===false?K("hc.offline","You seem to be offline — check your connection and try again."):K("hc.error","Sorry, the assistant is unreachable right now. Please try again.")},false);
+  function fail(text,t,busyErr){t.remove();var d=addMsg({role:"assistant",err:true,text:navigator.onLine===false?K("hc.offline","You seem to be offline — check your connection and try again."):busyErr?K("hc.slow","You're sending messages quickly — please wait a few seconds, then try again."):K("hc.error","Sorry, the assistant is unreachable right now. Please try again.")},false);
     var b=h("button","hc-retry",K("hc.retry","Try again"));b.type="button";b.onclick=function(){d.remove();var last=S.msgs[S.msgs.length-1];if(last&&last.role==="user"&&last.text===text){S.msgs.pop();wr();var u=msgs.querySelectorAll(".hc-m.u");if(u.length)u[u.length-1].remove()}send(text)};d.appendChild(b);b.focus({preventScroll:true})}
   function send(text){
     text=String(text||"").trim();if(!text||busy)return;busy=true;$("send").disabled=true;input.value="";input.style.height="";setChips([]);
     addMsg({role:"user",text:text},true);var t=typing(),ac=window.AbortController?new AbortController():null,tm=setTimeout(function(){if(ac)ac.abort()},25000),t0=Date.now();
     fetch("/api/pod-agent/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text,conversation_id:S.id||undefined,lang:lang(),country:country(),page:location.pathname}),signal:ac?ac.signal:undefined})
-      .then(function(r){return r.json().then(function(d){if(!r.ok&&!d.answer)throw new Error(d.error||r.status);return d})})
+      .then(function(r){return r.json().then(function(d){if(!r.ok&&!d.answer){var e=new Error(d.error||r.status);e.status=r.status;throw e}return d})})
       // keep the typing dots visible for at least ~350 ms so instant local answers still feel conversational
       .then(function(d){return new Promise(function(res){setTimeout(function(){res(d)},Math.max(0,350-(Date.now()-t0)))})})
       .then(function(d){t.remove();if(d.conversation_id)S.id=d.conversation_id;var ui=(d.ui||[]).filter(function(u){return u.type!=="chips"}),ch=(d.ui||[]).filter(function(u){return u.type==="chips"})[0];
         addMsg({role:"assistant",text:d.answer||K("hc.error","Sorry, please try again."),ui:ui,index:d.message_index,chips:ch?ch.items:[]},true,true,function(){setChips(ch?ch.items:[])})})
-      .catch(function(){fail(text,t)})
+      .catch(function(e){fail(text,t,e&&e.status===429)})
       .then(function(){clearTimeout(tm);busy=false;$("send").disabled=false;if(window.innerWidth>720||document.activeElement===input)input.focus({preventScroll:true})});
   }
   $("form").onsubmit=function(e){e.preventDefault();send(input.value)};
