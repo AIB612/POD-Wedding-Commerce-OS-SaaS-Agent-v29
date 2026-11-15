@@ -241,6 +241,7 @@ export function setEmbeddedFrameHeaders(res, shop) {
   const s = normalizeShop(shop); if (!s) throw new Error("invalid_shop_domain");
   res.removeHeader("X-Frame-Options");
   res.setHeader("Content-Security-Policy", `frame-ancestors https://${s} https://admin.shopify.com;`);
+  res.removeHeader("Content-Security-Policy-Report-Only"); // embedded in Shopify admin: its own framing rule only
 }
 export async function embeddedState(shop) {
   const shopRow = await repo.getShop(shop);

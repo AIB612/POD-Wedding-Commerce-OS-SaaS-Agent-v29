@@ -20,7 +20,7 @@ Answers (local first, LLM only when a key is configured on the server):
 - products from Admin API search (price, image, link); generic requests ("show me products", "what do you sell", "bestsellers", "Zeig mir eure Produkte", "你们有什么商品") list the newest active products
 - no published policy (e.g. dev store without a refund policy) → says so, adds shipping policy / contact e-mail, offers the team
 - order status + tracking: order number **and** order e-mail must match; 5 wrong tries → 15 min lock.
-  Tracking: our carrier APIs (YunExpress sandbox, 4PX production; PODAI_YUNEXPRESS_MODE / PODAI_FOURPX_MODE) → 51Tracking v4 (`TRACKING51_API_KEY`) → Shopify tracking link; status, latest event and timeline in chat; cached 30 min; read-only
+  Tracking: our carrier APIs (YunExpress sandbox, 4PX production; PODAI_YUNEXPRESS_MODE / PODAI_FOURPX_MODE) → optional tracking aggregator API (`TRACKING51_API_KEY`) → Shopify tracking link; status, latest event and timeline in chat; cached 30 min; read-only
 - shipping cost: the shop's delivery-profile rates for the customer's country; calculated rates / no zones → policy + "calculated at checkout"
 - "talk to a person", anger, repeated failures → Handoffs queue in the embedded admin (no e-mail sent)
 
@@ -35,7 +35,7 @@ Answers (local first, LLM only when a key is configured on the server):
 | Catalog | products, variants (title, price, availability), collections, metafields (text/number) | read_products |
 | Pricing | variant price, shop `currencyCode`, `taxesIncluded` | read_products |
 | Shipping | delivery profiles → zones → active method rates (+ conditions); calculated rates → "at checkout" | read_shipping |
-| Orders & tracking | order by name + e-mail check; `fulfillments.trackingInfo` → carrier API (YunExpress / 4PX) → 51Tracking → Shopify tracking URL | read_orders |
+| Orders & tracking | order by name + e-mail check; `fulfillments.trackingInfo` → carrier API (YunExpress / 4PX) → optional tracking aggregator → Shopify tracking URL | read_orders |
 | Promos | check one code the customer has (`codeDiscountNodes`, active?) — codes are never listed | read_discounts |
 | Returns / payment info | shop policies (refund, shipping, contact, terms) | read_legal_policies |
 | Merchant FAQ | Pod.AI admin → Knowledge | — |

@@ -7,7 +7,7 @@ import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { tenantContext, userContext } from "./auth.js";
 import { accountRouter } from "./routes/account.js";
-import { securityHeaders, errorHandler, notFound } from "./http/middleware.js";
+import { securityHeaders, errorHandler, notFound, cspReport, rateLimit } from "./http/middleware.js";
 import webhooks from "./routes/webhooks.js";
 import shopifyApp from "./routes/shopify-app.js";
 import { shopifyAgentRouter } from "./shopify-agent/routes.js";
@@ -47,6 +47,7 @@ export async function createApp({ root = projectRoot, generatedDir = path.join(p
   const json = express.json({ limit: "1mb" });
   // Larger bodies only where images are uploaded (invitation sites, studio designs).
   app.use((req, res, next) => (req.path === "/api/invitations" || req.path === "/api/studio/projects" || req.path === "/api/seller/media" ? next() : json(req, res, next)));
+  app.post("/api/csp-report", rateLimit({ bucket: "csp-report", windowMs: 60_000, max: 30 }), express.json({ type: ["application/csp-report", "application/reports+json", "application/json"], limit: "16kb" }), cspReport);
   app.use(tenantContext);
   app.use(userContext);
 

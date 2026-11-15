@@ -331,6 +331,7 @@ export function publicRouter({ root, generatedDir }) {
   router.use("/generated", ah(async (req, res, next) => {
     if (req.path.endsWith(".json") || /(^|\/)\./.test(req.path)) return res.sendStatus(404); // metadata and private (dot) folders are internal
     res.setHeader("Content-Security-Policy", "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals allow-downloads");
+    res.removeHeader("Content-Security-Policy-Report-Only"); // user content: no site-policy reports
     res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
     const m = /^\/([a-f0-9]{12})(?:\.html)?$/.exec(req.path);
     if (m) {
@@ -341,7 +342,8 @@ export function publicRouter({ root, generatedDir }) {
     next();
   }), express.static(generatedDir, { extensions: ["html"], maxAge: "1h", dotfiles: "deny", setHeaders: (res, p) => { if (p.endsWith(".html")) res.setHeader("Cache-Control", "no-cache"); } }));
 
-  router.get("/api/health", (req, res) => res.json({ ok: true, version: VERSION, tenant: req.tenantId, protocols: protocolRegistry().map(x => x.id) }));
+  // Public health check: liveness only. Version / tenant / protocol details only for admins (no fingerprinting).
+  router.get("/api/health", (req, res) => { res.setHeader("Cache-Control", "no-store"); res.json(isAdminRequest(req) ? { ok: true, version: VERSION, tenant: req.tenantId, protocols: protocolRegistry().map(x => x.id) } : { ok: true }); });
 
   return router;
 }

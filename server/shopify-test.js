@@ -270,7 +270,7 @@ await test("HTTP: embedded page headers, storefront unchanged, session-token API
     assert.equal(r.headers.get("content-security-policy"), `frame-ancestors https://${SHOP} https://admin.shopify.com;`);
     assert.match(html, /<meta name="shopify-api-key" content="test_key">/); assert.match(html, /cdn\.shopify\.com\/shopifycloud\/app-bridge\.js/);
     r = await fetch(`${base}/`); html = await r.text();
-    assert.equal(r.headers.get("x-frame-options"), "SAMEORIGIN"); assert.equal(r.headers.get("content-security-policy"), null); assert.doesNotMatch(html, /shopify-api-key/);
+    assert.equal(r.headers.get("x-frame-options"), "SAMEORIGIN"); assert.equal(r.headers.get("content-security-policy"), "frame-ancestors 'self'; base-uri 'self'; object-src 'none'", "storefront pages: same-origin framing only, never the Shopify admin"); assert.doesNotMatch(html, /shopify-api-key/);
     r = await fetch(`${base}/shopify/embedded?shop=evil.com`); assert.equal(r.status, 400);
     r = await fetch(`${base}/api/shopify/embedded/state`); assert.equal(r.status, 401);
     r = await fetch(`${base}/api/shopify/embedded/state`, { headers: { Authorization: `Bearer ${shopify.signSessionToken({ shop: SHOP, secret: "nope" })}` } }); assert.equal(r.status, 401);
