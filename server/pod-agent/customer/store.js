@@ -2,7 +2,7 @@
 // Supabase tables (conversations, messages, handoffs, discounts_issued, settings). Collections:
 //   agent_settings       one row per tenant (admin → AI Agent → Settings / Knowledge)
 //   agent_conversations  one row per chat (messages capped + redacted, intents, tools, feedback, handoff flag)
-//   agent_handoffs       queue for the team (admin → AI Agent → Handoffs). No e-mail is sent automatically.
+//   agent_handoffs       queue for the team (admin → AI Agent → Handoffs) incl. "Contact us" tickets (ticket_id POD-T-…, see tickets.js).
 //   agent_discounts      sales codes issued by the chat (only when enabled in settings)
 import crypto from "node:crypto";
 import { addRecord, findRecord, getState, listForTenant, removeWhere, updateRecord } from "../../saas-store.js";
@@ -88,11 +88,15 @@ export async function updateHandoff(tenantId, id, patch) {
   const h = await findRecord("agent_handoffs", id);
   if (!h || h.tenant_id !== tenantId) return null;
   const allowed = {};
-  if (["open", "in_progress", "resolved"].includes(patch.status)) allowed.status = patch.status;
+  // Ticket statuses: open → pending (waiting for the customer / in progress) → closed. "in_progress" / "resolved" kept for older rows.
+  if (["open", "pending", "in_progress", "closed", "resolved"].includes(patch.status)) allowed.status = patch.status;
   if (patch.note !== undefined) allowed.team_note = String(patch.note || "").slice(0, 1000);
-  const row = await updateRecord("agent_handoffs", id, { ...allowed, updated_at: now(), ...(allowed.status === "resolved" ? { resolved_at: now() } : {}) });
-  // Resolving the handoff lets the AI answer this conversation again (POD Agent: un-mute).
-  if (allowed.status === "resolved") { const c = await findRecord("agent_conversations", h.conversation_id); if (c) await updateRecord("agent_conversations", c.id, { status: "open" }); }
+  if (patch.add_note) allowed.notes = [...(h.notes || []), { at: now(), text: String(patch.add_note).slice(0, 1000) }].slice(-50);
+  if (patch.test === true) allowed.test = true;
+  const done = allowed.status === "resolved" || allowed.status === "closed";
+  const row = await updateRecord("agent_handoffs", id, { ...allowed, updated_at: now(), ...(done ? { resolved_at: now() } : {}) });
+  // Closing the ticket / handoff lets the AI answer this conversation again (POD Agent: un-mute).
+  if (done) { const c = await findRecord("agent_conversations", h.conversation_id); if (c) await updateRecord("agent_conversations", c.id, { status: "open" }); }
   return row;
 }
 export async function listConversations(tenantId, { limit = 50 } = {}) {

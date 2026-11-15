@@ -36,9 +36,48 @@ const res = C.map(([q, want, quoteRe]) => {
 });
 const intents = [["how long does shiping take", "delivery_time"], ["I want a refnd", "return_request"], ["wher is my ordr", "order_status"], ["Wie lange dauert die Liferung?", "delivery_time"]].map(([q, want]) => {
   const t = nlu.fixTypos ? nlu.fixTypos(q).text : q; const got = nlu.classifyRules(t).intent; return { q, want, got, ok: got === want }; });
+// Recommendations (fixture shop products, multi-turn, 5 languages): 2–4 real products, budget / colour / recipient respected.
+const { podaiRecommend, isFollowUp } = await import(pathToFileURL(path.join(root, "server/shopify-agent/engine/reco.js")));
+const { PRODUCTS, fakeSearch } = await import(pathToFileURL(path.join(root, "server/shopify-agent/test/fixtures-reco.js")));
+const realIds = new Set(PRODUCTS.map(p => p.id));
+const RECO = [
+  { lang: "en", turns: ["Can you recommend something?"], clarify: true },
+  { lang: "en", turns: ["gift ideas for him under 40"], max: 40, re: /for him/ },
+  { lang: "en", turns: ["gift ideas for him under 40", "cheaper"], cheaperThanFirst: true },
+  { lang: "en", turns: ["a t-shirt in blue"], variants: ["101", "502"] },
+  { lang: "de", turns: ["Geschenkideen für sie unter 30"], max: 30, re: /für sie/ },
+  { lang: "de", turns: ["Geschenkideen für sie unter 30", "in Rot"], none: /Rot/ },
+  { lang: "fr", turns: ["Une idée cadeau pour un enfant ?"], first: "Kids Goat Tee" },
+  { lang: "it", turns: ["Idee regalo sotto 20"], max: 20 },
+  { lang: "zh", turns: ["推荐个礼物给男朋友"], re: /送他/ },
+  { lang: "en", turns: ["wedding guest gift ideas", "more like this"], notFirst: true },
+  { lang: "en", turns: ["recommend a gift, total budget 100 for 4 people"], max: 25 }
+];
+const recoRes = [];
+for (const c of RECO) {
+  const conv = { messages: [], slots: {}, tools: {} }; let first = null, last = null;
+  for (const text of c.turns) { conv.messages.push({ role: "user", text }); const ctx = { lang: c.lang, conv, ui: [] };
+    const answer = await podaiRecommend(ctx, nlu.classifyRules(text, { hint: c.lang }), text, { search: fakeSearch(), follow: isFollowUp(text, conv.slots.reco, conv) });
+    conv.messages.push({ role: "assistant", text: answer }); last = { answer, cards: ctx.ui.find(u => u.type === "products")?.items || [] }; first = first || last; }
+  const f = [];
+  if (c.clarify) { if (last.cards.length) f.push("no clarifying question"); }
+  else if (c.none) { if (!c.none.test(last.answer)) f.push("colour not reported"); }
+  else {
+    if (last.cards.length < 1 || last.cards.length > 4) f.push(`cards ${last.cards.length}`);
+    if (last.cards.some(x => !realIds.has(x.id))) f.push("invented product");
+    if (c.max && last.cards.some(x => x.unit_price > c.max)) f.push("over budget");
+    if (c.re && !c.re.test(last.answer)) f.push(`missing ${c.re}`);
+    if (c.variants && last.cards.some(x => !c.variants.includes(String(x.variant_id)))) f.push("wrong colour variant");
+    if (c.first && last.cards[0]?.name !== c.first) f.push(`first ${last.cards[0]?.name}`);
+    if (c.cheaperThanFirst && last.cards.some(x => x.unit_price >= Math.min(...first.cards.map(y => y.unit_price)))) f.push("not cheaper");
+    if (c.notFirst && last.cards.some(x => first.cards.some(y => y.id === x.id))) f.push("repeated");
+  }
+  recoRes.push({ q: c.turns.join(" ⟶ "), lang: c.lang, ok: !f.length, fails: f, answer: last.answer });
+}
 const n = res.length, ok = res.filter(r => r.ok).length, qs = res.filter(r => r.quoteOk !== null), qok = qs.filter(r => r.quoteOk).length;
-const summary = { root, retrieval_top1_pct: Math.round(100 * ok / n), retrieval: `${ok}/${n}`, focused_quote: `${qok}/${qs.length}`, typo_intents: `${intents.filter(i => i.ok).length}/${intents.length}`, outbound_requests: outbound };
-const out = arg("--out"); if (out) fs.writeFileSync(out, JSON.stringify({ summary, res, intents }, null, 2));
+const summary = { root, retrieval_top1_pct: Math.round(100 * ok / n), retrieval: `${ok}/${n}`, focused_quote: `${qok}/${qs.length}`, typo_intents: `${intents.filter(i => i.ok).length}/${intents.length}`, recommendations: `${recoRes.filter(r => r.ok).length}/${recoRes.length}`, outbound_requests: outbound };
+const out = arg("--out"); if (out) fs.writeFileSync(out, JSON.stringify({ summary, res, intents, recommendations: recoRes }, null, 2));
 console.log(JSON.stringify(summary, null, 2));
 for (const r of [...res, ...intents].filter(r => !r.ok || r.quoteOk === false)) console.log("MISS", r.q, "want", r.want, "got", r.got, r.quoteOk === false ? "(quote not focused)" : "");
+for (const r of recoRes.filter(r => !r.ok)) console.log("RECO MISS", r.q, r.fails.join("; "), "→", r.answer);
 globalThis.fetch = realFetch;

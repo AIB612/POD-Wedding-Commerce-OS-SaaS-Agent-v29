@@ -11,6 +11,8 @@ export const ABUSE_RE =
 // Customer explicitly asks for a person (EN / DE / FR / IT / ZH).
 export const HUMAN_RE =
   /(\b(human|real person|a person|someone real|agent please|customer service|support team|talk to (a|an|your) (person|human|team|agent)|speak (to|with) (a|an|someone|your)|mensch|mitarbeiter|kundendienst|personne|conseiller|operatore|persona reale)\b|人工|真人|客服|转人工|找人|(?<!怎么|如何|怎样|怎麼)联系你们)/i;
+// The "Contact us" button / chip text on its own (→ e-mail form → ticket). Questions like "怎么联系你们" stay informational.
+export const CONTACT_BTN_RE = /^\s*(contact( us| the team| support)?|kontakt( aufnehmen)?|kontaktieren sie uns|nous contacter|contactez[- ]nous|contattaci|contatta(re)? il team|联系我们|聯絡我們|联系客服|留言)\s*[.!?。！？]*\s*$/i;
 export const REFUND_RE = /(\b(refund|money back|r[üu]ckerstattung|geld zur[üu]ck|rembourse|rimborso)\b|退款|退钱)/i;
 export const ANGRY_RE = /(!!!|\b(furious|unacceptable|worst|disgusting|w[üu]tend|inakzeptabel)\b|太差|气死|愤怒|非常不满|忍无可忍)/i;
 // Prompt injection / role override attempts: answered with a polite refusal, never forwarded to the model.
@@ -33,6 +35,7 @@ export const WRITE_TOOLS = new Set(["create_draft_order", "issue_discount", "che
  * Returns null or { reason }.
  */
 export function handoffCheck(cfg, cls, conv, text) {
+  if (CONTACT_BTN_RE.test(text)) return { reason: "contact us" };
   if (cls.wants_human || HUMAN_RE.test(text)) return { reason: "customer asked for a human" };
   if (cls.abusive || ABUSE_RE.test(text)) return { reason: "abusive language" };
   if (cls.threat || THREAT_RE.test(text) || ZH_THREAT_RE.test(text)) return { reason: "legal / chargeback threat" };
@@ -52,11 +55,11 @@ const HOLDING = {
   zh: h => `感谢您的留言。我已将您的问题转交给我们的团队，您将在 ${h} 小时内收到回复。`
 };
 const HOLDING_NEEDS_EMAIL = {
-  de: "Damit das Team Sie erreichen kann, schreiben Sie bitte Ihre E-Mail-Adresse (und, falls vorhanden, die Bestellnummer) in den Chat.",
-  fr: "Pour que l'équipe puisse vous répondre, indiquez votre adresse e-mail (et le numéro de commande si vous l'avez).",
-  it: "Per permettere al team di risponderle, scriva il suo indirizzo e-mail (e il numero d'ordine, se lo ha).",
-  en: "So the team can reach you, please type your e-mail address (and your order number, if you have one).",
-  zh: "为了让团队联系您，请在对话中留下您的邮箱（如有订单号也请一并提供）。"
+  de: "Damit das Team Sie erreichen kann, geben Sie bitte unten Ihre E-Mail-Adresse ein – Sie erhalten sofort eine Ticketnummer.",
+  fr: "Pour que l'équipe puisse vous répondre, indiquez votre adresse e-mail ci-dessous — vous recevrez tout de suite un numéro de ticket.",
+  it: "Per permettere al team di risponderle, inserisca qui sotto il suo indirizzo e-mail: riceverà subito un numero di ticket.",
+  en: "So the team can reach you, please leave your e-mail below — you'll get a ticket number right away.",
+  zh: "为了让团队联系您，请在下方留下您的邮箱，提交后会立即生成工单号。"
 };
 const ERRORS = {
   de: "Entschuldigung, gerade gibt es ein technisches Problem. Bitte versuchen Sie es in ein paar Minuten noch einmal.",

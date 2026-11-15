@@ -47,7 +47,7 @@ export async function agentOverview(tenantId, { days = 30 } = {}) {
     { id: "quotes", label: "Shipping quotes given", value: tools.quote_shipping || 0 },
     { id: "recommendations", label: "Product recommendations", value: tools.recommend_products || 0 },
     { id: "order_lookups", label: "Order lookups", value: (tools.find_order || 0) + (tools.get_tracking || 0) },
-    { id: "open_handoffs", label: "Open handoffs", value: (await listHandoffs(tenantId)).filter(h => h.status !== "resolved").length },
+    { id: "open_handoffs", label: "Open handoffs", value: (await listHandoffs(tenantId)).filter(h => !["resolved", "closed"].includes(h.status)).length },
     { id: "guardrail_hits", label: "Guardrail refusals", value: guard },
     { id: "discounts_issued", label: "Chat discount codes", value: (await discountsIssued(tenantId)).filter(d => Date.parse(d.created_at) >= since).length }
   ].map(k => ({ ...k, status: k.value == null ? "NO DATA" : k.target != null ? (k.value >= k.target ? "PASS" : "WARN") : k.target_max != null ? (k.value <= k.target_max ? "PASS" : "WARN") : "INFO" }));
@@ -112,7 +112,7 @@ export async function dataCheck(tenantId) {
   const llm = llmStatus();
   if (!llm.available) f("warn", "C1", "Configuration", `No LLM key configured — the chat runs on the rule engine (missing: ${llm.missing.join(", ")})`, "Add the key + model to the server .env and restart");
   else if (!llm.tool_calling) f("warn", "C2", "Configuration", `${llm.provider} has no tool calling here — tools run via the rule engine`, "Use openai, xai or deepseek for full tool calling");
-  const open = (await listHandoffs(tenantId)).filter(h => h.status !== "resolved" && Date.now() - Date.parse(h.created_at) > s.human_reply_hours * 3600e3);
+  const open = (await listHandoffs(tenantId)).filter(h => !["resolved", "closed"].includes(h.status) && !h.test && Date.now() - Date.parse(h.created_at) > s.human_reply_hours * 3600e3);
   if (open.length) f("error", "C3", "Handoffs", `${open.length} handoff(s) older than the promised ${s.human_reply_hours} h reply time`, "Answer them and mark resolved");
   if (!s.enabled) f("warn", "C4", "Settings", "The chat assistant is switched off", "Enable it in Settings");
   const errors = out.filter(x => x.level === "error").length, warns = out.filter(x => x.level === "warn").length;

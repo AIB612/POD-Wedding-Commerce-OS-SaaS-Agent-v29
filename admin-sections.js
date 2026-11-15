@@ -340,13 +340,13 @@ function carriers(root){
 
 // ---------- Customer chat agent (POD Agent back office) ----------
 function chatagent(root){
-  const TABS=[["overview","Overview"],["handoffs","Handoffs"],["conversations","Conversations"],["knowledge","Knowledge"],["settings","Settings"],["check","Data check"]];
+  const TABS=[["overview","Overview"],["handoffs","Tickets"],["conversations","Conversations"],["knowledge","Knowledge"],["settings","Settings"],["check","Data check"]];
   root.innerHTML=`<div class="query-card adm-bar"><div class="lang-switch" role="group" aria-label="Tabs">${TABS.map(([id,l],i)=>`<button data-tab="${id}"${i?"":' class="active"'}>${l}</button>`).join("")}</div><span class="adm-msg" data-r="msg" aria-live="polite"></span></div><div data-r="body">Loading…</div>`;
   const $=n=>root.querySelector(`[data-r="${n}"]`),body=()=>$("body");let tab="overview";
   const card=(title,inner,meta="")=>`<div class="table-card"><div class="table-toolbar"><strong>${title}</strong><span class="adm-meta">${meta}</span></div>${inner}</div>`;
   const table=(head,rows)=>`<div class="table-wrap"><table class="adm-table"><thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")||`<tr><td colspan="${head.length}" class="adm-meta">Nothing yet.</td></tr>`}</tbody></table></div>`;
   const when=t=>t?new Date(t).toLocaleString():"—";
-  const tagFor=s=>({PASS:"green",WARN:"gold",FAIL:"red",error:"red",warn:"gold",open:"gold",in_progress:"blue",resolved:"green",handed_off:"gold"}[s]||"");
+  const tagFor=s=>({PASS:"green",WARN:"gold",FAIL:"red",error:"red",warn:"gold",open:"gold",pending:"blue",in_progress:"blue",closed:"green",resolved:"green",handed_off:"gold"}[s]||"");
   async function overview(){
     const d=await api("/api/saas/agent/overview?days=30");
     const llm=d.llm.available?`${esc(d.llm.provider)} · ${d.llm.tool_calling?"tool calling":"answers only"}`:`Rule engine (no LLM key: ${esc(d.llm.missing.join(", "))})`;
@@ -358,10 +358,20 @@ function chatagent(root){
   }
   async function handoffs(){
     const {handoffs:list}=await api("/api/saas/agent/handoffs");
-    body().innerHTML=card("Handoff queue",table(["Created","Reason","Customer","Last messages","Status",""],list.map(h=>`<tr><td class="adm-meta">${when(h.created_at)}</td><td>${esc(h.reason)}</td><td>${esc(h.customer_email||"— (no e-mail yet)")}${h.order_number?`<br><span class="adm-meta">${esc(h.order_number)}</span>`:""}</td>
-      <td style="max-width:420px">${(h.messages||[]).slice(-4).map(m=>`<div class="adm-meta"><b>${m.role==="user"?"Customer":"AI"}:</b> ${esc(String(m.text).slice(0,200))}</div>`).join("")}</td>
-      <td><span class="tag ${tagFor(h.status)}">${esc(h.status)}</span></td><td style="white-space:nowrap">${h.status!=="in_progress"&&h.status!=="resolved"?`<button class="ant-btn" data-ho="${esc(h.id)}" data-st="in_progress">Take</button> `:""}${h.status!=="resolved"?`<button class="ant-btn" data-ho="${esc(h.id)}" data-st="resolved">Resolve</button>`:""}</td></tr>`)),"Reply to the customer from your own mailbox; nothing is sent automatically. Resolving lets the AI answer that chat again.");
-    body().onclick=async e=>{const b=e.target.closest("[data-ho]");if(!b)return;try{await api(`/api/saas/agent/handoffs/${b.dataset.ho}`,{method:"PUT",body:JSON.stringify({status:b.dataset.st})});await handoffs()}catch(err){say($("msg"),false,err.message)}};
+    const st=h=>h.status==="resolved"?"closed":h.status==="in_progress"?"pending":h.status;
+    const mail=h=>h.customer_email?`mailto:${encodeURIComponent(h.customer_email)}?subject=${encodeURIComponent(`[${h.ticket_id||"POD.AI"}] Re: your request`)}`:"";
+    body().innerHTML=card("Tickets & handoffs",table(["Created","Ticket","Customer","Reason / message","Status",""],list.map(h=>`<tr data-tk="${esc(h.id)}" style="cursor:pointer"><td class="adm-meta">${when(h.created_at)}</td><td><b>${esc(h.ticket_id||"—")}</b>${h.test?' <span class="tag">test</span>':""}</td>
+      <td>${esc(h.customer_email||"— (no e-mail yet)")}${h.customer_name?`<br><span class="adm-meta">${esc(h.customer_name)}</span>`:""}${h.order_number?`<br><span class="adm-meta">${esc(h.order_number)}</span>`:""}</td>
+      <td style="max-width:380px">${esc(h.reason||"")}${h.customer_message?`<div class="adm-meta">${esc(String(h.customer_message).slice(0,160))}</div>`:""}<div class="adm-meta">${esc([h.language,h.market,h.page].filter(Boolean).join(" · "))}</div></td>
+      <td><span class="tag ${tagFor(st(h))}">${esc(st(h))}</span></td><td style="white-space:nowrap">${["open","pending","closed"].filter(x=>x!==st(h)).map(x=>`<button class="ant-btn" data-ho="${esc(h.id)}" data-st="${x}">${x==="pending"?"Pending":x==="closed"?"Close":"Reopen"}</button>`).join(" ")}${mail(h)?` <a class="ant-btn" href="${esc(mail(h))}">Reply by e-mail</a>`:""}</td></tr>`)),"Click a row for the transcript, notes and e-mail log. Tickets (POD-T-…) are e-mailed to support with Reply-To = customer. Closing lets the AI answer that chat again.")+`<div data-r="tk"></div>`;
+    const detail=h=>{$("tk").innerHTML=card(`${esc(h.ticket_id||h.id)} — ${esc(h.customer_email||"")}`,`<div style="padding:12px 16px">
+      ${(h.messages||[]).map(m=>`<p><b>${m.role==="user"?"Customer":"AI"}</b> <span class="adm-meta">${when(m.at)}</span><br>${esc(m.text)}</p>`).join("")||'<p class="adm-meta">No transcript.</p>'}
+      <h4>Notes</h4>${(h.notes||[]).map(n=>`<p class="adm-meta">${when(n.at)} — ${esc(n.text)}</p>`).join("")||'<p class="adm-meta">No notes yet.</p>'}${h.team_note?`<p class="adm-meta">${esc(h.team_note)}</p>`:""}
+      <form data-r="nf" style="display:flex;gap:8px;margin:8px 0"><input class="ant-input" data-r="nt" maxlength="1000" placeholder="Add a note (internal)" style="flex:1"><button class="ant-btn" type="submit">Add note</button></form>
+      <h4>E-mail log</h4>${(h.email_log||[]).map(l=>`<p class="adm-meta">${when(l.at)} · ${esc(l.kind)} ${esc(l.to)} · ${esc(l.status)}${l.provider?" via "+esc(l.provider):""}${l.error?" · "+esc(l.error):""}</p>`).join("")||'<p class="adm-meta">No e-mails.</p>'}</div>`);
+      $("nf").onsubmit=async e=>{e.preventDefault();const t=$("nt").value.trim();if(!t)return;try{const r=await api(`/api/saas/agent/handoffs/${h.id}`,{method:"PUT",body:JSON.stringify({add_note:t})});detail({...h,...r})}catch(err){say($("msg"),false,err.message)}}};
+    body().onclick=async e=>{const b=e.target.closest("[data-ho]");if(b){try{await api(`/api/saas/agent/handoffs/${b.dataset.ho}`,{method:"PUT",body:JSON.stringify({status:b.dataset.st})});await handoffs()}catch(err){say($("msg"),false,err.message)}return}
+      if(e.target.closest("a,form,input,button"))return;const tr=e.target.closest("[data-tk]");if(tr){const h=list.find(x=>x.id===tr.dataset.tk);if(h)detail(h)}};
   }
   async function conversations(){
     const {conversations:list}=await api("/api/saas/agent/conversations?limit=50");

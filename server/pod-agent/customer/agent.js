@@ -3,6 +3,7 @@
 //  ⑤ handed-off chats stay with the team  ⑥ classify (rules; LLM classifier only on the LLM path)  ⑦ guardrails → handoff queue
 //  ⑧ route (router.js): local rule engine + shop data first; LLM only for complex / unmatched questions when a key exists  ⑨ store + stats (answered_by)
 import { classifyRules, detectLanguage, fixTypos, attrKind, COLOR_RE, extractEmail, extractOrderNumber, extractTracking } from "./nlu.js";
+import { PROSE, CONVERTED, RECO_HINT, parseNeeds, mergeNeeds, isRecoFollowUp, needsClarify, leadLine, RT as RECO_T, joinNames, fmtMoney as rMoney, perItemBudget } from "./recommend.js";
 import { productReply, attrReply, kbReply, deliveryReply, dontKnow, clarifyCards, CARD_CHIPS, nextChips, phrase } from "./compose.js";
 import { handoffCheck, holdingMessage, errorMessage, injectionMessage, paymentDataMessage, INJECTION_RE, containsPaymentData, redact } from "./guardrails.js";
 import { createTools, resolveProduct, productById } from "./tools.js";
@@ -165,6 +166,14 @@ async function ruleAnswer(ctx, cls, text, tools) {
   if (!product && ["other", "price", "product_question"].includes(intent) && /\b(cards?|karten?|cartes?|biglietti)\b|卡片/i.test(text) && !/(credit|kredit|crédit|credito|gift card|geschenkkarte|信用卡)/i.test(text)) {
     s.pending = null; ctx.ui.push(chips(lang, CARD_CHIPS[lang] || CARD_CHIPS.en)); return clarifyCards(lang);
   }
+  // Refining the last recommendation ("cheaper", "more like this", "in blue", "for 80 guests", "by June 1") or answering our one
+  // clarifying question ("Guest favours") → recommendation with the remembered needs.
+  const pn = parseNeeds(text, cls);
+  if (s.reco && conv.messages.length - (s.reco.at || 0) <= 4 && !["order_status", "tracking", "shipping_quote", "return_request", "refund_request", "greeting", "thanks"].includes(intent)
+    && !(intent === "discount" && (pn.refine !== "cheaper" || /\b(code|coupon|promo|gutschein)\b|优惠码|折扣码/i.test(text)))
+    && !(product && intent !== "recommendation") && (isRecoFollowUp(text, s.reco) || (s.reco.asked && pn.pool))) { intent = cls.intent = "recommendation"; cls.reco_follow = true; }
+  // "Gift ideas for 80 guests, total CHF 300" / "Des idées de papeterie…" without the classic recommend words → recommendation
+  if (intent !== "recommendation" && !product && ["other", "price", "product_question", "browse"].includes(intent) && pn.pool && (pn.pool !== "wedding" || RECO_HINT.test(text)) && (RECO_HINT.test(text) || pn.budget || pn.budget_total || pn.quantity || pn.color || pn.deadline)) intent = cls.intent = "recommendation";
   s.pending = null;
   const seed = `${conv.id}:${conv.messages.length}`;
   const kb = async (id, extra = {}) => { const e = await knowledgeEntry(ctx.tenantId, id, lang, ctx.countryHint); return e ? kbReply([e], text, { lang, seed, ...extra }) : L("unknown", lang); };
@@ -220,11 +229,52 @@ async function ruleAnswer(ctx, cls, text, tools) {
     }
     case "ships_from": ctx.ui.push(chips(lang, nextChips("delivery", lang))); return kb("ships_from", { followUp: false });
     case "recommendation": {
-      const r = await tools.execute("recommend_products", { occasion: text, budget: cls.budget, quantity: s.quantity, country: pageCountry(ctx, s) });
-      if (!r.ok) return L("recoNone", lang);
+      const Rt = RECO_T[lang] || RECO_T.en;
+      const fresh = parseNeeds(text, cls);
+      const prev = cls.reco_follow ? (s.reco?.needs || {}) : {};
+      const needs = mergeNeeds(prev, fresh);
+      if (cls.reco_follow && fresh.refine === "more") needs.exclude = [...new Set([...(prev.exclude || []), ...(s.reco?.shown || [])])];
+      else if (cls.reco_follow && fresh.refine) needs.exclude = [...(s.reco?.shown || [])];
+      else if (!cls.reco_follow || fresh.pool) needs.exclude = [];
+      needs.last_prices = s.reco?.prices || [];
+      if (needs.quantity) s.quantity = needs.quantity;
+      // one short clarifying question when we know nothing yet (no occasion / recipient / budget / colour / date)
+      if (needsClarify(needs) && !cls.reco_follow && !s.reco?.asked && !/\b(wedding|hochzeit|mariage|matrimonio)\b|婚/i.test(text)) {
+        s.reco = { needs, shown: [], asked: true, at: conv.messages.length };
+        ctx.ui.push(chips(lang, Rt.chips.clar)); return Rt.clarify;
+      }
+      const r = await tools.execute("recommend_products", { needs: { ...needs, refine: fresh.refine }, country: pageCountry(ctx, s), limit: 3 });
+      if (!r.ok) {
+        s.reco = { ...(s.reco || {}), needs, at: conv.messages.length, asked: false };
+        if (fresh.refine === "cheaper") { ctx.ui.push(chips(lang, [Rt.chips.more])); return Rt.cheaperNone; }
+        if (fresh.refine === "more") { ctx.ui.push(chips(lang, [Rt.chips.cheaper])); return Rt.noMore; }
+        if (r.error === "nothing_by_deadline") { ctx.ui.push(chips(lang, [HUMAN_CHIP[lang] || HUMAN_CHIP.en])); return Rt.noneDeadline(fmtDate(needs.deadline, lang)); }
+        if (r.error === "nothing_within_budget") {
+          const loose = await tools.execute("recommend_products", { needs: { ...needs, budget: null, budget_total: null, refine: "cheaper", last_prices: [] }, country: pageCountry(ctx, s), limit: 3 });
+          if (loose.ok) { s.reco = { needs: { ...needs }, shown: loose.products.map(p => p.id), prices: loose.products.map(p => p.unit_price), at: conv.messages.length };
+            return Rt.noneBudget(rMoney(loose.products[0].currency, perItemBudget(needs))); }
+        }
+        return L("recoNone", lang);
+      }
       const cur = r.products[0]?.currency || "";
-      const minP = r.products.reduce((m, p) => (p.unit_price < m.unit_price ? p : m), r.products[0]);
-      return L("reco", lang)({ plan: /(stationery|papeterie|cancelleria|纸品|need|brauche|besoin|serve|准备)/i.test(text), n: r.products.length, budget: cls.budget ? `${cur} ${cls.budget}` : "", names: joinList(r.products.map(p => p.name), lang), min: money(minP.currency, minP.unit_price) });
+      if (r.needs) Object.assign(needs, { budget: r.needs.budget, budget_total: r.needs.budget_total, budget_cur: r.needs.budget_cur });
+      s.reco = { needs, shown: [...new Set([...(fresh.refine === "more" ? needs.exclude || [] : []), ...r.products.map(p => p.id)])], prices: r.products.map(p => p.unit_price), at: conv.messages.length, asked: false };
+      const plan = !cls.reco_follow && needs.pool === "stationery" && /(stationery|papeterie|cancelleria|纸品|need|brauche|besoin|serve|准备)/i.test(text);
+      const P = PROSE[lang] || PROSE.en, low = x => x.replace(/^./, c => c.toLowerCase()), nm = x => lang === "en" && !/[A-Z]/.test(x.slice(1)) ? x.replace(/^[A-Z](?=[a-z])/, c => c.toLowerCase()) : x;
+      const [top, ...rest] = r.products, each = lang === "zh" ? "/件" : "";
+      const lead = plan ? L("reco", lang)({ plan: true, n: r.products.length, budget: "", names: joinNames(r.products.map(p => p.name), lang), min: rMoney(cur, Math.min(...r.products.map(p => p.unit_price))) }).split(/(?<=[.!?])\s+|(?<=。)/)[0]
+        : leadLine(needs, r.products.length, cur, lang, fmtDate).replace(/\s?[:：]$/, m => (r.converted ? (lang === "zh" ? "" : " ") + (CONVERTED[lang] || CONVERTED.en)(r.converted.from, r.converted.to) : "") + (lang === "zh" ? "。" : "."));
+      const parts = [lead, P.top(nm(top.name), rMoney(top.currency, top.unit_price) + each, low(top.reason))];
+      if (rest.length && !plan) parts.push(P.also(joinNames(rest.map(p => `${nm(p.name)} (${rMoney(p.currency, p.unit_price)}${each})`), lang)));
+      if (r.products.some(p => p.shipping === "express")) parts.push(Rt.onlyExpress);
+      if (r.complements?.length) parts.push(Rt.pairs(joinNames(r.complements.map(c => c.name), lang)));
+      let out = parts.join(lang === "zh" ? "" : " ");
+      if (!plan && out.length + P.ask.length < (lang === "zh" ? 240 : 520)) out += (lang === "zh" ? "" : " ") + P.ask;
+      const cs = [Rt.chips.cheaper, Rt.chips.more];
+      if (!needs.quantity && ["favours", "stationery", "wedding", "thankyou", "decor"].includes(needs.pool || "wedding")) cs.push(Rt.chips.qty(80));
+      else if (r.complements?.[0]) cs.push(r.complements[0].name);
+      ctx.ui.push(chips(lang, cs));
+      return out;
     }
     case "order_status": {
       if (!s.order_number) { if (cls.tracking_number) return ruleAnswer(ctx, { ...cls, intent: "tracking" }, text, tools); s.pending = "order_number"; return L("askOrder", lang); }
@@ -293,8 +343,8 @@ async function ruleAnswer(ctx, cls, text, tools) {
     case "website": return kb("website");
     default: {
       const hits = await searchKnowledge(ctx.tenantId, text, lang, { custom: settings.custom_faq, country: ctx.countryHint });
-      if (hits.length && hits[0].score >= 2.5) { ctx.ui.push(chips(lang, nextChips(["contact", "returns", "cancel", "customs", "vat", "payment"].includes(hits[0].id) ? "policy" : "browse", lang))); return kbReply(hits, text, { lang, seed }); }
-      ctx.unanswered = true;
+      if (hits.length && hits[0].score >= 2.5) { if (hits[0].id === "contact") ctx.ui.push({ type: "contact_cta" }); ctx.ui.push(chips(lang, nextChips(["contact", "returns", "cancel", "customs", "vat", "payment"].includes(hits[0].id) ? "policy" : "browse", lang))); return kbReply(hits, text, { lang, seed }); }
+      ctx.unanswered = true; ctx.ui.push({ type: "contact_cta" });
       ctx.ui.push(chips(lang, [...(CHIPS[lang] || CHIPS.en).slice(0, 3), HUMAN_CHIP[lang] || HUMAN_CHIP.en]));
       return dontKnow(lang, seed);
     }
@@ -347,6 +397,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
     await appendToHandoff(conv, { text, email: cls.email });
     if (cls.email) conv.slots.email = cls.email;
     ctx.handoff = "pending";
+    if (!conv.ticket_id) ctx.ui.push({ type: "contact_form", ...(cls.email ? { email: cls.email } : {}) }); // confirm consent → ticket number
     return finish(cls.email ? L("emailNoted", lang) : L("muted", lang), { intent: "muted", muted: true, answered_by: "local", route: { path: "local", reason: "with_team", confidence: 1 } });
   }
 
@@ -363,6 +414,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
       if (cls.email) conv.slots.email = cls.email;
       const h = await createHandoff(tenantId, conv, { reason: hand.reason, summary: `Intent: ${m.intent}, emotion: ${m.emotion}.`, email: cls.email, order_number: cls.order_number });
       ctx.handoff = h.reason;
+      if (!h.customer_email) ctx.ui.push({ type: "contact_form" }); // e-mail form → ticket POD-T-… (tickets.js)
       return finish(holdingMessage({ humanReplyHours: settings.human_reply_hours }, lang, { needEmail: !h.customer_email }), { intent: "handoff", answered_by: "local", route: { path: "local", reason: "handoff", confidence: 1 } });
     };
     const early = await handoffIf(merged); if (early) return early;

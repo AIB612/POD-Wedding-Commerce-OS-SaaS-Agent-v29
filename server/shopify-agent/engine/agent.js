@@ -5,6 +5,7 @@
 //  ⑧ route (router.js): local rule engine + shop data first; LLM only for complex / unmatched questions when a key exists  ⑨ store + stats (answered_by)
 import { classifyRules, detectLanguage, fixTypos } from "./nlu.js";
 import { HUMAN_RE, handoffCheck, holdingMessage, errorMessage, injectionMessage, paymentDataMessage, INJECTION_RE, containsPaymentData, redact } from "./guardrails.js";
+import { ensurePodaiTicket, ticketLine } from "./tickets.js";
 import { getSettings, findOrCreateConversation, saveConversation, recentUserMessages, createHandoff, appendToHandoff, handoffStillOpen } from "./store.js";
 import { llmStatus, runToolLoop, chatJson, answerOpenQuestion } from "./llm.js";
 import { CLASSIFIER_SYSTEM } from "./prompts.js";
@@ -132,6 +133,10 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
     return out(answer, { ...extra, message_index: Math.min(message_index, conv.messages.length - 1) });
   };
 
+  // "Contact us" ticket: once the open handoff has an e-mail → POD-T-… + transcript to the merchant; the reply names the ticket.
+  const tk = async (answer) => { try { const t = await ensurePodaiTicket({ tenantId, conv, profile, settings, lang }); if (!t) return answer;
+    ctx.ui.forEach(u => { if (u.type === "handoff") u.ticket_id = t.ticket_id; });
+    return t.created ? `${ticketLine(lang, t.ticket_id, maskEmail(t.email), settings.human_reply_hours)}` : answer; } catch (e) { console.error("[pod.ai] ticket failed:", e.message); return answer; } };
   // ③ per-chat rate limit (POD Agent: web chat max messages per 10 minutes)
   if (recentUserMessages(conv, 10) >= settings.max_messages_per_10min) return out(L("rate", lang), { rate_limited: true });
   // ④ refuse payment data (never stored) and prompt injection
@@ -150,14 +155,14 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
   if (withTeam && cls.email && cls.intent === "contact_info") {
     await appendToHandoff(conv, { text, email: cls.email }); conv.slots.email = cls.email; ctx.handoff = "pending";
     ctx.ui.push({ type: "handoff", email: maskEmail(cls.email) });
-    return finish(L("emailNoted", lang), { intent: "muted", muted: true, answered_by: "local", route: { path: "local", reason: "with_team", confidence: 1 } });
+    return finish(await tk(L("emailNoted", lang)), { intent: "muted", muted: true, answered_by: "local", route: { path: "local", reason: "with_team", confidence: 1 } });
   }
   // with the team, but the AI still answers what it can; only unanswerable messages go to the handoff
   const toTeam = async () => {
     ctx.ui.length = 0; ctx.unanswered = false;
     await appendToHandoff(conv, { text, email: cls.email }); if (cls.email) conv.slots.email = cls.email; ctx.handoff = "pending";
     if (!conv.over_limit) ctx.ui.push(chips(lang, [L("backToAi", lang)]));
-    return finish(L("mutedShort", lang), { intent: "muted", muted: true, answered_by: "local", route: { path: "local", reason: "with_team", confidence: 1 } });
+    return finish(cls.email ? await tk(L("mutedShort", lang)) : L("mutedShort", lang), { intent: "muted", muted: true, answered_by: "local", route: { path: "local", reason: "with_team", confidence: 1 } });
   };
 
   // plan limit reached: no AI answer; the customer may ask for a person (button) or leave an e-mail → handoff queue
@@ -167,7 +172,8 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
       if (cls.email) conv.slots.email = cls.email;
       const h = await createHandoff(tenantId, conv, { reason: "plan chat limit reached", summary: "Monthly chat limit of the Pod.AI plan reached; the AI did not answer.", email: cls.email || conv.slots?.email || null });
       ctx.handoff = h.reason; ctx.ui.push({ type: "handoff", email: maskEmail(h.customer_email) });
-      return finish(holdingMessage({ humanReplyHours: settings.human_reply_hours }, lang, { needEmail: !h.customer_email }), { intent: "handoff", answered_by: "local", plan_limit: true, route: { path: "local", reason: "plan_limit", confidence: 1 } });
+      const hold = holdingMessage({ humanReplyHours: settings.human_reply_hours }, lang, { needEmail: !h.customer_email });
+      return finish(h.customer_email ? await tk(hold) : hold, { intent: "handoff", answered_by: "local", plan_limit: true, route: { path: "local", reason: "plan_limit", confidence: 1 } });
     }
     ctx.ui.push(chips(lang, [L("talkHuman", lang)]));
     return finish(L("planLimit", lang), { intent: "plan_limit", plan_limit: true, answered_by: "local", route: { path: "local", reason: "plan_limit", confidence: 1 } });
@@ -188,7 +194,8 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
       const h = await createHandoff(tenantId, conv, { reason: hand.reason, summary: `Intent: ${m.intent}, emotion: ${m.emotion}.`, email: cls.email || conv.slots?.email || null, order_number: cls.order_number || conv.slots?.order_number || null });
       ctx.handoff = h.reason;
       ctx.ui.push({ type: "handoff", email: maskEmail(h.customer_email) }); // widget: "We'll reply to t***@…" + change, or an e-mail field
-      return finish(holdingMessage({ humanReplyHours: settings.human_reply_hours }, lang, { needEmail: !h.customer_email }), { intent: "handoff", answered_by: "local", route: { path: "local", reason: "handoff", confidence: 1 } });
+      const hold = holdingMessage({ humanReplyHours: settings.human_reply_hours }, lang, { needEmail: !h.customer_email });
+      return finish(h.customer_email ? await tk(hold) : hold, { intent: "handoff", answered_by: "local", route: { path: "local", reason: "handoff", confidence: 1 } });
     };
     const early = await handoffIf(merged); if (early) return early;
 

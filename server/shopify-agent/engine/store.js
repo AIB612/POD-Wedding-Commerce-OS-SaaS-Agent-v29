@@ -3,7 +3,8 @@
 // Supabase tables (conversations, messages, handoffs, discounts_issued, settings). Collections:
 //   agent_settings       one row per tenant (admin → AI Agent → Settings / Knowledge)
 //   agent_conversations  one row per chat (messages capped + redacted, intents, tools, feedback, handoff flag)
-//   agent_handoffs       queue for the team (admin → AI Agent → Handoffs). No e-mail is sent automatically.
+//   podai_handoffs       queue for the team (embedded admin → Tickets). With a customer e-mail it becomes ticket POD-T-… and the
+//                        transcript is e-mailed to the merchant (engine/tickets.js).
 //   agent_discounts      sales codes issued by the chat (only when enabled in settings)
 import crypto from "node:crypto";
 import { addRecord, findRecord, getState, listForTenant, removeWhere, updateRecord } from "../../saas-store.js";
@@ -100,8 +101,12 @@ export async function updateHandoff(tenantId, id, patch) {
   const h = await findRecord("podai_handoffs", id);
   if (!h || h.tenant_id !== tenantId) return null;
   const allowed = {};
-  if (["open", "in_progress", "resolved"].includes(patch.status)) allowed.status = patch.status;
+  // Ticket statuses shown as Open / Pending / Closed; stored as open / in_progress / resolved (older rows + widget logic).
+  const ST = { pending: "in_progress", closed: "resolved" }, st = ST[patch.status] || patch.status;
+  if (["open", "in_progress", "resolved"].includes(st)) allowed.status = st;
   if (patch.note !== undefined) allowed.team_note = String(patch.note || "").slice(0, 1000);
+  if (patch.add_note) allowed.notes = [...(h.notes || []), { at: now(), text: String(patch.add_note).slice(0, 1000) }].slice(-50);
+  if (patch.test === true) allowed.test = true;
   const row = await updateRecord("podai_handoffs", id, { ...allowed, updated_at: now(), ...(allowed.status === "resolved" ? { resolved_at: now() } : {}) });
   // Resolving the handoff lets the AI answer this conversation again (POD Agent: un-mute).
   if (allowed.status === "resolved") { const c = await findRecord("podai_conversations", h.conversation_id); if (c) await updateRecord("podai_conversations", c.id, { status: "open" }); }

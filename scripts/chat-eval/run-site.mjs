@@ -22,7 +22,7 @@ process.chdir(root);
 const { createApp } = await import(pathToFileURL(path.join(root, "server", "create-app.js")));
 const app = await createApp({ generatedDir: fs.mkdtempSync(path.join(os.tmpdir(), "eval-")) });
 const server = app.listen(0); const base = `http://127.0.0.1:${server.address().port}`;
-const ask = async (message, lang, conversation_id) => { const t0 = performance.now(); const r = await (await realFetch(base + "/api/pod-agent/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, lang, conversation_id, country: "CH" }) })).json(); r._ms = performance.now() - t0; return r; };
+const ask = async (message, lang, conversation_id, country = "CH") => { const t0 = performance.now(); const r = await (await realFetch(base + "/api/pod-agent/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, lang, conversation_id, country }) })).json(); r._ms = performance.now() - t0; return r; };
 
 const CJK = /[\u3400-\u9fff]/g;
 function rubric(c, r) {
@@ -42,12 +42,18 @@ function rubric(c, r) {
 const results = [];
 for (const c of CASES) {
   let conv, r;
-  for (const t of c.turns) { r = await ask(t, c.lang, conv); conv = r.conversation_id || conv; }
+  for (const t of c.turns) { r = await ask(t, c.lang, conv, c.country || "CH"); conv = r.conversation_id || conv; }
   const a = String(r.answer || ""), fails = [];
   for (const re of c.re || []) if (!re.test(a)) fails.push(`missing ${re}`);
   if (c.any && !c.any.some(re => re.test(a))) fails.push(`none of ${c.any.join(" ")}`);
   for (const re of [...(c.not || []), ...ALWAYS_NOT]) if (re.test(a)) fails.push(`forbidden ${re}`);
   if (c.ui && !(r.ui || []).some(u => u.type === c.ui)) fails.push(`no ui ${c.ui}`);
+  // recommendation cases: number of product cards [min, max], every card real (price + link + reason) and optional per-card check
+  const cards = (r.ui || []).filter(u => u.type === "products").flatMap(u => u.items || []);
+  if (c.cards) { if (cards.length < c.cards[0] || cards.length > c.cards[1]) fails.push(`cards ${cards.length} not in ${c.cards}`);
+    for (const it of cards) if (it.unit_price == null || !/^\/studio\.html\?/.test(it.link || "") || !it.reason) fails.push(`card ${it.id} incomplete`); }
+  if (c.card) for (const it of cards) { const e = c.card(it); if (e) fails.push(`${it.id}: ${e}`); }
+  if (c.chips) { const ch = (r.ui || []).find(u => u.type === "chips")?.items || []; for (const re of c.chips) if (!ch.some(x => re.test(x.label || x))) fails.push(`no chip ${re}`); }
   const nat = rubric(c, r);
   results.push({ id: c.id, lang: c.lang, q: c.turns.join(" ⟶ "), answer: a, intent: r.intent, ui: (r.ui || []).map(u => u.type), ms: Math.round(r._ms), pass: !fails.length, fails, nat: nat.score, nat_parts: nat.parts });
   if (verbose) console.log(`${fails.length ? "FAIL" : "ok  "} ${c.id} [${r.intent}] nat=${nat.score} ${fails.join("; ")}\n     ${a.replace(/\n/g, " ⏎ ").slice(0, 260)}`);

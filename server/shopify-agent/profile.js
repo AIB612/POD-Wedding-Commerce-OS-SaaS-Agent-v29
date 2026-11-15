@@ -95,28 +95,29 @@ export async function findShopOrder(shop, { order_number, email }) {
     total: o.totalPriceSet?.shopMoney?.amount, currency: o.totalPriceSet?.shopMoney?.currencyCode, items: (o.lineItems?.nodes || []).map(i => ({ title: i.title, quantity: i.quantity })), tracking } };
 }
 
-const PRODUCT_Q = `query($q: String!, $first: Int!, $sort: ProductSortKeys!, $rev: Boolean!) { products(first: $first, query: $q, sortKey: $sort, reverse: $rev) { nodes { id title handle onlineStoreUrl status productType featuredImage { url }
+const PRODUCT_Q = `query($q: String!, $first: Int!, $sort: ProductSortKeys!, $rev: Boolean!) { products(first: $first, query: $q, sortKey: $sort, reverse: $rev) { nodes { id title handle onlineStoreUrl status productType tags featuredImage { url }
   priceRangeV2 { minVariantPrice { amount currencyCode } maxVariantPrice { amount currencyCode } } collections(first: 3) { nodes { title } }
-  variants(first: 5) { nodes { id title price availableForSale } } metafields(first: 5) { nodes { namespace key value type } } } } }`;
+  variants(first: 10) { nodes { id title price availableForSale } } metafields(first: 5) { nodes { namespace key value type } } } } }`;
 // Product wording (synonyms, singular/plural, "what do you sell") lives in the shared layer used by both chats.
 import { BROWSE_RE, productTerms, detectLanguage } from "../shared/lang-terms.js";
+import { podaiRecommend, isFollowUp, wantsReco } from "./engine/reco.js";
 export { BROWSE_RE, productTerms };
-export async function searchShopProducts(shop, query, { browse = false } = {}) {
+export async function searchShopProducts(shop, query, { browse = false, limit = null } = {}) {
   const ts = browse ? [] : productTerms(query);
   if (!ts.length && !browse) return { ok: true, products: [] };
   // browse: newest active products first (Shopify's product query has no best-selling sort)
   const q = ts.length ? `(${ts.map(t => `title:*${t.replace(/[^\p{L}\p{N}-]/gu, "")}*`).join(" OR ")}) AND status:active` : "status:active";
   try {
-    const all = (await graphql(shop, PRODUCT_Q, { q, first: browse ? 18 : 12, sort: ts.length ? "RELEVANCE" : "UPDATED_AT", rev: !ts.length })).products?.nodes || [];
+    const all = (await graphql(shop, PRODUCT_Q, { q, first: limit ? Math.min(50, limit) : browse ? 18 : 12, sort: ts.length ? "RELEVANCE" : "UPDATED_AT", rev: !ts.length })).products?.nodes || [];
     // only products published to the Online Store (a storefront URL) — others would 404 from a chat card
     // Online Store link: onlineStoreUrl when Shopify returns it (null on password-protected / dev stores), else the
     // storefront handle URL; the widget then checks /products/<handle>.js in the visitor's session and drops 404s.
     const base = (await shopFactsFor(shop).catch(() => null))?.url || `https://${shop}`;
-    const nodes = all.filter(p => p.status === "ACTIVE" && p.handle).slice(0, browse ? 8 : 5);
+    const nodes = all.filter(p => p.status === "ACTIVE" && p.handle).slice(0, limit || (browse ? 8 : 5));
     return { ok: true, products: nodes.map(p => ({ id: p.id, name: p.title, image: p.featuredImage?.url || null, unit_price: Number(p.priceRangeV2?.minVariantPrice?.amount ?? NaN),
       currency: p.priceRangeV2?.minVariantPrice?.currencyCode || null, max_price: Number(p.priceRangeV2?.maxVariantPrice?.amount ?? NaN), link: p.onlineStoreUrl || `${String(base).replace(/\/$/, "")}/products/${p.handle}`,
-      type: p.productType || "", collections: (p.collections?.nodes || []).map(c => c.title),
-      variants: (p.variants?.nodes || []).map(v => ({ title: v.title, price: Number(v.price), available: !!v.availableForSale })),
+      type: p.productType || "", tags: (p.tags || []).slice(0, 20), collections: (p.collections?.nodes || []).map(c => c.title),
+      variants: (p.variants?.nodes || []).map(v => ({ ...(v.id ? { id: String(v.id).split("/").pop() } : {}), title: v.title, price: Number(v.price), available: !!v.availableForSale })),
       variant_id: String((p.variants?.nodes || []).find(v => v.availableForSale)?.id || "").split("/").pop() || null,
       details: (p.metafields?.nodes || []).filter(m => /^(single_line_text_field|multi_line_text_field|number_integer|number_decimal|boolean|dimension|weight|volume)$/.test(m.type)).map(m => ({ key: m.key, value: String(m.value).slice(0, 200) })) })) };
   } catch (e) { console.error("[pod.ai] product search failed:", shop, String(e.message).slice(0, 200)); return { ok: false, error: "product_search_failed" }; }
@@ -326,6 +327,13 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
       if (conv.slots.pending === "order" && (m.order_number || m.email) && !["greeting", "thanks"].includes(intent)) intent = "order_status";
       if (BROWSE_RE.test(text) && !["order_status", "tracking", "shipping_quote", "discount"].includes(intent)) intent = "browse";
       if (conv.slots.pending === "shipping" && m.country && !["greeting", "thanks"].includes(intent)) intent = "shipping_quote";
+      // Product recommendation (engine/reco.js): needs → 2–4 real shop products with a reason; refinements of the last picks.
+      const codeish = /\b(code|coupon|promo|gutschein|rabattcode)\b|优惠码|折扣码/i.test(text);
+      const follow = isFollowUp(text, conv.slots.reco, conv) && !["order_status", "tracking", "shipping_quote", "greeting", "thanks", "return_request", "refund_request"].includes(intent) && !(intent === "discount" && codeish);
+      if (follow || intent === "recommendation" || (["price", "product_question", "other"].includes(intent) && wantsReco(text, intent) && !m.order_number)) {
+        const out = await podaiRecommend(ctx, m, text, { search: (q, o) => searchShopProducts(shop, q, o), follow });
+        if (out) { ctx.toolLog.push({ name: "recommend_products", ok: true }); conv.tools.recommend_products = (conv.tools.recommend_products || 0) + 1; if (ctx.ui.some(u => u.type === "products")) taxNote(ctx, f, lang); return out; }
+      }
       switch (intent) {
         case "greeting": ctx.ui.push({ type: "chips", items: t("chips", lang) }); return settings.greeting?.[lang] || settings.greeting?.en || t("greet", lang)(f.shop_name);
         case "thanks": return t("thanks", lang);

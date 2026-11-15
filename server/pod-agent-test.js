@@ -5,8 +5,8 @@ import os from "node:os";
 import path from "node:path";
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wcos-podagent-"));
-for (const k of ["LLM_ENABLED", "LLM_PROVIDER", "OPENAI_API_KEY", "OPENAI_MODEL", "XAI_API_KEY", "XAI_MODEL", "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"]) delete process.env[k];
-Object.assign(process.env, { NODE_ENV: "test", ADMIN_API_KEY: "k", RATE_LIMIT_DISABLED: "true", STORE_PERSIST_PATH: path.join(tmp, "state.json"), APP_ENCRYPTION_KEY: "z".repeat(40) });
+for (const k of ["SENDGRID_API_KEY", "POSTMARK_SERVER_TOKEN", "SMTP_HOST", "SMTP_USER", "SMTP_PASS", "SMTP_URL", "SUPPORT_EMAIL", "SUPPORT_NOTIFY_EMAILS", "TICKET_CONFIRM_EMAIL", "LLM_ENABLED", "LLM_PROVIDER", "OPENAI_API_KEY", "OPENAI_MODEL", "XAI_API_KEY", "XAI_MODEL", "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"]) delete process.env[k];
+Object.assign(process.env, { TEST_EMAIL_ALLOWLIST: "qa-inbox@example.com", SUPPORT_NOTIFY_EMAILS: "qa-inbox@example.com", NODE_ENV: "test", ADMIN_API_KEY: "k", RATE_LIMIT_DISABLED: "true", STORE_PERSIST_PATH: path.join(tmp, "state.json"), APP_ENCRYPTION_KEY: "z".repeat(40) });
 const { createApp } = await import("./create-app.js");
 const { quoteStorefront } = await import("./services/checkout-service.js");
 const { addRecord, getState } = await import("./saas-store.js");
@@ -66,6 +66,33 @@ try {
   const prods = r.json.ui.find(u => u.type === "products"); assert.ok(prods && prods.items.length, "products card");
   for (const it of prods.items) { assert.ok(it.unit_price <= 10, `${it.name} within budget`); assert.match(it.link, /^\/studio\.html\?/); }
   r = await chat("推荐婚礼伴手礼", { lang: "zh" }); assert.ok(r.json.ui.some(u => u.type === "products")); assert.match(r.json.answer, /推荐/);
+  // Recommendation v2: needs parsing (5 languages), clarifying question, 2–4 real cards with reason, refinements, matching items.
+  { const R = await import("./pod-agent/customer/recommend.js"); const { studioCatalog } = await import("./services/studio-service.js");
+    const today = new Date("2026-11-15T10:00:00Z");
+    assert.equal(R.parseDeadline("our wedding is on 1 June", today), "2027-06-01"); assert.equal(R.parseDeadline("bis 12.12.", today), "2026-12-12");
+    assert.equal(R.parseDeadline("6月1日之前", today), "2027-06-01"); assert.equal(R.parseDeadline("dans 2 semaines", today), "2026-11-29"); assert.equal(R.parseDeadline("entro il 3 maggio 2027", today), "2027-05-03");
+    let n = R.parseNeeds("Wir brauchen Gastgeschenke für 80 Gäste, Budget insgesamt 300 Euro"); assert.deepEqual([n.pool, n.quantity, n.budget_total, n.budget_cur], ["favours", 80, 300, "EUR"]); assert.equal(R.perItemBudget(n), 3.75);
+    n = R.parseNeeds("Geschenkideen für das Brautpaar"); assert.equal(n.pool, "couple", "kid ≠ Geschenkideen");
+    n = R.parseNeeds("cadeaux pour mes demoiselles d'honneur en bleu, style champêtre"); assert.deepEqual([n.pool, n.color, n.style], ["bridesmaids", "blue", "eco"]);
+    assert.equal(R.parseNeeds("Can you recommend something?").style, null, "no 'eco' inside 'recommend'");
+    assert.ok(R.isRecoFollowUp("for 80 guests", { shown: ["candle"] }) && R.isRecoFollowUp("更便宜的", { shown: ["x"] }) && !R.isRecoFollowUp("where is my order?", { shown: ["x"] }));
+    const ids = new Set(studioCatalog().products.map(p => p.id));
+    for (const p of R.POOLS) for (const id of p.items || []) assert.ok(ids.has(id), `pool ${p.id}: ${id} is a real product`);
+    for (const [k, v] of Object.entries(R.COMPLEMENTS)) for (const id of [k, ...v]) assert.ok(ids.has(id), `complement ${id} is a real product`);
+    let c = await chat("Can you recommend something?", { country: "CH" }); const rc = c.json.conversation_id;
+    assert.ok(!c.json.ui.some(u => u.type === "products") && c.json.ui.some(u => u.type === "chips" && u.items.includes("Bridesmaid gifts")), "one clarifying question with chips");
+    c = await chat("Bridesmaid gifts", { country: "CH", conversation_id: rc }); let cards = c.json.ui.find(u => u.type === "products")?.items || [];
+    assert.ok(cards.length >= 2 && cards.length <= 4, "2–4 cards"); for (const it of cards) { assert.ok(ids.has(it.id) && it.unit_price > 0 && it.currency === "CHF" && it.reason && /^\/studio\.html\?/.test(it.link)); }
+    const first = cards.map(x => x.id), minP = Math.min(...cards.map(x => x.unit_price));
+    c = await chat("cheaper", { country: "CH", conversation_id: rc }); cards = c.json.ui.find(u => u.type === "products")?.items || [];
+    assert.ok(cards.length && cards.every(x => x.unit_price < minP), "cheaper than before"); assert.notEqual(c.json.intent, "discount");
+    c = await chat("in pink", { country: "CH", conversation_id: rc }); assert.match(c.json.answer, /pink/i);
+    c = await chat("for 12 people", { country: "CH", conversation_id: rc }); assert.ok((c.json.ui.find(u => u.type === "products")?.items || []).every(x => x.quantity === 12), "quantity applied");
+    c = await chat("Gift ideas for bridesmaids under EUR 15", { country: "DE" }); cards = c.json.ui.find(u => u.type === "products")?.items || [];
+    assert.ok(cards.length && cards.every(x => x.currency === "EUR" && x.unit_price <= 15), "budget + page currency");
+    c = await chat("100位客人的伴手礼，总预算2000元", { lang: "zh", country: "CH" }); assert.match(c.json.answer, /CNY 2000 ≈ CHF 240/); 
+    c = await chat("Recommend gifts for bridesmaids, we need them in 3 days", { country: "CH" }); assert.match(c.json.answer, /even with express/); assert.ok(!c.json.ui.some(u => u.type === "products"), "no cards that can't arrive in time");
+    c = await chat("Wedding invitation ideas please", { country: "CH" }); assert.match(c.json.answer, /Save the Date card \(CHF 1.90\).*Goes well with: Menu card/); }
   result.recommendations = "pass";
 
   // One currency per page: list prices follow the page market (country sent by the site), even after a quote to another country.
@@ -101,6 +128,31 @@ try {
   a = await call(`/api/saas/agent/handoffs/${ho.id}`, { method: "PUT", body: { status: "resolved" }, admin: true }); assert.equal(a.status, 200);
   r = await chat("Thanks! How long does delivery take to Switzerland?", { conversation_id: cid }); assert.ok(!r.json.handoff, "AI answers again after resolve");
   result.handoff = "queued, no e-mail, resolvable";
+
+  // "Contact us" ticket: e-mail form → POD-T-… in the handoff queue, transcript mailed to support (test mode: allowlist only).
+  { const { cleanTicketBody, allowedRecipient, transcriptText } = await import("./pod-agent/customer/tickets.js");
+    let c = await chat("Can I get 120 invitations by June 1st?", { country: "CH" }); const tcid = c.json.conversation_id;
+    c = await chat("Contact us", { conversation_id: tcid, country: "CH" }); assert.ok(c.json.ui.some(u => u.type === "contact_form"), "contact form offered");
+    c = await chat("如何联系你们", { lang: "zh", country: "CH" }); assert.ok(c.json.ui.some(u => u.type === "contact_cta"), "contact info + contact button");
+    let t = await call("/api/pod-agent/ticket", { method: "POST", body: { conversation_id: tcid, email: "nope", consent: true } }); assert.equal(t.status, 400);
+    t = await call("/api/pod-agent/ticket", { method: "POST", body: { conversation_id: tcid, email: "anna@example.com" } }); assert.equal(t.status, 400, "consent required");
+    t = await call("/api/pod-agent/ticket", { method: "POST", body: { conversation_id: tcid, email: "x@example.com", consent: true, website: "http://spam" } }); assert.equal(t.status, 200); assert.equal(t.json.ticket_id, null, "honeypot: no ticket");
+    const n0 = ((await getState()).notifications || []).length;
+    t = await call("/api/pod-agent/ticket", { method: "POST", body: { conversation_id: tcid, email: "anna@example.com", name: "Anna", message: "Need them fast", consent: true, lang: "de", country: "CH", page: "/" } });
+    assert.equal(t.status, 200); assert.match(t.json.ticket_id, /^POD-T-[A-Z2-9]{6}$/); assert.match(t.json.message, /Ticketnummer/); assert.ok(t.json.message.includes(t.json.ticket_id));
+    const again = await call("/api/pod-agent/ticket", { method: "POST", body: { conversation_id: tcid, email: "anna@example.com", consent: true, lang: "de" } }); assert.equal(again.json.ticket_id, t.json.ticket_id, "one open ticket per chat");
+    const st = await getState(); const tk = st.agent_handoffs.find(h => h.ticket_id === t.json.ticket_id);
+    assert.ok(tk && tk.kind === "ticket" && tk.customer_email === "anna@example.com" && tk.market === "CHF" && tk.messages.length >= 4, "ticket stored with transcript");
+    const sent = (st.notifications || []).slice(n0); assert.equal(sent.length, 1, "test mode: only the allowlisted copy, not support@ or the customer");
+    assert.equal(sent[0].to, "qa-inbox@example.com"); assert.ok(sent[0].subject.includes(t.json.ticket_id));
+    assert.deepEqual(tk.email_log.map(l => `${l.kind}:${l.status}`).sort(), ["customer:skipped_test_mode", "team:not_configured", "team:skipped_test_mode"]);
+    assert.ok(!allowedRecipient("anna@example.com", { TEST_EMAIL_ALLOWLIST: "qa-inbox@example.com" }) && allowedRecipient("anna@example.com", { NODE_ENV: "production" }));
+    assert.match(transcriptText(tk.messages), /Customer: Can I get 120 invitations/);
+    assert.throws(() => cleanTicketBody({ email: "a@b.co" }), /confirm/);
+    let a2 = await call(`/api/saas/agent/handoffs/${tk.id}`, { method: "PUT", body: { status: "pending", add_note: "called back" }, admin: true }); assert.equal(a2.json.status, "pending"); assert.equal(a2.json.notes[0].text, "called back");
+    a2 = await call(`/api/saas/agent/handoffs/${tk.id}`, { method: "PUT", body: { status: "closed" }, admin: true }); assert.equal(a2.json.status, "closed");
+    const t2 = await call("/api/pod-agent/ticket", { method: "POST", body: { conversation_id: tcid, email: "anna@example.com", consent: true } }); assert.notEqual(t2.json.ticket_id, t.json.ticket_id, "new ticket after close"); }
+  result.tickets = "form, ticket id, transcript mail (allowlist), notes, close";
 
   // Local-first routing without a key: data questions local; complex questions → best local answer + offer a person.
   r = await chat("How much is shipping to Switzerland for 10 invitations?");

@@ -1,6 +1,6 @@
 /**
  * POD Agent API routes.
- *   Public (storefront chat panel):  POST /api/pod-agent/chat, POST /api/pod-agent/feedback, GET /api/pod-agent/status
+ *   Public (storefront chat panel):  POST /api/pod-agent/chat, POST /api/pod-agent/feedback, POST /api/pod-agent/ticket ("Contact us"), GET /api/pod-agent/status
  *   Admin (behind the admin login):  /api/saas/agent/* — see server/routes/admin.js
  * Mount: app.use("/api/pod-agent", podAgentRouter());
  */
@@ -12,6 +12,8 @@ import { CONFIDENCE_THRESHOLD } from "./customer/router.js";
 import { KPI_IDS } from "./customer/admin.js";
 import { CUSTOMER_TOOLS } from "./customer/tools.js";
 import { llmStatus } from "./customer/llm.js";
+import { createSiteTicket } from "./customer/tickets.js";
+import { currencyForCountry } from "../services/pricing-service.js";
 import { findRecord, updateRecord } from "../saas-store.js";
 import { rateLimit, ah } from "../http/middleware.js";
 import { requireAdmin } from "../auth.js";
@@ -32,6 +34,14 @@ export function podAgentRouter({ store = null, connectors = {} } = {}) {
     if (typeof b.message !== "string" || !b.message.trim()) return res.status(400).json({ error: "message_required" });
     res.setHeader("Cache-Control", "private, no-store");
     res.json(await handleChat({ tenantId: req.tenantId || "tenant_demo", message: b.message, conversation_id: b.conversation_id, lang: b.lang, country: String(b.country || "").toUpperCase().slice(0, 2), page: b.page }));
+  }));
+
+  // "Contact us": e-mail (+ optional name / message, consent) → ticket POD-T-XXXXXX in the handoff queue, transcript e-mailed to support.
+  // Spam protection: per-IP limit (5 / 10 min) + honeypot field "website" (silently ignored when filled).
+  const ticketLimit = rateLimit({ bucket: "pod-agent-ticket", windowMs: 10 * 60_000, max: 5 });
+  r.post("/ticket", ticketLimit, ah(async (req, res) => {
+    res.setHeader("Cache-Control", "private, no-store");
+    res.json(await createSiteTicket(req.tenantId || "tenant_demo", req.body || {}, { currencyForCountry }));
   }));
 
   // 👍 / 👎 on an assistant reply (POD Agent metrics.recordFeedback): only for this conversation's own replies.

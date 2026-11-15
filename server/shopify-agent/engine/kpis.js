@@ -1,7 +1,7 @@
 // Pod.AI copy of the POD.AI Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
 // Back-office side of the customer chat (Admin → AI Agent, behind the admin login). Ported from the POD Agent:
 //   metrics.js  KPIs (conversations, automation / handoff rate, unanswered rate, feedback, intents, tools, guardrails)
-//   handoff.js  handoff queue (status, team note) — the team replies from their own mailbox; nothing is sent from here
+//   handoff.js  handoff / ticket queue (status, notes) — the transcript goes to the merchant's ticket e-mail; the team replies from their own mailbox
 //   knowledge   custom FAQ management + retrieval test ("eval")
 //   datacheck.js K/C checks (placeholders, internal data, answer length, duplicates, configuration)
 // Skipped (already in our Admin): admin login/permissions (admin-auth), shops/Shopify (Shopify section), tracking CSV
@@ -66,6 +66,7 @@ export async function putAgentSettings(tenantId, b = {}) {
   const cur = await getSettings(tenantId), sd = b.sales_discount || {};
   return saveSettings(tenantId, {
     enabled: b.enabled === undefined ? cur.enabled : b.enabled !== false,
+    support_email: b.support_email === undefined ? (cur.support_email || "") : (/^[^\s@<>]{1,64}@[^\s@<>]{1,190}\.[A-Za-z]{2,24}$/.test(String(b.support_email).trim()) ? String(b.support_email).trim() : ""),
     human_reply_hours: num(b.human_reply_hours, 1, 168, cur.human_reply_hours),
     failed_answers_before_handoff: num(b.failed_answers_before_handoff, 1, 10, cur.failed_answers_before_handoff),
     max_messages_per_10min: num(b.max_messages_per_10min, 3, 100, cur.max_messages_per_10min),

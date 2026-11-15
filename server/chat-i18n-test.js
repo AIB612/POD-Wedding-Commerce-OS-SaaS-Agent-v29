@@ -25,7 +25,7 @@ try {
   let r = await ask("Que vendez-vous ?", "fr"); assert.equal(r.language, "fr"); assert.equal(r.intent, "browse"); assert.match(r.answer, /papeterie de mariage/);
   r = await ask("Cosa vendete?", "it"); assert.equal(r.language, "it"); assert.equal(r.intent, "browse"); assert.match(r.answer, /cartoleria per matrimoni/);
   r = await ask("Was verkauft ihr?", "de"); assert.equal(r.intent, "browse"); assert.match(r.answer, /Hochzeitspapeterie/);
-  r = await ask("Avete magliette?", "it"); assert.equal(r.language, "it"); assert.equal(r.intent, "product_question"); assert.match(r.answer, /tee/i); assert.match(r.answer, / da 1/);
+  r = await ask("Avete magliette?", "it"); assert.equal(r.language, "it"); assert.equal(r.intent, "product_question"); assert.match(r.answer, /tee|t-shirt/i); assert.match(r.answer, / da 1/);
   r = await ask("Bonjour", "fr"); assert.match(r.answer, /^Bonjour/);
   r = await ask("Ciao", "it"); assert.match(r.answer, /^Ciao/);
   r = await ask("Combien de temps prend la livraison ?", "fr"); assert.equal(r.language, "fr"); assert.match(r.answer, /jours ouvrables/);

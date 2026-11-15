@@ -15,11 +15,15 @@ import { findWhere, listForTenant } from "../../saas-store.js";
 import { LOGISTICS_STATUS, CARRIERS } from "../../logistics/index.js";
 import { searchKnowledge, knowledgeEntry, POLICY_TOPICS } from "./knowledge.js";
 import { createHandoff, discountsIssued, recordDiscount } from "./store.js";
+import { currencyForCountry } from "../../services/pricing-service.js";
+import fsRates from "node:fs";
+const SF_RATE = (() => { try { const c = JSON.parse(fsRates.readFileSync(new URL("../../data/storefront-pricing.json", import.meta.url), "utf8")).storefront_currencies || {}; return { CNY: 1, ...Object.fromEntries(Object.entries(c).filter(([, v]) => v?.rate).map(([k, v]) => [k, Number(v.rate)])) }; } catch { return { CNY: 1 }; } })();
+import { rankProducts, complementsFor, reasonFor, nameFor, parseNeeds } from "./recommend.js";
 
 const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
 const catalog = () => studioCatalog();
 export const productById = id => (catalog().products || []).find(p => p.id === id) || null;
-const pname = (p, lang) => p?.name?.[lang] || p?.name?.en || p?.id;
+const pname = (p, lang) => nameFor(p, lang);
 function scenarioFor(id) { for (const s of catalog().scenarios || []) if ((s.kits || []).some(k => k.items.includes(id))) return s.id; return null; }
 export function productLink(id) { const sc = scenarioFor(id); return sc ? `/studio.html?scenario=${sc}&entry=home&product=${encodeURIComponent(id)}` : `/studio.html?product=${encodeURIComponent(id)}`; }
 const image = p => p?.mockup_photo?.src ? "/" + p.mockup_photo.src.replace(/^\//, "") : null;
@@ -85,16 +89,32 @@ export function createTools(ctx) {
         materials: (p.materials || []).map(m => ({ id: m.id, name: m.name?.[lang] || m.name?.en })), sizes: p.sizes || null, colors: (p.colors || []).length || null,
         eco: p.eco_tags || [], link: card.link, price_tiers: tiers, prices_note: "Unit prices per quantity tier, excl. VAT unless the shop shows incl. VAT; shipping and VAT at checkout." } };
     },
-    async recommend_products({ occasion = "", budget, quantity, country: cc, limit = 4 }) {
-      const text = String(occasion || ""), dest = country(cc) || "CH";
-      const rule = OCCASIONS.find(o => o.re.test(text)) || OCCASIONS[OCCASIONS.length - 1];
-      let ids = rule.items || (catalog().scenarios || []).flatMap(s => s.kits).find(k => k.id === rule.kit)?.items || [];
-      ids = ids.filter(id => productById(id));
-      const qty = Math.max(1, Number(quantity) || 1), cards = [];
-      for (const id of ids) { const c = await productCard(productById(id), qty, dest); if (c.unit_price == null) continue; if (budget && c.unit_price > Number(budget)) continue; cards.push(c); if (cards.length >= Math.min(6, limit)) break; }
-      if (!cards.length) return { ok: false, error: budget ? "nothing_within_budget" : "no_products", budget: budget || null };
-      ui.push({ type: "products", items: cards });
-      return { ok: true, occasion: rule.kit || "custom", products: cards.map(c => ({ id: c.id, name: c.name, unit_price: c.unit_price, currency: c.currency, link: c.link })) };
+    // Needs-aware recommendation (recommend.js): real catalog products, real server quotes in the page currency.
+    // needs: { pool, color, style, quantity, budget, budget_total, deadline, refine, exclude, last_prices } — the LLM path may pass
+    // occasion text only; the rule path passes parsed needs. Cards carry a one-line reason and the Studio link.
+    async recommend_products({ occasion = "", budget, quantity, country: cc, limit = 3, needs = null, color, style, deadline }) {
+      const dest = country(cc) || "CH";
+      const n = needs || { ...parseNeeds(String(occasion || ""), { budget, quantity }), ...(color ? { color } : {}), ...(style ? { style } : {}), ...(deadline ? { deadline } : {}) };
+      const pageCur = currencyForCountry(dest);
+      let converted = null;
+      if (n.budget_cur && n.budget_cur !== pageCur && SF_RATE[n.budget_cur] && SF_RATE[pageCur]) { // shop's storefront rates (CNY base)
+        const f = SF_RATE[pageCur] / SF_RATE[n.budget_cur], src = n.budget || n.budget_total;
+        converted = { from: `${n.budget_cur} ${src}`, to: `${pageCur} ${r2(src * f).toFixed(2)}` };
+        n.budget = n.budget ? r2(n.budget * f) : n.budget; n.budget_total = n.budget_total ? r2(n.budget_total * f) : n.budget_total; n.budget_cur = pageCur;
+      }
+      const qty = Math.max(1, Number(n.quantity) || 1);
+      const quote = async (id, q) => { const r = await lineQuote(tenantId, { product_id: id, quantity: q, country: dest }); const it = r.items?.[0];
+        const std = r.shipping_options?.find(o => o.id === "standard"), exp = r.shipping_options?.find(o => o.id === "express");
+        return it ? { unit_price: it.unit_price, currency: r.currency, std_to: std?.delivery?.to || null, exp_to: exp?.delivery?.to || null } : null; };
+      const { picks, more, dropped } = await rankProducts(n, { catalog: catalog(), quote, limit: Math.max(2, Math.min(4, Number(limit) || 3)) });
+      if (!picks.length) return { ok: false, error: dropped.deadline ? "nothing_by_deadline" : dropped.budget ? "nothing_within_budget" : dropped.color ? "no_color" : "no_products", budget: n.budget || null, dropped };
+      const fd = (iso, l) => { const d = new Date(iso + "T12:00:00Z"); return l === "zh" ? `${d.getUTCMonth() + 1}月${d.getUTCDate()}日` : d.toLocaleDateString({ de: "de-CH", fr: "fr-CH", it: "it-CH" }[l] || "en-GB", { day: "numeric", month: "short", timeZone: "UTC" }); };
+      const cards = picks.map(x => ({ id: x.p.id, name: pname(x.p, lang), image: image(x.p), unit_price: x.q.unit_price, quantity: qty, currency: x.q.currency,
+        link: productLink(x.p.id), eco: (x.p.eco_tags || []).length > 0, reason: reasonFor(x, n, lang, fd), ...(x.late ? { shipping: x.late } : {}) }));
+      ui.push({ type: "products", items: cards, kind: "recommendation" });
+      const comp = complementsFor(picks, catalog()).map(id => ({ id, name: pname(productById(id), lang) }));
+      return { ok: true, occasion: n.pool || "wedding", products: cards.map(c => ({ id: c.id, name: c.name, unit_price: c.unit_price, currency: c.currency, link: c.link, reason: c.reason, shipping: c.shipping || "standard" })),
+        complements: comp, more_available: more, dropped, converted, needs: n, note: "Real catalog products and server quotes (page currency). Mention 2–4 with the reason; offer cheaper / more like this / matching items." };
     },
     async quote_shipping({ country: cc, product, quantity, postcode, shipping_method }) {
       const dest = country(cc);
@@ -180,7 +200,7 @@ export function createTools(ctx) {
     fn("search_knowledge", "Search the shop FAQ and policies (delivery, proofs, returns, VAT, payment, website…). Use before answering any policy question.", { query: { type: "string" } }, ["query"]),
     fn("get_policy", "Get the shop policy text for a topic.", { topic: { type: "string", enum: Object.keys(POLICY_TOPICS) } }, ["topic"]),
     fn("get_product", "Get one product with materials, price per quantity tier and its design link.", { product: { type: "string", description: "Product id or name, e.g. invitation, menu card" }, quantity: { type: "integer" }, country: { type: "string" } }, ["product"]),
-    fn("recommend_products", "Recommend products for an occasion (wedding, guests/favours, stationery, decor, anniversary, baby, party, corporate) and optional budget per item. Shows product cards.", { occasion: { type: "string" }, budget: { type: "number" }, quantity: { type: "integer" }, country: { type: "string" } }, ["occasion"]),
+    fn("recommend_products", "Recommend 2–4 real products for an occasion / recipient (wedding, guests/favours, bridesmaids, groomsmen, couple, parents, stationery, decor, anniversary, baby, party, corporate) with optional budget per item, colour, style and deadline (YYYY-MM-DD). Shows product cards with a reason and returns matching items.", { color: { type: "string" }, style: { type: "string" }, deadline: { type: "string" }, occasion: { type: "string" }, budget: { type: "number" }, quantity: { type: "integer" }, country: { type: "string" } }, ["occasion"]),
     fn("quote_shipping", "Price + shipping options + estimated arrival for a product, quantity and delivery country (2-letter ISO). Same calculation as checkout. Shows a quote card.", { country: { type: "string" }, product: { type: "string" }, quantity: { type: "integer", minimum: 1, maximum: 10000 }, postcode: { type: "string" } }, ["country"]),
     fn("find_order", "Order status. Needs the order number AND the e-mail used for the order.", { order_number: { type: "string" }, email: { type: "string" } }, ["order_number"]),
     fn("get_tracking", "Shipping status for a tracking number of one of our parcels.", { tracking_number: { type: "string" } }, ["tracking_number"]),
