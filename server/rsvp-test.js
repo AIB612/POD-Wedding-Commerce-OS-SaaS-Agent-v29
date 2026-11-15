@@ -44,7 +44,7 @@ try {
   result.publish_split_images = "pass";
 
   // 1c. Generator helpers from index.html: initials, guest error strings in all languages.
-  const indexSrc = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const indexSrc = ["index.html", "home-app.js", "home-wedding-site.js"].map(f => fs.readFileSync(new URL(`../${f}`, import.meta.url), "utf8")).join("\n"); // homepage code lives in external files
   const initials = new Function(indexSrc.match(/function weddingInitials\(names\)\{.*\}/)[0] + "; return weddingInitials;")();
   assert.equal(initials("Maximiliane-Alexandra & Jean-Christophe"), "M&J");
   assert.equal(initials("Sandra and Fernando"), "S&F");

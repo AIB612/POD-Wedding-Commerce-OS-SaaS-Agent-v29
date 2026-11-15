@@ -44,6 +44,9 @@ function ipCountry(req) {
   try { const ip = clientIp(req).replace(/^::ffff:/, ""); if (!ip || isLocal(ip)) return ""; return geoip.lookup(ip)?.country || ""; } catch { return ""; }
 }
 
+// Front-end files served from the project root (explicit allowlist — server code and .env are never exposed).
+const ASSET_FILES = ["checkout.js", "cart.js", "cart.css", "mobile.css", "studio.js", "studio-data.js", "studio-pricing.js", "studio-mockups.js", "studio-preview.js", "studio-seller.js", "account-auth.js", "account-app.js", "footer.js", "header.js", "home-chat.js", "home-app.js", "home-wedding-site.js", "favicon.svg", "favicon.ico", "site.webmanifest"];
+
 export function publicRouter({ root, generatedDir }) {
   const router = express.Router();
   // Pod.AI (Shopify app) host-only behaviour lives on podai.swisspro.site; pod.swisspro.site is the wedding site (as wed was).
@@ -117,15 +120,41 @@ export function publicRouter({ root, generatedDir }) {
 
   const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/admin/login": "admin-login.html", "/admin-login.html": "admin-login.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html", "/shipping": "shipping.html", "/shipping.html": "shipping.html", "/returns": "returns.html", "/returns.html": "returns.html", "/imprint": "imprint.html", "/imprint.html": "imprint.html", "/impressum": "imprint.html", "/agent.html": "agent.html", "/agent": "agent.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
-  const sendAgent = (_, res) => {
-    let html = fs.readFileSync(path.join(root, "agent.html"), "utf8");
-    html = html.replace("<!--__PODAI_GA_LANDING__-->", gaLandingSnippet());
-    res.setHeader("Cache-Control", "no-cache");
-    res.type("html").send(html);
+  // ---- Static asset versioning (performance) ----
+  // Pages are served no-cache; every local script / stylesheet they reference gets ?v=<content hash>, and a request that
+  // carries ?v= is cached for a year (immutable). A changed file gets a new hash, so browsers never run stale code.
+  const assetHash = new Map();
+  const hashOf = file => {
+    const abs = path.join(root, file);
+    let st; try { st = fs.statSync(abs); } catch { return null; }
+    const c = assetHash.get(abs);
+    if (c && c.mtimeMs === st.mtimeMs && c.size === st.size) return c.hash;
+    const hash = crypto.createHash("sha256").update(fs.readFileSync(abs)).digest("hex").slice(0, 10);
+    assetHash.set(abs, { mtimeMs: st.mtimeMs, size: st.size, hash });
+    return hash;
   };
+  const VERSIONED = new Set(ASSET_FILES.concat(["i18n.js", "wedding-qr.js", "admin-sections.js"]));
+  const versionAssets = html => html.replace(/(<(?:script|link)\b[^>]*?\s(?:src|href)=")(\/?)([\w.-]+\.(?:js|css|svg|ico|webmanifest))(?:\?v=[^"]*)?(")/g, (m, a, slash, file, z) => {
+    if (!VERSIONED.has(file)) return m;
+    const h = hashOf(file); return h ? `${a}${slash}${file}?v=${h}${z}` : m;
+  });
+  const pageCache = new Map();
+  const sendPage = (file, transform = x => x) => (_, res) => {
+    const abs = path.join(root, file);
+    let st; try { st = fs.statSync(abs); } catch { return res.status(404).json({ error: "not_found" }); }
+    const key = `${abs}`; const c = pageCache.get(key);
+    let html;
+    if (c && c.mtimeMs === st.mtimeMs && c.size === st.size && c.transform === transform) html = c.html;
+    else { html = versionAssets(fs.readFileSync(abs, "utf8")); pageCache.set(key, { mtimeMs: st.mtimeMs, size: st.size, html, transform }); }
+    res.setHeader("Cache-Control", "no-cache");
+    res.type("html").send(transform(html));
+  };
+  const assetOpts = (req, short) => (req.query.v ? { maxAge: "365d", immutable: true } : { maxAge: short });
+  const gaLanding = html => html.replace("<!--__PODAI_GA_LANDING__-->", gaLandingSnippet());
+  const sendAgent = sendPage("agent.html", gaLanding);
   for (const [route, file] of Object.entries(pages)) {
     if (file === "agent.html") router.get(route, sendAgent);
-    else router.get(route, (_, res) => res.sendFile(path.join(root, file), noStore));
+    else router.get(route, sendPage(file));
   }
 
   const loginLimit = rateLimit({ bucket: "admin-login", windowMs: 60_000, max: 20 });
@@ -135,16 +164,18 @@ export function publicRouter({ root, generatedDir }) {
   // Price list / Fees & tax / Promo codes are sections inside admin.html; the old standalone URLs redirect there.
   for (const [section, routes] of Object.entries({ prices: ["/admin-prices.html", "/admin/prices"], fees: ["/admin-fees.html", "/admin/fees"], promos: ["/admin-promos.html", "/admin/promos"] }))
     for (const route of routes) router.get(route, (_, res) => res.redirect(302, `/admin#${section}`));
-  router.get("/admin-sections.js", (_, res) => res.sendFile(path.join(root, "admin-sections.js"), { maxAge: "5m" }));
+  router.get("/admin-sections.js", (req, res) => res.sendFile(path.join(root, "admin-sections.js"), assetOpts(req, "5m")));
   // Shared front-end assets (explicit allowlist — server code and .env are never exposed).
-  router.get("/i18n.js", (_, res) => res.sendFile(path.join(root, "i18n.js"), { maxAge: "1h" }));
-  router.get("/wedding-qr.js", (_, res) => res.sendFile(path.join(root, "wedding-qr.js"), { maxAge: "1h" }));
+  router.get("/i18n.js", (req, res) => res.sendFile(path.join(root, "i18n.js"), assetOpts(req, "1h")));
+  router.get("/wedding-qr.js", (req, res) => res.sendFile(path.join(root, "wedding-qr.js"), assetOpts(req, "1h")));
   // Wedding sites are private links: keep them out of search engines.
   router.get("/robots.txt", (_, res) => res.type("text/plain").send("User-agent: *\nDisallow: /generated/\n"));
   // POD Studio page + its scripts (explicit allowlist, like the other pages)
-  router.get(["/studio", "/studio.html"], (_, res) => res.sendFile(path.join(root, "studio.html"), noStore));
-  for (const f of ["checkout.js", "cart.js", "cart.css", "mobile.css", "studio.js", "studio-data.js", "studio-pricing.js", "studio-mockups.js", "studio-preview.js", "studio-seller.js", "account-auth.js", "account-app.js", "footer.js", "header.js", "home-chat.js", "favicon.svg", "favicon.ico", "site.webmanifest"]) router.get("/" + f, (_, res) => res.sendFile(path.join(root, f), { maxAge: "5m" }));
-  router.use("/assets", express.static(path.join(root, "assets"), { maxAge: "7d", fallthrough: false }));
+  router.get(["/studio", "/studio.html"], sendPage("studio.html"));
+  for (const f of ASSET_FILES) router.get("/" + f, (req, res) => res.sendFile(path.join(root, f), assetOpts(req, "5m")));
+  const assetsLong = express.static(path.join(root, "assets"), { maxAge: "365d", immutable: true, fallthrough: false });
+  const assetsShort = express.static(path.join(root, "assets"), { maxAge: "7d", fallthrough: false });
+  router.use("/assets", (req, res, next) => (req.query.v ? assetsLong : assetsShort)(req, res, next));
   // Self-hosted OFL webfonts for generated wedding sites (sandboxed /generated pages have an opaque origin, so CORS is required).
   router.use("/fonts", (_, res, next) => { res.setHeader("Access-Control-Allow-Origin", "*"); next(); }, express.static(path.join(root, "fonts"), { maxAge: "30d", fallthrough: false }));
   const adminAppDist = path.join(root, "admin-app", "dist");

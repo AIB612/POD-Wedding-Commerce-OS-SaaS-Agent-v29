@@ -7,7 +7,7 @@ import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const src = fs.readFileSync(path.join(root, "index.html"), "utf8");
+const src = ["index.html", "home-app.js", "home-wedding-site.js"].map(f => fs.readFileSync(path.join(root, f), "utf8")).join("\n");
 const result = {};
 
 // Load the real generator (index.html) and the lazy theme module into a sandbox.

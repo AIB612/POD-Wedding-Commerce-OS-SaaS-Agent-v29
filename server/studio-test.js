@@ -16,7 +16,7 @@ for (const sc of data.scenarios) for (const k of sc.kits) for (const pid of k.it
 result.data_in_sync = "pass";
 
 // Focused v24 architecture: one storefront wedding scene; six business scenarios live in the studio.
-const home = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const home = ["index.html", "home-app.js", "home-wedding-site.js"].map(f => fs.readFileSync(new URL(`../${f}`, import.meta.url), "utf8")).join("\n");
 // The homepage now renders its scenes from the shared Studio catalog (studio-data.js) instead of a hard-coded wedding scene.
 assert.ok(home.includes("studio-data.js") && home.includes("STUDIO_DATA"), "storefront renders scenes from the Studio catalog");
 assert.ok(!home.includes('French Indoor Wedding'), "extra storefront wedding scenes removed");

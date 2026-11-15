@@ -27,7 +27,7 @@ try {
   // Brand: one name; header.js carries it, old per-page variants are gone.
   const hdr = (await get("/header.js")).text;
   assert.match(hdr, /POD.AI/); assert.match(hdr, /pod-market-v1/);
-  for (const f of ["index.html", "studio.html", "checkout.html", "payment-success.html", "account.html", "proof.html"]) {
+  for (const f of ["index.html", "home-app.js", "home-wedding-site.js", "studio.html", "checkout.html", "payment-success.html", "account.html", "proof.html"]) {
     const s = fs.readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
     assert.doesNotMatch(s, /POD WEDDING STUDIO|<b>POD STUDIO<\/b>/, f);
   }
@@ -36,7 +36,7 @@ try {
   // Customer pages written in English: no Chinese literals in proof / payment-success / checkout / account sources.
   for (const f of ["proof.html", "payment-success.html", "checkout.html", "account.html", "account-app.js", "account-auth.js", "cart.js", "checkout.js", "footer.js", "header.js"])
     assert.ok(!CJK.test(fs.readFileSync(new URL(`../${f}`, import.meta.url), "utf8").replace(/data-lang="zh">[^<]*</g, "")), `${f} contains Chinese`);
-  const idx = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const idx = ["index.html", "home-app.js", "home-wedding-site.js"].map(f => fs.readFileSync(new URL(`../${f}`, import.meta.url), "utf8")).join("\n");
   assert.doesNotMatch(idx, /alt="材质大图"/); assert.doesNotMatch(idx, /Incl\. VAT where applicable/);
   assert.match(idx, /data-vat-label/); assert.match(idx, /homeMarket\(\)/);
   result.no_chinese_sources = "pass";

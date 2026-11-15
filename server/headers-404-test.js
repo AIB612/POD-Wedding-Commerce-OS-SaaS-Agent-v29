@@ -28,6 +28,16 @@ try {
   }
   r = await fetch(base + "/api/csp-report", { method: "POST", headers: { "Content-Type": "application/csp-report" }, body: JSON.stringify({ "csp-report": { "document-uri": "https://pod.swisspro.site/?x=1", "effective-directive": "script-src-elem", "blocked-uri": "https://evil.example/x.js?q" } }) });
   assert.equal(r.status, 204);
+  // Performance: homepage code is external, every local script has a content-hash ?v=, versioned assets are immutable for a year.
+  r = await fetch(base + "/"); const home = await r.text(); assert.equal(r.headers.get("cache-control"), "no-cache");
+  assert.ok(home.length < 100_000, "homepage HTML slimmed"); assert.match(home, /src="\/home-app\.js\?v=[0-9a-f]{10}"/); assert.match(home, /src="\/home-wedding-site\.js\?v=[0-9a-f]{10}"/);
+  assert.match(home, /src="cart\.js\?v=[0-9a-f]{10}"/); assert.match(home, /src="\/price-list\.js"/, "dynamic price list stays unversioned");
+  const v = home.match(/src="\/home-app\.js\?v=([0-9a-f]+)"/)[1];
+  r = await fetch(base + "/home-app.js?v=" + v); assert.equal(r.status, 200); assert.match(r.headers.get("cache-control"), /max-age=31536000.*immutable/);
+  r = await fetch(base + "/home-app.js"); assert.match(r.headers.get("cache-control"), /max-age=300$/, "unversioned stays short");
+  r = await fetch(base + "/assets/brand/icon-32.png?v=1"); assert.match(r.headers.get("cache-control"), /immutable/);
+  r = await fetch(base + "/price-list.js?v=1"); assert.equal(r.headers.get("cache-control"), "no-cache");
+  result.asset_caching = "pass";
   result.csp = "pass";
 } finally { server.close(); fs.rmSync(tmp, { recursive: true, force: true }); }
 console.log(JSON.stringify({ ok: true, result }, null, 2));
