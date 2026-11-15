@@ -17,7 +17,8 @@ result.data_in_sync = "pass";
 
 // Focused v24 architecture: one storefront wedding scene; six business scenarios live in the studio.
 const home = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
-assert.ok(home.includes('Cream Garden Wedding'), "storefront keeps the first wedding scene");
+// The homepage now renders its scenes from the shared Studio catalog (studio-data.js) instead of a hard-coded wedding scene.
+assert.ok(home.includes("studio-data.js") && home.includes("STUDIO_DATA"), "storefront renders scenes from the Studio catalog");
 assert.ok(!home.includes('French Indoor Wedding'), "extra storefront wedding scenes removed");
 assert.deepEqual(data.scenarios.map(s => s.id), ["creator", "community", "corporate", "art", "gifts", "seasonal"]);
 assert.equal(data.products.length, 97);
@@ -66,6 +67,14 @@ function png(w = 64, h = 64) { // minimal valid PNG
   const raw = Buffer.alloc((w * 4 + 1) * h);
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", ihdr), chunk("IDAT", zlib.deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
 }
+// Studio designs are private to their owner (guest cookie issued on first save) — keep a cookie jar like a browser does.
+const realFetch = globalThis.fetch; const jar = new Map();
+const fetch = async (url, opt = {}) => {
+  const cookie = [...jar].map(([k, v]) => `${k}=${v}`).join("; ");
+  const r = await realFetch(url, { ...opt, headers: { ...(opt.headers || {}), ...(cookie && !opt.anonymous ? { cookie } : {}) } });
+  for (const c of r.headers.getSetCookie?.() || []) { const [kv] = c.split(";"); const i = kv.indexOf("="); jar.set(kv.slice(0, i).trim(), kv.slice(i + 1)); }
+  return r;
+};
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wcos-studio-"));
 const app = await createApp({ generatedDir: tmp }); const server = app.listen(0); const base = `http://127.0.0.1:${server.address().port}`;
 const post = (p, b) => fetch(base + p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
@@ -84,7 +93,8 @@ try {
   assert.equal((await post("/api/studio/projects", { ...plan, kit_id: "nope" })).status, 400);
   const saved = await (await post("/api/studio/projects", { ...plan, design_data_url: "data:image/png;base64," + png().toString("base64") })).json();
   assert.match(saved.id, /^sp_[a-f0-9]{20}$/); assert.equal(saved.link, `/studio.html?project=${saved.id}`);
-  assert.equal((await fetch(base + saved.design_url)).status, 200, "design stored under /generated/studio");
+  assert.equal((await fetch(base + saved.design_url)).status, 200, "design served to its owner");
+  assert.equal((await realFetch(base + saved.design_url)).status, 401, "design is private: anonymous requests get 401");
   assert.equal(saved.quote.lines.length, 3, "unknown products dropped");
   const proj = await (await fetch(`${base}/api/studio/projects/${saved.id}`)).json();
   assert.equal(proj.items[0].placement.scale, 3, "placement values are clamped"); assert.equal(proj.items[0].placement.dx, 1);
@@ -103,12 +113,12 @@ try {
   const revenueBefore = (await financeSummary("tenant_demo")).revenue;
   assert.equal((await post(`/api/studio/projects/${saved.id}/request-quote`, { contact: { email: "nope" } })).status, 400);
   const req = await (await post(`/api/studio/projects/${saved.id}/request-quote`, { contact: { email: "owner@cafe.ch", name: "Lea", company: "Café Lumière" } })).json();
-  assert.match(req.order_id, /^STU-\d{4}-[0-9A-F]{8}$/); assert.equal(req.status, "quote_requested"); assert.equal(req.skipped, 1, "merchant: espresso exceeds the retail ceiling at 60 %");
+  assert.match(req.order_id, /^STU-\d{4}-[0-9A-F]{8}$/); assert.equal(req.status, "Sample requested", "merchant requests become sample requests"); assert.equal(req.skipped, 1, "merchant: espresso exceeds the retail ceiling at 60 %");
   const again = await (await post(`/api/studio/projects/${saved.id}/request-quote`, { contact: { email: "owner@cafe.ch" } })).json();
-  assert.equal(again.status, "already_requested");
+  assert.equal(again.already_requested, true); assert.equal(again.order_id, req.order_id);
   const orders = await (await fetch(base + "/api/saas/orders", { headers: { "x-admin-api-key": "k" } })).json();
   const o = orders.find(x => x.id === req.order_id);
-  assert.ok(o && o.status === "Quote requested" && o.payment_status === "pending" && o.channel === "studio" && o.items.length === 2 && o.currency === "CHF");
+  assert.ok(o && o.status === "Sample requested" && o.payment_status === "pending" && o.channel === "studio" && o.items.length === 2 && o.currency === "CHF");
   assert.equal(o.buyer_type, "merchant"); assert.ok(o.items.every(i => i.quantity === 1 && i.suggested_retail > i.unit_price), "merchant: one sample each at base price");
   assert.equal(o.fulfillment.mode, "dropship");
   const proofs = await (await fetch(base + "/api/saas/proofs", { headers: { "x-admin-api-key": "k" } })).json();
@@ -119,7 +129,7 @@ try {
   result.quote_request = "pass";
   const recipients = [["Lea", "CH", "M"], ["Jonas", "DE", "L"], ["Sam", "US", "XL"], ["Kenji", "JP", "M"]].map(([name, country, size]) => ({ name, country, size }));
   const co = await (await post("/api/studio/projects", { buyer_type: "company", kit_id: "corp_onboarding", scenario_id: "corporate", market: "CH",
-    fulfillment: { mode: "multi", recipients, deadline: "2099-01-01" }, items: [{ product_id: "polo_emb", qty: 999, per_person: 1 }, { product_id: "thermos", qty: 999, per_person: 2 }] })).json();
+    fulfillment: { mode: "multi", recipients, deadline: "2099-01-01" }, items: [{ product_id: "polo_emb", qty: 999, per_person: 1 }, { product_id: "thermos", qty: 999, per_person: 2 }], design_data_url: "data:image/png;base64," + png().toString("base64") })).json(); // a print-ready design is required before an order request
   assert.deepEqual(co.quote.lines.map(l => l.qty), [3, 6], "qty = served recipients × per person (JP not served)");
   const coReq = await (await post(`/api/studio/projects/${co.id}/request-quote`, { contact: { email: "hr@acme.ch", company: "ACME", vat_id: "CHE-123.456.789" } })).json();
   const coOrder = (await (await fetch(base + "/api/saas/orders", { headers: { "x-admin-api-key": "k" } })).json()).find(x => x.id === coReq.order_id);
@@ -157,14 +167,14 @@ try {
   assert.ok(ws && !JSON.stringify(stores).includes("cs_bbbb"), "store created; keys never returned");
   for (const k of ["STUDIO_PUBLIC_CONNECT", "SHOPIFY_CLIENT_ID", "SHOPIFY_REDIRECT_URI", "PUBLIC_BASE_URL"]) delete process.env[k];
   // merchant project remembers the publish target; the quote request carries it
-  const mp = await (await post("/api/studio/projects", { buyer_type: "merchant", items: [{ product_id: "tee", qty: 1 }], publish_store: { platform: "woocommerce", connection_id: wc.connection.id, store: "https://shop.example.org/store" } })).json();
+  const mp = await (await post("/api/studio/projects", { buyer_type: "merchant", items: [{ product_id: "tee", qty: 1 }], publish_store: { platform: "woocommerce", connection_id: wc.connection.id, store: "https://shop.example.org/store" }, design_data_url: "data:image/png;base64," + png().toString("base64") })).json();
   const mq = await (await post(`/api/studio/projects/${mp.id}/request-quote`, { contact: { email: "m@shop.org" } })).json();
   const mo = (await (await fetch(base + "/api/saas/orders", { headers: { "x-admin-api-key": "k" } })).json()).find(x => x.id === mq.order_id);
   assert.equal(mo.publish_store.connection_id, wc.connection.id);
   result.store_connections = "pass";
 
   // materials travel with the project and into the order
-  const matp = await (await post("/api/studio/projects", { buyer_type: "individual", items: [{ product_id: "invitation", qty: 40, material_id: "pearl" }, { product_id: "mug", qty: 2, material_id: "bogus" }] })).json();
+  const matp = await (await post("/api/studio/projects", { buyer_type: "individual", items: [{ product_id: "invitation", qty: 40, material_id: "pearl" }, { product_id: "mug", qty: 2, material_id: "bogus" }], design_data_url: "data:image/png;base64," + png().toString("base64") })).json();
   assert.deepEqual(matp.quote.lines.map(l => l.material_id), ["pearl", "gloss"]);
   const mreq = await (await post(`/api/studio/projects/${matp.id}/request-quote`, { contact: { email: "x@y.ch" } })).json();
   const mord = (await (await fetch(base + "/api/saas/orders", { headers: { "x-admin-api-key": "k" } })).json()).find(x => x.id === mreq.order_id);
