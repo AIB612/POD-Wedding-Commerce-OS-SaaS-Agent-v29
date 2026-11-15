@@ -9,7 +9,7 @@ Key facts:
 - Proofs: personalised designs get a proof by e-mail; production starts after approval (or right after payment if the customer approves the mockup at checkout).
 - Delivery: 7–15 business days to all regions (production, standard 3 business days, + international transit from China via YunExpress / 4PX); tracking is provided.
 - Languages: English, Deutsch, 中文.
-- Payments shown on the site: TWINT and PayPal.
+- Payment: PayPal (PayPal balance or credit/debit card via PayPal) in the secure checkout.
 - Also offered: a wedding website / digital invitation builder with RSVP.
 
 ## Main pages

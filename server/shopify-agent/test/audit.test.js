@@ -5,7 +5,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(new URL("..", import.meta.url).pathname), server = path.resolve(root, "..");
-const ALLOWED = new Set(["saas-store.js", "utils/crypto.js", "logistics/yunexpress.js", "logistics/fourpx.js", "logistics/http.js"].map(p => path.join(server, p)));
+// shared/lang-terms.js: pure language + product-term helpers (no imports, no state) shared with the site chat on purpose.
+const ALLOWED = new Set(["saas-store.js", "shared/lang-terms.js", "utils/crypto.js", "logistics/yunexpress.js", "logistics/fourpx.js", "logistics/http.js"].map(p => path.join(server, p)));
 const files = [];
 (function walk(d) { for (const f of fs.readdirSync(d)) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) { if (f !== "test") walk(p); } else if (p.endsWith(".js")) files.push(p); } })(root);
 const outside = [];

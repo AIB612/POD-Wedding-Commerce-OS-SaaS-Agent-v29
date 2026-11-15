@@ -50,10 +50,20 @@ export async function withFileLock(file, fn, opts) {
   try { return await fn(); } finally { release(); }
 }
 
-/** Cheap identity of a file's current content version: changes on every atomic tmp+rename write. */
+/** Identity of a file's current content version. stat alone (ino:size:mtime) is not enough: after tmp+rename the
+ *  freed inode is often reused by the next write, SQLite files keep the same page-aligned size, and mtime can tie —
+ *  so another process's write could look "unchanged" and be overwritten. Every writer therefore also bumps a random
+ *  generation token in "<file>.gen" (bumpGeneration) right after its atomic rename, while still holding the lock. */
+const genFile = file => `${file}.gen`;
+function readGen(file) { try { return fs.readFileSync(genFile(file), "utf8").trim(); } catch { return ""; } }
 export function fileStamp(file) {
-  try { const s = fs.statSync(file); return `${s.ino}:${s.size}:${s.mtimeMs}`; } catch { return null; }
+  try { const s = fs.statSync(file); return `${s.ino}:${s.size}:${s.mtimeMs}:${readGen(file)}`; } catch { return null; }
 }
 export async function fileStampAsync(file) {
-  try { const s = await fsp.stat(file); return `${s.ino}:${s.size}:${s.mtimeMs}`; } catch { return null; }
+  try { const s = await fsp.stat(file); let g = ""; try { g = (await fsp.readFile(genFile(file), "utf8")).trim(); } catch { /* none yet */ } return `${s.ino}:${s.size}:${s.mtimeMs}:${g}`; } catch { return null; }
+}
+/** Mark a new content version of `file` (call after the atomic rename, under the file lock). */
+export function bumpGeneration(file) {
+  const g = genFile(file), tmp = `${g}.${process.pid}.tmp`;
+  try { fs.writeFileSync(tmp, `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`, { mode: 0o600 }); fs.renameSync(tmp, g); } catch (e) { console.warn("[lock] could not write generation token:", e.message); }
 }

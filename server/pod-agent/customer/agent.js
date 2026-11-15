@@ -10,6 +10,7 @@ import { getSettings, findOrCreateConversation, saveConversation, recentUserMess
 import { llmStatus, runToolLoop, chatJson, answerOpenQuestion } from "./llm.js";
 import { systemPrompt, CLASSIFIER_SYSTEM } from "./prompts.js";
 import { decideRoute } from "./router.js";
+import { T_FR_IT, CHIPS_FR_IT, PRODUCT_CHIPS_FR_IT, COUNTRY_CHIPS_FR_IT, HUMAN_CHIP_FR_IT, COUNTRY_LABEL_FR_IT } from "./i18n-fr-it.js";
 
 const LANGS = ["en", "zh", "de", "fr", "it"];
 const UNRESOLVED_RE = /(didn'?t help|not helpful|not what i asked|doesn'?t answer|hilft nicht|nicht geholfen|ça n'aide pas|non aiuta|没用|没解决|不是我问的|答非所问)/i;
@@ -22,9 +23,10 @@ function fmtDate(iso, lang) {
   return d.toLocaleDateString(lang === "de" ? "de-CH" : lang === "fr" ? "fr-CH" : lang === "it" ? "it-CH" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 }
 const COUNTRY_LABEL = { en: { CH: "Switzerland", DE: "Germany", AT: "Austria", FR: "France", IT: "Italy", LI: "Liechtenstein", GB: "the UK", US: "the USA" }, zh: { CH: "瑞士", DE: "德国", AT: "奥地利", FR: "法国", IT: "意大利", LI: "列支敦士登", GB: "英国", US: "美国" }, de: { CH: "die Schweiz", DE: "Deutschland", AT: "Österreich", FR: "Frankreich", IT: "Italien", LI: "Liechtenstein", GB: "Grossbritannien", US: "die USA" } };
+Object.assign(COUNTRY_LABEL, COUNTRY_LABEL_FR_IT);
 const cname = (cc, lang) => (COUNTRY_LABEL[lang] || COUNTRY_LABEL.en)[cc] || cc;
 
-// ---- Reply templates (EN / ZH / DE; FR / IT fall back to EN) ----
+// ---- Reply templates (EN / ZH / DE here; FR / IT merged from i18n-fr-it.js) ----
 const T = {
   greet: { en: "Hi! I'm the POD.AI assistant. I can recommend products, quote prices and shipping, and check your order.", zh: "您好！我是 POD.AI 助手，可以为您推荐产品、报价和运费，以及查询订单。", de: "Hallo! Ich bin der POD.AI-Assistent. Ich empfehle Produkte, berechne Preise und Versand und prüfe Ihre Bestellung." },
   thanks: { en: "You're welcome! Anything else I can help with?", zh: "不客气！还有什么可以帮您？", de: "Gern geschehen! Kann ich sonst noch helfen?" },
@@ -68,15 +70,35 @@ const T = {
   rate: { en: "You have sent a lot of messages. Please wait a moment.", zh: "您发送的消息太多了，请稍等片刻。", de: "Sie haben sehr viele Nachrichten gesendet. Bitte warten Sie einen Moment." },
   disabled: { en: "The chat assistant is currently offline. Please use Find my order (/account#find-order) or try again later.", zh: "AI 助手暂时离线，请使用“查询订单”（/account#find-order）或稍后再试。", de: "Der Chat-Assistent ist gerade offline. Bitte nutzen Sie „Bestellung finden“ oder versuchen Sie es später." }
 };
+// New answers: catalogue overview ("what do you sell") and products we don't carry.
+T.browse = {
+  en: v => `${v.intro} Popular right now: ${v.list}. Tap a card to personalise it, or ask me about a specific product.`,
+  zh: v => `${v.intro} 热门商品：${v.list}。点击卡片即可定制，也可以直接问我某个产品。`,
+  de: v => `${v.intro} Gerade beliebt: ${v.list}. Tippen Sie auf eine Karte, um sie zu gestalten, oder fragen Sie mich nach einem bestimmten Produkt.`,
+  fr: v => `${v.intro} En ce moment : ${v.list}. Touchez une carte pour la personnaliser, ou demandez-moi un produit précis.`,
+  it: v => `${v.intro} Più richiesti ora: ${v.list}. Tocchi una scheda per personalizzarla, oppure mi chieda un prodotto specifico.` };
+T.notCarried = {
+  en: v => `Sorry, we don't carry ${v.item}. Here is what we do sell: ${v.range}`,
+  zh: v => `抱歉，我们不提供${v.item}。我们的商品包括：${v.range}`,
+  de: v => `Leider führen wir keine ${v.item}. Das bieten wir an: ${v.range}`,
+  fr: v => `Désolé, nous ne proposons pas de ${v.item}. Voici ce que nous vendons : ${v.range}`,
+  it: v => `Ci dispiace, non vendiamo ${v.item}. Ecco cosa offriamo: ${v.range}` };
+T.from = { en: "from ", zh: "", de: "ab ", fr: "dès ", it: "da " };
+T.fromSuffix = { en: "", zh: " 起", de: "", fr: "", it: "" };
+for (const [k, v] of Object.entries(T_FR_IT)) T[k] = { ...(T[k] || {}), ...v };
 /** Languages the chat detects (LANGS) and the languages with full reply templates (REPLY_LANGS; others fall back to English). */
 export const DETECTED_LANGS = LANGS;
 export const REPLY_LANGS = Object.keys(T.greet);
-const L = (key, lang) => { const e = T[key]; return e[lang] || e.en; };
+const L = (key, lang) => { const e = T[key]; return e[lang] ?? e.en; };
 const CHIPS = {
   en: ["Shipping to Switzerland for 10 invitations", "Recommend wedding favours", "How long does delivery take?", "Track my order"],
   zh: ["10 份邀请卡寄到瑞士运费多少", "推荐婚礼伴手礼", "多久能送达？", "查询我的订单"],
   de: ["Versand in die Schweiz für 10 Einladungen", "Gastgeschenke empfehlen", "Wie lange dauert die Lieferung?", "Meine Bestellung verfolgen"]
 };
+Object.assign(CHIPS, CHIPS_FR_IT);
+const PRODUCT_CHIPS = { en: ["Invitations", "Menu cards", "Place cards", "Welcome sign"], zh: ["邀请卡", "菜单卡", "席位卡", "迎宾牌"], de: ["Einladungen", "Menükarten", "Platzkarten", "Willkommensschild"], ...PRODUCT_CHIPS_FR_IT };
+const COUNTRY_CHIPS = { en: ["Switzerland", "Germany", "Austria", "France"], zh: ["瑞士", "德国", "奥地利", "法国"], de: ["Schweiz", "Deutschland", "Österreich", "Frankreich"], ...COUNTRY_CHIPS_FR_IT };
+const HUMAN_CHIP = { en: "Talk to a person", zh: "转人工", de: "Mit einem Menschen sprechen", ...HUMAN_CHIP_FR_IT };
 const chips = (lang, list) => ({ type: "chips", items: list || CHIPS[lang] || CHIPS.en });
 
 /** Deterministic responder: same tools, rule-based routing. Used without an LLM key and as fallback on LLM errors. */
@@ -101,9 +123,9 @@ async function ruleAnswer(ctx, cls, text, tools) {
     case "greeting": ctx.ui.push(chips(lang)); return (settings.greeting?.[lang] || L("greet", lang));
     case "thanks": return L("thanks", lang);
     case "shipping_quote": {
-      if (!s.product) { s.pending = "quote"; ctx.ui.push(chips(lang, lang === "zh" ? ["邀请卡", "菜单卡", "席位卡", "迎宾牌"] : lang === "de" ? ["Einladungen", "Menükarten", "Platzkarten", "Willkommensschild"] : ["Invitations", "Menu cards", "Place cards", "Welcome sign"])); return L("askProduct", lang); }
+      if (!s.product) { s.pending = "quote"; ctx.ui.push(chips(lang, PRODUCT_CHIPS[lang] || PRODUCT_CHIPS.en)); return L("askProduct", lang); }
       const cc = s.country || null;
-      if (!cc) { s.pending = "quote"; ctx.ui.push(chips(lang, lang === "zh" ? ["瑞士", "德国", "奥地利", "法国"] : lang === "de" ? ["Schweiz", "Deutschland", "Österreich", "Frankreich"] : ["Switzerland", "Germany", "Austria", "France"])); return L("askCountry", lang); }
+      if (!cc) { s.pending = "quote"; ctx.ui.push(chips(lang, COUNTRY_CHIPS[lang] || COUNTRY_CHIPS.en)); return L("askCountry", lang); }
       const q = await tools.execute("quote_shipping", { product: s.product, quantity: s.quantity || 1, country: cc });
       if (!q.ok) return q.error === "no_shipping_to_country" ? L("noShip", lang)(cname(cc, lang)) : L("unknown", lang);
       s.pending = "quote";
@@ -124,7 +146,7 @@ async function ruleAnswer(ctx, cls, text, tools) {
       const r = await tools.execute("recommend_products", { occasion: text, budget: cls.budget, quantity: s.quantity, country: s.country || ctx.countryHint || "CH" });
       if (!r.ok) return L("recoNone", lang);
       const cur = r.products[0]?.currency || "";
-      return L("reco", lang)({ n: r.products.length, budget: cls.budget ? `${cur} ${cls.budget}` : "", list: r.products.map(p => `${p.name} (${lang === "zh" ? "" : "from "}${money(p.currency, p.unit_price)}${lang === "zh" ? " 起" : ""})`).join(lang === "zh" ? "、" : ", ") });
+      return L("reco", lang)({ n: r.products.length, budget: cls.budget ? `${cur} ${cls.budget}` : "", list: r.products.map(p => `${p.name} (${L("from", lang)}${money(p.currency, p.unit_price)}${L("fromSuffix", lang)})`).join(lang === "zh" ? "、" : ", ") });
     }
     case "order_status": {
       if (!s.order_number) { if (cls.tracking_number) return ruleAnswer(ctx, { ...cls, intent: "tracking" }, text, tools); s.pending = "order_number"; return L("askOrder", lang); }
@@ -162,9 +184,22 @@ async function ruleAnswer(ctx, cls, text, tools) {
     }
     case "delivery_time": {
       if (s.product && s.country) { const q = await tools.execute("quote_shipping", { product: s.product, quantity: s.quantity || 1, country: s.country });
-        if (q.ok) { const o = q.shipping_options; s.pending = "quote"; const head = { en: `${q.quantity} × ${q.product} to ${cname(q.country, lang)}: `, zh: `${q.quantity} 份${q.product}寄往${cname(q.country, lang)}：`, de: `${q.quantity} × ${q.product} nach ${cname(q.country, lang)}: ` }[lang] || `${q.quantity} × ${q.product} → ${q.country}: `;
+        if (q.ok) { const o = q.shipping_options; s.pending = "quote"; const head = { en: `${q.quantity} × ${q.product} to ${cname(q.country, lang)}: `, zh: `${q.quantity} 份${q.product}寄往${cname(q.country, lang)}：`, de: `${q.quantity} × ${q.product} nach ${cname(q.country, lang)}: `, fr: `${q.quantity} × ${q.product} vers ${cname(q.country, lang)} : `, it: `${q.quantity} × ${q.product} verso ${cname(q.country, lang)}: ` }[lang] || `${q.quantity} × ${q.product} → ${q.country}: `;
           return head + o.map(x => L("opt", lang)({ ...x, cur: q.currency, from: fmtDate(x.arrives_from, lang), to: fmtDate(x.arrives_to, lang) })).join("; "); } }
       return (await knowledgeEntry(ctx.tenantId, "delivery_time", lang)).answer;
+    }
+    case "browse": {
+      // "What do you sell?" in any language: short catalogue overview + a few product cards from the live catalogue.
+      const intro = (await knowledgeEntry(ctx.tenantId, "what_we_sell", lang)).answer;
+      const r = await tools.execute("recommend_products", { occasion: "wedding", country: s.country || ctx.countryHint || "CH", limit: 4 });
+      if (!r.ok) return intro;
+      return L("browse", lang)({ intro, list: r.products.map(p => `${p.name} (${L("from", lang)}${money(p.currency, p.unit_price)}${L("fromSuffix", lang)})`).join(lang === "zh" ? "、" : ", ") });
+    }
+    case "unknown_product": {
+      // "Do you sell sofas? / Avete divani? / 有沙发吗" for something that is not in the catalogue: say so and list what we sell.
+      const range = (await knowledgeEntry(ctx.tenantId, "what_we_sell", lang)).answer;
+      ctx.ui.push(chips(lang, PRODUCT_CHIPS[lang] || PRODUCT_CHIPS.en));
+      return L("notCarried", lang)({ item: String(cls.asked_product || "").replace(/[<>]/g, "").slice(0, 40), range });
     }
     case "return_request": return (await knowledgeEntry(ctx.tenantId, "returns", lang)).answer;
     case "cancel_or_change": return (await knowledgeEntry(ctx.tenantId, "cancel", lang)).answer;
@@ -177,7 +212,7 @@ async function ruleAnswer(ctx, cls, text, tools) {
       const hits = await searchKnowledge(ctx.tenantId, text, lang, { custom: settings.custom_faq });
       if (hits.length && hits[0].score >= 2) return hits[0].answer;
       ctx.unanswered = true;
-      ctx.ui.push(chips(lang, [...(CHIPS[lang] || CHIPS.en).slice(0, 3), lang === "zh" ? "转人工" : lang === "de" ? "Mit einem Menschen sprechen" : "Talk to a person"]));
+      ctx.ui.push(chips(lang, [...(CHIPS[lang] || CHIPS.en).slice(0, 3), HUMAN_CHIP[lang] || HUMAN_CHIP.en]));
       return L("unknown", lang);
     }
   }
@@ -262,7 +297,7 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
     if (!llm.available) {
       // No key: best rule-based answer + offer a person.
       const l = await local("no_llm_key");
-      if (!ctx.unanswered) { l.answer = `${l.answer}\n\n${L("offerHuman", lang)}`; ctx.ui.push(chips(lang, [lang === "zh" ? "转人工" : lang === "de" ? "Mit einem Menschen sprechen" : "Talk to a person"])); }
+      if (!ctx.unanswered) { l.answer = `${l.answer}\n\n${L("offerHuman", lang)}`; ctx.ui.push(chips(lang, [HUMAN_CHIP[lang] || HUMAN_CHIP.en])); }
       return finish(l.answer, { intent: merged.intent, mode: "rules", answered_by: "local", route: l.route });
     }
     try {

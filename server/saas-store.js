@@ -5,7 +5,7 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { acquireLock, fileStamp } from "./utils/file-lock.js";
+import { acquireLock, fileStamp, bumpGeneration } from "./utils/file-lock.js";
 
 const seedUrl = new URL("./data/saas-seed.json", import.meta.url);
 const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."); // repo root (…/pod-wedding)
@@ -98,6 +98,7 @@ function writeSnapshot(file) {
   fs.writeFileSync(tmp, JSON.stringify(serialise(state)), { encoding: "utf8", mode: 0o600 }); // orders, accounts, sessions: owner-only
   fs.renameSync(tmp, file); // atomic replace: readers in other processes never see a half-written file
   try { fs.chmodSync(file, 0o600); } catch {}
+  bumpGeneration(file); // new content version even if the inode / size / mtime happen to repeat
   stamp = fileStamp(file);
 }
 

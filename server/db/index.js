@@ -9,8 +9,9 @@
 // hidden behind insertIgnore()/upsert helpers in the repo modules.
 import fs from "node:fs";
 import path from "node:path";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { MIGRATIONS } from "./migrations.js";
-import { acquireLock, fileStamp } from "../utils/file-lock.js";
+import { acquireLock, fileStamp, bumpGeneration } from "../utils/file-lock.js";
 
 let db = null;
 
@@ -31,13 +32,21 @@ export async function setDb(d) { if (db && db !== d) await db.close?.(); db = d;
 export async function closeDb() { if (db) await db.close?.(); db = null; }
 
 async function migrate(d) {
+  // Several app processes can start at the same time (LiteSpeed workers): the SQLite driver runs all migrations under one
+  // cross-process lock; any driver tolerates a migration that another process applied meanwhile.
+  const exclusive = d.exclusive ? fn => d.exclusive(fn) : fn => fn();
+  await exclusive(async () => {
   await d.run("CREATE TABLE IF NOT EXISTS schema_migrations (id VARCHAR(64) PRIMARY KEY, applied_at VARCHAR(40) NOT NULL)");
-  const done = new Set((await d.query("SELECT id FROM schema_migrations")).map(r => r.id));
+  const applied = async () => new Set((await d.query("SELECT id FROM schema_migrations")).map(r => r.id));
+  const done = await applied();
   for (const m of MIGRATIONS) {
     if (done.has(m.id)) continue;
-    for (const sql of m.sql) await d.run(d.kind === "mysql" ? sql : sql.replace(/\s+ENGINE=InnoDB.*$/i, ""));
-    await d.run("INSERT INTO schema_migrations (id, applied_at) VALUES (?, ?)", [m.id, new Date().toISOString()]);
+    try {
+      for (const sql of m.sql) await d.run(d.kind === "mysql" ? sql : sql.replace(/\s+ENGINE=InnoDB.*$/i, ""));
+      await d.run("INSERT INTO schema_migrations (id, applied_at) VALUES (?, ?)", [m.id, new Date().toISOString()]);
+    } catch (e) { if (!(await applied()).has(m.id)) throw e; }
   }
+  });
 }
 
 async function sqliteDriver(file) {
@@ -56,8 +65,11 @@ async function sqliteDriver(file) {
   let seen = abs ? fileStamp(abs) : null;
   let conn = seen ? new SQL.Database(fs.readFileSync(abs)) : new SQL.Database();
   const sync = () => { if (!abs) return; const st = fileStamp(abs); if (st && st !== seen) { const fresh = new SQL.Database(fs.readFileSync(abs)); conn.close(); conn = fresh; seen = st; } };
-  const persist = () => { if (!abs) return; const tmp = `${abs}.tmp.${process.pid}`; fs.writeFileSync(tmp, Buffer.from(conn.export()), { mode: 0o600 }); fs.renameSync(tmp, abs); seen = fileStamp(abs); };
-  const locked = async fn => { if (!abs) return fn(); const release = await acquireLock(abs); try { sync(); return fn(); } finally { release(); } };
+  const persist = () => { if (!abs) return; const tmp = `${abs}.tmp.${process.pid}`; fs.writeFileSync(tmp, Buffer.from(conn.export()), { mode: 0o600 }); fs.renameSync(tmp, abs); bumpGeneration(abs); seen = fileStamp(abs); };
+  // Re-entrant only inside exclusive() (migrations run several statements under one lock): tracked per async context,
+  // so unrelated concurrent calls in this process still queue for the lock.
+  const inside = new AsyncLocalStorage();
+  const locked = async fn => { if (!abs || inside.getStore() === abs) return fn(); const release = await acquireLock(abs); try { sync(); return await inside.run(abs, fn); } finally { release(); } };
   const norm = p => p.map(v => (v === undefined ? null : typeof v === "boolean" ? Number(v) : v));
   return {
     kind: "sqlite", file: abs || ":memory:",
@@ -69,6 +81,7 @@ async function sqliteDriver(file) {
     async run(sql, params = []) { return locked(() => { conn.run(sql, norm(params)); const changes = conn.getRowsModified(); if (changes || !/^\s*(SELECT|PRAGMA)/i.test(sql)) persist(); return { changes }; }); },
     async insertIgnore(table, row) { return this.run(`INSERT OR IGNORE INTO ${table} (${Object.keys(row).join(",")}) VALUES (${Object.keys(row).map(() => "?").join(",")})`, Object.values(row)); },
     async upsert(table, row, key) { const cols = Object.keys(row); return this.run(`INSERT INTO ${table} (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")}) ON CONFLICT(${key.join(",")}) DO UPDATE SET ${cols.filter(c => !key.includes(c)).map(c => `${c}=excluded.${c}`).join(",")}`, Object.values(row)); },
+    async exclusive(fn) { return locked(fn); },
     async close() { conn.close(); } // every run() already persisted; writing here could replace newer rows from another process
   };
 }

@@ -74,11 +74,11 @@ const REFUSE_INJECTION = {
   zh: "这个我无法协助。我可以回答关于产品、价格、运费和订单的问题。"
 };
 const REFUSE_PAYMENT = {
-  de: "Bitte senden Sie keine Karten-, Bank- oder Passwortdaten im Chat. Bezahlt wird nur sicher an der Kasse (TWINT, PayPal oder Karte).",
+  de: "Bitte senden Sie keine Karten-, Bank- oder Passwortdaten im Chat. Bezahlt wird nur sicher an der sicheren Kasse.",
   fr: "Merci de ne jamais envoyer de données de carte, bancaires ou de mot de passe dans le chat. Le paiement se fait uniquement au checkout sécurisé.",
   it: "Non invii dati di carta, bancari o password nella chat. Il pagamento avviene solo nel checkout sicuro.",
-  en: "Please never send card, bank or password details in the chat. Payment only happens in our secure checkout (TWINT, PayPal or card).",
-  zh: "请不要在对话中发送银行卡、账户或密码信息。付款只在安全结账页面完成（TWINT、PayPal 或银行卡）。"
+  en: "Please never send card, bank or password details in the chat. Payment only happens in our secure checkout.",
+  zh: "请不要在对话中发送银行卡、账户或密码信息。付款只在安全结账页面完成。"
 };
 const pick = (table, lang) => table[lang] || table[String(lang || "").slice(0, 2)] || table.en;
 export const holdingMessage = (cfg, lang, { needEmail = false } = {}) => pick(HOLDING, lang)(cfg.humanReplyHours) + (needEmail ? " " + pick(HOLDING_NEEDS_EMAIL, lang) : "");

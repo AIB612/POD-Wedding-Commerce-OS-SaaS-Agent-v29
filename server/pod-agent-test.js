@@ -108,9 +108,9 @@ try {
   const { KPI_IDS } = await import("./pod-agent/customer/admin.js");
   const { CUSTOMER_TOOLS } = await import("./pod-agent/customer/tools.js");
   assert.equal(r.json.strategy, "local_first"); assert.equal(r.json.confidence_threshold, 0.6); assert.equal(r.json.kpis, KPI_IDS.length); assert.equal(r.json.tools, CUSTOMER_TOOLS.length);
-  assert.deepEqual(r.json.languages, { detected: ["en", "zh", "de", "fr", "it"], replies: ["en", "zh", "de"] });
+  assert.deepEqual(r.json.languages, { detected: ["en", "zh", "de", "fr", "it"], replies: ["en", "zh", "de", "fr", "it"] });
   const agentPage = fs.readFileSync(new URL("../agent.html", import.meta.url), "utf8");
-  for (const [k, v] of Object.entries({ kpis: KPI_IDS.length, tools: CUSTOMER_TOOLS.length, threshold: 0.6, langs_detected: 5, langs_replies: 3 }))
+  for (const [k, v] of Object.entries({ kpis: KPI_IDS.length, tools: CUSTOMER_TOOLS.length, threshold: 0.6, langs_detected: 5, langs_replies: 5 }))
     assert.ok(new RegExp(`data-fact="${k}"[^>]*>${String(v).replace(".", "\\.")}<`).test(agentPage), `agent.html fallback for ${k} = ${v}`);
   assert.ok(!/\b13 (KPIs|项)/.test(agentPage), "no stale KPI count on agent.html");
   // Only the embeddable widget is served from /pod-agent/; server code and README are not.

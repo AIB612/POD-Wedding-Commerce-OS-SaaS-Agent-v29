@@ -6,6 +6,7 @@
 import { studioCatalog } from "../../services/studio-service.js";
 import { getFees, carrierDays, pricesIncludeVat } from "../../services/fees-service.js";
 import { paymentMethods } from "../../services/checkout-service.js";
+import { FAQ_FR_IT, dynamicFrIt } from "./i18n-fr-it.js";
 
 const FAQ = [
   { id: "what_we_sell", tags: ["products", "sell", "offer", "range", "什么", "卖", "产品", "sortiment", "angebot"],
@@ -60,6 +61,9 @@ const FAQ = [
          de: "Schreiben Sie hier einfach, dass Sie einen Menschen möchten, und hinterlassen Sie Ihre E-Mail – das Team antwortet innerhalb von 24 Stunden (Mo–Fr)." } }
 ];
 
+// French / Italian answers (same entries, merged in so FR / IT shoppers are answered in their language).
+for (const e of FAQ) { const x = FAQ_FR_IT[e.id]; if (x) { Object.assign(e.q, x.q); Object.assign(e.a, x.a); } }
+
 const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
 const fmtDays = ([a, b]) => (a === b ? `${a}` : `${a}–${b}`);
 
@@ -77,6 +81,7 @@ export async function shopFacts(tenantId) {
   const fac = {}; for (const f of cat.facilities || []) fac[f.region] = Math.min(fac[f.region] ?? Infinity, Number(f.days)); // fastest facility per region
   const freeOver = { CHF: fees.shipping?.zone_ch?.standard?.CHF?.free_over || null, EUR: fees.shipping?.zone_de?.standard?.EUR?.free_over || null };
   let pay = null; try { pay = await paymentMethods(tenantId); } catch { pay = null; }
+  // Only what checkout really offers right now (GET /api/payments/methods). TWINT is listed only once it is configured.
   const methods = [pay?.twint?.configured ? "TWINT" : null, pay?.paypal?.configured ? "PayPal (incl. cards)" : null].filter(Boolean);
   return {
     production_days: { CH: fac.CH ?? 3, EU: fac.EU ?? 3 },
@@ -85,13 +90,18 @@ export async function shopFacts(tenantId) {
     carrier_days: Object.fromEntries(["zone_ch", "zone_de", "zone_eu", "zone_uk", "zone_us", "zone_world"].map(z => [z, { standard: fmtDays(carrierDays(z, "standard")), express: fmtDays(carrierDays(z, "express")) }])),
     prices_include_vat: pricesIncludeVat(),
     free_standard_shipping_over: { CHF: freeOver.CHF ? r2(freeOver.CHF) : null, EUR: freeOver.EUR ? r2(freeOver.EUR) : null },
-    payment_methods: methods.length ? methods : ["TWINT", "PayPal"],
+    payment_methods: methods.length ? methods : ["PayPal"],
     human_reply_hours: Number(process.env.HUMAN_REPLY_HOURS || 24)
   };
 }
 
 /** Dynamic FAQ entries built from the facts above (delivery time, VAT, payment, free shipping). */
 function dynamicEntries(f) {
+  const list = dynamicEntriesBase(f), x = dynamicFrIt(f);
+  for (const e of list) if (x[e.id]) { Object.assign(e.q, x[e.id].q); Object.assign(e.a, x[e.id].a); }
+  return list;
+}
+function dynamicEntriesBase(f) {
   const vat = f.prices_include_vat;
   const free = f.free_standard_shipping_over;
   return [
@@ -104,7 +114,7 @@ function dynamicEntries(f) {
       q: { en: "Are prices including VAT?", zh: "价格含税吗？", de: "Sind die Preise inkl. MwSt.?" },
       a: vat ? { en: "Prices include VAT for your delivery country; the VAT share is shown at checkout.", zh: "价格已含收货国家的增值税，税额在结账时列出。", de: "Die Preise enthalten die MwSt. Ihres Lieferlandes; der Anteil wird an der Kasse ausgewiesen." }
              : { en: "Product prices are shown excluding VAT; VAT for your delivery country (e.g. 8.1% in Switzerland) is added at checkout.", zh: "商品价格不含增值税；结账时按收货国家加收增值税（如瑞士 8.1%）。", de: "Produktpreise verstehen sich exkl. MwSt.; die MwSt. Ihres Lieferlandes (z. B. 8,1 % in der Schweiz) wird an der Kasse addiert." } },
-    { id: "payment", tags: ["pay", "payment", "twint", "paypal", "card", "credit", "付款", "支付", "信用卡", "zahlung", "bezahlen", "karte"],
+    { id: "payment", tags: ["pay", "payment", "twint", "paypal", "paiement", "pagamento", "payer", "pagare", "card", "credit", "付款", "支付", "信用卡", "zahlung", "bezahlen", "karte"],
       q: { en: "Which payment methods do you accept?", zh: "支持哪些付款方式？", de: "Welche Zahlungsarten gibt es?" },
       a: { en: `We accept ${f.payment_methods.join(", ")}. Payment happens only in our secure checkout — never send card details in the chat.`,
            zh: `支持 ${f.payment_methods.join("、")}。付款只在安全结账页面完成，请勿在对话中发送卡号。`,

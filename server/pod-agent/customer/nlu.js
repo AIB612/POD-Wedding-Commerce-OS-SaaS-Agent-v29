@@ -4,24 +4,9 @@
 import { studioCatalog } from "../../services/studio-service.js";
 
 const CJK = /[\u3400-\u9fff]/;
-const WORDS = {
-  de: /\b(ich|wir|sie|und|der|die|das|wie|viel|kostet|kosten|versand|nach|schweiz|bestellung|meine|meiner|lieferung|empfehlen|einladungen|stück|bitte|danke|hallo|grüezi|gibt|kann|könnt|möchte|für|mit|wo|ist)\b/gi,
-  fr: /\b(je|nous|vous|est|combien|livraison|pour|commande|frais|suisse|bonjour|merci|mon|ma|mes|quels?|quelle|où|avec|cartes?|invitations?)\b/gi,
-  it: /\b(io|voi|quanto|costa|spedizione|per|ordine|svizzera|ciao|grazie|mio|mia|dove|quali|con|inviti)\b/gi,
-  en: /\b(i|we|you|the|and|how|much|cost|shipping|to|order|my|where|is|what|recommend|please|hello|hi|thanks|for|with|can|do|does|invitations?)\b/gi
-};
-/** ISO 639-1 language of the message; `hint` (UI language) wins for very short / ambiguous messages. */
-export function detectLanguage(text, hint = "en") {
-  const t = String(text || "");
-  if (CJK.test(t)) return "zh";
-  const score = Object.fromEntries(Object.entries(WORDS).map(([l, re]) => [l, (t.match(re) || []).length]));
-  if (/[äöüß]/i.test(t)) score.de += 2;
-  if (/[éèêàç]/i.test(t)) score.fr += 1;
-  const best = Object.entries(score).sort((a, b) => b[1] - a[1])[0];
-  if (!best || best[1] === 0) return ["en", "de", "fr", "it", "zh"].includes(hint) ? hint : "en";
-  if (best[0] !== "en" && best[1] === score.en) return ["de", "fr", "it"].includes(hint) ? hint : "en";
-  return best[0];
-}
+// Language detection + "what do you sell" / "do you sell X?" detection are shared with the Pod.AI chat (server/shared/lang-terms.js).
+import { detectLanguage, BROWSE_RE, askedProduct, productTerms } from "../../shared/lang-terms.js";
+export { detectLanguage, askedProduct, productTerms };
 
 // ---- Countries (names in EN / DE / FR / IT / ZH → ISO-2) ----
 const COUNTRY_NAMES = {
@@ -51,20 +36,22 @@ export function extractCountry(text) {
 
 // ---- Products ----
 const SYN = {
-  invitation: ["invitation", "invitations", "invite", "invites", "wedding invitation", "einladung", "einladungen", "einladungskarte", "einladungskarten", "faire-part", "faire-parts", "invito", "inviti", "请柬", "喜帖", "邀请卡", "邀请函", "请帖"],
+  invitation: ["invitation", "invitations", "invite", "invites", "wedding invitation", "einladung", "einladungen", "einladungskarte", "einladungskarten", "faire-part", "faire-parts", "invito", "inviti", "请柬", "喜帖", "邀请卡", "邀请函", "请帖", "faire-part de mariage", "carte d'invitation", "cartes d'invitation", "invitation de mariage", "partecipazione", "partecipazioni", "invito di nozze"],
   save_date: ["save the date", "save-the-date", "save the dates"], rsvp_card: ["rsvp", "rsvp card", "回执卡"],
-  menu_card: ["menu", "menus", "menu card", "menu cards", "menükarte", "menükarten", "menukarte", "菜单", "菜单卡"],
-  place_card: ["place card", "place cards", "name card", "name cards", "escort card", "platzkarte", "platzkarten", "tischkarte", "tischkarten", "marque-place", "座位卡", "席位卡", "桌卡", "名卡"],
-  table_number: ["table number", "table numbers", "tischnummer", "tischnummern", "桌号", "桌牌"],
-  welcome_sign: ["welcome sign", "welcome board", "willkommensschild", "迎宾牌", "欢迎牌", "迎宾板"],
-  gift_box: ["gift box", "gift boxes", "geschenkbox", "礼盒", "喜糖盒"], candle: ["candle", "candles", "kerze", "kerzen", "蜡烛", "香薰蜡烛"],
-  mug: ["mug", "mugs", "tasse", "tassen", "马克杯", "杯子"], magic_mug: ["magic mug", "变色杯"], tee: ["t-shirt", "t-shirts", "tshirt", "tee", "tees", "t恤"],
-  hoodie: ["hoodie", "hoodies", "卫衣"], tote: ["tote", "tote bag", "tote bags", "stofftasche", "帆布袋", "托特包"], poster: ["poster", "posters", "海报"],
-  sticker: ["sticker", "stickers", "aufkleber", "贴纸"], greeting: ["greeting card", "greeting cards", "grusskarte", "贺卡"], postcard: ["postcard", "postcards", "postkarte", "明信片"],
-  photo_frame: ["photo frame", "picture frame", "bilderrahmen", "相框"], photo_book: ["photo book", "photobook", "fotobuch", "相册", "照片书"],
-  engraved_jewelry: ["jewelry", "jewellery", "necklace", "schmuck", "首饰", "项链"], canvas: ["canvas", "leinwand", "帆布画"], notebook: ["notebook", "notizbuch", "笔记本"],
-  calendar: ["calendar", "kalender", "日历"], coaster: ["coaster", "coasters", "untersetzer", "杯垫"], blanket: ["blanket", "decke", "毯子"], pillow: ["pillow", "cushion", "kissen", "抱枕"],
-  phone_case: ["phone case", "handyhülle", "手机壳"], keychain: ["keychain", "schlüsselanhänger", "钥匙扣"], banner: ["banner", "横幅"], apron: ["apron", "schürze", "围裙"]
+  menu_card: ["menu", "menus", "menu card", "menu cards", "menükarte", "menükarten", "menukarte", "菜单", "菜单卡", "carte de menu", "cartes de menu", "carta menu", "menù", "menu di nozze"],
+  place_card: ["place card", "place cards", "name card", "name cards", "escort card", "platzkarte", "platzkarten", "tischkarte", "tischkarten", "marque-place", "座位卡", "席位卡", "桌卡", "名卡", "marque-places", "carte de table", "segnaposto", "segnaposti", "segnatavolo"],
+  table_number: ["table number", "table numbers", "tischnummer", "tischnummern", "桌号", "桌牌", "numéro de table", "numéros de table", "numero tavolo", "numeri tavolo"],
+  welcome_sign: ["welcome sign", "welcome board", "willkommensschild", "迎宾牌", "欢迎牌", "迎宾板", "panneau de bienvenue", "cartello di benvenuto"],
+  gift_box: ["gift box", "gift boxes", "geschenkbox", "礼盒", "喜糖盒", "boîte cadeau", "boîtes cadeaux", "coffret cadeau", "scatola regalo", "scatole regalo"], candle: ["candle", "candles", "kerze", "kerzen", "蜡烛", "香薰蜡烛", "bougie", "bougies", "candela", "candele"],
+  mug: ["mug", "mugs", "tasse", "tassen", "马克杯", "杯子", "tazza", "tazze", "tasse à café", "mugs personnalisés", "becher"], magic_mug: ["magic mug", "变色杯"], tee: ["t-shirt", "t-shirts", "tshirt", "tee", "tees", "t恤", "maglietta", "magliette", "t-shirt personnalisé", "tee-shirt", "tee-shirts", "tshirts", "shirt", "shirts"],
+  hoodie: ["hoodie", "hoodies", "卫衣", "felpa", "felpe", "sweat à capuche", "sweats à capuche", "kapuzenpulli", "kapuzenpullover"], tote: ["tote", "tote bag", "tote bags", "stofftasche", "帆布袋", "托特包", "sac cabas", "sacs cabas", "borsa", "borse", "shopper", "tragetasche"], poster: ["poster", "posters", "海报", "affiche", "affiches", "manifesto"],
+  sticker: ["sticker", "stickers", "aufkleber", "贴纸", "autocollant", "autocollants", "adesivo", "adesivi"], greeting: ["greeting card", "greeting cards", "grusskarte", "贺卡", "carte de vœux", "cartes de vœux", "biglietto d'auguri", "biglietti d'auguri", "biglietto"], postcard: ["postcard", "postcards", "postkarte", "明信片", "carte postale", "cartes postales", "cartolina", "cartoline"],
+  photo_frame: ["photo frame", "picture frame", "bilderrahmen", "相框", "cadre photo", "cadres photo", "cornice", "cornici"], photo_book: ["photo book", "photobook", "fotobuch", "相册", "照片书", "livre photo", "album photo", "fotolibro"],
+  engraved_jewelry: ["jewelry", "jewellery", "necklace", "schmuck", "首饰", "项链", "bijou", "bijoux", "collier", "gioiello", "gioielli", "collana"], canvas: ["canvas", "leinwand", "帆布画", "toile", "toiles", "tela"], notebook: ["notebook", "notizbuch", "笔记本", "carnet", "carnets", "quaderno", "quaderni"],
+  calendar: ["calendar", "kalender", "日历", "calendrier", "calendriers", "calendario", "calendari"], coaster: ["coaster", "coasters", "untersetzer", "杯垫", "dessous de verre", "sottobicchiere", "sottobicchieri"], blanket: ["blanket", "decke", "毯子", "couverture", "couvertures", "coperta", "coperte", "plaid"], pillow: ["pillow", "cushion", "kissen", "抱枕", "coussin", "coussins", "cuscino", "cuscini"],
+  cap_emb: ["cap", "caps", "baseball cap", "casquette", "casquettes", "cappellino", "cappellini", "kappe", "mütze", "帽子", "棒球帽"], socks: ["socks", "sock", "socken", "chaussettes", "calze", "calzini", "袜子"], sweatshirt: ["sweatshirt", "sweatshirts", "sweat", "pullover", "pulli"],
+  towel: ["towel", "towels", "handtuch", "serviette", "asciugamano", "毛巾"], bottle: ["bottle", "water bottle", "trinkflasche", "gourde", "borraccia", "水瓶"], puzzle: ["puzzle", "puzzles", "拼图"],
+  phone_case: ["phone case", "handyhülle", "手机壳", "coque de téléphone", "coques", "cover per telefono"], keychain: ["keychain", "schlüsselanhänger", "钥匙扣", "porte-clés", "porte-clé", "portachiavi"], banner: ["banner", "横幅", "bannière", "banderole", "striscione"], apron: ["apron", "schürze", "围裙", "tablier", "tabliers", "grembiule", "grembiuli"]
 };
 let ALIASES = null;
 function aliases() {
@@ -86,6 +73,15 @@ export function extractProducts(text) {
     if (rx.test(low)) { if (!found.includes(id)) found.push(id); low = low.replace(rx, " ␣ "); }
   }
   return found;
+}
+
+/** True when a word the shopper asked about loosely matches a catalogue name / alias (e.g. "engraving" ~ "Engraved pendant"). */
+export function looksLikeCatalog(word) {
+  const w = String(word || "").toLowerCase().trim();
+  if (!w) return false;
+  if (productTerms(w).some(t => aliases().some(a => a.alias === t))) return true;
+  const stems = w.split(/[^\p{L}]+/u).filter(x => x.length >= 5).map(x => x.slice(0, Math.max(5, x.length - 3)));
+  return stems.some(st => aliases().some(a => a.alias.split(/[^\p{L}]+/u).some(part => part.startsWith(st))));
 }
 
 // ---- Numbers ----
@@ -156,9 +152,10 @@ const RX = {
   payment: /(pay|payment|twint|paypal|credit card|zahl|bezahl|paiement|pagamento|付款|支付|怎么付)/i,
   proof: /(proof|mockup|approve|korrektur|abzug|freigabe|épreuve|bozza|效果图|样稿|样图|确认图)/i,
   website: /(website|rsvp|webseite|site web|sito|网站|回执)/i,
-  vat: /(vat|tax|mwst|mehrwertsteuer|tva|iva|增值税|含税|税)/i,
+  vat: /(\b(vat|tax|taxes|mwst|mehrwertsteuer|tva|iva)\b|增值税|含税|税)/i,
   customs: /(customs|duty|duties|zoll|douane|dogana|关税|清关)/i,
   material: /(material|paper|finish|papier|matériau|carta|材质|纸|面料)/i,
+  browse: BROWSE_RE,
   thanks: /^\s*(thanks?|thank you|danke|merci|grazie|谢谢|多谢|thx)\b[\s!.]*$/i
 };
 /** Classification in the POD Agent router shape (intent, language, emotion…) plus extracted entities. */
@@ -185,6 +182,8 @@ export function classifyRules(text, { hint = "en" } = {}) {
   else if (RX.payment.test(t)) intent = "payment";
   else if (RX.proof.test(t)) intent = "proof";
   else if (RX.website.test(t)) intent = "website";
+  else if (!e.products.length && RX.browse.test(t)) intent = "browse";
+  else if (!e.products.length && (e.asked_product = askedProduct(t)) && !RX.material.test(t) && !looksLikeCatalog(e.asked_product)) intent = "unknown_product";
   else if (e.products.length && (RX.cost.test(t) || e.quantity)) intent = "price";
   else if (e.products.length || RX.material.test(t)) intent = "product_question";
   else if (RX.cost.test(t)) intent = "price";
