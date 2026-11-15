@@ -6,6 +6,7 @@
 import { studioCatalog } from "../../services/studio-service.js";
 import { getFees, carrierDays, pricesIncludeVat } from "../../services/fees-service.js";
 import { paymentMethods } from "../../services/checkout-service.js";
+import { currencyForCountry } from "../../services/pricing-service.js";
 import { FAQ_FR_IT, dynamicFrIt } from "./i18n-fr-it.js";
 import { BM25 } from "../../shared/local-rag.js";
 
@@ -86,11 +87,41 @@ function totalDays(prod) {
   return lo === hi ? String(lo) : `${lo}–${hi}`;
 }
 
-/** Live facts from the shop settings (never hard-coded in prompts). */
-export async function shopFacts(tenantId) {
+/** Where each shipping zone's free-shipping threshold applies, per chat language. */
+const ZONE_WHERE = {
+  en: { zone_ch: "in Switzerland", zone_de: "to Germany", zone_eu: "to other EU countries", zone_uk: "to the UK", zone_us: "to the USA and Canada", zone_world: "for other countries" },
+  de: { zone_ch: "Schweiz", zone_de: "Deutschland", zone_eu: "andere EU-Länder", zone_uk: "Grossbritannien", zone_us: "USA und Kanada", zone_world: "andere Länder" },
+  fr: { zone_ch: "en Suisse", zone_de: "vers l'Allemagne", zone_eu: "vers les autres pays de l'UE", zone_uk: "vers le Royaume-Uni", zone_us: "vers les États-Unis et le Canada", zone_world: "vers les autres pays" },
+  it: { zone_ch: "in Svizzera", zone_de: "verso la Germania", zone_eu: "verso gli altri paesi UE", zone_uk: "verso il Regno Unito", zone_us: "verso USA e Canada", zone_world: "verso gli altri paesi" },
+  zh: { zone_ch: "瑞士", zone_de: "德国", zone_eu: "其他欧盟国家", zone_uk: "英国", zone_us: "美国和加拿大", zone_world: "其他国家" }
+};
+const fmtAmount = n => (Number(n) % 1 ? Number(n).toFixed(2) : String(Number(n)));
+/** "CHF 108 in Switzerland and EUR 143 to Germany" in the chat language, from facts.free_shipping. */
+export function freeShippingText(list = [], lang = "en") {
+  const W = ZONE_WHERE[lang] || ZONE_WHERE.en;
+  const parts = list.map(x => lang === "zh" ? `${x.currency} ${fmtAmount(x.amount)}（${W[x.zone] || x.zone}）`
+    : lang === "de" ? `${x.currency} ${fmtAmount(x.amount)} (${W[x.zone] || x.zone})` : `${x.currency} ${fmtAmount(x.amount)} ${W[x.zone] || x.zone}`);
+  const sep = { en: " and ", de: " bzw. ", fr: " et ", it: " e ", zh: "、" }[lang] || " and ";
+  return parts.join(sep);
+}
+/** Shipping zone for a destination country (fee settings → zone countries; "*" = rest of world). */
+function zoneFor(fees, cc) {
+  const z = Object.entries(fees.shipping || {}).find(([, v]) => Array.isArray(v?.countries) && v.countries.includes(cc));
+  return z ? z[0] : (fees.shipping?.zone_world ? "zone_world" : null);
+}
+
+/** Live facts from the shop settings (never hard-coded in prompts). With the shopper's market country, amounts are in
+ *  that market's currency only (the same currency the page, cart and checkout show). */
+export async function shopFacts(tenantId, country = null) {
   const cat = studioCatalog(), fees = getFees();
   const fac = {}; for (const f of cat.facilities || []) fac[f.region] = Math.min(fac[f.region] ?? Infinity, Number(f.days)); // fastest facility per region
   const freeOver = { CHF: fees.shipping?.zone_ch?.standard?.CHF?.free_over || null, EUR: fees.shipping?.zone_de?.standard?.EUR?.free_over || null };
+  const cc = /^[A-Z]{2}$/.test(String(country || "")) ? String(country) : null;
+  const freeAt = (zone, cur) => { const v = Number(fees.shipping?.[zone]?.standard?.[cur]?.free_over); return v > 0 ? { zone, currency: cur, amount: r2(v) } : null; };
+  let freeList;
+  if (cc) { const cur = currencyForCountry(cc), zone = zoneFor(fees, cc); freeList = [zone && freeAt(zone, cur)]; }
+  else freeList = [freeAt("zone_ch", "CHF"), freeAt("zone_de", "EUR")];
+  freeList = freeList.filter(Boolean);
   let pay = null; try { pay = await paymentMethods(tenantId); } catch { pay = null; }
   // Only what checkout really offers right now (GET /api/payments/methods). TWINT is listed only once it is configured.
   const methods = [pay?.twint?.configured ? "TWINT" : null, pay?.paypal?.configured ? "PayPal (incl. cards)" : null].filter(Boolean);
@@ -100,7 +131,8 @@ export async function shopFacts(tenantId) {
     proof_buffer_days: Number(cat.proof_buffer_days || 0),
     carrier_days: Object.fromEntries(["zone_ch", "zone_de", "zone_eu", "zone_uk", "zone_us", "zone_world"].map(z => [z, { standard: fmtDays(carrierDays(z, "standard")), express: fmtDays(carrierDays(z, "express")) }])),
     prices_include_vat: pricesIncludeVat(),
-    free_standard_shipping_over: { CHF: freeOver.CHF ? r2(freeOver.CHF) : null, EUR: freeOver.EUR ? r2(freeOver.EUR) : null },
+    free_standard_shipping_over: cc ? Object.fromEntries(freeList.map(x => [x.currency, x.amount])) : { CHF: freeOver.CHF ? r2(freeOver.CHF) : null, EUR: freeOver.EUR ? r2(freeOver.EUR) : null },
+    free_shipping: freeList,
     payment_methods: methods.length ? methods : ["PayPal"],
     human_reply_hours: Number(process.env.HUMAN_REPLY_HOURS || 24)
   };
@@ -108,13 +140,13 @@ export async function shopFacts(tenantId) {
 
 /** Dynamic FAQ entries built from the facts above (delivery time, VAT, payment, free shipping). */
 function dynamicEntries(f) {
-  const list = dynamicEntriesBase(f), x = dynamicFrIt(f);
+  const list = dynamicEntriesBase(f), x = dynamicFrIt(f, freeShippingText);
   for (const e of list) if (x[e.id]) { Object.assign(e.q, x[e.id].q); Object.assign(e.a, x[e.id].a); }
   return list;
 }
 function dynamicEntriesBase(f) {
   const vat = f.prices_include_vat;
-  const free = f.free_standard_shipping_over;
+  const free = f.free_shipping || [];
   return [
     { id: "delivery_time", tags: ["delivery", "long", "time", "arrive", "when", "days", "production", "多久", "几天", "时间", "到货", "送达", "生产", "lieferzeit", "dauert", "wann", "produktion"],
       q: { en: "How long does delivery take?", zh: "多久能收到？", de: "Wie lange dauert die Lieferung?" },
@@ -132,9 +164,9 @@ function dynamicEntriesBase(f) {
            de: `Wir akzeptieren ${f.payment_methods.map(m => m.replace("(incl. cards)", "(inkl. Karten)")).join(", ")} – Kartenzahlung über PayPal geht auch ohne PayPal-Konto. Bezahlt wird nur an der sicheren Kasse – senden Sie keine Kartendaten im Chat.` } },
     { id: "free_shipping", tags: ["free", "shipping", "免运费", "包邮", "免费", "versandkostenfrei", "gratis"],
       q: { en: "Is there free shipping?", zh: "有包邮吗？", de: "Gibt es kostenlosen Versand?" },
-      a: (free.CHF || free.EUR) ? { en: `Standard shipping is free from ${[free.CHF ? `CHF ${free.CHF.toFixed(2)} in Switzerland` : "", free.EUR ? `EUR ${free.EUR.toFixed(2)} to Germany` : ""].filter(Boolean).join(" and ")} (merchandise subtotal). Express is always charged.`,
-           zh: `商品金额满 ${[free.CHF ? `CHF ${free.CHF.toFixed(2)}（瑞士）` : "", free.EUR ? `EUR ${free.EUR.toFixed(2)}（德国）` : ""].filter(Boolean).join("、")} 标准运费免费，快递始终收费。`,
-           de: `Standardversand ist ab ${[free.CHF ? `CHF ${free.CHF.toFixed(2)} (Schweiz)` : "", free.EUR ? `EUR ${free.EUR.toFixed(2)} (Deutschland)` : ""].filter(Boolean).join(" bzw. ")} Warenwert kostenlos; Express wird immer berechnet.` }
+      a: free.length ? { en: `Standard shipping is free from ${freeShippingText(free, "en")} (merchandise subtotal). Express is always charged.`,
+           zh: `商品金额满 ${freeShippingText(free, "zh")} 标准运费免费，快递始终收费。`,
+           de: `Standardversand ist ab ${freeShippingText(free, "de")} Warenwert kostenlos; Express wird immer berechnet.` }
            : { en: "Shipping is calculated in the cart for your address.", zh: "运费在购物车中按地址计算。", de: "Versandkosten werden im Warenkorb berechnet." } }
   ];
 }
@@ -156,13 +188,13 @@ export function normaliseCustom(list = []) {
   return (list || []).filter(x => x && x.question && x.answer && x.active !== false).map(x => ({ id: x.id, custom: true,
     tags: String(x.tags || "").toLowerCase().split(/[,;\s]+/).filter(Boolean), q: { [x.lang || "en"]: x.question, en: x.question }, a: { [x.lang || "en"]: x.answer, en: x.answer } }));
 }
-export async function allEntries(tenantId, custom = []) { return [...normaliseCustom(custom), ...dynamicEntries(await shopFacts(tenantId)), ...FAQ]; }
+export async function allEntries(tenantId, custom = [], country = null) { return [...normaliseCustom(custom), ...dynamicEntries(await shopFacts(tenantId, country)), ...FAQ]; }
 /**
  * Ranked knowledge hits (BM25 over questions + tags in every language, answers weighted lower; typo tolerant).
  * Each hit: { id, question, answer (shopper's language, English fallback), score (≈0–6, ≥ 2 = confident), norm (0–1) }.
  */
-export async function searchKnowledge(tenantId, query, lang = "en", { limit = 3, custom = [] } = {}) {
-  const docs = await allEntries(tenantId, custom);
+export async function searchKnowledge(tenantId, query, lang = "en", { limit = 3, custom = [], country = null } = {}) {
+  const docs = await allEntries(tenantId, custom, country);
   const index = new BM25(docs.map(d => ({ id: d.id, entry: d, fields: { q: Object.values(d.q).join(" "), tags: d.tags.join(" "), a: Object.values(d.a).join(" ") } })), { weights: { q: 3, tags: 3, a: 0.6 } });
   return index.search(query, { limit: limit + 2 }).map(h => {
     const d = h.doc.entry, coverage = h.terms ? h.matched / h.terms : 0;
@@ -170,8 +202,8 @@ export async function searchKnowledge(tenantId, query, lang = "en", { limit = 3,
     return { id: d.id, question: d.q[lang] || d.q.en, answer: d.a[lang] || d.a.en, score, norm: Math.round(h.norm * 100) / 100, ...(d.custom ? { custom: true } : {}) };
   }).filter(h => h.score >= 1).sort((a, b) => b.score - a.score).slice(0, limit);
 }
-export async function knowledgeEntry(tenantId, id, lang = "en") {
-  const facts = await shopFacts(tenantId), d = [...dynamicEntries(facts), ...FAQ].find(x => x.id === id);
+export async function knowledgeEntry(tenantId, id, lang = "en", country = null) {
+  const facts = await shopFacts(tenantId, country), d = [...dynamicEntries(facts), ...FAQ].find(x => x.id === id);
   return d ? { id: d.id, question: d.q[lang] || d.q.en, answer: d.a[lang] || d.a.en } : null;
 }
 export const POLICY_TOPICS = { shipping: "delivery_time", delivery: "delivery_time", returns: "returns", refunds: "returns", customs: "customs", payment: "payment", proofs: "proof", vat: "vat", cancel: "cancel", free_shipping: "free_shipping" };

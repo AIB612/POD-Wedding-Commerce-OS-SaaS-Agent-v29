@@ -56,7 +56,7 @@ export const CUSTOMER_TOOLS = ["search_knowledge", "get_policy", "get_product", 
 export function createTools(ctx) {
   const { tenantId, lang, conv, settings } = ctx;
   const ui = ctx.ui;
-  const country = c => safeCountry(c) || safeCountry(conv.slots?.country) || safeCountry(ctx.countryHint) || null;
+  const country = c => safeCountry(c) || safeCountry(ctx.countryHint) || safeCountry(conv.slots?.country) || null; // page market before an older quote destination
 
   async function productCard(p, qty = 1, cc = "CH") {
     let q = null; try { q = await lineQuote(tenantId, { product_id: p.id, quantity: qty, country: cc }); } catch { q = null; }
@@ -66,11 +66,11 @@ export function createTools(ctx) {
 
   const impl = {
     async search_knowledge({ query }) {
-      const hits = await searchKnowledge(tenantId, query, lang, { custom: settings.custom_faq });
+      const hits = await searchKnowledge(tenantId, query, lang, { custom: settings.custom_faq, country: ctx.countryHint });
       return { ok: true, results: hits.map(h => ({ question: h.question, answer: h.answer })) };
     },
     async get_policy({ topic }) {
-      const e = await knowledgeEntry(tenantId, POLICY_TOPICS[topic] || topic, lang);
+      const e = await knowledgeEntry(tenantId, POLICY_TOPICS[topic] || topic, lang, ctx.countryHint);
       return e ? { ok: true, topic, text: e.answer } : { ok: false, error: `No policy text for "${topic}".` };
     },
     async get_product({ product, quantity, country: cc }) {

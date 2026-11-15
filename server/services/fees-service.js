@@ -23,15 +23,28 @@ const r4 = n => Math.round((Number(n) || 0) * 10000) / 10000;
 const CN_DAYS = { standard: [4, 12], express: [4, 12] };
 const CARRIER_DAYS = { zone_ch: CN_DAYS, zone_de: CN_DAYS, zone_eu: CN_DAYS, zone_uk: CN_DAYS, zone_us: CN_DAYS, zone_world: CN_DAYS };
 
+const seedRate = c => Number(pricing.storefront_currencies?.[c]?.rate) || 1;
+/** Free-shipping threshold in a charge currency: the base value (CNY, saas-seed.json) converted and rounded to whole units
+ *  (CHF 108 rather than CHF 107.88). The same number is shown in the shop/chat and applied by shippingAmount() at checkout. */
+const freeOver = (base, rate) => Number(base) > 0 ? Math.max(1, Math.round(Number(base) * rate)) : null;
+/** Older seeds stored the unrounded conversion (r2(base × rate), e.g. CHF 107.88 / EUR 142.87). Values still equal to that
+ *  untouched conversion are shown/applied rounded; anything an admin typed in "Fees & tax" is kept as is. */
+function roundLegacyFreeOver(shipping) {
+  for (const z of seedZones) for (const c of FEE_CURRENCIES) {
+    const t = shipping?.[z.id]?.standard?.[c]; if (!t || t.free_over == null) continue;
+    if (Number(t.free_over) === r2(z.free_shipping_threshold * seedRate(c))) t.free_over = freeOver(z.free_shipping_threshold, seedRate(c));
+  }
+}
+
 export function seedFees() {
-  const rate = c => Number(pricing.storefront_currencies?.[c]?.rate) || 1;
+  const rate = seedRate;
   const shipping = {}, tax = {};
   for (const z of seedZones) {
     tax[z.id] = Number(z.tax_rate || 0);
     shipping[z.id] = { name: z.name, countries: z.countries };
     for (const m of METHODS) {
       shipping[z.id][m] = { days: [...(CARRIER_DAYS[z.id]?.[m] || CN_DAYS.standard)] };
-      for (const c of FEE_CURRENCIES) shipping[z.id][m][c] = { base: r2(z[`${m}_base`] * rate(c)), per_kg: r4(z[`${m}_per_kg`] * rate(c)), free_over: m === "standard" ? r2(z.free_shipping_threshold * rate(c)) : null };
+      for (const c of FEE_CURRENCIES) shipping[z.id][m][c] = { base: r2(z[`${m}_base`] * rate(c)), per_kg: r4(z[`${m}_per_kg`] * rate(c)), free_over: m === "standard" ? freeOver(z.free_shipping_threshold, rate(c)) : null };
     }
   }
   tax.zone_ch = 0.081;
@@ -44,6 +57,7 @@ export async function initFees() {
   const stored = await findRecord("fee_settings", RECORD_ID);
   if (stored) { const seed = seedFees(); for (const k of ["tax", "shipping", "packaging"]) stored[k] = { ...seed[k], ...(stored[k] || {}) };
     for (const [z, ms] of Object.entries(stored.shipping)) for (const m of METHODS) if (ms?.[m] && !ms[m].USD && seed.shipping[z]?.[m]?.USD) ms[m].USD = seed.shipping[z][m].USD;
+    roundLegacyFreeOver(stored.shipping);
     stored.fx_rates = { ...SEED_FX, ...(stored.fx_rates || {}) }; cache = stored; }
   else { cache = seedFees(); await addRecord("fee_settings", cache); }
   return cache;

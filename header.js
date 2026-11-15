@@ -15,8 +15,8 @@
   function langCountry(){try{var m=String(navigator.language||"").match(/-([A-Za-z]{2})$/);return m?m[1].toUpperCase():""}catch(e){return ""}}
   var Market={
     KEY:MKEY,list:MARKETS,marketForCountry:marketForCountry,
-    /** No user choice: checkout country if entered, else visitor geo (/api/geo, IP headers), else browser locale. */
-    get:function(){var co=rd(CO_KEY);if(co&&co.country)return marketForCountry(co.country);var m=rd(MKEY);if(m&&m.geo)return marketForCountry(m.geo);var lc=langCountry();return lc?marketForCountry(lc):"US"},
+    /** No user choice: checkout country if entered, else visitor geo (/api/geo, IP headers), else browser locale region, else Switzerland (CHF, the home market). */
+    get:function(){var co=rd(CO_KEY);if(co&&co.country)return marketForCountry(co.country);var m=rd(MKEY);if(m&&m.geo)return marketForCountry(m.geo);var lc=langCountry();return lc?marketForCountry(lc):"CH"},
     currency:function(){return MARKETS[Market.get()].currency},
     /** Destination country used for cart quotes: the checkout country if it matches the market, otherwise the market's default. */
     country:function(){var co=rd(CO_KEY)||{},m=Market.get();if(co.country&&marketForCountry(co.country)===m)return co.country;var s=rd(MKEY);if(s&&s.geo&&marketForCountry(s.geo)===m)return s.geo;return m==="CH"?"CH":m==="EU"?"DE":"US"},

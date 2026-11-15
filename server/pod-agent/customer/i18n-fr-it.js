@@ -91,10 +91,9 @@ export const FAQ_FR_IT = {
 };
 
 // ---- Knowledge base (entries built from live shop facts) ----
-export function dynamicFrIt(f) {
-  const vat = f.prices_include_vat, free = f.free_standard_shipping_over, methods = f.payment_methods.join(", ");
-  const freeFr = [free.CHF ? `CHF ${free.CHF.toFixed(2)} en Suisse` : "", free.EUR ? `EUR ${free.EUR.toFixed(2)} vers l'Allemagne` : ""].filter(Boolean).join(" et ");
-  const freeIt = [free.CHF ? `CHF ${free.CHF.toFixed(2)} in Svizzera` : "", free.EUR ? `EUR ${free.EUR.toFixed(2)} verso la Germania` : ""].filter(Boolean).join(" e ");
+export function dynamicFrIt(f, freeShippingText = () => "") {
+  const vat = f.prices_include_vat, free = f.free_shipping || [], methods = f.payment_methods.join(", ");
+  const freeFr = freeShippingText(free, "fr"), freeIt = freeShippingText(free, "it");
   return {
     delivery_time: { q: { fr: "Quel est le délai de livraison ?", it: "Quanto tempo richiede la consegna?" },
       a: { fr: `La livraison prend environ ${f.delivery_days} jours ouvrables vers toutes les régions (Suisse, UE et monde) : environ ${f.production_days.CH} jours ouvrables de production (à la commande) plus le transport international depuis la Chine via YunExpress ou 4PX, et environ ${f.proof_buffer_days} jours de plus si vous validez d'abord une épreuve. Vos dates exactes s'affichent dans le panier et au paiement avant de payer, et vous recevez un numéro de suivi dès l'expédition du colis.`,
@@ -105,7 +104,7 @@ export function dynamicFrIt(f) {
     payment: { q: { fr: "Quels moyens de paiement acceptez-vous ?", it: "Quali metodi di pagamento accettate?" },
       a: { fr: `Nous acceptons ${methods.replace("(incl. cards)", "(cartes incluses)")} — le paiement par carte via PayPal fonctionne aussi sans compte PayPal. Le paiement se fait uniquement au checkout sécurisé — n'envoyez jamais de données de carte dans le chat.`, it: `Accettiamo ${methods.replace("(incl. cards)", "(carte incluse)")} — si può pagare con carta tramite PayPal anche senza account PayPal. Il pagamento avviene solo nel checkout sicuro — non invii mai dati della carta nella chat.` } },
     free_shipping: { q: { fr: "La livraison est-elle gratuite ?", it: "La spedizione è gratuita?" },
-      a: (free.CHF || free.EUR) ? { fr: `La livraison standard est gratuite dès ${freeFr} (montant des articles). L'express est toujours payant.`, it: `La spedizione standard è gratuita da ${freeIt} (valore della merce). L'espresso è sempre a pagamento.` }
+      a: free.length ? { fr: `La livraison standard est gratuite dès ${freeFr} (montant des articles). L'express est toujours payant.`, it: `La spedizione standard è gratuita da ${freeIt} (valore della merce). L'espresso è sempre a pagamento.` }
                                 : { fr: "Les frais de port sont calculés dans le panier selon votre adresse.", it: "Le spese di spedizione sono calcolate nel carrello in base all'indirizzo." } }
   };
 }
