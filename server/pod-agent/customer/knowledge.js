@@ -64,7 +64,7 @@ const FAQ = [
          de: "Alles wird auf Bestellung gedruckt und mit YunExpress oder 4PX aus China versandt – mit Sendungsverfolgung bis zur Haustür. Insgesamt dauert die Lieferung etwa 7–15 Werktage.",
          fr: "Tout est imprimé à la commande et expédié depuis la Chine par YunExpress ou 4PX, avec suivi jusqu'à chez vous. Comptez environ 7 à 15 jours ouvrés au total.",
          it: "Tutto viene stampato su ordinazione e spedito dalla Cina con YunExpress o 4PX, tracciato fino a casa. In totale servono circa 7–15 giorni lavorativi." } },
-  { id: "contact", tags: ["contact", "email", "phone", "person", "联系", "电话", "邮箱", "kontakt"],
+  { id: "contact", tags: ["contact", "email", "phone", "person", "联系", "联系方式", "怎么联系", "如何联系", "联系你们", "电话", "邮箱", "kontakt"],
     q: { en: "How can I contact a person?", zh: "怎么联系人工客服？", de: "Wie erreiche ich einen Menschen?" },
     a: { en: "Just ask here for a person and leave your e-mail — I pass the chat to our team, who reply within 24 hours (Mon–Fri).",
          zh: "直接在这里说“转人工”并留下邮箱，我会把对话转给团队，他们会在 24 小时内（周一至周五）回复。",

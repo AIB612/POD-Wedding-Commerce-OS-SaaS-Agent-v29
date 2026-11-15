@@ -10,7 +10,7 @@ export const ABUSE_RE =
   /\b(schei(ss|ß)e?|arschl[öo]ch(er)?|idiot(en|s)?|betr[üu]ger(n)?|abzocke(r)?|merde|connards?|arnaques?|escrocs?|stronz[oi]|vaffanculo|truff[ae]|truffatori|fuck(ing)?|scam(mer)?s?|bullshit)\b/i;
 // Customer explicitly asks for a person (EN / DE / FR / IT / ZH).
 export const HUMAN_RE =
-  /(\b(human|real person|a person|someone real|agent please|customer service|support team|talk to (a|an|your) (person|human|team|agent)|speak (to|with) (a|an|someone|your)|mensch|mitarbeiter|kundendienst|personne|conseiller|operatore|persona reale)\b|人工|真人|客服|转人工|找人|联系你们)/i;
+  /(\b(human|real person|a person|someone real|agent please|customer service|support team|talk to (a|an|your) (person|human|team|agent)|speak (to|with) (a|an|someone|your)|mensch|mitarbeiter|kundendienst|personne|conseiller|operatore|persona reale)\b|人工|真人|客服|转人工|找人|(?<!怎么|如何|怎样|怎麼)联系你们)/i;
 export const REFUND_RE = /(\b(refund|money back|r[üu]ckerstattung|geld zur[üu]ck|rembourse|rimborso)\b|退款|退钱)/i;
 export const ANGRY_RE = /(!!!|\b(furious|unacceptable|worst|disgusting|w[üu]tend|inakzeptabel)\b|太差|气死|愤怒|非常不满|忍无可忍)/i;
 // Prompt injection / role override attempts: answered with a polite refusal, never forwarded to the model.
