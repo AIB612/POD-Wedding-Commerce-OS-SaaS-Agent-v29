@@ -45,6 +45,14 @@ export async function shopFactsFor(shop) {
 
 const STOP = new Set("the and you your for can how what are with does from this that ich sie und der die das wie was ist ein eine have has do is my me i a an to of in on it please bitte".split(" "));
 const terms = q => String(q || "").toLowerCase().match(/[\p{L}\p{N}]{2,}/gu)?.filter(t => !STOP.has(t)) || [];
+/** Quote a shop policy; adds a note in the shopper's language when the policy is written in another language. */
+export function quotePolicy(text, { lang = "en", type = null, url = "", max } = {}) {
+  const body = max ? cut(text, max) : cut(text);
+  const src = detectLanguage(String(text || "").slice(0, 600), "en");
+  if (src === lang) return body + (url ? `\n${url}` : "");
+  const name = type ? (POLICY_NAME[type]?.[lang] || POLICY_NAME[type]?.en) : "";
+  return `${t("policyIntro", lang)(name, LANG_NAME[lang]?.[src] || src)}\n${body}${url ? `\n${t("policyLink", lang)} ${url}` : ""}`;
+}
 const policyDocs = facts => facts.policies.map(p => ({ id: `policy_${p.type}`, tags: (POLICY_TAGS[p.type] || "").split(" "), question: p.title, answer: p.text, url: p.url }));
 export function rankKnowledge(facts, custom, query, lang = "en", limit = 3) {
   const docs = [...normaliseCustom(custom).map(d => ({ id: d.id, custom: true, tags: d.tags, question: d.q[lang] || d.q.en, answer: d.a[lang] || d.a.en })), ...policyDocs(facts)];
@@ -81,7 +89,7 @@ const PRODUCT_Q = `query($q: String!, $first: Int!, $sort: ProductSortKeys!, $re
   priceRangeV2 { minVariantPrice { amount currencyCode } maxVariantPrice { amount currencyCode } } collections(first: 3) { nodes { title } }
   variants(first: 5) { nodes { id title price availableForSale } } metafields(first: 5) { nodes { namespace key value type } } } } }`;
 // Product wording (synonyms, singular/plural, "what do you sell") lives in the shared layer used by both chats.
-import { BROWSE_RE, productTerms } from "../shared/lang-terms.js";
+import { BROWSE_RE, productTerms, detectLanguage } from "../shared/lang-terms.js";
 export { BROWSE_RE, productTerms };
 export async function searchShopProducts(shop, query, { browse = false } = {}) {
   const ts = browse ? [] : productTerms(query);
@@ -180,6 +188,16 @@ const TX = {
   chips: { en: ["Where is my order?", "Shipping", "Returns"], de: ["Wo ist meine Bestellung?", "Versand", "Rückgabe"], fr: ["Où est ma commande ?", "Livraison", "Retours"], zh: ["我的订单在哪", "运费", "退货"] }
 };
 
+// Policy quoted from the shop: when the policy text is in another language than the shopper's, say so in the shopper's language
+// (the original wording stays authoritative; Pro plans with an LLM summarise it in the shopper's language on the model path).
+const LANG_NAME = { en: { en: "English", de: "German", fr: "French", it: "Italian", zh: "Chinese" }, de: { en: "Englisch", de: "Deutsch", fr: "Französisch", it: "Italienisch", zh: "Chinesisch" },
+  fr: { en: "anglais", de: "allemand", fr: "français", it: "italien", zh: "chinois" }, it: { en: "inglese", de: "tedesco", fr: "francese", it: "italiano", zh: "cinese" }, zh: { en: "英文", de: "德文", fr: "法文", it: "意大利文", zh: "中文" } };
+TX.policyIntro = {
+  en: (name, l) => `Here is the shop's ${name || "policy"} (original in ${l}):`, de: (name, l) => `Hier die ${name || "Richtlinie"} des Shops (Original auf ${l}):`,
+  fr: (name, l) => `Voici la ${name || "politique"} de la boutique (original en ${l}) :`, zh: (name, l) => `以下是本店的${name || "政策"}（原文为${l}）：`,
+  it: (name, l) => `Ecco la ${name || "politica"} del negozio (originale in ${l}):` };
+TX.policyLink = { en: "Full text:", de: "Vollständiger Text:", fr: "Texte complet :", it: "Testo completo:", zh: "完整内容：" };
+
 // Italian replies (Pod.AI answers in the customer's language; FR is inline above)
 const TX_IT = {
   greet: n => `Ciao! Sono l'assistente di ${n}. Posso aiutarla con ordini, spedizioni, resi e prodotti.`,
@@ -229,6 +247,8 @@ function orderText(o, lang) {
   const st = o.cancelled ? "cancelled" : String(o.fulfillment || "").toLowerCase().replace(/_/g, " ");
   if (lang === "zh") return `订单 ${o.name}：${st}（付款：${String(o.payment || "").toLowerCase()}）。商品：${items}。${tr ? `物流：${tr}` : "暂无物流单号。"}`;
   if (lang === "de") return `Bestellung ${o.name}: ${st} (Zahlung: ${String(o.payment || "").toLowerCase()}). Artikel: ${items}. ${tr ? `Sendungsverfolgung: ${tr}` : "Noch keine Sendungsnummer."}`;
+  if (lang === "fr") return `Commande ${o.name} : ${st} (paiement : ${String(o.payment || "").toLowerCase()}). Articles : ${items}. ${tr ? `Suivi : ${tr}` : "Pas encore de numéro de suivi."}`;
+  if (lang === "it") return `Ordine ${o.name}: ${st} (pagamento: ${String(o.payment || "").toLowerCase()}). Articoli: ${items}. ${tr ? `Tracciamento: ${tr}` : "Nessun numero di tracciamento ancora."}`;
   return `Order ${o.name}: ${st} (payment: ${String(o.payment || "").toLowerCase()}). Items: ${items}. ${tr ? `Tracking: ${tr}` : "No tracking number yet."}`;
 }
 
@@ -240,7 +260,7 @@ export function makeProfile(shop) {
     facts,
     async searchKnowledge(_tenant, query, lang, { custom = [], limit = 3 } = {}) { return rankKnowledge(await facts(), custom, query, lang, limit); },
     systemPrompt({ facts: f, lang }) {
-      return `You are the customer-service assistant of the online shop "${f.shop_name}" (Shopify). Answer in the customer's language (${lang}). Be short and friendly.
+      return `You are the customer-service assistant of the online shop "${f.shop_name}" (Shopify). Answer in the customer's language (${lang}). Be short and friendly. When a shop policy is written in another language, summarise it in the customer's language, say that the original is in that language and give its link.
 Use ONLY the tools and the shop's policies for facts: order status needs order number + e-mail (find_order); product info comes from search_products; policies from get_policy / search_knowledge.
 Never invent prices, delivery dates, discounts or order data. Shipping costs are calculated at checkout. If you cannot help, offer handoff_to_human. Never ask for card numbers or passwords.`;
     },
@@ -350,17 +370,17 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
       }
       const type = INTENT_POLICY[intent];
       const kb = rankKnowledge(f, settings.custom_faq, text, lang, 1)[0];
-      if (kb && (kb.custom || !type || kb.id === `policy_${type}`)) return cut(kb.answer) + (intent === "shipping_quote" ? `\n\n${t("shipCheckout", lang)}` : "") + (kb.url ? `\n${kb.url}` : "");
+      if (kb && (kb.custom || !type || kb.id === `policy_${type}`)) return (kb.custom ? cut(kb.answer) + (kb.url ? `\n${kb.url}` : "") : quotePolicy(kb.answer, { lang, type: kb.id.replace(/^policy_/, ""), url: kb.url })) + (intent === "shipping_quote" ? `\n\n${t("shipCheckout", lang)}` : "");
       if (type) {
         const p = f.policies.find(x => x.type === type);
-        if (p) return cut(p.text) + (intent === "shipping_quote" ? `\n\n${t("shipCheckout", lang)}` : "") + (p.url ? `\n${p.url}` : "");
+        if (p) return quotePolicy(p.text, { lang, type, url: p.url }) + (intent === "shipping_quote" ? `\n\n${t("shipCheckout", lang)}` : "");
         if (intent === "shipping_quote") return t("shipCheckout", lang);
         if (intent === "contact_info" && f.email) return f.email;
         // no published policy: say so, give what the shop does publish (shipping policy / contact) and offer a person
         const ship = type !== "SHIPPING_POLICY" ? f.policies.find(x => x.type === "SHIPPING_POLICY") : null;
         const contact = f.policies.find(x => x.type === "CONTACT_INFORMATION");
         const parts = [t("noPolicyFor", lang)(POLICY_NAME[type]?.[lang] || POLICY_NAME[type]?.en || "")];
-        if (ship) parts.push(`${t("shipInfo", lang)} ${cut(ship.text, 300)}${ship.url ? ` ${ship.url}` : ""}`);
+        if (ship) parts.push(`${t("shipInfo", lang)} ${quotePolicy(ship.text, { lang, type: "SHIPPING_POLICY", url: ship.url, max: 300 })}`);
         if (f.email) parts.push(t("mailUs", lang)(f.email)); else if (contact) parts.push(cut(contact.text, 300));
         parts.push(t("offerTeam", lang));
         ctx.ui.push(human); return parts.join("\n\n");
