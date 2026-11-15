@@ -7,6 +7,7 @@ import { studioCatalog } from "../../services/studio-service.js";
 import { getFees, carrierDays, pricesIncludeVat } from "../../services/fees-service.js";
 import { paymentMethods } from "../../services/checkout-service.js";
 import { FAQ_FR_IT, dynamicFrIt } from "./i18n-fr-it.js";
+import { BM25 } from "../../shared/local-rag.js";
 
 const FAQ = [
   { id: "what_we_sell", tags: ["products", "sell", "offer", "range", "什么", "卖", "产品", "sortiment", "angebot"],
@@ -54,6 +55,13 @@ const FAQ = [
     a: { en: "Many paper products use FSC or recycled paper (e.g. recycled kraft); all items are made to order and shipped from China via YunExpress or 4PX. Look for the Eco label on the product list.",
          zh: "许多纸品使用 FSC 认证纸或再生纸（如再生牛皮纸）；所有商品按单定制，通过云途或递四方从中国发货。产品列表中带 Eco 标识的即为环保款。",
          de: "Viele Papierprodukte nutzen FSC- oder Recyclingpapier; alle Artikel werden auf Bestellung gefertigt und mit YunExpress oder 4PX aus China versandt. Achten Sie auf das Eco-Label." } },
+  { id: "ships_from", tags: ["from", "where", "china", "made", "produced", "printed", "warehouse", "origin", "发货", "哪里", "中国", "生产", "woher", "herkunft", "produziert", "provenance", "provenienza"],
+    q: { en: "Where do you ship from?", zh: "从哪里发货？", de: "Von wo wird versendet?", fr: "D'où expédiez-vous ?", it: "Da dove spedite?" },
+    a: { en: "Everything is printed to order and ships from China with YunExpress or 4PX, tracked to your door. Delivery takes about 7–15 business days in total.",
+         zh: "所有商品按单印制，由云途（YunExpress）或递四方（4PX）从中国发货，全程可追踪。总共大约 7–15 个工作日送达。",
+         de: "Alles wird auf Bestellung gedruckt und mit YunExpress oder 4PX aus China versandt – mit Sendungsverfolgung bis zur Haustür. Insgesamt dauert die Lieferung etwa 7–15 Werktage.",
+         fr: "Tout est imprimé à la commande et expédié depuis la Chine par YunExpress ou 4PX, avec suivi jusqu'à chez vous. Comptez environ 7 à 15 jours ouvrés au total.",
+         it: "Tutto viene stampato su ordinazione e spedito dalla Cina con YunExpress o 4PX, tracciato fino a casa. In totale servono circa 7–15 giorni lavorativi." } },
   { id: "contact", tags: ["contact", "email", "phone", "person", "联系", "电话", "邮箱", "kontakt"],
     q: { en: "How can I contact a person?", zh: "怎么联系人工客服？", de: "Wie erreiche ich einen Menschen?" },
     a: { en: "Just ask here for a person and leave your e-mail — I pass the chat to our team, who reply within 24 hours (Mon–Fri).",
@@ -63,6 +71,9 @@ const FAQ = [
 
 // French / Italian answers (same entries, merged in so FR / IT shoppers are answered in their language).
 for (const e of FAQ) { const x = FAQ_FR_IT[e.id]; if (x) { Object.assign(e.q, x.q); Object.assign(e.a, x.a); } }
+// The public support address (also on the imprint page) so shoppers can always reach a person.
+{ const c = FAQ.find(e => e.id === "contact"), add = { en: " You can also e-mail us at support@swisspro.site.", zh: "也可以发邮件至 support@swisspro.site。", de: " Oder schreiben Sie an support@swisspro.site.", fr: " Vous pouvez aussi écrire à support@swisspro.site.", it: " Può anche scriverci a support@swisspro.site." };
+  for (const l of Object.keys(c.a)) if (!c.a[l].includes("support@")) c.a[l] += add[l] || add.en; }
 
 const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
 const fmtDays = ([a, b]) => (a === b ? `${a}` : `${a}–${b}`);
@@ -116,9 +127,9 @@ function dynamicEntriesBase(f) {
              : { en: "Product prices are shown excluding VAT; VAT for your delivery country (e.g. 8.1% in Switzerland) is added at checkout.", zh: "商品价格不含增值税；结账时按收货国家加收增值税（如瑞士 8.1%）。", de: "Produktpreise verstehen sich exkl. MwSt.; die MwSt. Ihres Lieferlandes (z. B. 8,1 % in der Schweiz) wird an der Kasse addiert." } },
     { id: "payment", tags: ["pay", "payment", "twint", "paypal", "paiement", "pagamento", "payer", "pagare", "card", "credit", "付款", "支付", "信用卡", "zahlung", "bezahlen", "karte"],
       q: { en: "Which payment methods do you accept?", zh: "支持哪些付款方式？", de: "Welche Zahlungsarten gibt es?" },
-      a: { en: `We accept ${f.payment_methods.join(", ")}. Payment happens only in our secure checkout — never send card details in the chat.`,
-           zh: `支持 ${f.payment_methods.join("、")}。付款只在安全结账页面完成，请勿在对话中发送卡号。`,
-           de: `Wir akzeptieren ${f.payment_methods.join(", ")}. Bezahlt wird nur an der sicheren Kasse – senden Sie keine Kartendaten im Chat.` } },
+      a: { en: `We accept ${f.payment_methods.join(", ")} — you can pay by card through PayPal, even without a PayPal account. Payment happens only in our secure checkout — never send card details in the chat.`,
+           zh: `支持 ${f.payment_methods.map(m => m.replace(" (incl. cards)", "（含银行卡）")).join("、")}，没有 PayPal 账户也可以通过 PayPal 用银行卡付款。付款只在安全结账页面完成，请勿在对话中发送卡号。`,
+           de: `Wir akzeptieren ${f.payment_methods.map(m => m.replace("(incl. cards)", "(inkl. Karten)")).join(", ")} – Kartenzahlung über PayPal geht auch ohne PayPal-Konto. Bezahlt wird nur an der sicheren Kasse – senden Sie keine Kartendaten im Chat.` } },
     { id: "free_shipping", tags: ["free", "shipping", "免运费", "包邮", "免费", "versandkostenfrei", "gratis"],
       q: { en: "Is there free shipping?", zh: "有包邮吗？", de: "Gibt es kostenlosen Versand?" },
       a: (free.CHF || free.EUR) ? { en: `Standard shipping is free from ${[free.CHF ? `CHF ${free.CHF.toFixed(2)} in Switzerland` : "", free.EUR ? `EUR ${free.EUR.toFixed(2)} to Germany` : ""].filter(Boolean).join(" and ")} (merchandise subtotal). Express is always charged.`,
@@ -146,13 +157,18 @@ export function normaliseCustom(list = []) {
     tags: String(x.tags || "").toLowerCase().split(/[,;\s]+/).filter(Boolean), q: { [x.lang || "en"]: x.question, en: x.question }, a: { [x.lang || "en"]: x.answer, en: x.answer } }));
 }
 export async function allEntries(tenantId, custom = []) { return [...normaliseCustom(custom), ...dynamicEntries(await shopFacts(tenantId)), ...FAQ]; }
+/**
+ * Ranked knowledge hits (BM25 over questions + tags in every language, answers weighted lower; typo tolerant).
+ * Each hit: { id, question, answer (shopper's language, English fallback), score (≈0–6, ≥ 2 = confident), norm (0–1) }.
+ */
 export async function searchKnowledge(tenantId, query, lang = "en", { limit = 3, custom = [] } = {}) {
-  const docs = await allEntries(tenantId, custom), ts = terms(query).filter(t => !STOP.has(t));
-  return docs.map(d => {
-    const hay = [d.tags.join(" "), ...Object.values(d.q)].join(" ").toLowerCase();
-    const score = ts.reduce((s, t) => s + (hay.includes(t) ? (d.tags.includes(t) ? 2 : 1) : 0), 0);
-    return { id: d.id, question: d.q[lang] || d.q.en, answer: d.a[lang] || d.a.en, score: score + (d.custom && score ? 1 : 0), ...(d.custom ? { custom: true } : {}) };
-  }).filter(d => d.score > 0).sort((a, b) => b.score - a.score).slice(0, limit);
+  const docs = await allEntries(tenantId, custom);
+  const index = new BM25(docs.map(d => ({ id: d.id, entry: d, fields: { q: Object.values(d.q).join(" "), tags: d.tags.join(" "), a: Object.values(d.a).join(" ") } })), { weights: { q: 3, tags: 3, a: 0.6 } });
+  return index.search(query, { limit: limit + 2 }).map(h => {
+    const d = h.doc.entry, coverage = h.terms ? h.matched / h.terms : 0;
+    const score = Math.round((h.norm * 4 + coverage * 2 + (d.custom && h.norm > 0.2 ? 1 : 0)) * 100) / 100;
+    return { id: d.id, question: d.q[lang] || d.q.en, answer: d.a[lang] || d.a.en, score, norm: Math.round(h.norm * 100) / 100, ...(d.custom ? { custom: true } : {}) };
+  }).filter(h => h.score >= 1).sort((a, b) => b.score - a.score).slice(0, limit);
 }
 export async function knowledgeEntry(tenantId, id, lang = "en") {
   const facts = await shopFacts(tenantId), d = [...dynamicEntries(facts), ...FAQ].find(x => x.id === id);

@@ -1,87 +1,15 @@
 // Pod.AI copy of the POD.AI Agent engine (server/pod-agent/customer). Pod.AI-only: edit here, never the site agent.
-// Multi-provider LLM call. Returns {text, configured}. When no provider is configured the caller
-// can fall back to its own demo behaviour instead of showing a configuration message to customers.
-const TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 30_000);
+// Multi-provider LLM call. Returns {text, configured}. Local-only by default: a provider is used only when
+// LLM_ENABLED=true and its API key variable is set (see server/shared/llm-providers.js for all providers and env names).
+// When it is off the caller falls back to its own local behaviour; no network request is made.
+import { llmConfig, complete } from "../../shared/llm-providers.js";
 
-async function jsonFetch(url, options) {
-  const r = await fetch(url, { ...options, signal: AbortSignal.timeout(TIMEOUT_MS) });
-  if (!r.ok) throw new Error(`${r.status} ${(await r.text()).slice(0, 500)}`);
-  return r.json();
-}
+/** Active provider id ("openai", "xai", "anthropic", "gemini", "deepseek", "qwen", "mistral", "custom") or null. */
+export function llmProvider() { const c = llmConfig(); return c.enabled ? c.provider : null; }
 
-export function llmProvider() {
-  const provider = (process.env.LLM_PROVIDER || "openai").toLowerCase();
-  const ok = {
-    openai: process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL,
-    chatgpt: process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL,
-    anthropic: process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_MODEL,
-    gemini: process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL,
-    deepseek: process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_MODEL,
-    grok: process.env.XAI_API_KEY && process.env.XAI_MODEL,
-    xai: process.env.XAI_API_KEY && process.env.XAI_MODEL
-  }[provider];
-  return ok ? provider : null;
-}
-
-export const DEMO_MESSAGE = "后端已进入演示模式：请在 .env 中配置 OpenAI、Anthropic、Gemini、DeepSeek 或 Grok 的 API Key 和模型名。";
+export const DEMO_MESSAGE = "后端已进入本地模式：如需大模型，请在 .env 中设置 LLM_ENABLED=true 以及所选提供商的 API Key（例如 OPENAI_API_KEY、XAI_API_KEY、ANTHROPIC_API_KEY、GEMINI_API_KEY、DEEPSEEK_API_KEY、DASHSCOPE_API_KEY、MISTRAL_API_KEY 或 LLM_BASE_URL+LLM_API_KEY）。";
 
 export async function callLLM({ system, user }) {
-  const provider = llmProvider();
-
-  if (provider === "openai") {
-    const data = await jsonFetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: process.env.OPENAI_MODEL, input: [{ role: "system", content: system }, { role: "user", content: user }] })
-    });
-    return { configured: true, text: data.output_text || data.output?.flatMap(x => x.content || []).map(x => x.text || "").join("") || "已处理。" };
-  }
-
-  if (provider === "anthropic") {
-    const data = await jsonFetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
-      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL, max_tokens: 1200, system, messages: [{ role: "user", content: user }] })
-    });
-    return { configured: true, text: (data.content || []).map(x => x.text || "").join("") || "已处理。" };
-  }
-
-  if (provider === "gemini") {
-    const model = encodeURIComponent(process.env.GEMINI_MODEL);
-    const data = await jsonFetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
-      body: JSON.stringify({ system_instruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts: [{ text: user }] }] })
-    });
-    return { configured: true, text: data.candidates?.[0]?.content?.parts?.map(x => x.text || "").join("") || "已处理。" };
-  }
-
-  if (provider === "deepseek") {
-    const data = await jsonFetch("https://api.deepseek.com/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: process.env.DEEPSEEK_MODEL || "deepseek-chat", messages: [{ role: "system", content: system }, { role: "user", content: user }] })
-    });
-    return { configured: true, text: data.choices?.[0]?.message?.content || "已处理。" };
-  }
-
-  if (provider === "grok" || provider === "xai") {
-    const data = await jsonFetch("https://api.x.ai/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.XAI_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: process.env.XAI_MODEL || "grok-4.7", messages: [{ role: "system", content: system }, { role: "user", content: user }] })
-    });
-    return { configured: true, text: data.choices?.[0]?.message?.content || "已处理。" };
-  }
-
-  if (provider === "chatgpt") {
-    const data = await jsonFetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: process.env.OPENAI_MODEL || "gpt-4o", messages: [{ role: "system", content: system }, { role: "user", content: user }] })
-    });
-    return { configured: true, text: data.choices?.[0]?.message?.content || "已处理。" };
-  }
-
-  return { configured: false, text: DEMO_MESSAGE };
+  const r = await complete({ system, user });
+  return r.configured ? { configured: true, text: r.text || "OK" } : { configured: false, text: DEMO_MESSAGE };
 }

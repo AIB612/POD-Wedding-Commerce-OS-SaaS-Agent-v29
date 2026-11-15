@@ -3,7 +3,7 @@
 //  ① validate + redact  ② conversation (agent_conversations)  ③ per-chat rate limit  ④ injection / payment-data refusal
 //  ⑤ handed-off chats stay with the team  ⑥ classify (rules; LLM classifier only on the LLM path)  ⑦ guardrails → handoff queue
 //  ⑧ route (router.js): local rule engine + shop data first; LLM only for complex / unmatched questions when a key exists  ⑨ store + stats (answered_by)
-import { classifyRules, detectLanguage } from "./nlu.js";
+import { classifyRules, detectLanguage, fixTypos } from "./nlu.js";
 import { HUMAN_RE, handoffCheck, holdingMessage, errorMessage, injectionMessage, paymentDataMessage, INJECTION_RE, containsPaymentData, redact } from "./guardrails.js";
 import { getSettings, findOrCreateConversation, saveConversation, recentUserMessages, createHandoff, appendToHandoff, handoffStillOpen } from "./store.js";
 import { llmStatus, runToolLoop, chatJson, answerOpenQuestion } from "./llm.js";
@@ -141,7 +141,9 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
   if (INJECTION_RE.test(text)) return finish(injectionMessage(lang), { intent: "injection", guardrail: "prompt_injection", answered_by: "local", route: { path: "local", reason: "guardrail", confidence: 1 } });
 
   // ⑤ already with the team → add the message to the handoff, AI stays quiet
-  const cls = classifyRules(text, { hint: lang });
+  const typo = fixTypos(text);
+  const cls = classifyRules(typo.text, { hint: lang });
+  if (typo.fixes.length) { const raw = classifyRules(text, { hint: lang }); Object.assign(cls, { email: raw.email, order_number: raw.order_number, tracking_number: raw.tracking_number, typo_fixes: typo.fixes }); }
   const withTeam = await handoffStillOpen(conv);
   if (withTeam && BACK_RE.test(text) && !conv.over_limit) { conv.status = "open"; return finish(L("aiBack", lang), { intent: "back_to_ai", answered_by: "local", route: { path: "local", reason: "back_to_ai", confidence: 1 } }); }
   // an e-mail only message while with the team → reply address for the handoff

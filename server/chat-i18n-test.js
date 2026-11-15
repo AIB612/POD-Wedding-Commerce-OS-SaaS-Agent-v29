@@ -31,7 +31,7 @@ try {
   r = await ask("Combien de temps prend la livraison ?", "fr"); assert.equal(r.language, "fr"); assert.match(r.answer, /jours ouvrables/);
   r = await ask("Quanto costa la spedizione in Svizzera per 10 inviti?", "it"); assert.match(r.answer, /verso la Svizzera/);
   result.fr_it_de = "pass";
-  for (const [q, l, re] of [["Do you sell sofas?", "en", /we don't carry sofas/], ["Avete divani?", "it", /non vendiamo divani/], ["Vendez-vous des canapés ?", "fr", /ne proposons pas de canapés/], ["Habt ihr Sofas?", "de", /führen wir keine Sofas/], ["你们有沙发吗", "zh", /不提供沙发/]]) {
+  for (const [q, l, re] of [["Do you sell sofas?", "en", /we don't sell sofas/], ["Avete divani?", "it", /non vendiamo divani/], ["Vendez-vous des canapés ?", "fr", /ne vendons pas de canapés/], ["Habt ihr Sofas?", "de", /führen wir keine Sofas/], ["你们有沙发吗", "zh", /不卖沙发/]]) {
     r = await ask(q, l); assert.equal(r.intent, "unknown_product", q); assert.match(r.answer, re, q);
   }
   r = await ask("Do you sell mugs?"); assert.equal(r.intent, "product_question", "mugs are in the catalogue"); assert.match(r.answer, /mug/i);

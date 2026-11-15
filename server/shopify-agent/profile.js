@@ -11,6 +11,7 @@ import { graphql, tenantFor } from "./core.js";
 import { logAccess } from "./security/access-log.js";
 import { createHandoff } from "./engine/store.js";
 import { trackParcel } from "./tracking.js";
+import { BM25, pickSentences } from "../shared/local-rag.js";
 
 /** Merchant FAQ rows (embedded admin → Knowledge) → search shape. */
 function normaliseCustom(list = []) {
@@ -19,8 +20,8 @@ function normaliseCustom(list = []) {
 }
 
 const strip = h => String(h || "").replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
-const POLICY_TAGS = { SHIPPING_POLICY: "shipping delivery versand livraison 运费 配送 发货 customs", REFUND_POLICY: "return returns refund exchange rückgabe retoure umtausch retour 退货 退款 换货",
-  CONTACT_INFORMATION: "contact email phone address kontakt 联系", PRIVACY_POLICY: "privacy data datenschutz 隐私", TERMS_OF_SERVICE: "terms conditions agb 条款", SUBSCRIPTION_POLICY: "subscription abo 订阅", LEGAL_NOTICE: "impressum legal notice" };
+const POLICY_TAGS = { SHIPPING_POLICY: "shipping ship delivery deliver arrive long versand lieferung lieferzeit livraison expédition délai spedizione consegna tempi 运费 配送 发货 多久 customs zoll douane dogana", REFUND_POLICY: "return returns refund exchange money back rückgabe zurückgeben retoure umtausch erstattung retour retourner remboursement échange reso restituire rimborso cambio 退货 退款 换货",
+  CONTACT_INFORMATION: "contact email phone address reach kontakt erreichen telefon contacter joindre contatto contattare telefono 联系 电话 邮箱", PRIVACY_POLICY: "privacy data datenschutz 隐私", TERMS_OF_SERVICE: "terms conditions agb 条款", SUBSCRIPTION_POLICY: "subscription abo 订阅", LEGAL_NOTICE: "impressum legal notice" };
 const POLICY_NAME = { REFUND_POLICY: { en: "return / refund policy", de: "Rückgabe-/Erstattungsrichtlinie", fr: "politique de retour", it: "politica di reso", zh: "退换货政策" },
   SHIPPING_POLICY: { en: "shipping policy", de: "Versandrichtlinie", fr: "politique d'expédition", it: "politica di spedizione", zh: "配送政策" },
   CONTACT_INFORMATION: { en: "contact page", de: "Kontaktseite", fr: "page de contact", it: "pagina contatti", zh: "联系方式" } };
@@ -46,20 +47,29 @@ export async function shopFactsFor(shop) {
 const STOP = new Set("the and you your for can how what are with does from this that ich sie und der die das wie was ist ein eine have has do is my me i a an to of in on it please bitte".split(" "));
 const terms = q => String(q || "").toLowerCase().match(/[\p{L}\p{N}]{2,}/gu)?.filter(t => !STOP.has(t)) || [];
 /** Quote a shop policy; adds a note in the shopper's language when the policy is written in another language. */
-export function quotePolicy(text, { lang = "en", type = null, url = "", max } = {}) {
-  const body = max ? cut(text, max) : cut(text);
+export function quotePolicy(text, { lang = "en", type = null, url = "", max, query = "" } = {}) {
+  // With the shopper's question: the 2–3 sentences of the policy that answer it (not the first 700 characters).
+  const focused = query && String(text || "").length > 280 ? pickSentences(String(text), query, { max: 3 }) : String(text || "");
+  const body = max ? cut(focused, max) : cut(focused);
   const src = detectLanguage(String(text || "").slice(0, 600), "en");
   if (src === lang) return body + (url ? `\n${url}` : "");
   const name = type ? (POLICY_NAME[type]?.[lang] || POLICY_NAME[type]?.en) : "";
   return `${t("policyIntro", lang)(name, LANG_NAME[lang]?.[src] || src)}\n${body}${url ? `\n${t("policyLink", lang)} ${url}` : ""}`;
 }
 const policyDocs = facts => facts.policies.map(p => ({ id: `policy_${p.type}`, tags: (POLICY_TAGS[p.type] || "").split(" "), question: p.title, answer: p.text, url: p.url }));
+/**
+ * Merchant FAQ + shop policies ranked with BM25 (multilingual stemming, CJK bigrams, typo tolerance).
+ * score ≈ 0–6 (≥ 1 kept; the caller uses the best hit); custom answers get +1 so the merchant's own words win ties.
+ */
 export function rankKnowledge(facts, custom, query, lang = "en", limit = 3) {
-  const docs = [...normaliseCustom(custom).map(d => ({ id: d.id, custom: true, tags: d.tags, question: d.q[lang] || d.q.en, answer: d.a[lang] || d.a.en })), ...policyDocs(facts)];
-  const ts = terms(query);
-  return docs.map(d => { const hay = `${d.tags.join(" ")} ${d.question}`.toLowerCase(), body = d.answer.toLowerCase();
-    const score = ts.reduce((s, t) => s + (d.tags.includes(t) ? 2 : hay.includes(t) ? 1.5 : body.includes(t) ? 0.5 : 0), 0);
-    return { ...d, score: score + (d.custom && score ? 1 : 0) }; }).filter(d => d.score >= 1).sort((a, b) => b.score - a.score).slice(0, limit);
+  const docs = [...normaliseCustom(custom).map(d => ({ id: d.id, custom: true, tags: d.tags, question: d.q[lang] || d.q.en, answer: d.a[lang] || d.a.en, allQ: Object.values(d.q).join(" "), allA: Object.values(d.a).join(" ") })), ...policyDocs(facts)];
+  if (!docs.length) return [];
+  const index = new BM25(docs.map(d => ({ id: d.id, d, fields: { tags: d.tags.join(" "), q: d.allQ || d.question, a: String(d.allA || d.answer).slice(0, 4000) } })), { weights: { tags: 3, q: 3, a: 0.5 } });
+  return index.search(query, { limit: limit + 2 }).map(h => {
+    const cov = h.terms ? h.matched / h.terms : 0, d = h.doc.d;
+    const score = Math.round((h.norm * 4 + cov * 2 + (d.custom && h.norm > 0.15 ? 1 : 0)) * 100) / 100;
+    const { allQ, allA, ...rest } = d; return { ...rest, score };
+  }).filter(d => d.score >= 1).sort((a, b) => b.score - a.score).slice(0, limit);
 }
 
 // ---- order lookup: e-mail must match, same answer for "no order" and "wrong e-mail", 5 failures → 15 min lock per order ----
@@ -370,10 +380,10 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
       }
       const type = INTENT_POLICY[intent];
       const kb = rankKnowledge(f, settings.custom_faq, text, lang, 1)[0];
-      if (kb && (kb.custom || !type || kb.id === `policy_${type}`)) return (kb.custom ? cut(kb.answer) + (kb.url ? `\n${kb.url}` : "") : quotePolicy(kb.answer, { lang, type: kb.id.replace(/^policy_/, ""), url: kb.url })) + (intent === "shipping_quote" ? `\n\n${t("shipCheckout", lang)}` : "");
+      if (kb && (kb.custom || !type || kb.id === `policy_${type}`)) return (kb.custom ? cut(kb.answer) + (kb.url ? `\n${kb.url}` : "") : quotePolicy(kb.answer, { lang, type: kb.id.replace(/^policy_/, ""), url: kb.url, query: text })) + (intent === "shipping_quote" ? `\n\n${t("shipCheckout", lang)}` : "");
       if (type) {
         const p = f.policies.find(x => x.type === type);
-        if (p) return quotePolicy(p.text, { lang, type, url: p.url }) + (intent === "shipping_quote" ? `\n\n${t("shipCheckout", lang)}` : "");
+        if (p) return quotePolicy(p.text, { lang, type, url: p.url, query: text }) + (intent === "shipping_quote" ? `\n\n${t("shipCheckout", lang)}` : "");
         if (intent === "shipping_quote") return t("shipCheckout", lang);
         if (intent === "contact_info" && f.email) return f.email;
         // no published policy: say so, give what the shop does publish (shipping policy / contact) and offer a person

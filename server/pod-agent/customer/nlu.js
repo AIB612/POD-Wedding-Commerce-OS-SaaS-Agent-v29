@@ -139,7 +139,7 @@ export function extractTracking(text) {
 
 // ---- Intents ----
 const RX = {
-  greeting: /^\s*(hi|hello|hey|hallo|grüezi|gruezi|servus|bonjour|salut|ciao|buongiorno|你好|您好|嗨|哈喽|good (morning|afternoon|evening))\b[\s!.,?]*$/i,
+  greeting: /^\s*(hi|hello|hey|hallo|hoi|grüezi|gruezi|servus|moin|bonjour|bonsoir|salut|coucou|ciao|salve|buongiorno|buonasera|你好|您好|嗨|哈喽|早上好|晚上好|good (morning|afternoon|evening))(?![\p{L}])[\s!.,?！。，]*(there|everyone|all|guys|team|folks|zusammen|miteinander|tout le monde|à tous|a tutti|呀|啊)?[\s!.,?！。]*$/iu,
   shipping: /(shipping|ship|postage|delivery (cost|fee|price)|send .* to|versand|porto|lieferkosten|livraison|frais de port|spedizione|运费|邮费|快递费|寄到|寄往|发到|送到|配送费)/i,
   cost: /(cost|costs|price|how much|fee|kosten|kostet|preis|wie viel|wieviel|combien|prix|quanto|costo|多少钱|多少|价格|价钱|费用|报价|几块|贵)/i,
   time: /(how long|when will|arrive|delivery time|lead time|how many days|wie lange|lieferzeit|wann|combien de temps|quanto tempo|多久|几天|多长时间|什么时候|到货|送达|时效)/i,
@@ -147,7 +147,7 @@ const RX = {
   tracking: /(track|tracking|parcel|package|shipment|sendung|paket|colis|suivi|pacco|物流|快递|运单|包裹|追踪|跟踪)/i,
   recommend: /(recommend|suggest|idea|ideas|what should|which product|best for|gift for|favou?rs?|empfehl|vorschlag|idee|conseill|suggér|consigli|推荐|建议|送什么|买什么|有什么好|伴手礼|回礼|适合)/i,
   discount: /(discount|coupon|promo|voucher|code|sale|cheaper|rabatt|gutschein|aktion|réduction|code promo|sconto|优惠|折扣|打折|优惠码|便宜|满减)/i,
-  returns: /(return|exchange|withdraw|defect|damaged|broken|wrong item|retour|rückgabe|umtausch|defekt|beschädigt|retourner|reso|退货|换货|退换|破损|坏了|发错)/i,
+  returns: /(return|refund|money back|exchange|withdraw|erstattung|zurückgeben|geld zurück|remboursement|rimborso|restituire|退款|defect|damaged|broken|wrong item|retour|rückgabe|umtausch|defekt|beschädigt|retourner|reso|退货|换货|退换|破损|坏了|发错)/i,
   cancel: /(cancel|change my order|modify|stornieren|ändern|annuler|modifier|annullare|取消|修改订单|改订单)/i,
   payment: /(pay|payment|twint|paypal|credit card|zahl|bezahl|paiement|pagamento|付款|支付|怎么付)/i,
   proof: /(proof|mockup|approve|korrektur|abzug|freigabe|épreuve|bozza|效果图|样稿|样图|确认图)/i,
@@ -156,8 +156,45 @@ const RX = {
   customs: /(customs|duty|duties|zoll|douane|dogana|关税|清关)/i,
   material: /(material|paper|finish|papier|matériau|carta|材质|纸|面料)/i,
   browse: BROWSE_RE,
-  thanks: /^\s*(thanks?|thank you|danke|merci|grazie|谢谢|多谢|thx)\b[\s!.]*$/i
+  thanks: /^\s*(thanks?( a lot| so much| very much)?|thank you( so much| very much)?|many thanks|cheers|perfect,? thanks?|danke( schön| sehr| vielmals)?|vielen dank|merci( beaucoup| bien)?|grazie( mille)?|谢谢(你|您)?|多谢|非常感谢|thx|ty)(?![\p{L}])[\s!.。！]*$/iu,
+  attr: /(\bsizes?\b|größen?|grössen?|\btailles?\b|\btaglie?\b|尺码|尺寸|码数|\bcolou?rs?\b|\bfarben?\b|couleurs?|\bcolori?\b|颜色|\bmaterials?\b|\bfabric\b|\bstoff\b|tissu|tessuto|材质|面料|made of|aus was|en quoi|di che|print(ing)? (method|technique)|druckverfahren|technique d.impression|tecnica di stampa|印刷工艺)/i,
+  eco: /(eco|sustainab|organic|recycl|green|nachhaltig|bio\b|umweltfreundlich|écolo|durable|ecologic|sostenibil|环保|有机|可持续)/i,
+  shipFrom: /(ship(ped|ping)? from|where .*(ship|sent|made|produced|printed) from|where (are|is) (it|they|your products?) (made|produced|printed)|von wo|woher|wo wird .* (produziert|gedruckt|hergestellt)|d.où|expédi\w* depuis|da dove|spedit\w* da|从哪里发货|哪里发货|从哪发|在哪生产|哪里生产)/i,
+  plan: /((what|which) .{0,30}(do i need|should i (get|order|prepare))|was brauche ich|welche .{0,25}brauche ich|de quoi ai-je besoin|qu.est-ce qu.il faut|cosa mi serve|di cosa ho bisogno|需要准备|要准备哪些|需要哪些)/i,
 };
+/** "你们卖手机吗" / "有沙发吗" → "手机" (null for generic words like 什么 / 东西). */
+function zhAsked(t) {
+  const m = String(t).match(/(?:你们|您们|这里|店里)?(?:卖|有|做)(?:没有)?([\u4e00-\u9fff]{1,6}?)(?:吗|么|嘛|不)[?？]?\s*$/);
+  if (!m || /什么|哪些|啥|东西|产品|商品|些/.test(m[1])) return null;
+  return m[1];
+}
+
+/** Which product attribute a question is about: sizes | colors | material | technique | eco, or null. */
+export function attrKind(text) {
+  const t = String(text || "");
+  if (/(\bsizes?\b|größen?|grössen?|\btailles?\b|\btaglie?\b|尺码|尺寸|码数|\bwhich size)/i.test(t)) return "sizes";
+  if (/(\bcolou?rs?\b|\bfarben?\b|couleurs?|\bcolori?\b|颜色)/i.test(t) || COLOR_RE.test(t)) return "colors";
+  if (/(print(ing)? (method|technique)|druckverfahren|technique d.impression|tecnica di stampa|印刷工艺|how (is it|are they) printed)/i.test(t)) return "technique";
+  if (/(\bmaterials?\b|\bfabric\b|\bstoff\b|tissu|tessuto|材质|面料|made of|aus was|en quoi|di che)/i.test(t)) return "material";
+  return null;
+}
+const COLOR_RE = /\b(blue|navy|blau|bleu|blu|green|grün|vert|verde|pink|rosa|rose|red|rot|rouge|rosso|white|weiss|weiß|blanc|bianco|black|schwarz|noir|nero|gr[ae]y|grau|gris|grigio|beige|brown|braun|yellow|gelb|jaune|giallo|purple|lila|viola)\b|蓝色|绿色|粉色|红色|白色|黑色|灰色|黄色|紫色/i;
+export { COLOR_RE };
+
+// ---- Typo tolerance: words that are 1–2 edits away from a catalogue / intent word are corrected before classification ----
+import { buildVocab, correctTypos } from "../../shared/local-rag.js";
+const INTENT_WORDS = "shipping delivery deliver delivered arrive invitation invitations wedding price prices cost costs order orders tracking track parcel package return returns refund exchange payment paypal discount coupon recommend suggest favours favors guests proof mockup website customs duties sizes colours colors material materials stationery sample samples eco organic recycled contact person human cancel change "
+  + "versand lieferung lieferzeit einladung einladungen hochzeit preis kosten kostet bestellung sendung paket rückgabe zahlung rabatt gutschein empfehlen gastgeschenke korrektur vorschau grössen größen farben tasse tassen menükarten platzkarten "
+  + "livraison invitation mariage commande colis retour paiement réduction recommander cadeaux épreuve tailles couleurs "
+  + "spedizione consegna inviti matrimonio prezzo ordine pacco reso pagamento sconto consigliare bomboniere bozza taglie colori magliette";
+let VOCAB = null;
+export function typoVocab() {
+  if (VOCAB) return VOCAB;
+  return (VOCAB = buildVocab([INTENT_WORDS, ...aliases().map(a => a.alias)]));
+}
+/** Text with obvious typos fixed ("invitatons" → "invitations", "shiping" → "shipping", "tase" → "tasse"). */
+export function fixTypos(text) { return correctTypos(text, typoVocab()); }
+
 /** Classification in the POD Agent router shape (intent, language, emotion…) plus extracted entities. */
 export function classifyRules(text, { hint = "en" } = {}) {
   const t = String(text || "");
@@ -169,19 +206,25 @@ export function classifyRules(text, { hint = "en" } = {}) {
   let intent = "other";
   if (RX.thanks.test(t)) intent = "thanks";
   else if (RX.greeting.test(t)) intent = "greeting";
+  else if (!e.order_number && RX.cancel.test(t)) intent = "cancel_or_change";
   else if (e.order_number || (RX.order.test(t) && !RX.shipping.test(t))) intent = "order_status";
   else if (e.tracking_number || (RX.tracking.test(t) && !RX.cost.test(t) && !RX.time.test(t))) intent = "tracking";
+  else if (RX.shipFrom.test(t)) intent = "ships_from";
   else if (RX.shipping.test(t) && (RX.cost.test(t) || e.country || /^\s*(shipping|versand|运费)/i.test(t)) && !RX.time.test(t)) intent = "shipping_quote";
   else if (RX.returns.test(t)) intent = "return_request";
   else if (RX.cancel.test(t)) intent = "cancel_or_change";
+  else if (e.products.length && e.quantity && RX.discount.test(t) && !/\b(code|coupon|promo|gutschein)\b|优惠码/i.test(t)) intent = "price";
   else if (RX.discount.test(t)) intent = "discount";
   else if (RX.time.test(t)) intent = "delivery_time";
-  else if (RX.recommend.test(t)) intent = "recommendation";
+  else if (RX.recommend.test(t) || RX.plan.test(t)) intent = "recommendation";
   else if (RX.customs.test(t)) intent = "customs";
   else if (RX.vat.test(t)) intent = "vat";
   else if (RX.payment.test(t)) intent = "payment";
   else if (RX.proof.test(t)) intent = "proof";
   else if (RX.website.test(t)) intent = "website";
+  else if (!e.products.length && (e.asked_product = zhAsked(t)) && !looksLikeCatalog(e.asked_product)) intent = "unknown_product";
+  else if (!e.products.length && RX.eco.test(t) && /(product|item|material|paper|produkt|produit|prodott|产品|材料|纸|friendly|freundlich)/i.test(t)) intent = "eco";
+  else if (RX.attr.test(t) && (e.products.length || t.trim().split(/\s+/).length <= 4 || (/[\u4e00-\u9fff]/.test(t) && t.trim().length <= 10)) && (e.attr = attrKind(t))) intent = "product_attr";
   else if (!e.products.length && RX.browse.test(t)) intent = "browse";
   else if (!e.products.length && (e.asked_product = askedProduct(t)) && !RX.material.test(t) && !looksLikeCatalog(e.asked_product)) intent = "unknown_product";
   else if (e.products.length && (RX.cost.test(t) || e.quantity)) intent = "price";

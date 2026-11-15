@@ -806,6 +806,8 @@ const K={
 'hc.design':{zh:'去定制',en:'Personalise',de:'Gestalten'},'hc.standard':{zh:'标准',en:'Standard',de:'Standard'},'hc.express':{zh:'快递',en:'Express',de:'Express'},'hc.free':{zh:'免费',en:'Free',de:'Kostenlos'},
 'hc.subtotal':{zh:'商品小计',en:'Items',de:'Artikel'},'hc.arrives':{zh:'预计送达',en:'Arrives',de:'Ankunft'},'hc.vatEx':{zh:'不含增值税，结账时添加',en:'excl. VAT, added at checkout',de:'exkl. MwSt., an der Kasse addiert'},'hc.vatIn':{zh:'含增值税',en:'incl. VAT',de:'inkl. MwSt.'},
 'hc.track':{zh:'查看物流',en:'Track parcel',de:'Sendung verfolgen'},'hc.order':{zh:'订单',en:'Order',de:'Bestellung'},
+'hc.retry':{zh:'重试',en:'Try again',de:'Erneut versuchen'},
+'hc.offline':{zh:'您似乎已离线，请检查网络后重试。',en:'You seem to be offline — check your connection and try again.',de:'Sie scheinen offline zu sein – bitte Verbindung prüfen und erneut versuchen.'},
 'pay.delivery':{en:'Estimated delivery'},
 'acct.so.title':{en:'Sign in to your account'},
 'acct.so.text':{en:'See your orders, saved designs and addresses. One tap, no password.'}

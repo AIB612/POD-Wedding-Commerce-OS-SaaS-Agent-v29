@@ -8,6 +8,10 @@ const studioCatalog = () => ({ products: [] });
 const CJK = /[\u3400-\u9fff]/;
 // Language detection is shared with the site chat (server/shared/lang-terms.js).
 import { detectLanguage } from "../../shared/lang-terms.js";
+import { buildVocab, correctTypos, SHOP_WORDS } from "../../shared/local-rag.js";
+const SHOP_VOCAB = buildVocab([SHOP_WORDS]);
+/** Obvious typos fixed before intent detection ("shiping" → "shipping", "refnd" → "refund"). No shop data involved. */
+export function fixTypos(text) { return correctTypos(text, SHOP_VOCAB); }
 export { detectLanguage };
 
 // ---- Countries (names in EN / DE / FR / IT / ZH → ISO-2) ----
@@ -138,7 +142,7 @@ const RX = {
   tracking: /(track|tracking|parcel|package|shipment|sendung|paket|colis|suivi|pacco|物流|快递|运单|包裹|追踪|跟踪)/i,
   recommend: /(recommend|suggest|idea|ideas|what should|which product|best for|gift for|favou?rs?|empfehl|vorschlag|idee|conseill|suggér|consigli|推荐|建议|送什么|买什么|有什么好|伴手礼|回礼|适合)/i,
   discount: /(discount|coupon|promo|voucher|code|sale|cheaper|rabatt|gutschein|aktion|réduction|code promo|sconto|优惠|折扣|打折|优惠码|便宜|满减)/i,
-  returns: /(return|exchange|withdraw|defect|damaged|broken|wrong item|retour|rückgabe|umtausch|defekt|beschädigt|retourner|reso|退货|换货|退换|破损|坏了|发错)/i,
+  returns: /(return|refund|money back|exchange|withdraw|erstattung|zurückgeben|geld zurück|remboursement|rimborso|restituire|退款|defect|damaged|broken|wrong item|retour|rückgabe|umtausch|defekt|beschädigt|retourner|reso|退货|换货|退换|破损|坏了|发错)/i,
   cancel: /(cancel|change my order|modify|stornieren|ändern|annuler|modifier|annullare|取消|修改订单|改订单)/i,
   payment: /(pay|payment|twint|paypal|credit card|zahl|bezahl|paiement|pagamento|付款|支付|怎么付)/i,
   proof: /(proof|mockup|approve|korrektur|abzug|freigabe|épreuve|bozza|效果图|样稿|样图|确认图)/i,

@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wcos-podagent-"));
-for (const k of ["LLM_PROVIDER", "OPENAI_API_KEY", "OPENAI_MODEL", "XAI_API_KEY", "XAI_MODEL", "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"]) delete process.env[k];
+for (const k of ["LLM_ENABLED", "LLM_PROVIDER", "OPENAI_API_KEY", "OPENAI_MODEL", "XAI_API_KEY", "XAI_MODEL", "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"]) delete process.env[k];
 Object.assign(process.env, { NODE_ENV: "test", ADMIN_API_KEY: "k", RATE_LIMIT_DISABLED: "true", STORE_PERSIST_PATH: path.join(tmp, "state.json"), APP_ENCRYPTION_KEY: "z".repeat(40) });
 const { createApp } = await import("./create-app.js");
 const { quoteStorefront } = await import("./services/checkout-service.js");
@@ -127,7 +127,7 @@ try {
     assert.equal((await call(p)).status, 401, p); assert.equal((await call(p, { admin: true })).status, 200, p);
   }
   const ov = (await call("/api/saas/agent/overview", { admin: true })).json;
-  assert.deepEqual(ov.kpis.map(k => k.id), KPI_IDS); assert.equal(ov.kpis.find(k => k.id === "answered_local").value, 100); assert.equal(ov.kpis.find(k => k.id === "answered_llm").value, 0); assert.ok(Object.keys(ov.routes).some(k => k.startsWith("local · shop_data"))); assert.ok(ov.llm.missing.includes("OPENAI_API_KEY"));
+  assert.deepEqual(ov.kpis.map(k => k.id), KPI_IDS); assert.equal(ov.kpis.find(k => k.id === "answered_local").value, 100); assert.equal(ov.kpis.find(k => k.id === "answered_llm").value, 0); assert.ok(Object.keys(ov.routes).some(k => k.startsWith("local · shop_data"))); assert.ok(ov.llm.missing.includes("LLM_ENABLED"));
   assert.equal(ov.kpis.find(k => k.id === "satisfaction").value, 100);
   a = await call("/api/saas/agent/knowledge", { method: "POST", body: { question: "Do you print on velvet?", answer: "Not yet — velvet invitations are coming in spring." }, admin: true }); assert.equal(a.status, 200);
   r = await chat("Do you print on velvet?"); assert.match(r.json.answer, /velvet invitations are coming/);
@@ -137,7 +137,7 @@ try {
   result.admin = "auth + KPIs + knowledge";
 
   // LLM tool loop (mocked provider): the model calls our quote tool and its numbers come from our data.
-  Object.assign(process.env, { LLM_PROVIDER: "xai", XAI_API_KEY: "test-key", XAI_MODEL: "test-model" });
+  Object.assign(process.env, { LLM_ENABLED: "true", LLM_PROVIDER: "xai", XAI_API_KEY: "test-key", XAI_MODEL: "test-model" });
   let calls = 0, sawTool = null;
   globalThis.fetch = async (url, opts) => {
     if (!String(url).startsWith("https://api.x.ai/")) return realFetch(url, opts);

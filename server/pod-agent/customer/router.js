@@ -4,9 +4,9 @@
 // Without a key the customer gets the best rule-based answer plus an offer to talk to a person.
 
 /** Intents answered from live shop data: local unless open-ended; numbers and order data never come from a model (it must call our tools). */
-export const DATA_INTENTS = new Set(["shipping_quote", "price", "order_status", "tracking", "discount", "recommendation", "greeting", "thanks", "browse", "unknown_product"]);
+export const DATA_INTENTS = new Set(["shipping_quote", "price", "order_status", "tracking", "discount", "recommendation", "greeting", "thanks", "browse", "unknown_product", "product_attr"]);
 /** Policy / FAQ intents with fixed answers from our knowledge base. Local unless the question is clearly open-ended. */
-export const FAQ_INTENTS = new Set(["return_request", "cancel_or_change", "delivery_time", "customs", "vat", "payment", "proof", "website", "product_question", "contact_info"]);
+export const FAQ_INTENTS = new Set(["return_request", "cancel_or_change", "delivery_time", "customs", "vat", "payment", "proof", "website", "product_question", "contact_info", "eco", "ships_from"]);
 export const CONFIDENCE_THRESHOLD = 0.6;
 
 const OPEN_RE = /(\bwhy\b|\bexplain\b|\bcompare\b|difference between|\bversus\b|\bvs\.?\b|what do you think|your opinion|advice|ideas? for|inspiration|help me (write|choose|plan|decide)|wording|write (a|me|my)|text for|\bpoem\b|\btheme\b|colou?r (scheme|palette)|which (one )?(is|would be) better|should i|\bwarum\b|erkl[äa]r|unterschied|vergleich|pourquoi|diff[ée]rence|perch[ée]|为什么|区别|比较|怎么选|哪个更好|建议|帮我写|文案|措辞|设计思路|搭配|主题|灵感|意见)/i;
