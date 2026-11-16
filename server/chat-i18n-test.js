@@ -44,10 +44,20 @@ try {
   }
   r = await ask("my card is 4111 1111 1111 1111"); assert.ok(!/TWINT/.test(r.answer));
   const http = await import("node:http");
-  const getHost = (p, host) => new Promise((ok, ko) => http.get({ host: "127.0.0.1", port: server.address().port, path: p, headers: { Host: host } }, res => { let b = ""; res.on("data", c => (b += c)); res.on("end", () => ok({ status: res.statusCode, body: b })); }).on("error", ko));
+  const getHost = (p, host) => new Promise((ok, ko) => http.get({ host: "127.0.0.1", port: server.address().port, path: p, headers: { Host: host } }, res => { let b = ""; res.on("data", c => (b += c)); res.on("end", () => ok({ status: res.statusCode, headers: res.headers, body: b })); }).on("error", ko));
   for (const host of ["pod.swisspro.site", "podai.swisspro.site"]) {
     const llms = await getHost("/llms.txt", host); assert.equal(llms.status, 200, host); assert.ok(llms.body.length > 200, host);
     assert.ok(!/TWINT/i.test(llms.body) || methods.twint.configured, `${host}/llms.txt must not claim TWINT`); assert.ok(!/51tracking/i.test(llms.body), `${host}/llms.txt must not mention 51Tracking`);
+  }
+  // Pod.AI pages indexed on pod before the podai split → 301 to podai (clean URL); wedding legal pages stay on pod; sitemap URLs are all 200.
+  for (const [p, to] of [["/support", "/support"], ["/docs", "/support"], ["/security.html", "/security"], ["/dpa", "/dpa"]]) {
+    const r2 = await getHost(p, "pod.swisspro.site"); assert.equal(r2.status, 301, p); assert.equal(r2.headers.location, "https://podai.swisspro.site" + to, p);
+    assert.equal((await getHost(p, "podai.swisspro.site")).status, 200, "podai " + p);
+  }
+  for (const p of ["/privacy", "/terms"]) assert.equal((await getHost(p, "pod.swisspro.site")).status, 200, p);
+  for (const host of ["pod.swisspro.site", "podai.swisspro.site"]) {
+    const sm = await getHost("/sitemap.xml", host);
+    for (const loc of sm.body.match(/<loc>[^<]+/g).map(x => x.slice(5))) { const u = new URL(loc); assert.equal(u.host, host, loc); assert.equal((await getHost(u.pathname, host)).status, 200, loc); }
   }
   result.payment_methods = "pass";
 } finally { server.close(); fs.rmSync(tmp, { recursive: true, force: true }); }

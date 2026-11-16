@@ -117,6 +117,12 @@ export function publicRouter({ root, generatedDir }) {
   router.get(["/support", "/support.html", "/docs", "/docs.html"], sendPodPage("support.html"));
   router.get(["/security", "/security.html"], sendPodPage("security.html"));
   router.get(["/dpa", "/dpa.html"], sendPodPage("dpa.html"));
+  // Before the podai split (f09ff00) these Pod.AI pages lived on pod.swisspro.site and were indexed there; the wedding
+  // site never had them, so they 404'd on pod. Permanently redirect to the Pod.AI host (clean URL). /privacy and /terms
+  // stay the wedding site's own legal pages on pod.
+  const PODAI_MOVED = { "/support": "/support", "/support.html": "/support", "/docs": "/support", "/docs.html": "/support",
+    "/security": "/security", "/security.html": "/security", "/dpa": "/dpa", "/dpa.html": "/dpa", "/llms-full.txt": "/llms-full.txt" };
+  router.get(Object.keys(PODAI_MOVED), (req, res, next) => podSiteHost(req) ? res.redirect(301, PODAI_ORIGIN + PODAI_MOVED[req.path]) : next("route"));
 
   const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/admin/login": "admin-login.html", "/admin-login.html": "admin-login.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html", "/shipping": "shipping.html", "/shipping.html": "shipping.html", "/returns": "returns.html", "/returns.html": "returns.html", "/imprint": "imprint.html", "/imprint.html": "imprint.html", "/impressum": "imprint.html", "/agent.html": "agent.html", "/agent": "agent.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
