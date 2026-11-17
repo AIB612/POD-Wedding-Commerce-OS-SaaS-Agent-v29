@@ -263,15 +263,26 @@ function orderText(o, lang) {
   return `Order ${o.name}: ${st} (payment: ${String(o.payment || "").toLowerCase()}). Items: ${items}. ${tr ? `Tracking: ${tr}` : "No tracking number yet."}`;
 }
 
-/** Build the handleChat profile for a verified shop. */
-export function makeProfile(shop) {
-  const facts = () => shopFactsFor(shop);
+const PROMO = { en: (c, s) => `Yes — use code ${c}${s ? ` (${s})` : ""}. I can apply it to your cart for you.`, de: (c, s) => `Ja – mit dem Code ${c}${s ? ` (${s})` : ""}. Ich kann ihn direkt in Ihrem Warenkorb einlösen.`,
+  fr: (c, s) => `Oui — utilisez le code ${c}${s ? ` (${s})` : ""}. Je peux l'appliquer à votre panier.`, it: (c, s) => `Sì — usa il codice ${c}${s ? ` (${s})` : ""}. Posso applicarlo al tuo carrello.`, zh: (c, s) => `有的——优惠码 ${c}${s ? `（${s}）` : ""}。我可以直接帮你用到购物车里。` };
+/** Shopify data source of a profile: the shop's Admin GraphQL API (default). */
+export const shopifyData = shop => ({ platform: "Shopify", facts: () => shopFactsFor(shop), searchProducts: (q, o) => searchShopProducts(shop, q, o),
+  findOrder: a => findShopOrder(shop, a), shippingRates: c => shippingRates(shop, c), checkDiscount: c => checkDiscount(shop, c), liveTracking: true, adminUrl: `https://${shop}/admin/apps` });
+/**
+ * Build the handleChat profile. `data` is the store's data source — Shopify by default; the WooCommerce channel
+ * (server/woo-agent) passes its own { platform, facts, searchProducts, findOrder, shippingRates, checkDiscount, liveTracking, adminUrl }.
+ * Everything else (local RAG, recommendations, policies, order replies, tickets) is shared.
+ */
+export function makeProfile(shop, data = shopifyData(shop)) {
+  const facts = () => data.facts();
   return {
     shop,
+    platform: data.platform,
+    adminUrl: data.adminUrl,
     facts,
     async searchKnowledge(_tenant, query, lang, { custom = [], limit = 3 } = {}) { return rankKnowledge(await facts(), custom, query, lang, limit); },
     systemPrompt({ facts: f, lang }) {
-      return `You are the customer-service assistant of the online shop "${f.shop_name}" (Shopify). Answer in the customer's language (${lang}). Be short and friendly. When a shop policy is written in another language, summarise it in the customer's language, say that the original is in that language and give its link.
+      return `You are the customer-service assistant of the online shop "${f.shop_name}" (${data.platform || "Shopify"}). Answer in the customer's language (${lang}). Be short and friendly. When a shop policy is written in another language, summarise it in the customer's language, say that the original is in that language and give its link.
 Use ONLY the tools and the shop's policies for facts: order status needs order number + e-mail (find_order); product info comes from search_products; policies from get_policy / search_knowledge.
 Never invent prices, delivery dates, discounts or order data. Shipping costs are calculated at checkout. If you cannot help, offer handoff_to_human. Never ask for card numbers or passwords.`;
     },
@@ -281,14 +292,14 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
         async search_knowledge({ query }) { return { ok: true, results: rankKnowledge(await facts(), settings.custom_faq, query, lang).map(h => ({ question: h.question, answer: cut(h.answer, 1200) })) }; },
         async get_policy({ topic }) { const f = await facts(), type = { shipping: "SHIPPING_POLICY", returns: "REFUND_POLICY", refund: "REFUND_POLICY", contact: "CONTACT_INFORMATION", privacy: "PRIVACY_POLICY", terms: "TERMS_OF_SERVICE" }[topic] || topic;
           const p = f.policies.find(x => x.type === type); return p ? { ok: true, title: p.title, text: cut(p.text, 1500), url: p.url } : { ok: false, error: "policy_not_set" }; },
-        async search_products({ query, browse = false }) { const r = await searchShopProducts(shop, query, { browse: browse || BROWSE_RE.test(String(query || "")) || !String(query || "").trim() }); if (r.ok && r.products.length) ctx.ui.push({ type: "products", items: r.products }); return r; },
+        async search_products({ query, browse = false }) { const r = await data.searchProducts(query, { browse: browse || BROWSE_RE.test(String(query || "")) || !String(query || "").trim() }); if (r.ok && r.products.length) ctx.ui.push({ type: "products", items: r.products }); return r; },
         async find_order({ order_number, email }) {
-          const r = await findShopOrder(shop, { order_number: order_number || conv.slots?.order_number, email: email || conv.slots?.email });
+          const r = await data.findOrder({ order_number: order_number || conv.slots?.order_number, email: email || conv.slots?.email });
           if (r.ok) {
             conv.slots.order_number = r.order.name;
             // live tracking: carrier API (YunExpress / 4PX) → 51Tracking → Shopify tracking link
             r.order.tracking = await Promise.all(r.order.tracking.filter(x => x.number).slice(0, 3).map(async x => {
-              const t = await trackParcel({ number: x.number, company: x.company, url: x.url, lang }).catch(() => null);
+              const t = data.liveTracking === false ? null : await trackParcel({ number: x.number, company: x.company, url: x.url, lang }).catch(() => null);
               return t ? { ...x, company: t.carrier || x.company, url: t.url || x.url, source: t.source, status: t.status, status_text: t.status_text, last_event: t.last_event, events: t.events.slice(0, 8) } : x;
             }));
             ctx.ui.push({ type: "order", order: r.order });
@@ -296,8 +307,8 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
           }
           return r;
         },
-        async quote_shipping({ country }) { const r = await shippingRates(shop, country || conv.slots?.country || ctx.countryHint); if (r.ok && r.ships) ctx.ui.push({ type: "shipping", country: r.country, rates: r.rates }); return r; },
-        async check_discount_code({ code }) { return checkDiscount(shop, code); },
+        async quote_shipping({ country }) { const r = await data.shippingRates(country || conv.slots?.country || ctx.countryHint); if (r.ok && r.ships) ctx.ui.push({ type: "shipping", country: r.country, rates: r.rates }); return r; },
+        async check_discount_code({ code }) { return data.checkDiscount(code); },
         async handoff_to_human({ reason = "customer_request", summary = "" }) { const h = await createHandoff(tenantId, conv, { reason, summary }); ctx.handoff = h.reason; return { ok: true, handoff_id: h.id }; }
       };
       const fn = (name, description, properties = {}, required = []) => ({ type: "function", function: { name, description, parameters: { type: "object", properties, required } } });
@@ -330,8 +341,10 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
       // Product recommendation (engine/reco.js): needs → 2–4 real shop products with a reason; refinements of the last picks.
       const codeish = /\b(code|coupon|promo|gutschein|rabattcode)\b|优惠码|折扣码/i.test(text);
       const follow = isFollowUp(text, conv.slots.reco, conv) && !["order_status", "tracking", "shipping_quote", "greeting", "thanks", "return_request", "refund_request"].includes(intent) && !(intent === "discount" && codeish);
+      // the merchant's own FAQ wins over a recommendation when it answers the question almost word for word ("Do you offer gift wrapping?")
+      if (!follow && !m.order_number && settings.custom_faq?.length && !["order_status", "tracking"].includes(intent)) { const own = rankKnowledge(f, settings.custom_faq, text, lang, 1)[0]; if (own?.custom && own.score >= 5) return cut(own.answer) + (own.url ? `\n${own.url}` : ""); }
       if (follow || intent === "recommendation" || (["price", "product_question", "other"].includes(intent) && wantsReco(text, intent) && !m.order_number)) {
-        const out = await podaiRecommend(ctx, m, text, { search: (q, o) => searchShopProducts(shop, q, o), follow });
+        const out = await podaiRecommend(ctx, m, text, { search: (q, o) => data.searchProducts(q, o), follow });
         if (out) { ctx.toolLog.push({ name: "recommend_products", ok: true }); conv.tools.recommend_products = (conv.tools.recommend_products || 0) + 1; if (ctx.ui.some(u => u.type === "products")) taxNote(ctx, f, lang); return out; }
       }
       switch (intent) {
@@ -368,7 +381,11 @@ Never invent prices, delivery dates, discounts or order data. Shipping costs are
         case "discount": {
           // a code is a token the customer wrote in capitals or with digits (e.g. ALPS10, summer25)
           const code = (text.match(/[A-Za-z0-9][A-Za-z0-9_-]{3,39}/g) || []).find(w => /\d/.test(w) || (w === w.toUpperCase() && /[A-Z]/.test(w)));
-          if (!code) return t("askCode", lang);
+          if (!code) { // optional public promo (WooCommerce "visible coupon"): offer it + a one-click "apply" in the widget
+            const promo = data.promo ? await data.promo().catch(() => null) : null;
+            if (promo?.code) { ctx.ui.push({ type: "coupon", code: promo.code, summary: promo.summary || "" }); return (PROMO[lang] || PROMO.en)(promo.code, promo.summary || ""); }
+            return t("askCode", lang);
+          }
           const r = await tools.execute("check_discount_code", { code });
           if (!r.ok) break;
           return r.valid ? t("codeOk", lang)(r.code, r.summary) : t("codeBad", lang)(r.code);

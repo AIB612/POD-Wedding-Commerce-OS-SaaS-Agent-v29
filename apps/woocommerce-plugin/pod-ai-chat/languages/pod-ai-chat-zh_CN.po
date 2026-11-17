@@ -1,0 +1,370 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Pod.AI Chat for WooCommerce 1.0.0\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Domain: pod-ai-chat\n"
+
+#. Plugin Name of the plugin
+#: pod-ai-chat.php
+msgid "Pod.AI Chat for WooCommerce"
+msgstr "Pod.AI Chat for WooCommerce"
+
+#. Plugin URI of the plugin
+#. Author URI of the plugin
+#: pod-ai-chat.php
+msgid "https://podai.swisspro.site/"
+msgstr "https://podai.swisspro.site/"
+
+#. Description of the plugin
+#: pod-ai-chat.php
+msgid "AI shopping assistant for WooCommerce: answers from your store's own data (products, policies, shipping), recommends in-stock products and adds them to the cart, looks up orders and tracking, and turns \"contact us\" into tickets."
+msgstr "WooCommerce 的 AI 购物助手：用店铺自己的数据（商品、政策、运费）回答顾客，推荐有货商品并加入购物车，查询订单和物流，并把“联系我们”变成工单。"
+
+#. Author of the plugin
+#: pod-ai-chat.php
+msgid "Pod.AI"
+msgstr "Pod.AI"
+
+#: includes/class-podai-chat-admin.php:38
+#: includes/class-podai-chat-admin.php:48
+msgid "Settings"
+msgstr "设置"
+
+#: includes/class-podai-chat-admin.php:47
+#: includes/class-podai-chat-admin.php:260
+msgid "Pod.AI Chat"
+msgstr "Pod.AI 聊天"
+
+#: includes/class-podai-chat-admin.php:49
+msgid "Tickets"
+msgstr "工单"
+
+#: includes/class-podai-chat-admin.php:113
+msgid "Saved, but Pod.AI could not be updated:"
+msgstr "已保存，但未能同步到 Pod.AI："
+
+#: includes/class-podai-chat-admin.php:124
+msgid "Sorry, you are not allowed to do that."
+msgstr "抱歉，你没有权限执行此操作。"
+
+#: includes/class-podai-chat-admin.php:220
+msgid "Connected to Pod.AI. Your products were synced and the chat is live on your store."
+msgstr "已连接 Pod.AI。商品已同步，聊天窗口已在店铺上线。"
+
+#: includes/class-podai-chat-admin.php:221
+msgid "Could not connect to Pod.AI:"
+msgstr "无法连接 Pod.AI："
+
+#: includes/class-podai-chat-admin.php:222
+msgid "Disconnected. Your store data at Pod.AI was deleted."
+msgstr "已断开连接，Pod.AI 上的店铺数据已删除。"
+
+#. translators: %d: number of products.
+#: includes/class-podai-chat-admin.php:224
+#, php-format
+msgid "Sync finished: %d products sent."
+msgstr "同步完成：已发送 %d 个商品。"
+
+#: includes/class-podai-chat-admin.php:225
+msgid "Sync failed:"
+msgstr "同步失败："
+
+#: includes/class-podai-chat-admin.php:226
+msgid "Ticket updated."
+msgstr "工单已更新。"
+
+#: includes/class-podai-chat-admin.php:227
+msgid "The ticket could not be updated."
+msgstr "工单更新失败。"
+
+#: includes/class-podai-chat-admin.php:245
+msgid "— None —"
+msgstr "— 无 —"
+
+#: includes/class-podai-chat-admin.php:266
+msgid "1. Connection"
+msgstr "1. 连接"
+
+#: includes/class-podai-chat-admin.php:269
+msgid "Connected"
+msgstr "已连接"
+
+#: includes/class-podai-chat-admin.php:269
+msgid "Site key:"
+msgstr "站点密钥 ID："
+
+#: includes/class-podai-chat-admin.php:273
+#: includes/class-podai-chat-admin.php:346
+msgid "Plan"
+msgstr "套餐"
+
+#. translators: 1: chats used, 2: monthly limit.
+#: includes/class-podai-chat-admin.php:275
+#, php-format
+msgid "%1$d / %2$d"
+msgstr "%1$d / %2$d"
+
+#. translators: 1: chats used, 2: monthly limit.
+#: includes/class-podai-chat-admin.php:275
+msgid "Chats this month"
+msgstr "本月对话数"
+
+#: includes/class-podai-chat-admin.php:276
+msgid "Products in stock / synced"
+msgstr "有货商品 / 已同步商品"
+
+#: includes/class-podai-chat-admin.php:277
+msgid "Last full sync"
+msgstr "上次全量同步"
+
+#: includes/class-podai-chat-admin.php:280
+#: includes/class-podai-chat-admin.php:372
+msgid "Pod.AI is not reachable right now."
+msgstr "暂时无法连接 Pod.AI。"
+
+#: includes/class-podai-chat-admin.php:285
+msgid "Sync products now"
+msgstr "立即同步商品"
+
+#: includes/class-podai-chat-admin.php:286
+msgid "Disconnect and delete this store's data at Pod.AI (tickets, chats, products)?"
+msgstr "断开连接并删除此店铺在 Pod.AI 的数据（工单、对话、商品）？"
+
+#: includes/class-podai-chat-admin.php:289
+msgid "Disconnect"
+msgstr "断开连接"
+
+#: includes/class-podai-chat-admin.php:292
+msgid "Connect your store to the Pod.AI service. Your site gets its own key; only public product data, your policies and settings are sent. Orders stay in WooCommerce and are only read when a shopper gives the order number and e-mail."
+msgstr "把店铺连接到 Pod.AI 服务。你的网站会获得独立密钥；只发送公开的商品数据、店铺政策和设置。订单留在 WooCommerce 中，只有顾客提供订单号和邮箱时才会读取。"
+
+#: includes/class-podai-chat-admin.php:296
+msgid "Pod.AI service URL"
+msgstr "Pod.AI 服务地址"
+
+#: includes/class-podai-chat-admin.php:297
+msgid "Connect to Pod.AI"
+msgstr "连接 Pod.AI"
+
+#: includes/class-podai-chat-admin.php:306
+msgid "2. Chat and tickets"
+msgstr "2. 聊天与工单"
+
+#: includes/class-podai-chat-admin.php:307
+msgid "Chat on the storefront"
+msgstr "店铺前台聊天"
+
+#: includes/class-podai-chat-admin.php:307
+msgid "Show the chat widget"
+msgstr "显示聊天窗口"
+
+#: includes/class-podai-chat-admin.php:308
+msgid "Ticket e-mail"
+msgstr "工单邮箱"
+
+#: includes/class-podai-chat-admin.php:308
+msgid "When a shopper clicks \"contact us\" and leaves an e-mail, a ticket is created and the chat transcript is sent here. Reply to that e-mail to answer the shopper."
+msgstr "顾客点击“联系我们”并留下邮箱后，会生成工单，聊天记录发送到这个邮箱。直接回复那封邮件即可回复顾客。"
+
+#: includes/class-podai-chat-admin.php:309
+msgid "Reply time (hours)"
+msgstr "回复时间（小时）"
+
+#: includes/class-podai-chat-admin.php:310
+msgid "Greeting"
+msgstr "欢迎语"
+
+#: includes/class-podai-chat-admin.php:310
+msgid "Hi! Ask me about products, shipping or your order."
+msgstr "你好！可以问我商品、运费或订单的问题。"
+
+#: includes/class-podai-chat-admin.php:313
+msgid "3. Widget"
+msgstr "3. 聊天窗口"
+
+#: includes/class-podai-chat-admin.php:314
+msgid "Colour"
+msgstr "颜色"
+
+#: includes/class-podai-chat-admin.php:315
+msgid "Position"
+msgstr "位置"
+
+#: includes/class-podai-chat-admin.php:315
+msgid "Bottom right"
+msgstr "右下角"
+
+#: includes/class-podai-chat-admin.php:315
+msgid "Bottom left"
+msgstr "左下角"
+
+#: includes/class-podai-chat-admin.php:317
+msgid "Automatic (shopper / store language)"
+msgstr "自动（顾客 / 店铺语言）"
+
+#: includes/class-podai-chat-admin.php:324
+msgid "Language"
+msgstr "语言"
+
+#: includes/class-podai-chat-admin.php:329
+msgid "Header title"
+msgstr "标题"
+
+#: includes/class-podai-chat-admin.php:332
+msgid "4. Knowledge"
+msgstr "4. 知识库"
+
+#: includes/class-podai-chat-admin.php:332
+msgid "The assistant answers from your refund/returns, terms and privacy pages, your shipping zones and the pages below. No external AI service is used."
+msgstr "助手根据你的退换货、条款、隐私页面、运费区域和下方页面回答，不使用任何外部 AI 服务。"
+
+#: includes/class-podai-chat-admin.php:333
+msgid "Shipping information page"
+msgstr "配送说明页面"
+
+#: includes/class-podai-chat-admin.php:335
+msgid "Contact page"
+msgstr "联系页面"
+
+#: includes/class-podai-chat-admin.php:338
+msgid "FAQ"
+msgstr "常见问题"
+
+#: includes/class-podai-chat-admin.php:338
+msgid "Do you offer gift wrapping?\nYes, gift wrapping is free — add a note at checkout.\n\nCan I pick up my order?\nYes, in our Zurich shop Mon–Sat."
+msgstr "可以礼品包装吗？\n可以，礼品包装免费——结账时备注即可。\n\n可以自提吗？\n可以，周一到周六在苏黎世门店自提。"
+
+#: includes/class-podai-chat-admin.php:338
+msgid "One question per block: first line = question, next lines = answer, blank line between blocks."
+msgstr "每个问题一段：第一行是问题，后面几行是答案，段与段之间空一行。"
+
+#: includes/class-podai-chat-admin.php:339
+msgid "Public coupon (optional)"
+msgstr "公开优惠码（可选）"
+
+#: includes/class-podai-chat-admin.php:339
+msgid "10% off your first order"
+msgstr "首单 9 折"
+
+#: includes/class-podai-chat-admin.php:339
+msgid "When a shopper asks for a discount, the chat offers this code and can apply it to their cart. Leave empty to never offer a code."
+msgstr "顾客询问折扣时，聊天会提供这个优惠码，并可以直接用到购物车。留空则不提供优惠码。"
+
+#: includes/class-podai-chat-admin.php:346
+msgid "5. Plan"
+msgstr "5. 套餐"
+
+#: includes/class-podai-chat-admin.php:346
+msgid "Chats / month"
+msgstr "每月对话数"
+
+#: includes/class-podai-chat-admin.php:346
+msgid "Price"
+msgstr "价格"
+
+#: includes/class-podai-chat-admin.php:348
+msgid "Free"
+msgstr "免费"
+
+#: includes/class-podai-chat-admin.php:348
+msgid "Current"
+msgstr "当前"
+
+#: includes/class-podai-chat-admin.php:350
+msgid "Paid plans are not on sale yet. Contact Pod.AI if you need more chats."
+msgstr "付费套餐暂未开放购买。如需更多对话次数，请联系 Pod.AI。"
+
+#: includes/class-podai-chat-admin.php:362
+msgid "Pod.AI tickets"
+msgstr "Pod.AI 工单"
+
+#: includes/class-podai-chat-admin.php:365
+msgid "Connect Pod.AI first (Pod.AI Chat → Settings)."
+msgstr "请先连接 Pod.AI（Pod.AI 聊天 → 设置）。"
+
+#: includes/class-podai-chat-admin.php:376
+msgid "All"
+msgstr "全部"
+
+#: includes/class-podai-chat-admin.php:377
+msgid "Open"
+msgstr "待处理"
+
+#: includes/class-podai-chat-admin.php:378
+msgid "Pending"
+msgstr "处理中"
+
+#: includes/class-podai-chat-admin.php:379
+msgid "Closed"
+msgstr "已关闭"
+
+#: includes/class-podai-chat-admin.php:386
+msgid "Ticket"
+msgstr "工单"
+
+#: includes/class-podai-chat-admin.php:386
+#: includes/class-podai-chat-admin.php:417
+msgid "Status"
+msgstr "状态"
+
+#: includes/class-podai-chat-admin.php:386
+#: includes/class-podai-chat-admin.php:403
+msgid "Customer"
+msgstr "顾客"
+
+#: includes/class-podai-chat-admin.php:386
+msgid "Order"
+msgstr "订单"
+
+#: includes/class-podai-chat-admin.php:386
+msgid "Reason"
+msgstr "原因"
+
+#: includes/class-podai-chat-admin.php:386
+msgid "Created"
+msgstr "创建时间"
+
+#: includes/class-podai-chat-admin.php:388
+msgid "No tickets yet."
+msgstr "还没有工单。"
+
+#: includes/class-podai-chat-admin.php:396
+msgid "(no e-mail yet)"
+msgstr "（尚未留邮箱）"
+
+#: includes/class-podai-chat-admin.php:401
+msgid "Chat transcript"
+msgstr "聊天记录"
+
+#: includes/class-podai-chat-admin.php:403
+msgid "Assistant"
+msgstr "助手"
+
+#: includes/class-podai-chat-admin.php:408
+msgid "Notes"
+msgstr "备注"
+
+#: includes/class-podai-chat-admin.php:421
+msgid "Add a note (internal)"
+msgstr "添加备注（内部）"
+
+#: includes/class-podai-chat-admin.php:423
+msgid "Reply by e-mail"
+msgstr "邮件回复"
+
+#: includes/class-podai-chat-admin.php:425
+msgid "Save ticket"
+msgstr "保存工单"
+
+#: includes/class-podai-chat-client.php:55
+#: includes/class-podai-chat-sync.php:161
+msgid "Pod.AI is not connected yet."
+msgstr "尚未连接 Pod.AI。"
+
+#: includes/class-podai-chat-plugin.php:69
+msgid "Pod.AI Chat needs WooCommerce to be installed and active."
+msgstr "Pod.AI 聊天需要先安装并启用 WooCommerce。"

@@ -13,7 +13,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const filter = process.argv.slice(2).filter(a => !a.startsWith("-"));
 const TIMEOUT_MS = Number(process.env.TEST_TIMEOUT_MS || 180_000);
 const list = dir => fs.readdirSync(path.join(root, dir)).filter(f => /(-test|\.test)\.js$/.test(f)).sort().map(f => path.join(dir, f));
-const files = [...list("server"), ...list("server/shopify-agent/test")].filter(f => !filter.length || filter.some(x => f.includes(x)));
+const files = [...list("server"), ...list("server/shopify-agent/test"), ...list("server/woo-agent/test")].filter(f => !filter.length || filter.some(x => f.includes(x)));
 // Clean environment: only what node needs. Tests set their own fake keys.
 const env = { PATH: process.env.PATH, HOME: process.env.HOME || "/tmp", TMPDIR: process.env.TMPDIR || "/tmp", NODE_ENV: "test", LANG: "C.UTF-8", TZ: process.env.TZ || "Europe/Zurich" };
 

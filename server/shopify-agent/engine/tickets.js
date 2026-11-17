@@ -20,7 +20,7 @@ export async function ensurePodaiTicket({ tenantId, conv, profile, settings, lan
     messages: (conv.messages || []).slice(-30).map(m => ({ role: m.role, text: String(m.text || "").slice(0, 2000), at: m.at })), updated_at: new Date().toISOString() });
   conv.ticket_id = ticket_id;
   const log = to ? await sendTicketMails({ tenantId, ticket: { ...row, market: facts?.currency || null }, brand: `Pod.AI · ${facts?.shop_name || shop}`, support: to, extra: [], confirm: false,
-    hours: settings?.human_reply_hours || 24, adminUrl: `https://${shop}/admin/apps`, type: "podai_ticket" }) : [{ kind: "team", status: "no_ticket_email", at: new Date().toISOString() }];
+    hours: settings?.human_reply_hours || 24, adminUrl: profile?.adminUrl || `https://${shop}/admin/apps`, type: "podai_ticket" }) : [{ kind: "team", status: "no_ticket_email", at: new Date().toISOString() }];
   await updateRecord("podai_handoffs", h.id, { email_log: log });
   logAccess({ actor: "pod_ai", action: "ticket_email_to_merchant", shop, tenant: tenantId, via: "chat", ids: [h.id] }).catch(() => {});
   return { ticket_id, created: true, email: h.customer_email };

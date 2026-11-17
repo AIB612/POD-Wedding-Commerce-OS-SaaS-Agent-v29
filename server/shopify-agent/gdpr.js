@@ -44,7 +44,7 @@ export async function purgeExpired(nowMs = Date.now()) {
   const at = { podai_conversations: r => r.last_message_at || r.created_at, podai_handoffs: r => r.updated_at || r.created_at, podai_events: r => r.at, podai_gdpr: r => r.at, podai_usage: r => r.at };
   for (const [col, days] of Object.entries(RETENTION_DAYS)) {
     const cut = nowMs - days * 864e5;
-    out[col] = (await removeWhere(col, r => String(r.tenant_id || "").startsWith("shopagent_") && (Date.parse(at[col](r)) || nowMs) < cut)).length;
+    out[col] = (await removeWhere(col, r => /^(shopagent_|wooagent_)/.test(String(r.tenant_id || "")) && (Date.parse(at[col](r)) || nowMs) < cut)).length;
   }
   out.podai_shops = 0; // explicit: shop sessions are not retention-purged
   return out;

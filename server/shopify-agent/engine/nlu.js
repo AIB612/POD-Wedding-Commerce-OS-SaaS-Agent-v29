@@ -121,6 +121,9 @@ export function extractOrderNumber(text) {
   if (pod) return pod[0].toUpperCase();
   const m = t.match(/(?:order|bestellung|bestellnummer|commande|ordine|订单号?)\s*(?:no\.?|number|nr\.?|#|:|是)?\s*#?\s*([A-Z0-9][A-Z0-9-]{3,30})/i);
   if (m && /\d/.test(m[1])) return m[1].toUpperCase();
+  // short numbers (new WooCommerce stores: #27, order number 312) only with a "#" or an explicit "order number" — never "order 2 mugs"
+  const short = t.match(/(?:order|bestellung|commande|ordine|订单)\s*#\s*(\d{1,3})\b/i) || t.match(/(?:order\s*(?:no\.?|number|nr\.?)|bestellnummer|numéro de commande|numero (?:d'|dell')ordine|订单号)\s*[:是]?\s*#?\s*(\d{1,3})\b/i) || t.match(/^\s*#(\d{1,3})\s*$/);
+  if (short) return short[1];
   const hash = t.match(/#([A-Z0-9-]{4,30})\b/i);
   return hash && /\d/.test(hash[1]) ? hash[1].toUpperCase() : null;
 }

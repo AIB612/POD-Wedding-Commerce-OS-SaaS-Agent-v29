@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { registerPersistCodec } from "../../saas-store.js";
 import { seal, open } from "./keys.js";
 
-export const COLLECTIONS = ["podai_shops", "podai_settings", "podai_conversations", "podai_handoffs", "podai_events", "podai_discounts", "podai_gdpr"];
+export const COLLECTIONS = ["podai_shops", "podai_woo_sites", "podai_settings", "podai_conversations", "podai_handoffs", "podai_events", "podai_discounts", "podai_gdpr"];
 const PREFIX = "pa1.";
 const aad = (col, id) => `${col}:${id}`;
 export const isEncryptedRow = r => !!r && typeof r._enc === "string" && r._enc.startsWith(PREFIX);
