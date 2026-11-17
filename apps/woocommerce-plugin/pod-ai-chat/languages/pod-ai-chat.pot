@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Pod.AI Chat for WooCommerce 1.0.0\n"
+"Project-Id-Version: Pod.AI Chat for WooCommerce 1.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/pod-ai-chat\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-17T10:28:37+00:00\n"
+"POT-Creation-Date: 2026-11-17T11:23:06+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pod-ai-chat\n"
@@ -35,212 +35,220 @@ msgstr ""
 msgid "Pod.AI"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:38
-#: includes/class-podai-chat-admin.php:48
+#: includes/class-podai-chat-admin.php:40
+#: includes/class-podai-chat-admin.php:50
 msgid "Settings"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:47
-#: includes/class-podai-chat-admin.php:260
+#: includes/class-podai-chat-admin.php:49
+#: includes/class-podai-chat-admin.php:311
 msgid "Pod.AI Chat"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:49
+#: includes/class-podai-chat-admin.php:51
 msgid "Tickets"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:113
+#: includes/class-podai-chat-admin.php:116
 msgid "Saved, but Pod.AI could not be updated:"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:124
+#: includes/class-podai-chat-admin.php:127
 msgid "Sorry, you are not allowed to do that."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:220
+#: includes/class-podai-chat-admin.php:269
 msgid "Connected to Pod.AI. Your products were synced and the chat is live on your store."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:221
+#: includes/class-podai-chat-admin.php:270
 msgid "Could not connect to Pod.AI:"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:222
+#: includes/class-podai-chat-admin.php:271
 msgid "Disconnected. Your store data at Pod.AI was deleted."
 msgstr ""
 
 #. translators: %d: number of products.
-#: includes/class-podai-chat-admin.php:224
+#: includes/class-podai-chat-admin.php:273
 #, php-format
 msgid "Sync finished: %d products sent."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:225
+#: includes/class-podai-chat-admin.php:274
 msgid "Sync failed:"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:226
+#: includes/class-podai-chat-admin.php:275
 msgid "Ticket updated."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:227
+#: includes/class-podai-chat-admin.php:276
 msgid "The ticket could not be updated."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:245
+#: includes/class-podai-chat-admin.php:277
+msgid "Billing is not available right now:"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:278
+msgid "Thank you! Your plan is updated as soon as Paddle confirms the payment (usually within a minute)."
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:296
 msgid "— None —"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:266
+#: includes/class-podai-chat-admin.php:317
 msgid "1. Connection"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:269
+#: includes/class-podai-chat-admin.php:320
 msgid "Connected"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:269
+#: includes/class-podai-chat-admin.php:320
 msgid "Site key:"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:273
-#: includes/class-podai-chat-admin.php:346
+#: includes/class-podai-chat-admin.php:324
+#: includes/class-podai-chat-admin.php:409
 msgid "Plan"
 msgstr ""
 
 #. translators: 1: chats used, 2: monthly limit.
-#: includes/class-podai-chat-admin.php:275
+#: includes/class-podai-chat-admin.php:326
 #, php-format
 msgid "%1$d / %2$d"
 msgstr ""
 
 #. translators: 1: chats used, 2: monthly limit.
-#: includes/class-podai-chat-admin.php:275
+#: includes/class-podai-chat-admin.php:326
 msgid "Chats this month"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:276
+#: includes/class-podai-chat-admin.php:327
 msgid "Products in stock / synced"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:277
+#: includes/class-podai-chat-admin.php:328
 msgid "Last full sync"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:280
-#: includes/class-podai-chat-admin.php:372
+#: includes/class-podai-chat-admin.php:331
+#: includes/class-podai-chat-admin.php:470
 msgid "Pod.AI is not reachable right now."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:285
+#: includes/class-podai-chat-admin.php:336
 msgid "Sync products now"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:286
+#: includes/class-podai-chat-admin.php:337
 msgid "Disconnect and delete this store's data at Pod.AI (tickets, chats, products)?"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:289
+#: includes/class-podai-chat-admin.php:340
 msgid "Disconnect"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:292
+#: includes/class-podai-chat-admin.php:343
 msgid "Connect your store to the Pod.AI service. Your site gets its own key; only public product data, your policies and settings are sent. Orders stay in WooCommerce and are only read when a shopper gives the order number and e-mail."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:296
+#: includes/class-podai-chat-admin.php:347
 msgid "Pod.AI service URL"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:297
+#: includes/class-podai-chat-admin.php:348
 msgid "Connect to Pod.AI"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:306
+#: includes/class-podai-chat-admin.php:357
 msgid "2. Chat and tickets"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:307
+#: includes/class-podai-chat-admin.php:358
 msgid "Chat on the storefront"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:307
+#: includes/class-podai-chat-admin.php:358
 msgid "Show the chat widget"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:308
+#: includes/class-podai-chat-admin.php:359
 msgid "Ticket e-mail"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:308
+#: includes/class-podai-chat-admin.php:359
 msgid "When a shopper clicks \"contact us\" and leaves an e-mail, a ticket is created and the chat transcript is sent here. Reply to that e-mail to answer the shopper."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:309
+#: includes/class-podai-chat-admin.php:360
 msgid "Reply time (hours)"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:310
+#: includes/class-podai-chat-admin.php:361
 msgid "Greeting"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:310
+#: includes/class-podai-chat-admin.php:361
 msgid "Hi! Ask me about products, shipping or your order."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:313
+#: includes/class-podai-chat-admin.php:364
 msgid "3. Widget"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:314
+#: includes/class-podai-chat-admin.php:365
 msgid "Colour"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:315
+#: includes/class-podai-chat-admin.php:366
 msgid "Position"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:315
+#: includes/class-podai-chat-admin.php:366
 msgid "Bottom right"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:315
+#: includes/class-podai-chat-admin.php:366
 msgid "Bottom left"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:317
+#: includes/class-podai-chat-admin.php:368
 msgid "Automatic (shopper / store language)"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:324
+#: includes/class-podai-chat-admin.php:375
 msgid "Language"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:329
+#: includes/class-podai-chat-admin.php:380
 msgid "Header title"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:332
+#: includes/class-podai-chat-admin.php:383
 msgid "4. Knowledge"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:332
+#: includes/class-podai-chat-admin.php:383
 msgid "The assistant answers from your refund/returns, terms and privacy pages, your shipping zones and the pages below. No external AI service is used."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:333
+#: includes/class-podai-chat-admin.php:384
 msgid "Shipping information page"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:335
+#: includes/class-podai-chat-admin.php:386
 msgid "Contact page"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:338
+#: includes/class-podai-chat-admin.php:389
 msgid "FAQ"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:338
+#: includes/class-podai-chat-admin.php:389
 msgid ""
 "Do you offer gift wrapping?\n"
 "Yes, gift wrapping is free — add a note at checkout.\n"
@@ -249,125 +257,183 @@ msgid ""
 "Yes, in our Zurich shop Mon–Sat."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:338
+#: includes/class-podai-chat-admin.php:389
 msgid "One question per block: first line = question, next lines = answer, blank line between blocks."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:339
+#: includes/class-podai-chat-admin.php:390
 msgid "Public coupon (optional)"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:339
+#: includes/class-podai-chat-admin.php:390
 msgid "10% off your first order"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:339
+#: includes/class-podai-chat-admin.php:390
 msgid "When a shopper asks for a discount, the chat offers this code and can apply it to their cart. Leave empty to never offer a code."
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:346
-msgid "5. Plan"
+#: includes/class-podai-chat-admin.php:394
+msgid "5. AI agents"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:346
-msgid "Chats / month"
+#: includes/class-podai-chat-admin.php:395
+msgid "AI agent access"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:346
-msgid "Price"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:348
-msgid "Free"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:348
-msgid "Current"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:350
-msgid "Paid plans are not on sale yet. Contact Pod.AI if you need more chats."
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:362
-msgid "Pod.AI tickets"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:365
-msgid "Connect Pod.AI first (Pod.AI Chat → Settings)."
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:376
-msgid "All"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:377
-msgid "Open"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:378
-msgid "Pending"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:379
-msgid "Closed"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:386
-msgid "Ticket"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:386
-#: includes/class-podai-chat-admin.php:417
-msgid "Status"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:386
-#: includes/class-podai-chat-admin.php:403
-msgid "Customer"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:386
-msgid "Order"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:386
-msgid "Reason"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:386
-msgid "Created"
-msgstr ""
-
-#: includes/class-podai-chat-admin.php:388
-msgid "No tickets yet."
+#: includes/class-podai-chat-admin.php:395
+msgid "Let AI assistants (ChatGPT, Claude, Grok, Gemini …) search your in-stock products and create a checkout link"
 msgstr ""
 
 #: includes/class-podai-chat-admin.php:396
+msgid "Read-only: only in-stock products with their current prices. The shopper reviews the cart and pays in your normal WooCommerce checkout; AI agents never take payment or see orders."
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:398
+msgid "MCP server:"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:398
+msgid "Discovery:"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:409
+msgid "6. Plan"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:409
+msgid "Chats / month"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:409
+msgid "Price"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:411
+msgid "month"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:411
+msgid "Free"
+msgstr ""
+
+#. translators: %s: yearly price in USD.
+#: includes/class-podai-chat-admin.php:414
+#, php-format
+msgid "USD %s / year (−20%%)"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:418
+msgid "Current"
+msgstr ""
+
+#. translators: %s: date.
+#: includes/class-podai-chat-admin.php:421
+#, php-format
+msgid "Free trial until %s"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:424
+msgid "Monthly"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:424
+msgid "Yearly"
+msgstr ""
+
+#. translators: %d: number of trial days.
+#: includes/class-podai-chat-admin.php:437
+#, php-format
+msgid "Paid plans start with a %d-day free trial. Payment is handled by Paddle (merchant of record: invoices and VAT included); cancel any time."
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:442
+msgid "Manage billing (change plan, invoices, cancel)"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:446
+msgid "Paid plans are not on sale yet. Contact Pod.AI if you need more chats."
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:460
+msgid "Pod.AI tickets"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:463
+msgid "Connect Pod.AI first (Pod.AI Chat → Settings)."
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:474
+msgid "All"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:475
+msgid "Open"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:476
+msgid "Pending"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:477
+msgid "Closed"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:484
+msgid "Ticket"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:484
+#: includes/class-podai-chat-admin.php:515
+msgid "Status"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:484
+#: includes/class-podai-chat-admin.php:501
+msgid "Customer"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:484
+msgid "Order"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:484
+msgid "Reason"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:484
+msgid "Created"
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:486
+msgid "No tickets yet."
+msgstr ""
+
+#: includes/class-podai-chat-admin.php:494
 msgid "(no e-mail yet)"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:401
+#: includes/class-podai-chat-admin.php:499
 msgid "Chat transcript"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:403
+#: includes/class-podai-chat-admin.php:501
 msgid "Assistant"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:408
+#: includes/class-podai-chat-admin.php:506
 msgid "Notes"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:421
+#: includes/class-podai-chat-admin.php:519
 msgid "Add a note (internal)"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:423
+#: includes/class-podai-chat-admin.php:521
 msgid "Reply by e-mail"
 msgstr ""
 
-#: includes/class-podai-chat-admin.php:425
+#: includes/class-podai-chat-admin.php:523
 msgid "Save ticket"
 msgstr ""
 
@@ -376,6 +442,6 @@ msgstr ""
 msgid "Pod.AI is not connected yet."
 msgstr ""
 
-#: includes/class-podai-chat-plugin.php:69
+#: includes/class-podai-chat-plugin.php:70
 msgid "Pod.AI Chat needs WooCommerce to be installed and active."
 msgstr ""

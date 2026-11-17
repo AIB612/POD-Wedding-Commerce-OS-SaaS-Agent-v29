@@ -12,6 +12,8 @@ import webhooks from "./routes/webhooks.js";
 import shopifyApp from "./routes/shopify-app.js";
 import { shopifyAgentRouter } from "./shopify-agent/routes.js";
 import { wooAgentRouter } from "./woo-agent/routes.js";
+import { agentApiRouter } from "./agent-api/routes.js";
+import { billingRouter } from "./billing/routes.js";
 import { getDb } from "./db/index.js";
 import { publicRouter } from "./routes/public.js";
 import { adminRouter } from "./routes/admin.js";
@@ -35,7 +37,9 @@ export async function createApp({ root = projectRoot, generatedDir = path.join(p
   if (process.env.TRUST_PROXY) app.set("trust proxy", process.env.TRUST_PROXY === "true" ? true : process.env.TRUST_PROXY);
 
   const origins = (process.env.CORS_ORIGINS || "").split(",").map(s => s.trim()).filter(Boolean);
-  app.use(cors(origins.length ? { origin: origins } : undefined));
+  const corsMw = cors(origins.length ? { origin: origins } : undefined);
+  // the public agent API sets its own open CORS (no credentials) — see server/agent-api/routes.js
+  app.use((req, res, next) => (req.path.startsWith("/agent/v1") || req.path === "/.well-known/pod-ai-agent.json" ? next() : corsMw(req, res, next)));
   app.use(securityHeaders);
   app.use(compression());
 
@@ -43,6 +47,8 @@ export async function createApp({ root = projectRoot, generatedDir = path.join(p
   app.use(webhooks);
   app.use(shopifyAgentRouter()); // Shopify Chat Agent app: App Proxy chat, embedded admin, GDPR webhooks (own body parsing)
   app.use(wooAgentRouter()); // Pod.AI for WooCommerce: signed plugin API /woo-agent/v1/* (own body parsing)
+  app.use(billingRouter()); // Paddle checkout page + signed webhook (WooCommerce plans; off until PADDLE_* is set)
+  app.use(agentApiRouter()); // public agent API for external AI agents: /agent/v1/* (REST + MCP), /.well-known/pod-ai-agent.json
   app.use(shopifyApp); // Shopify app OAuth + webhooks (raw body); admin JSON routes parse their own body
 
   // 1 MB default JSON limit; /api/invitations sets its own larger limit (photos are embedded as data URLs).

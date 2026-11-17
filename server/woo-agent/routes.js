@@ -8,6 +8,7 @@ import * as core from "./core.js";
 import { wooData } from "./adapter.js";
 import * as catalog from "./catalog.js";
 import * as billing from "./billing.js";
+import { cancelSubscription } from "../billing/paddle.js";
 import { profileFor, handleChat } from "../commerce-agent/index.js";
 import { getSettings, saveSettings } from "../shopify-agent/engine/store.js";
 import { agentHandoffs, patchHandoff, putAgentSettings } from "../shopify-agent/engine/kpis.js";
@@ -22,6 +23,7 @@ const LANGS = ["auto", "en", "zh", "de", "fr", "it"];
 export function widgetOf(s) { const w = s.widget || {};
   return { color: HEX(w.color) || "#2b2520", position: w.position === "left" ? "left" : "right", title: String(w.title || "").slice(0, 60), language: LANGS.includes(w.language) ? w.language : "auto" }; }
 const str = (v, n) => String(v ?? "").slice(0, n);
+const PUBLIC = () => String(process.env.PODAI_PUBLIC_URL || "https://podai.swisspro.site").replace(/\/+$/, "");
 
 // per-site limits (the caller is the WordPress server, so per-IP limits would be per-site anyway)
 const buckets = new Map();
@@ -100,14 +102,14 @@ export function wooAgentRouter() {
   // store facts + settings (plugin settings page save, activation, daily)
   v1.post("/store", siteLimit("store", 30), ah(async (req, res) => {
     const b = req.body || {}, site = req.wooSite;
-    if (b.store) await core.updateSite(site.id, { store: cleanStore(b.store, site), name: str(textOf(b.store.name), 120) || site.name });
+    if (b.store) await core.updateSite(site.id, { store: cleanStore(b.store, site), name: str(textOf(b.store.name), 120) || site.name, ...(/^\d+\.\d+\.\d+$/.test(String(b.plugin_version || "")) ? { plugin_version: b.plugin_version } : {}) });
     if (b.settings) { const x = b.settings;
       await putAgentSettings(req.wooTenant, { enabled: x.enabled, support_email: x.support_email, human_reply_hours: x.human_reply_hours, greeting: x.greeting });
       const cur = await getSettings(req.wooTenant);
-      await saveSettings(req.wooTenant, { widget: x.widget ? widgetOf({ widget: { ...widgetOf(cur), ...x.widget } }) : widgetOf(cur), ...(x.custom_faq ? { custom_faq: cleanFaq(x.custom_faq) } : {}), llm_enabled: x.llm_enabled === true });
+      await saveSettings(req.wooTenant, { widget: x.widget ? widgetOf({ widget: { ...widgetOf(cur), ...x.widget } }) : widgetOf(cur), ...(x.custom_faq ? { custom_faq: cleanFaq(x.custom_faq) } : {}), llm_enabled: x.llm_enabled === true, ...(typeof x.agent_api === "boolean" ? { agent_api: x.agent_api } : {}) });
     }
     const s = await getSettings(req.wooTenant);
-    res.json({ ok: true, support_email: s.support_email || "", widget: widgetOf(s), faq: s.custom_faq.length });
+    res.json({ ok: true, support_email: s.support_email || "", widget: widgetOf(s), faq: s.custom_faq.length, agent_api: s.agent_api !== false, agent_api_url: `${PUBLIC()}/agent/v1/stores/${site.id}` });
   }));
   v1.post("/products/sync", siteLimit("sync", 120), ah(async (req, res) => { const b = req.body || {};
     res.json({ ok: true, ...(await catalog.upsertProducts(req.wooSite.id, b.products, { mode: b.mode === "full" ? "full" : "upsert", sync_id: b.sync_id, done: b.done === true, currency: req.wooSite.store?.currency || req.wooSite.currency })) }); }));
@@ -115,8 +117,15 @@ export function wooAgentRouter() {
 
   v1.get("/status", ah(async (req, res) => { const site = req.wooSite, s = await getSettings(req.wooTenant);
     res.set("Cache-Control", "no-store").json({ site_id: site.id, url: site.url, name: site.name, connected: true, catalog: catalog.catalogStats(site.id), store_synced_at: site.store?.synced_at || null,
-      support_email: s.support_email || "", billing: await billing.billingSummary(site), llm: false }); }));
+      support_email: s.support_email || "", billing: await billing.billingSummary(site), llm: false,
+      agent_api: { enabled: s.agent_api !== false, manifest: `${PUBLIC()}/agent/v1/stores/${site.id}`, mcp: `${PUBLIC()}/agent/v1/stores/${site.id}/mcp` } }); }));
   v1.get("/billing", ah(async (req, res) => res.set("Cache-Control", "no-store").json(await billing.billingSummary(req.wooSite))));
+  // Paddle: start a checkout for a plan (opens the Pod.AI checkout page) · customer portal for an existing subscription
+  v1.post("/billing/checkout", siteLimit("billing", 10), ah(async (req, res) => { const b = req.body || {};
+    try { res.set("Cache-Control", "no-store").json(await billing.startCheckout(req.wooSite, { plan: String(b.plan || ""), cycle: b.cycle === "annual" ? "annual" : "monthly", email: b.email, return_url: b.return_url })); }
+    catch (e) { res.status(e.status || 500).json({ error: e.status ? e.message : "billing_failed" }); } }));
+  v1.post("/billing/portal", siteLimit("billing", 10), ah(async (req, res) => {
+    try { res.set("Cache-Control", "no-store").json(await billing.portal(req.wooSite)); } catch (e) { res.status(e.status || 500).json({ error: e.status ? e.message : "billing_failed" }); } }));
   v1.get("/tickets", ah(async (req, res) => { const st = { pending: "in_progress", closed: "resolved" }[req.query.status] || req.query.status;
     const h = await agentHandoffs(req.wooTenant, { status: ["open", "in_progress", "resolved"].includes(st) ? st : undefined });
     logAccess({ actor: "woo_admin", action: "view_handoffs", tenant: req.wooTenant, count: h.length, via: "wp_admin" }).catch?.(() => {});
@@ -128,6 +137,7 @@ export function wooAgentRouter() {
   v1.patch("/tickets/:id", patch); v1.post("/tickets/:id", patch);
   // plugin uninstall / disconnect: every record of this site is deleted
   v1.post("/disconnect", ah(async (req, res) => { const id = req.wooSite.id, T = req.wooTenant; let removed = 0;
+    const sub = req.wooSite.paddle; if (sub?.subscription_id && ["active", "trialing", "past_due", "paused"].includes(sub.status)) await cancelSubscription(sub.subscription_id);
     for (const col of ["podai_conversations", "podai_handoffs", "podai_events", "podai_settings", "podai_usage", "podai_discounts"]) removed += (await removeWhere(col, x => x.tenant_id === T)).length;
     await catalog.dropCatalog(id); removed += await core.removeSite(id);
     logAccess({ actor: "woo_plugin", action: "site_disconnected", tenant: T, count: removed, via: "disconnect" }).catch?.(() => {});

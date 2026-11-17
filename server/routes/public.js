@@ -90,7 +90,7 @@ export function publicRouter({ root, generatedDir }) {
   const POD_SITEMAP = sitemapXml(POD_ORIGIN, [["/", "daily", "1.0"], ["/studio.html", "weekly", "0.8"], ["/shipping", "monthly", "0.5"], ["/returns", "monthly", "0.4"],
     ["/terms", "yearly", "0.3"], ["/privacy", "yearly", "0.3"], ["/imprint", "yearly", "0.2"]]);
   const PODAI_SITEMAP = sitemapXml(PODAI_ORIGIN, [["/agent.html", "weekly", "1.0"], ["/support", "monthly", "0.7"], ["/privacy", "yearly", "0.3"], ["/terms", "yearly", "0.3"],
-    ["/security", "yearly", "0.3"], ["/dpa", "yearly", "0.3"]]);
+    ["/security", "yearly", "0.3"], ["/dpa", "yearly", "0.3"], ["/woocommerce", "monthly", "0.8"]]);
   router.get("/robots.txt", (req, res, next) => {
     if (podHost(req)) return res.type("text/plain").send(PODAI_ROBOTS);
     if (podSiteHost(req)) return res.type("text/plain").send(POD_ROBOTS);
@@ -117,6 +117,11 @@ export function publicRouter({ root, generatedDir }) {
   router.get(["/support", "/support.html", "/docs", "/docs.html"], sendPodPage("support.html"));
   router.get(["/security", "/security.html"], sendPodPage("security.html"));
   router.get(["/dpa", "/dpa.html"], sendPodPage("dpa.html"));
+  router.get(["/woocommerce", "/woocommerce.html"], sendPodPage("woocommerce.html"));
+  // WooCommerce plugin readme + zip (built into apps/woocommerce-plugin/dist by scripts/build-woo-plugin.mjs)
+  const wooDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "apps", "woocommerce-plugin");
+  router.get("/woocommerce/readme.txt", (req, res, next) => podHost(req) ? res.set("Cache-Control", "public, max-age=3600").type("text/plain; charset=utf-8").sendFile(path.join(wooDir, "pod-ai-chat", "readme.txt")) : next("route"));
+  router.get("/woocommerce/pod-ai-chat.zip", (req, res, next) => podHost(req) ? res.set("Cache-Control", "public, max-age=3600").download(path.join(wooDir, "dist", "pod-ai-chat.zip"), "pod-ai-chat.zip", err => { if (err && !res.headersSent) res.status(404).json({ error: "not_found" }); }) : next("route"));
   // Before the podai split (f09ff00) these Pod.AI pages lived on pod.swisspro.site and were indexed there; the wedding
   // site never had them, so they 404'd on pod. Permanently redirect to the Pod.AI host (clean URL). /privacy and /terms
   // stay the wedding site's own legal pages on pod.

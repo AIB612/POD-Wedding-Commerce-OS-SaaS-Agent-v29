@@ -215,7 +215,7 @@ a{color:var(--gold2)}
    <li><svg><use href="#i-check"/></svg><span data-t="tk2">Works without an AI key</span></li>
    <li><svg><use href="#i-check"/></svg><span data-t="tk3">No floating bubble</span></li>
   </ul>
-<p class="store-link" style="margin:18px 0 0;font-size:13px;color:var(--ink2)">Also on the <a id="app-store-link" href="/support#install" rel="noopener">Shopify App Store</a> <span style="color:var(--mut)">(listing URL soon)</span>.</p>
+<p class="store-link" style="margin:18px 0 0;font-size:13px;color:var(--ink2)">Also on the <a id="app-store-link" href="/support#install" rel="noopener">Shopify App Store</a> <span style="color:var(--mut)">(listing URL soon)</span> · <a href="https://podai.swisspro.site/woocommerce" data-t="wooLink">WooCommerce plugin</a>.</p>
  </div>
  <div class="dev rv" id="dev" role="img" aria-label="Example conversations on laptop and phone">
   <div class="laptop"><div class="lid"><div class="scr">
@@ -364,6 +364,7 @@ a{color:var(--gold2)}
   <button role="tab" aria-selected="true" data-tab="store"><svg><use href="#i-store"/></svg><span data-t="t_store">POD.AI store</span></button>
   <button role="tab" aria-selected="false" data-tab="embed"><svg><use href="#i-code"/></svg><span data-t="t_embed">Website embed</span></button>
   <button role="tab" aria-selected="false" data-tab="shopify"><svg><use href="#i-bag"/></svg><span>Shopify</span></button>
+  <button role="tab" aria-selected="false" data-tab="woo"><svg><use href="#i-store"/></svg><span>WooCommerce</span></button>
   <button role="tab" aria-selected="false" data-tab="api"><svg><use href="#i-chart"/></svg><span>REST API</span></button>
  </div>
  <div class="panel glass on" data-panel="store"><div><h3 data-t="p1h">Already on.</h3><p data-t="p1p">Ask POD.AI sits next to the logo. Link to it from anywhere.</p><a class="btn p" href="/?ask=1"><svg><use href="#i-spark"/></svg><span data-t="try">Try it now</span></a></div>
@@ -373,6 +374,8 @@ a{color:var(--gold2)}
         data-lang=<span class="s">"en"</span> async&gt;&lt;/<span class="k">script</span>&gt;</div></div>
  <div class="panel glass" data-panel="shopify"><div><h3 data-t="p3h">Connect your store.</h3><p data-t="p3p">Orders sync into the book the agent searches.</p></div>
   <ol class="mini"><li><i>1</i><span data-t="p3a">Admin → Shopify</span></li><li><i>2</i><span data-t="p3b">Enter your shop domain</span></li><li><i>3</i><span data-t="p3c">Approve the app — done</span></li></ol></div>
+ <div class="panel glass" data-panel="woo"><div><h3 data-t="p5h">Install the plugin.</h3><p data-t="p5p">Pod.AI Chat for WooCommerce — same assistant, your WordPress store.</p><a class="btn s" href="https://podai.swisspro.site/woocommerce"><span data-t="wooGuide">WooCommerce guide</span></a></div>
+  <ol class="mini"><li><i>1</i><span data-t="p5a">Upload &amp; activate the plugin</span></li><li><i>2</i><span data-t="p5b">Pod.AI Chat → Connect to Pod.AI</span></li><li><i>3</i><span data-t="p5c">Products sync — the chat is live</span></li></ol></div>
  <div class="panel glass" data-panel="api"><div><h3 data-t="p4h">Call it from anything.</h3><p data-t="p4p">Same local-first answers as the homepage.</p></div>
   <div class="code" id="curl"><button class="copy" type="button" data-copy="curl" data-t="copy">Copy</button>curl -X POST https://pod.swisspro.site/api/pod-agent/chat \
   -H <span class="s">"Content-Type: application/json"</span> \
@@ -388,6 +391,18 @@ a{color:var(--gold2)}
  </ol>
 </section>
 
+<section class="sec" id="woocommerce">
+ <div class="center rv"><span class="kick">WooCommerce</span><h2 class="serif" data-t="h_w">Now on WooCommerce.</h2><p class="sub" style="margin:10px auto 28px;max-width:640px" data-t="l_w">One agent core for Shopify and WooCommerce. Shoppers get answers and act — the store keeps the checkout.</p></div>
+ <div class="fg">
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-store"/></svg></span><h3 data-t="w1">WordPress plugin</h3><p data-t="w1d">Install, connect, done. Products sync on save.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-bag"/></svg></span><h3 data-t="w2">Add to cart</h3><p data-t="w2d">Recommends in-stock products and adds them to the cart.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-tag"/></svg></span><h3 data-t="w3">Coupon &amp; checkout</h3><p data-t="w3d">Applies your public coupon, links to checkout. Never takes payment.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-truck"/></svg></span><h3 data-t="w4">Orders &amp; tickets</h3><p data-t="w4d">Tracking with order no. + e-mail; "contact us" becomes a ticket.</p></div>
+  <div class="fc glass rv"><span class="ico"><svg><use href="#i-spark"/></svg></span><h3 data-t="w5">AI agent access</h3><p data-t="w5d">ChatGPT, Claude, Grok or Gemini can search your products via MCP and send a checkout link.</p></div>
+ </div>
+ <div class="ctas rv" style="justify-content:center;margin-top:22px"><a class="btn p" href="https://podai.swisspro.site/woocommerce"><span data-t="wooGuide">WooCommerce guide</span></a><a class="btn s" href="https://podai.swisspro.site/woocommerce#ai-agents"><span data-t="wooAgents">For AI agents (MCP)</span></a></div>
+</section>
+
 <section class="sec">
  <div class="center rv"><span class="kick">FAQ</span><h2 class="serif" data-t="h_q">Quick answers.</h2></div>
  <div class="faq">
@@ -395,6 +410,8 @@ a{color:var(--gold2)}
   <details class="glass rv"><summary data-t="q2">Are the prices exact?</summary><p data-t="a2">Yes — the same server quote as checkout.</p></details>
   <details class="glass rv"><summary data-t="q3">Can anyone look up an order?</summary><p data-t="a3">Only with the order number and the matching e-mail.</p></details>
   <details class="glass rv"><summary data-t="q4">What if it can't help?</summary><p data-t="a4">It hands the chat to your team in Admin.</p></details>
+  <details class="glass rv"><summary data-t="q6">Does it work with WooCommerce?</summary><p data-t="a6">Yes — install the Pod.AI Chat plugin and connect your store. <a href="https://podai.swisspro.site/woocommerce">Guide</a></p></details>
+  <details class="glass rv"><summary data-t="q7">Can AI assistants shop my store?</summary><p data-t="a7">Yes, if you allow it: they search in-stock products and send a checkout link. The shopper pays in your checkout.</p></details>
   <details class="glass rv"><summary data-t="q5">Which languages?</summary><p data-t="a5">Replies in English, 中文 and Deutsch; also detects French and Italian.</p></details>
  </div>
 </section>
@@ -443,6 +460,14 @@ a{color:var(--gold2)}
  h_q:{en:"Quick answers.",zh:"常见问题"},q1:{en:"Do I need an AI key?",zh:"需要 AI 密钥吗？"},a1:{en:"No. Rules + shop data answer; a key only adds open questions.",zh:"不需要。规则 + 店铺数据即可回答；密钥只用于开放性问题。"},q2:{en:"Are the prices exact?",zh:"价格准确吗？"},a2:{en:"Yes — the same server quote as checkout.",zh:"准确——与结账使用同一服务器报价。"},
  q3:{en:"Can anyone look up an order?",zh:"任何人都能查订单吗？"},a3:{en:"Only with the order number and the matching e-mail.",zh:"必须同时提供订单号和匹配的下单邮箱。"},q4:{en:"What if it can't help?",zh:"答不上来怎么办？"},a4:{en:"It hands the chat to your team in Admin.",zh:"会话转入后台，由您的团队处理。"},
  q5:{en:"Which languages?",zh:"支持哪些语言？"},a5:{en:"Replies in English, 中文 and Deutsch; also detects French and Italian.",zh:"用英文、中文、德文回复；还可识别法语和意大利语。"},
+ wooLink:{en:"WooCommerce plugin",zh:"WooCommerce 插件"},p5h:{en:"Install the plugin.",zh:"安装插件。"},p5p:{en:"Pod.AI Chat for WooCommerce — same assistant, your WordPress store.",zh:"Pod.AI Chat for WooCommerce——同一个助手，用在你的 WordPress 店铺。"},
+ wooGuide:{en:"WooCommerce guide",zh:"WooCommerce 指南"},wooAgents:{en:"For AI agents (MCP)",zh:"给 AI 助手（MCP）"},p5a:{en:"Upload &amp; activate the plugin",zh:"上传并启用插件"},p5b:{en:"Pod.AI Chat → Connect to Pod.AI",zh:"Pod.AI Chat → 连接 Pod.AI"},p5c:{en:"Products sync — the chat is live",zh:"商品自动同步，聊天即上线"},
+ h_w:{en:"Now on WooCommerce.",zh:"现已支持 WooCommerce。"},l_w:{en:"One agent core for Shopify and WooCommerce. Shoppers get answers and act — the store keeps the checkout.",zh:"Shopify 和 WooCommerce 共用一套智能核心。顾客不只得到回答，还能直接行动——结账始终在店铺自己那里。"},
+ w1:{en:"WordPress plugin",zh:"WordPress 插件"},w1d:{en:"Install, connect, done. Products sync on save.",zh:"安装、连接即可，保存商品时自动同步。"},w2:{en:"Add to cart",zh:"一键加购"},w2d:{en:"Recommends in-stock products and adds them to the cart.",zh:"推荐有货商品并直接加入购物车。"},
+ w3:{en:"Coupon &amp; checkout",zh:"优惠码与结账"},w3d:{en:"Applies your public coupon, links to checkout. Never takes payment.",zh:"自动使用公开优惠码并跳转结账，从不代收款。"},w4:{en:"Orders &amp; tickets",zh:"订单与工单"},w4d:{en:"Tracking with order no. + e-mail; \"contact us\" becomes a ticket.",zh:"凭订单号 + 邮箱查物流；“联系我们”自动生成工单。"},
+ w5:{en:"AI agent access",zh:"AI 助手接入"},w5d:{en:"ChatGPT, Claude, Grok or Gemini can search your products via MCP and send a checkout link.",zh:"ChatGPT、Claude、Grok、Gemini 可通过 MCP 搜索你的商品并发送结账链接。"},
+ q6:{en:"Does it work with WooCommerce?",zh:"支持 WooCommerce 吗？"},a6:{en:"Yes — install the Pod.AI Chat plugin and connect your store. <a href=\"https://podai.swisspro.site/woocommerce\">Guide</a>",zh:"支持——安装 Pod.AI Chat 插件并连接店铺即可。<a href=\"https://podai.swisspro.site/woocommerce\">指南</a>"},
+ q7:{en:"Can AI assistants shop my store?",zh:"AI 助手能在我的店里购物吗？"},a7:{en:"Yes, if you allow it: they search in-stock products and send a checkout link. The shopper pays in your checkout.",zh:"可以（需你开启）：它们搜索有货商品并发送结账链接，顾客在你的结账页付款。"},
  h_c:{en:"See it answer in seconds.",zh:"几秒钟，亲眼看它回答。"},l_c:{en:"Open the homepage chat and ask anything.",zh:"打开首页对话，随便问。"},talk:{en:"Talk to our team",zh:"联系团队"},seller:{en:"Merchant help →",zh:"商家帮助 →"}};
  function L(){var l="en";try{l=window.WeddingI18n&&WeddingI18n.lang?WeddingI18n.lang():"en"}catch(e){}return l==="zh"?"zh":"en"}
  var SVGNS="http://www.w3.org/2000/svg";

@@ -103,3 +103,17 @@ export function searchCatalog(siteId, query, { browse = false, limit = null } = 
   const hits = entry.index.search(ts.join(" "), { limit: Math.min(50, max * 2) }).filter(h => h.norm >= 0.15);
   return { ok: true, products: hits.slice(0, max).map(h => toEngine(h.doc.doc)) };
 }
+
+// ---- agent API (server/agent-api): read-only public view of sellable products ----
+/** One stored product by id (null when missing). */
+export function getProduct(siteId, id) { const p = load(siteId).data.products[String(id || "").replace(/[^0-9]/g, "")]; return p || null; }
+export const isSellable = p => !!p && sellable(p);
+/** Sellable products for the agent API: keyword search (BM25) or newest first, then optional price filter. */
+export function agentSearch(siteId, query, { limit = 10, min_price = null, max_price = null } = {}) {
+  const inRange = p => (min_price == null || p.price >= min_price) && (max_price == null || p.price <= max_price);
+  const q = String(query || "").trim();
+  if (!q) { const all = Object.values(load(siteId).data.products).filter(p => sellable(p) && inRange(p)); return all.sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at))).slice(0, limit); }
+  const ids = (searchCatalog(siteId, q, { limit: 50 }).products || []).map(p => p.id);
+  const data = load(siteId).data.products;
+  return ids.map(id => data[id]).filter(p => p && sellable(p) && inRange(p)).slice(0, limit);
+}

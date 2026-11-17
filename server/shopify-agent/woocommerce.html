@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pod.AI for WooCommerce — AI shopping assistant &amp; AI agent access</title>
+<meta name="description" content="Pod.AI Chat for WooCommerce: answers from your store data, recommends in-stock products, adds them to the cart, tracks orders, creates tickets — and lets AI assistants shop your store via MCP.">
+<link rel="canonical" href="https://podai.swisspro.site/woocommerce"/>
+<meta property="og:type" content="website"/><meta property="og:site_name" content="Pod.AI"/><meta property="og:url" content="https://podai.swisspro.site/woocommerce"/>
+<meta property="og:title" content="Pod.AI for WooCommerce"/><meta property="og:image" content="https://podai.swisspro.site/assets/brand/og-podai.png"/>
+<style>
+:root{--ink:#2b2520;--mut:#6f655c;--bg:#f6f1ea;--card:#fffdf9;--line:#e7ded3;--acc:#b07a4f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif}
+header{max-width:860px;margin:0 auto;padding:40px 24px 8px;display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:12px;overflow:hidden;background:var(--bg)}.logo img{width:100%;height:100%;object-fit:cover;display:block}
+.brand{font-family:Georgia,"Times New Roman",serif;font-size:22px}.brand small{display:block;font:13px/1.2 inherit;color:var(--mut);font-family:inherit}
+main{max-width:860px;margin:16px auto 40px;padding:32px 36px;background:var(--card);border:1px solid var(--line);border-radius:20px}
+h1{font-family:Georgia,serif;font-weight:500;font-size:34px;margin:0 0 4px}h2{font-size:19px;margin:30px 0 8px}
+.mut{color:var(--mut)}table{width:100%;border-collapse:collapse;font-size:14.5px;margin:8px 0}th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}th{background:#f3ece3}
+code{background:#f3ece3;padding:1px 5px;border-radius:5px;font-size:13.5px}footer{text-align:center;color:var(--mut);font-size:13px;padding:0 0 40px}a{color:var(--acc)}
+@media(max-width:600px){main{padding:22px 18px;border-radius:0}h1{font-size:27px}}
+</style>
+<style>pre{background:#f4f1ec;border-radius:10px;padding:12px;overflow:auto;font-size:12.5px}code{font-size:12.5px}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #e7e1d8;padding:6px 8px;text-align:left;font-size:14px}</style>
+</head>
+<body>
+<header><div class="logo"><img src="/assets/brand/mark-160.png" alt="Pod.AI" width="40" height="40"></div><div class="brand">Pod.AI<small>by Dropking AI</small></div></header>
+<main>
+<nav id="pod-legal-nav" class="mut" style="font-size:13px;margin:0 0 18px"><a href="/agent.html">Product</a> · <a href="/woocommerce">WooCommerce</a> · <a href="/support">Support</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/security">Security</a> · <a href="/dpa">DPA</a></nav>
+<h1>Pod.AI for WooCommerce</h1>
+<p class="mut">WordPress plugin “Pod.AI Chat for WooCommerce” · version 1.1.0</p>
+<div class="card"><p style="margin:0">The same Pod.AI shopping assistant as on Shopify, for WooCommerce stores. It answers from your store’s own data (products, policies, shipping zones, your FAQ) without an AI key, recommends in-stock products with real prices, <b>adds them to the cart</b>, applies your public coupon and links to checkout. Orders and tracking with order number + e-mail; “contact us” becomes a ticket for your team. The shopper always pays in your WooCommerce checkout.</p></div>
+
+<h2 id="install">Install</h2>
+<ol class="steps">
+<li>Download the plugin (<a href="/woocommerce/pod-ai-chat.zip">pod-ai-chat.zip</a>) — WordPress.org listing coming soon.</li>
+<li>WordPress admin → <strong>Plugins → Add New → Upload Plugin</strong> → Install → Activate (WooCommerce must be active).</li>
+<li><strong>Pod.AI Chat → Settings → Connect to Pod.AI</strong>. Your site gets its own key; products sync automatically.</li>
+<li>Set the ticket e-mail, colour, pages, FAQ and (optional) a public coupon → Save. The chat button appears on your shop.</li>
+</ol>
+<p>Full plugin description, data list and changelog: <a href="/woocommerce/readme.txt">readme.txt</a>.</p>
+
+<h2>What it does</h2>
+<table>
+<tr><td><b>Recommendations</b></td><td>Only in-stock, purchasable products with a price; budget, recipient, “cheaper”, “more like this”.</td></tr>
+<tr><td><b>Actions</b></td><td>Add to cart (WooCommerce Store API), apply the store’s public coupon, checkout link. Never takes payment.</td></tr>
+<tr><td><b>Orders</b></td><td>Status and tracking link after order number + billing e-mail match (Shipment Tracking, Advanced Shipment Tracking, YITH, generic meta).</td></tr>
+<tr><td><b>Tickets</b></td><td>The shopper leaves an e-mail → ticket POD-T-… with the transcript to your ticket e-mail; manage status and notes under Pod.AI Chat → Tickets.</td></tr>
+<tr><td><b>Languages</b></td><td>English, German, French, Italian, Chinese.</td></tr>
+</table>
+
+<h2 id="ai-agents">AI agent access (MCP)</h2>
+<p>With “AI agent access” on (default; one checkbox turns it off), AI assistants such as ChatGPT, Claude, Grok or Gemini can shop your store through a read-only <b>MCP server</b> and REST API hosted by Pod.AI. They see only in-stock products with current prices — never orders or customers — and can create a prefilled checkout link. The shopper reviews the cart and pays on your store. This works for Pod.AI stores on WooCommerce and Shopify.</p>
+<table>
+<tr><th>What</th><th>URL</th></tr>
+<tr><td>Store discovery</td><td><code>https://&lt;your-store&gt;/.well-known/pod-ai-agent.json</code></td></tr>
+<tr><td>MCP (Streamable HTTP, no auth)</td><td><code>https://podai.swisspro.site/agent/v1/stores/&lt;store&gt;/mcp</code></td></tr>
+<tr><td>Store manifest</td><td><code>https://podai.swisspro.site/agent/v1/stores/&lt;store&gt;</code></td></tr>
+<tr><td>REST / OpenAPI</td><td><a href="/agent/v1/openapi.json"><code>/agent/v1/openapi.json</code></a></td></tr>
+<tr><td>Service discovery</td><td><a href="/.well-known/pod-ai-agent.json"><code>/.well-known/pod-ai-agent.json</code></a></td></tr>
+</table>
+<p><code>&lt;store&gt;</code> is the WooCommerce site key (<code>ws_…</code>, shown under Pod.AI Chat → Settings → AI agents) or the Shopify shop domain (<code>shop.myshopify.com</code>).</p>
+<p>Tools: <code>get_store_info</code>, <code>search_products</code>, <code>get_product</code>, <code>create_checkout_link</code>.</p>
+<pre>curl -s https://podai.swisspro.site/agent/v1/stores/&lt;store&gt;/products?query=wool+scarf
+curl -s -X POST https://podai.swisspro.site/agent/v1/stores/&lt;store&gt;/checkout-link \
+  -H "Content-Type: application/json" -d '{"items":[{"product_id":"14","quantity":1}]}'
+# → { "checkout_url": "https://your-store/?podai_cart=14:1…", "subtotal": 49, "currency": "CHF", … }</pre>
+<p class="mut">Limits: 60 requests / minute per IP and store, 20 checkout links / minute per IP.</p>
+
+<h2 id="plans">Plans</h2>
+<table>
+<tr><th>Plan</th><th>Chats / month</th><th>Price</th></tr>
+<tr><td>Free</td><td>50</td><td>USD 0</td></tr>
+<tr><td>Growth</td><td>500</td><td>USD 19 / month · USD 182.40 / year</td></tr>
+<tr><td>Pro</td><td>2,500</td><td>USD 49 / month · USD 470.40 / year (optional LLM answers)</td></tr>
+</table>
+<p class="mut">Paid plans are not on sale yet. When they open, they start with a 14-day free trial and are billed by Paddle (merchant of record).</p>
+
+<h2>Data</h2>
+<p>Synced: public product data, your policy pages, shipping zones and settings. Orders are never synced; they are read from your store (signed request) only when a shopper gives the order number and e-mail. Disconnecting or uninstalling deletes your store’s data at Pod.AI. See the <a href="/privacy">Privacy Policy</a> and <a href="/security">Security</a>.</p>
+
+<h2>Help</h2>
+<p>E-mail <a href="mailto:support@swisspro.site">support@swisspro.site</a> · <a href="/support">Support</a></p>
+</main>
+<footer>© 2026 POD.AI</footer>
+</body></html>

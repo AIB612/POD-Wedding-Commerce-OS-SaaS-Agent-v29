@@ -47,6 +47,7 @@ final class PodAI_Chat_Plugin {
 		PodAI_Chat_REST::init();
 		PodAI_Chat_Sync::init();
 		PodAI_Chat_Widget::init();
+		PodAI_Chat_Agent::init();
 		if ( is_admin() ) {
 			PodAI_Chat_Admin::init();
 		}
@@ -92,6 +93,7 @@ final class PodAI_Chat_Plugin {
 			'promo_summary'  => '',
 			'faq'            => '',
 			'reply_hours'    => 24,
+			'agent_api'      => 1,
 			'last_sync'      => '',
 			'last_sync_info' => '',
 		);

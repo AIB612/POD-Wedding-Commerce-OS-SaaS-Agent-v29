@@ -3,7 +3,9 @@
 > Pod.AI (podai.swisspro.site) is an AI customer chat app for Shopify stores, made by Dropking AI. It answers shoppers' product, shipping and order questions from the store's real data — exact shipping quotes, order status and tracking, product recommendations and discount codes — in the customer's language, and hands the conversation to the merchant's team when it cannot help. It works without an AI/LLM key; an optional LLM only adds answers to open questions. Support: support@swisspro.site
 
 Key facts:
-- Platform: Shopify app (theme app embed on the storefront + admin dashboard in Shopify Admin).
+- Platforms: Shopify app (theme app embed + admin dashboard in Shopify Admin) and WooCommerce plugin "Pod.AI Chat for WooCommerce" (storefront chat + WordPress admin).
+- Actions: adds recommended in-stock products to the cart, applies the store's public coupon and links to checkout. It never takes payment.
+- AI agent access: each Pod.AI store can expose a read-only MCP server and REST API so AI assistants can search in-stock products and create a checkout link; the shopper pays on the store. Discovery: https://podai.swisspro.site/.well-known/pod-ai-agent.json (WooCommerce stores also publish /.well-known/pod-ai-agent.json on their own domain).
 - Plans: Free ($0), Growth ($19/month), Pro ($49/month), billed in USD.
 - Local first: rules + shop data answer most questions; quotes are the same server quote as checkout.
 - Order lookup requires the order number and the matching e-mail address.
@@ -14,6 +16,8 @@ Key facts:
 ## Main pages
 - [Pod.AI overview](https://podai.swisspro.site/agent.html): features, how it works, FAQ
 - [Support & resources](https://podai.swisspro.site/support): install, enable the theme embed, FAQ, contact
+- [Pod.AI for WooCommerce](https://podai.swisspro.site/woocommerce): plugin install, AI agent access (MCP), plans
+- [Agent API (OpenAPI)](https://podai.swisspro.site/agent/v1/openapi.json): MCP + REST for AI agents
 - [Full text for LLMs](https://podai.swisspro.site/llms-full.txt)
 
 ## Legal

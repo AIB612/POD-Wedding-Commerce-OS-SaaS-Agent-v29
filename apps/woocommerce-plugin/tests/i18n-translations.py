@@ -1,0 +1,131 @@
+import re, json, sys
+T = {
+'Billing is not available right now:': {'de': 'Abrechnung ist gerade nicht verfügbar:', 'fr': "La facturation n'est pas disponible pour le moment :", 'it': 'La fatturazione non è disponibile al momento:', 'zh': '暂时无法办理付费：'},
+'Thank you! Your plan is updated as soon as Paddle confirms the payment (usually within a minute).': {'de': 'Danke! Ihr Tarif wird aktualisiert, sobald Paddle die Zahlung bestätigt (meist innerhalb einer Minute).', 'fr': "Merci ! Votre forfait est mis à jour dès que Paddle confirme le paiement (en général en moins d'une minute).", 'it': 'Grazie! Il piano viene aggiornato appena Paddle conferma il pagamento (di solito entro un minuto).', 'zh': '谢谢！Paddle 确认付款后（通常一分钟内）套餐就会更新。'},
+'5. AI agents': {'de': '5. KI-Agenten', 'fr': '5. Agents IA', 'it': '5. Agenti IA', 'zh': '5. AI 助手接入'},
+'AI agent access': {'de': 'Zugriff für KI-Agenten', 'fr': 'Accès des agents IA', 'it': 'Accesso agli agenti IA', 'zh': '允许 AI 助手访问'},
+'Let AI assistants (ChatGPT, Claude, Grok, Gemini …) search your in-stock products and create a checkout link': {'de': 'KI-Assistenten (ChatGPT, Claude, Grok, Gemini …) dürfen Ihre verfügbaren Produkte suchen und einen Checkout-Link erstellen', 'fr': 'Autoriser les assistants IA (ChatGPT, Claude, Grok, Gemini …) à rechercher vos produits en stock et à créer un lien de paiement', 'it': 'Consenti agli assistenti IA (ChatGPT, Claude, Grok, Gemini …) di cercare i prodotti disponibili e creare un link al checkout', 'zh': '允许 AI 助手（ChatGPT、Claude、Grok、Gemini 等）搜索你的有货商品并生成结账链接'},
+'Read-only: only in-stock products with their current prices. The shopper reviews the cart and pays in your normal WooCommerce checkout; AI agents never take payment or see orders.': {'de': 'Nur lesend: nur verfügbare Produkte mit aktuellen Preisen. Der Kunde prüft den Warenkorb und bezahlt im normalen WooCommerce-Checkout; KI-Agenten nehmen nie Zahlungen entgegen und sehen keine Bestellungen.', 'fr': 'Lecture seule : uniquement les produits en stock avec leurs prix actuels. Le client vérifie le panier et paie dans votre checkout WooCommerce habituel ; les agents IA ne prennent jamais de paiement et ne voient pas les commandes.', 'it': 'Sola lettura: solo prodotti disponibili con i prezzi attuali. Il cliente controlla il carrello e paga nel normale checkout WooCommerce; gli agenti IA non incassano mai e non vedono gli ordini.', 'zh': '只读：只提供有货商品和当前价格。顾客自己确认购物车并在 WooCommerce 结账页付款；AI 助手不会收款，也看不到订单。'},
+'MCP server:': {'de': 'MCP-Server:', 'fr': 'Serveur MCP :', 'it': 'Server MCP:', 'zh': 'MCP 服务地址：'},
+'Discovery:': {'de': 'Auffindbarkeit:', 'fr': 'Découverte :', 'it': 'Individuazione:', 'zh': '发现地址：'},
+'6. Plan': {'de': '6. Tarif', 'fr': '6. Forfait', 'it': '6. Piano', 'zh': '6. 套餐'},
+'month': {'de': 'Monat', 'fr': 'mois', 'it': 'mese', 'zh': '月'},
+'USD %s / year (−20%%)': {'de': 'USD %s / Jahr (−20 %%)', 'fr': 'USD %s / an (−20 %%)', 'it': 'USD %s / anno (−20%%)', 'zh': 'USD %s / 年（省 20%%）'},
+'Free trial until %s': {'de': 'Kostenlos testen bis %s', 'fr': "Essai gratuit jusqu'au %s", 'it': 'Prova gratuita fino al %s', 'zh': '免费试用至 %s'},
+'Monthly': {'de': 'Monatlich', 'fr': 'Mensuel', 'it': 'Mensile', 'zh': '按月'},
+'Yearly': {'de': 'Jährlich', 'fr': 'Annuel', 'it': 'Annuale', 'zh': '按年'},
+'Paid plans start with a %d-day free trial. Payment is handled by Paddle (merchant of record: invoices and VAT included); cancel any time.': {'de': 'Bezahlte Tarife beginnen mit %d Tagen kostenlosem Test. Die Zahlung läuft über Paddle (Merchant of Record: Rechnungen und MwSt. inklusive); jederzeit kündbar.', 'fr': 'Les forfaits payants commencent par un essai gratuit de %d jours. Le paiement est géré par Paddle (merchant of record : factures et TVA incluses) ; résiliable à tout moment.', 'it': 'I piani a pagamento iniziano con %d giorni di prova gratuita. Il pagamento è gestito da Paddle (merchant of record: fatture e IVA incluse); disdici quando vuoi.', 'zh': '付费套餐先免费试用 %d 天。付款由 Paddle 处理（Paddle 作为销售方，开发票并代缴增值税），随时可以取消。'},
+'Manage billing (change plan, invoices, cancel)': {'de': 'Abrechnung verwalten (Tarif ändern, Rechnungen, kündigen)', 'fr': 'Gérer la facturation (changer de forfait, factures, résilier)', 'it': 'Gestisci fatturazione (cambia piano, fatture, disdici)', 'zh': '管理付费（换套餐、发票、取消）'},
+"AI shopping assistant for WooCommerce: answers from your store's own data (products, policies, shipping), recommends in-stock products and adds them to the cart, looks up orders and tracking, and turns \"contact us\" into tickets.": {
+ "de":"KI-Einkaufsassistent für WooCommerce: antwortet aus den eigenen Shopdaten (Produkte, Richtlinien, Versand), empfiehlt verfügbare Produkte und legt sie in den Warenkorb, findet Bestellungen und Sendungen und macht aus „Kontakt“ Tickets.",
+ "fr":"Assistant d'achat IA pour WooCommerce : répond à partir des données de votre boutique (produits, politiques, livraison), recommande des produits en stock et les ajoute au panier, retrouve commandes et suivis, et transforme « nous contacter » en tickets.",
+ "it":"Assistente di acquisto IA per WooCommerce: risponde con i dati del tuo negozio (prodotti, policy, spedizioni), consiglia prodotti disponibili e li aggiunge al carrello, trova ordini e tracking e trasforma « contattaci » in ticket.",
+ "zh":"WooCommerce 的 AI 购物助手：用店铺自己的数据（商品、政策、运费）回答顾客，推荐有货商品并加入购物车，查询订单和物流，并把“联系我们”变成工单。"},
+"Settings":{"de":"Einstellungen","fr":"Réglages","it":"Impostazioni","zh":"设置"},
+"Pod.AI Chat":{"de":"Pod.AI Chat","fr":"Pod.AI Chat","it":"Pod.AI Chat","zh":"Pod.AI 聊天"},
+"Tickets":{"de":"Tickets","fr":"Tickets","it":"Ticket","zh":"工单"},
+"Saved, but Pod.AI could not be updated:":{"de":"Gespeichert, aber Pod.AI konnte nicht aktualisiert werden:","fr":"Enregistré, mais Pod.AI n'a pas pu être mis à jour :","it":"Salvato, ma Pod.AI non è stato aggiornato:","zh":"已保存，但未能同步到 Pod.AI："},
+"Sorry, you are not allowed to do that.":{"de":"Dazu fehlt Ihnen die Berechtigung.","fr":"Vous n'avez pas l'autorisation de faire cela.","it":"Non hai il permesso di farlo.","zh":"抱歉，你没有权限执行此操作。"},
+"Connected to Pod.AI. Your products were synced and the chat is live on your store.":{"de":"Mit Pod.AI verbunden. Ihre Produkte wurden synchronisiert und der Chat ist in Ihrem Shop aktiv.","fr":"Connecté à Pod.AI. Vos produits sont synchronisés et le chat est actif sur votre boutique.","it":"Connesso a Pod.AI. I prodotti sono stati sincronizzati e la chat è attiva nel negozio.","zh":"已连接 Pod.AI。商品已同步，聊天窗口已在店铺上线。"},
+"Could not connect to Pod.AI:":{"de":"Verbindung mit Pod.AI fehlgeschlagen:","fr":"Connexion à Pod.AI impossible :","it":"Impossibile connettersi a Pod.AI:","zh":"无法连接 Pod.AI："},
+"Disconnected. Your store data at Pod.AI was deleted.":{"de":"Getrennt. Ihre Shopdaten bei Pod.AI wurden gelöscht.","fr":"Déconnecté. Les données de votre boutique chez Pod.AI ont été supprimées.","it":"Disconnesso. I dati del negozio su Pod.AI sono stati eliminati.","zh":"已断开连接，Pod.AI 上的店铺数据已删除。"},
+"Sync finished: %d products sent.":{"de":"Synchronisierung fertig: %d Produkte gesendet.","fr":"Synchronisation terminée : %d produits envoyés.","it":"Sincronizzazione completata: %d prodotti inviati.","zh":"同步完成：已发送 %d 个商品。"},
+"Sync failed:":{"de":"Synchronisierung fehlgeschlagen:","fr":"Échec de la synchronisation :","it":"Sincronizzazione non riuscita:","zh":"同步失败："},
+"Ticket updated.":{"de":"Ticket aktualisiert.","fr":"Ticket mis à jour.","it":"Ticket aggiornato.","zh":"工单已更新。"},
+"The ticket could not be updated.":{"de":"Das Ticket konnte nicht aktualisiert werden.","fr":"Le ticket n'a pas pu être mis à jour.","it":"Impossibile aggiornare il ticket.","zh":"工单更新失败。"},
+"— None —":{"de":"— Keine —","fr":"— Aucune —","it":"— Nessuna —","zh":"— 无 —"},
+"1. Connection":{"de":"1. Verbindung","fr":"1. Connexion","it":"1. Connessione","zh":"1. 连接"},
+"Connected":{"de":"Verbunden","fr":"Connecté","it":"Connesso","zh":"已连接"},
+"Site key:":{"de":"Site-Schlüssel:","fr":"Clé du site :","it":"Chiave del sito:","zh":"站点密钥 ID："},
+"Plan":{"de":"Tarif","fr":"Forfait","it":"Piano","zh":"套餐"},
+"%1$d / %2$d":{"de":"%1$d / %2$d","fr":"%1$d / %2$d","it":"%1$d / %2$d","zh":"%1$d / %2$d"},
+"Chats this month":{"de":"Chats diesen Monat","fr":"Chats ce mois-ci","it":"Chat questo mese","zh":"本月对话数"},
+"Products in stock / synced":{"de":"Produkte verfügbar / synchronisiert","fr":"Produits en stock / synchronisés","it":"Prodotti disponibili / sincronizzati","zh":"有货商品 / 已同步商品"},
+"Last full sync":{"de":"Letzte Vollsynchronisierung","fr":"Dernière synchronisation complète","it":"Ultima sincronizzazione completa","zh":"上次全量同步"},
+"Pod.AI is not reachable right now.":{"de":"Pod.AI ist gerade nicht erreichbar.","fr":"Pod.AI est injoignable pour le moment.","it":"Pod.AI non è raggiungibile al momento.","zh":"暂时无法连接 Pod.AI。"},
+"Sync products now":{"de":"Produkte jetzt synchronisieren","fr":"Synchroniser les produits","it":"Sincronizza ora i prodotti","zh":"立即同步商品"},
+"Disconnect and delete this store's data at Pod.AI (tickets, chats, products)?":{"de":"Trennen und die Daten dieses Shops bei Pod.AI löschen (Tickets, Chats, Produkte)?","fr":"Déconnecter et supprimer les données de cette boutique chez Pod.AI (tickets, chats, produits) ?","it":"Disconnettere ed eliminare i dati di questo negozio su Pod.AI (ticket, chat, prodotti)?","zh":"断开连接并删除此店铺在 Pod.AI 的数据（工单、对话、商品）？"},
+"Disconnect":{"de":"Trennen","fr":"Déconnecter","it":"Disconnetti","zh":"断开连接"},
+"Connect your store to the Pod.AI service. Your site gets its own key; only public product data, your policies and settings are sent. Orders stay in WooCommerce and are only read when a shopper gives the order number and e-mail.":{"de":"Verbinden Sie Ihren Shop mit dem Pod.AI-Dienst. Ihre Website erhält einen eigenen Schlüssel; gesendet werden nur öffentliche Produktdaten, Ihre Richtlinien und Einstellungen. Bestellungen bleiben in WooCommerce und werden nur gelesen, wenn ein Kunde Bestellnummer und E-Mail angibt.","fr":"Connectez votre boutique au service Pod.AI. Votre site reçoit sa propre clé ; seules les données produit publiques, vos politiques et réglages sont envoyés. Les commandes restent dans WooCommerce et ne sont lues que lorsqu'un client donne le numéro de commande et l'e-mail.","it":"Collega il negozio al servizio Pod.AI. Il sito riceve una chiave propria; vengono inviati solo dati pubblici dei prodotti, policy e impostazioni. Gli ordini restano in WooCommerce e vengono letti solo quando un cliente indica numero d'ordine ed e-mail.","zh":"把店铺连接到 Pod.AI 服务。你的网站会获得独立密钥；只发送公开的商品数据、店铺政策和设置。订单留在 WooCommerce 中，只有顾客提供订单号和邮箱时才会读取。"},
+"Pod.AI service URL":{"de":"Pod.AI-Dienst-URL","fr":"URL du service Pod.AI","it":"URL del servizio Pod.AI","zh":"Pod.AI 服务地址"},
+"Connect to Pod.AI":{"de":"Mit Pod.AI verbinden","fr":"Se connecter à Pod.AI","it":"Connetti a Pod.AI","zh":"连接 Pod.AI"},
+"2. Chat and tickets":{"de":"2. Chat und Tickets","fr":"2. Chat et tickets","it":"2. Chat e ticket","zh":"2. 聊天与工单"},
+"Chat on the storefront":{"de":"Chat im Shop","fr":"Chat sur la boutique","it":"Chat nel negozio","zh":"店铺前台聊天"},
+"Show the chat widget":{"de":"Chat-Widget anzeigen","fr":"Afficher le widget de chat","it":"Mostra il widget della chat","zh":"显示聊天窗口"},
+"Ticket e-mail":{"de":"Ticket-E-Mail","fr":"E-mail des tickets","it":"E-mail dei ticket","zh":"工单邮箱"},
+"When a shopper clicks \"contact us\" and leaves an e-mail, a ticket is created and the chat transcript is sent here. Reply to that e-mail to answer the shopper.":{"de":"Wenn ein Kunde auf „Kontakt“ klickt und eine E-Mail hinterlässt, wird ein Ticket erstellt und der Chatverlauf hierher gesendet. Antworten Sie auf diese E-Mail, um dem Kunden zu antworten.","fr":"Quand un client clique sur « nous contacter » et laisse un e-mail, un ticket est créé et la conversation est envoyée ici. Répondez à cet e-mail pour répondre au client.","it":"Quando un cliente clicca « contattaci » e lascia un'e-mail, viene creato un ticket e la conversazione viene inviata qui. Rispondi a quell'e-mail per rispondere al cliente.","zh":"顾客点击“联系我们”并留下邮箱后，会生成工单，聊天记录发送到这个邮箱。直接回复那封邮件即可回复顾客。"},
+"Reply time (hours)":{"de":"Antwortzeit (Stunden)","fr":"Délai de réponse (heures)","it":"Tempo di risposta (ore)","zh":"回复时间（小时）"},
+"Greeting":{"de":"Begrüßung","fr":"Message d'accueil","it":"Saluto","zh":"欢迎语"},
+"Hi! Ask me about products, shipping or your order.":{"de":"Hallo! Fragen Sie mich zu Produkten, Versand oder Ihrer Bestellung.","fr":"Bonjour ! Posez-moi vos questions sur les produits, la livraison ou votre commande.","it":"Ciao! Chiedimi di prodotti, spedizioni o del tuo ordine.","zh":"你好！可以问我商品、运费或订单的问题。"},
+"3. Widget":{"de":"3. Widget","fr":"3. Widget","it":"3. Widget","zh":"3. 聊天窗口"},
+"Colour":{"de":"Farbe","fr":"Couleur","it":"Colore","zh":"颜色"},
+"Position":{"de":"Position","fr":"Position","it":"Posizione","zh":"位置"},
+"Bottom right":{"de":"Unten rechts","fr":"En bas à droite","it":"In basso a destra","zh":"右下角"},
+"Bottom left":{"de":"Unten links","fr":"En bas à gauche","it":"In basso a sinistra","zh":"左下角"},
+"Automatic (shopper / store language)":{"de":"Automatisch (Kunden- / Shopsprache)","fr":"Automatique (langue du client / de la boutique)","it":"Automatica (lingua del cliente / del negozio)","zh":"自动（顾客 / 店铺语言）"},
+"Language":{"de":"Sprache","fr":"Langue","it":"Lingua","zh":"语言"},
+"Header title":{"de":"Titel","fr":"Titre","it":"Titolo","zh":"标题"},
+"4. Knowledge":{"de":"4. Wissen","fr":"4. Connaissances","it":"4. Conoscenze","zh":"4. 知识库"},
+"The assistant answers from your refund/returns, terms and privacy pages, your shipping zones and the pages below. No external AI service is used.":{"de":"Der Assistent antwortet aus Ihren Seiten zu Rückgabe, AGB und Datenschutz, Ihren Versandzonen und den Seiten unten. Es wird kein externer KI-Dienst verwendet.","fr":"L'assistant répond à partir de vos pages retours, CGV et confidentialité, de vos zones de livraison et des pages ci-dessous. Aucun service d'IA externe n'est utilisé.","it":"L'assistente risponde dalle pagine resi, termini e privacy, dalle zone di spedizione e dalle pagine qui sotto. Nessun servizio IA esterno viene usato.","zh":"助手根据你的退换货、条款、隐私页面、运费区域和下方页面回答，不使用任何外部 AI 服务。"},
+"Shipping information page":{"de":"Seite mit Versandinformationen","fr":"Page d'informations de livraison","it":"Pagina informazioni di spedizione","zh":"配送说明页面"},
+"Contact page":{"de":"Kontaktseite","fr":"Page de contact","it":"Pagina contatti","zh":"联系页面"},
+"FAQ":{"de":"FAQ","fr":"FAQ","it":"FAQ","zh":"常见问题"},
+"One question per block: first line = question, next lines = answer, blank line between blocks.":{"de":"Eine Frage pro Block: erste Zeile = Frage, folgende Zeilen = Antwort, Leerzeile zwischen den Blöcken.","fr":"Une question par bloc : première ligne = question, lignes suivantes = réponse, ligne vide entre les blocs.","it":"Una domanda per blocco: prima riga = domanda, righe seguenti = risposta, riga vuota tra i blocchi.","zh":"每个问题一段：第一行是问题，后面几行是答案，段与段之间空一行。"},
+"Public coupon (optional)":{"de":"Öffentlicher Gutschein (optional)","fr":"Code promo public (facultatif)","it":"Coupon pubblico (facoltativo)","zh":"公开优惠码（可选）"},
+"10% off your first order":{"de":"10 % auf die erste Bestellung","fr":"10 % sur votre première commande","it":"10% sul primo ordine","zh":"首单 9 折"},
+"When a shopper asks for a discount, the chat offers this code and can apply it to their cart. Leave empty to never offer a code.":{"de":"Fragt ein Kunde nach Rabatt, bietet der Chat diesen Code an und kann ihn im Warenkorb einlösen. Leer lassen, um nie einen Code anzubieten.","fr":"Quand un client demande une réduction, le chat propose ce code et peut l'appliquer à son panier. Laissez vide pour ne jamais proposer de code.","it":"Quando un cliente chiede uno sconto, la chat offre questo codice e può applicarlo al carrello. Lascia vuoto per non offrire mai un codice.","zh":"顾客询问折扣时，聊天会提供这个优惠码，并可以直接用到购物车。留空则不提供优惠码。"},
+"5. Plan":{"de":"5. Tarif","fr":"5. Forfait","it":"5. Piano","zh":"5. 套餐"},
+"Chats / month":{"de":"Chats / Monat","fr":"Chats / mois","it":"Chat / mese","zh":"每月对话数"},
+"Price":{"de":"Preis","fr":"Prix","it":"Prezzo","zh":"价格"},
+"Free":{"de":"Kostenlos","fr":"Gratuit","it":"Gratis","zh":"免费"},
+"Current":{"de":"Aktuell","fr":"Actuel","it":"Attuale","zh":"当前"},
+"Paid plans are not on sale yet. Contact Pod.AI if you need more chats.":{"de":"Bezahlte Tarife sind noch nicht erhältlich. Kontaktieren Sie Pod.AI, wenn Sie mehr Chats brauchen.","fr":"Les forfaits payants ne sont pas encore en vente. Contactez Pod.AI si vous avez besoin de plus de chats.","it":"I piani a pagamento non sono ancora in vendita. Contatta Pod.AI se ti servono più chat.","zh":"付费套餐暂未开放购买。如需更多对话次数，请联系 Pod.AI。"},
+"Pod.AI tickets":{"de":"Pod.AI-Tickets","fr":"Tickets Pod.AI","it":"Ticket Pod.AI","zh":"Pod.AI 工单"},
+"Connect Pod.AI first (Pod.AI Chat → Settings).":{"de":"Verbinden Sie zuerst Pod.AI (Pod.AI Chat → Einstellungen).","fr":"Connectez d'abord Pod.AI (Pod.AI Chat → Réglages).","it":"Connetti prima Pod.AI (Pod.AI Chat → Impostazioni).","zh":"请先连接 Pod.AI（Pod.AI 聊天 → 设置）。"},
+"All":{"de":"Alle","fr":"Tous","it":"Tutti","zh":"全部"},
+"Open":{"de":"Offen","fr":"Ouvert","it":"Aperto","zh":"待处理"},
+"Pending":{"de":"In Bearbeitung","fr":"En cours","it":"In corso","zh":"处理中"},
+"Closed":{"de":"Geschlossen","fr":"Fermé","it":"Chiuso","zh":"已关闭"},
+"Ticket":{"de":"Ticket","fr":"Ticket","it":"Ticket","zh":"工单"},
+"Status":{"de":"Status","fr":"Statut","it":"Stato","zh":"状态"},
+"Customer":{"de":"Kunde","fr":"Client","it":"Cliente","zh":"顾客"},
+"Order":{"de":"Bestellung","fr":"Commande","it":"Ordine","zh":"订单"},
+"Reason":{"de":"Grund","fr":"Motif","it":"Motivo","zh":"原因"},
+"Created":{"de":"Erstellt","fr":"Créé","it":"Creato","zh":"创建时间"},
+"No tickets yet.":{"de":"Noch keine Tickets.","fr":"Aucun ticket pour l'instant.","it":"Ancora nessun ticket.","zh":"还没有工单。"},
+"(no e-mail yet)":{"de":"(noch keine E-Mail)","fr":"(pas encore d'e-mail)","it":"(ancora nessuna e-mail)","zh":"（尚未留邮箱）"},
+"Chat transcript":{"de":"Chatverlauf","fr":"Conversation","it":"Conversazione","zh":"聊天记录"},
+"Assistant":{"de":"Assistent","fr":"Assistant","it":"Assistente","zh":"助手"},
+"Notes":{"de":"Notizen","fr":"Notes","it":"Note","zh":"备注"},
+"Add a note (internal)":{"de":"Notiz hinzufügen (intern)","fr":"Ajouter une note (interne)","it":"Aggiungi una nota (interna)","zh":"添加备注（内部）"},
+"Reply by e-mail":{"de":"Per E-Mail antworten","fr":"Répondre par e-mail","it":"Rispondi via e-mail","zh":"邮件回复"},
+"Save ticket":{"de":"Ticket speichern","fr":"Enregistrer le ticket","it":"Salva ticket","zh":"保存工单"},
+"Pod.AI is not connected yet.":{"de":"Pod.AI ist noch nicht verbunden.","fr":"Pod.AI n'est pas encore connecté.","it":"Pod.AI non è ancora connesso.","zh":"尚未连接 Pod.AI。"},
+"Pod.AI Chat needs WooCommerce to be installed and active.":{"de":"Pod.AI Chat benötigt ein installiertes und aktives WooCommerce.","fr":"Pod.AI Chat nécessite WooCommerce installé et activé.","it":"Pod.AI Chat richiede WooCommerce installato e attivo.","zh":"Pod.AI 聊天需要先安装并启用 WooCommerce。"},
+}
+FAQ_PH = {"de":"Bieten Sie Geschenkverpackung an?\nJa, die Geschenkverpackung ist gratis – einfach an der Kasse vermerken.\n\nKann ich meine Bestellung abholen?\nJa, in unserem Zürcher Laden Mo–Sa.","fr":"Proposez-vous l'emballage cadeau ?\nOui, l'emballage cadeau est gratuit — ajoutez une note au paiement.\n\nPuis-je retirer ma commande ?\nOui, dans notre boutique de Zurich du lundi au samedi.","it":"Offrite la confezione regalo?\nSì, la confezione regalo è gratuita — aggiungi una nota alla cassa.\n\nPosso ritirare l'ordine?\nSì, nel nostro negozio di Zurigo da lunedì a sabato.","zh":"可以礼品包装吗？\n可以，礼品包装免费——结账时备注即可。\n\n可以自提吗？\n可以，周一到周六在苏黎世门店自提。"}
+LOC = {"de":"de_DE","fr":"fr_FR","it":"it_IT","zh":"zh_CN"}
+pot = open(sys.argv[1], encoding="utf8").read()
+# parse entries
+entries = re.split(r"\n\n", pot)
+def unq(block, key):
+    m = re.search(r'^%s ((?:".*"\n?)+)' % key, block, re.M)
+    if not m: return None
+    parts = re.findall(r'"((?:[^"\\]|\\.)*)"', m.group(1))
+    return "".join(parts).encode().decode("unicode_escape").encode("latin1").decode("utf8")
+def q(s): return '"' + s.replace("\\","\\\\").replace('"','\\"').replace("\n","\\n") + '"'
+for lang, loc in LOC.items():
+    out = [f'msgid ""\nmsgstr ""\n"Project-Id-Version: Pod.AI Chat for WooCommerce 1.0.0\\n"\n"Language: {loc}\\n"\n"MIME-Version: 1.0\\n"\n"Content-Type: text/plain; charset=UTF-8\\n"\n"Content-Transfer-Encoding: 8bit\\n"\n"Plural-Forms: nplurals={1 if lang=="zh" else 2}; plural={"0" if lang=="zh" else "(n != 1)"};\\n"\n"X-Domain: pod-ai-chat\\n"\n']
+    missing = []
+    for e in entries[1:]:
+        mid = unq(e, "msgid")
+        if mid is None: continue
+        ctx = unq(e, "msgctxt")
+        if mid in T: tr = T[mid][lang]
+        elif mid.startswith("Do you offer gift wrapping?"): tr = FAQ_PH[lang]
+        elif mid in ("Pod.AI Chat for WooCommerce","https://podai.swisspro.site/","Pod.AI"): tr = mid
+        else: missing.append(mid); continue
+        refs = "\n".join(l for l in e.split("\n") if l.startswith("#"))
+        out.append(f"{refs}\n" + (f"msgctxt {q(ctx)}\n" if ctx else "") + f"msgid {q(mid)}\nmsgstr {q(tr)}\n")
+    open(f"{sys.argv[2]}/pod-ai-chat-{loc}.po","w",encoding="utf8").write("\n".join(out))
+    print(loc, "missing:", missing)

@@ -24,6 +24,8 @@ class PodAI_Chat_Admin {
 		add_action( 'admin_post_podai_chat_disconnect', array( __CLASS__, 'disconnect' ) );
 		add_action( 'admin_post_podai_chat_sync', array( __CLASS__, 'sync' ) );
 		add_action( 'admin_post_podai_chat_ticket', array( __CLASS__, 'ticket_update' ) );
+		add_action( 'admin_post_podai_chat_upgrade', array( __CLASS__, 'upgrade' ) );
+		add_action( 'admin_post_podai_chat_portal', array( __CLASS__, 'portal' ) );
 		add_action( 'update_option_' . PodAI_Chat_Plugin::OPTION, array( __CLASS__, 'after_save' ), 10, 0 );
 		add_filter( 'plugin_action_links_' . plugin_basename( PODAI_CHAT_FILE ), array( __CLASS__, 'links' ) );
 	}
@@ -94,6 +96,7 @@ class PodAI_Chat_Admin {
 				'promo_summary' => sanitize_text_field( isset( $in['promo_summary'] ) ? $in['promo_summary'] : '' ),
 				'faq'           => sanitize_textarea_field( isset( $in['faq'] ) ? $in['faq'] : '' ),
 				'reply_hours'   => max( 1, min( 168, absint( isset( $in['reply_hours'] ) ? $in['reply_hours'] : 24 ) ) ),
+				'agent_api'     => empty( $in['agent_api'] ) ? 0 : 1,
 			)
 		);
 	}
@@ -190,6 +193,52 @@ class PodAI_Chat_Admin {
 	}
 
 	/**
+	 * Upgrade: ask Pod.AI for a Paddle checkout of the chosen plan and open it.
+	 */
+	public static function upgrade() {
+		self::guard( 'podai_chat_upgrade' );
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- nonce verified in self::guard().
+		$plan  = isset( $_POST['plan'] ) ? sanitize_key( wp_unslash( $_POST['plan'] ) ) : '';
+		$cycle = isset( $_POST['cycle'] ) && 'annual' === $_POST['cycle'] ? 'annual' : 'monthly';
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
+		$res = PodAI_Chat_Client::request(
+			'POST',
+			'billing/checkout',
+			array(
+				'plan'       => $plan,
+				'cycle'      => $cycle,
+				'email'      => wp_get_current_user()->user_email,
+				'return_url' => admin_url( 'admin.php?page=pod-ai-chat&podai_notice=billing_return' ),
+			)
+		);
+		self::open_billing( $res );
+	}
+
+	/**
+	 * Manage billing: Paddle customer portal.
+	 */
+	public static function portal() {
+		self::guard( 'podai_chat_portal' );
+		self::open_billing( PodAI_Chat_Client::request( 'POST', 'billing/portal', array() ) );
+	}
+
+	/**
+	 * Redirect to a billing URL returned by the backend (Pod.AI checkout page or Paddle portal only).
+	 *
+	 * @param array|WP_Error $res Backend response.
+	 */
+	private static function open_billing( $res ) {
+		$url  = ! is_wp_error( $res ) && ! empty( $res['url'] ) ? esc_url_raw( $res['url'] ) : '';
+		$host = $url ? wp_parse_url( $url, PHP_URL_HOST ) : '';
+		$own  = wp_parse_url( PodAI_Chat_Plugin::settings()['backend'], PHP_URL_HOST );
+		if ( ! $url || ! ( $host === $own || preg_match( '/(^|\.)paddle\.com$/', (string) $host ) ) ) {
+			self::back( 'pod-ai-chat', 'billing_failed', array( 'podai_err' => rawurlencode( is_wp_error( $res ) ? $res->get_error_message() : 'billing_unavailable' ) ) );
+		}
+		wp_redirect( $url ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- external billing page, host checked above.
+		exit;
+	}
+
+	/**
 	 * Ticket status / note.
 	 */
 	public static function ticket_update() {
@@ -225,6 +274,8 @@ class PodAI_Chat_Admin {
 			'sync_failed'    => array( 'error', __( 'Sync failed:', 'pod-ai-chat' ) . ' ' . $err ),
 			'ticket_saved'   => array( 'success', __( 'Ticket updated.', 'pod-ai-chat' ) ),
 			'ticket_failed'  => array( 'error', __( 'The ticket could not be updated.', 'pod-ai-chat' ) ),
+			'billing_failed' => array( 'error', __( 'Billing is not available right now:', 'pod-ai-chat' ) . ' ' . $err ),
+			'billing_return' => array( 'success', __( 'Thank you! Your plan is updated as soon as Paddle confirms the payment (usually within a minute).', 'pod-ai-chat' ) ),
 		);
 		if ( isset( $map[ $code ] ) ) {
 			printf( '<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>', esc_attr( $map[ $code ][0] ), esc_html( $map[ $code ][1] ) );
@@ -338,16 +389,63 @@ class PodAI_Chat_Admin {
 		echo '<tr><th><label for="podai-faq">' . esc_html__( 'FAQ', 'pod-ai-chat' ) . '</label></th><td><textarea id="podai-faq" class="large-text code" rows="8" name="' . esc_attr( $opt ) . '[faq]" placeholder="' . esc_attr__( "Do you offer gift wrapping?\nYes, gift wrapping is free — add a note at checkout.\n\nCan I pick up my order?\nYes, in our Zurich shop Mon–Sat.", 'pod-ai-chat' ) . '">' . esc_textarea( $s['faq'] ) . '</textarea><p class="description">' . esc_html__( 'One question per block: first line = question, next lines = answer, blank line between blocks.', 'pod-ai-chat' ) . '</p></td></tr>';
 		echo '<tr><th><label for="podai-pc">' . esc_html__( 'Public coupon (optional)', 'pod-ai-chat' ) . '</label></th><td><input id="podai-pc" type="text" name="' . esc_attr( $opt ) . '[promo_code]" value="' . esc_attr( $s['promo_code'] ) . '" placeholder="WELCOME10"> <input type="text" class="regular-text" name="' . esc_attr( $opt ) . '[promo_summary]" value="' . esc_attr( $s['promo_summary'] ) . '" placeholder="' . esc_attr__( '10% off your first order', 'pod-ai-chat' ) . '"><p class="description">' . esc_html__( 'When a shopper asks for a discount, the chat offers this code and can apply it to their cart. Leave empty to never offer a code.', 'pod-ai-chat' ) . '</p></td></tr>';
 		echo '</table></div>';
+
+		// 5) AI agents.
+		echo '<div class="card"><h2>' . esc_html__( '5. AI agents', 'pod-ai-chat' ) . '</h2><table class="form-table">';
+		echo '<tr><th>' . esc_html__( 'AI agent access', 'pod-ai-chat' ) . '</th><td><label><input type="checkbox" name="' . esc_attr( $opt ) . '[agent_api]" value="1" ' . checked( ! empty( $s['agent_api'] ), true, false ) . '> ' . esc_html__( 'Let AI assistants (ChatGPT, Claude, Grok, Gemini …) search your in-stock products and create a checkout link', 'pod-ai-chat' ) . '</label>';
+		echo '<p class="description">' . esc_html__( 'Read-only: only in-stock products with their current prices. The shopper reviews the cart and pays in your normal WooCommerce checkout; AI agents never take payment or see orders.', 'pod-ai-chat' ) . '</p>';
+		if ( isset( $st ) && ! is_wp_error( $st ) && ! empty( $st['agent_api']['mcp'] ) && ! empty( $s['agent_api'] ) ) {
+			echo '<p>' . esc_html__( 'MCP server:', 'pod-ai-chat' ) . ' <code>' . esc_html( $st['agent_api']['mcp'] ) . '</code><br>' . esc_html__( 'Discovery:', 'pod-ai-chat' ) . ' <code>' . esc_html( home_url( '/.well-known/pod-ai-agent.json' ) ) . '</code></p>';
+		}
+		echo '</td></tr></table></div>';
 		submit_button();
 		echo '</form>';
 
-		// 5) plan.
+		// 6) plan.
 		if ( PodAI_Chat_Plugin::connected() && isset( $b ) ) {
-			echo '<div class="card"><h2>' . esc_html__( '5. Plan', 'pod-ai-chat' ) . '</h2><table class="podai-plans widefat striped"><thead><tr><th>' . esc_html__( 'Plan', 'pod-ai-chat' ) . '</th><th>' . esc_html__( 'Chats / month', 'pod-ai-chat' ) . '</th><th>' . esc_html__( 'Price', 'pod-ai-chat' ) . '</th><th></th></tr></thead><tbody>';
+			$pay = isset( $b['payments'] ) ? $b['payments'] : array();
+			$sub = isset( $b['subscription'] ) ? $b['subscription'] : null;
+			$on  = ! empty( $pay['enabled'] );
+			echo '<div class="card"><h2>' . esc_html__( '6. Plan', 'pod-ai-chat' ) . '</h2><table class="podai-plans widefat striped"><thead><tr><th>' . esc_html__( 'Plan', 'pod-ai-chat' ) . '</th><th>' . esc_html__( 'Chats / month', 'pod-ai-chat' ) . '</th><th>' . esc_html__( 'Price', 'pod-ai-chat' ) . '</th><th></th></tr></thead><tbody>';
 			foreach ( $b['plans'] as $p ) {
-				echo '<tr><td>' . esc_html( $p['name'] ) . '</td><td>' . esc_html( number_format_i18n( $p['chats'] ) ) . '</td><td>' . esc_html( $p['price'] ? 'USD ' . $p['price'] : __( 'Free', 'pod-ai-chat' ) ) . '</td><td>' . ( $p['handle'] === $b['plan'] ? '<span class="podai-badge">' . esc_html__( 'Current', 'pod-ai-chat' ) . '</span>' : '' ) . '</td></tr>';
+				$price = $p['price'] ? 'USD ' . $p['price'] . ' / ' . __( 'month', 'pod-ai-chat' ) : __( 'Free', 'pod-ai-chat' );
+				if ( $p['price'] && ! empty( $p['annual_price'] ) ) {
+					/* translators: %s: yearly price in USD. */
+					$price .= ' · ' . sprintf( __( 'USD %s / year (−20%%)', 'pod-ai-chat' ), number_format_i18n( (float) $p['annual_price'], 2 ) );
+				}
+				echo '<tr><td>' . esc_html( $p['name'] ) . '</td><td>' . esc_html( number_format_i18n( $p['chats'] ) ) . '</td><td>' . esc_html( $price ) . '</td><td>';
+				if ( $p['handle'] === $b['plan'] ) {
+					echo '<span class="podai-badge">' . esc_html__( 'Current', 'pod-ai-chat' ) . '</span>';
+					if ( $sub && 'trialing' === $sub['status'] && ! empty( $sub['trial_ends_at'] ) ) {
+						/* translators: %s: date. */
+						echo ' ' . esc_html( sprintf( __( 'Free trial until %s', 'pod-ai-chat' ), mysql2date( get_option( 'date_format' ), get_date_from_gmt( gmdate( 'Y-m-d H:i:s', strtotime( $sub['trial_ends_at'] ) ) ) ) ) );
+					}
+				} elseif ( $on && $p['price'] && ! $sub ) {
+					foreach ( array( 'monthly' => __( 'Monthly', 'pod-ai-chat' ), 'annual' => __( 'Yearly', 'pod-ai-chat' ) ) as $cycle => $label ) {
+						echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline;margin-right:6px">';
+						wp_nonce_field( 'podai_chat_upgrade' );
+						echo '<input type="hidden" name="action" value="podai_chat_upgrade"><input type="hidden" name="plan" value="' . esc_attr( $p['handle'] ) . '"><input type="hidden" name="cycle" value="' . esc_attr( $cycle ) . '">';
+						submit_button( $label, 'monthly' === $cycle ? 'primary small' : 'secondary small', 'submit', false );
+						echo '</form>';
+					}
+				}
+				echo '</td></tr>';
 			}
-			echo '</tbody></table><p class="description">' . esc_html__( 'Paid plans are not on sale yet. Contact Pod.AI if you need more chats.', 'pod-ai-chat' ) . '</p></div>';
+			echo '</tbody></table>';
+			if ( $on ) {
+				/* translators: %d: number of trial days. */
+				echo '<p class="description">' . esc_html( sprintf( __( 'Paid plans start with a %d-day free trial. Payment is handled by Paddle (merchant of record: invoices and VAT included); cancel any time.', 'pod-ai-chat' ), isset( $pay['trial_days'] ) ? (int) $pay['trial_days'] : 14 ) ) . '</p>';
+				if ( $sub ) {
+					echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+					wp_nonce_field( 'podai_chat_portal' );
+					echo '<input type="hidden" name="action" value="podai_chat_portal">';
+					submit_button( __( 'Manage billing (change plan, invoices, cancel)', 'pod-ai-chat' ), 'secondary', 'submit', false );
+					echo '</form>';
+				}
+			} else {
+				echo '<p class="description">' . esc_html__( 'Paid plans are not on sale yet. Contact Pod.AI if you need more chats.', 'pod-ai-chat' ) . '</p>';
+			}
+			echo '</div>';
 		}
 		echo '</div>';
 	}

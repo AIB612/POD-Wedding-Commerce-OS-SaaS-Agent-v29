@@ -11,3 +11,7 @@ The files here run against a **local** WordPress + WooCommerce test store (never
 5. `WP_URL=… WP_ADMIN_USER=… WP_ADMIN_PASS=… CHROME=/usr/bin/google-chrome node browser-e2e.mjs` – real browser: widget, add to cart (Store API), coupon, tracking, Chinese, ticket, admin ticket management, screenshots into `SHOTS_DIR`.
 
 Static checks: `php -l` on every file and `wp plugin check pod-ai-chat` (no errors in 1.0.0).
+
+AI agents: `MCP_SDK_DIR=<path to @modelcontextprotocol/sdk> WP_URL=… CHROME=… node mcp-agent-e2e.mjs` – official MCP client: discovery, initialize, tools/list, search, get_product, create_checkout_link, then opens the link in a browser and checks the prefilled cart + coupon.
+
+Build the release zip: `node scripts/build-woo-plugin.mjs` → `apps/woocommerce-plugin/dist/pod-ai-chat.zip` (served at https://podai.swisspro.site/woocommerce/pod-ai-chat.zip). WordPress.org assets (banners, icons, screenshots): `apps/woocommerce-plugin/wordpress-org-assets/`.

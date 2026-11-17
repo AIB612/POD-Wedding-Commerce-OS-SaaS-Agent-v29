@@ -89,3 +89,10 @@ Is customer data shared across stores? — No. Data is separated per shop and de
 ### Legal
 
 Privacy Policy · Terms of Service
+
+
+## WooCommerce
+Pod.AI Chat for WooCommerce is a WordPress plugin with the same assistant: answers from the store's own data (products, policies, shipping zones, FAQ), recommends in-stock products with real prices, adds them to the cart via the WooCommerce Store API, applies the store's public coupon, links to checkout, looks up orders with order number + e-mail and turns "contact us" into tickets. Guide: https://podai.swisspro.site/woocommerce
+
+## AI agent access (MCP)
+Every Pod.AI store (WooCommerce or Shopify) whose merchant keeps "AI agent access" on has a public, read-only MCP server (Streamable HTTP, no auth) at https://podai.swisspro.site/agent/v1/stores/<store>/mcp with the tools get_store_info, search_products, get_product and create_checkout_link, plus the same REST API (https://podai.swisspro.site/agent/v1/openapi.json). Only in-stock products with current prices are returned; create_checkout_link returns a prefilled cart / checkout URL on the store and the shopper pays there. <store> is the WooCommerce site key (ws_…) or the Shopify shop domain.

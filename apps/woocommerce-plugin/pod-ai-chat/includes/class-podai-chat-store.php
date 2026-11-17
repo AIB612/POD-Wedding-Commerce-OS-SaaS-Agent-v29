@@ -153,6 +153,7 @@ class PodAI_Chat_Store {
 			$greeting[ $lang ] = $s['greeting'];
 		}
 		return array(
+			'plugin_version' => PODAI_CHAT_VERSION,
 			'store'    => array(
 				'name'           => wp_strip_all_tags( get_bloginfo( 'name' ) ),
 				'email'          => get_option( 'woocommerce_email_from_address', get_option( 'admin_email' ) ),
@@ -180,6 +181,7 @@ class PodAI_Chat_Store {
 					'title'    => $s['title'],
 				),
 				'custom_faq'        => self::parse_faq( $s['faq'] ),
+				'agent_api'         => ! empty( $s['agent_api'] ),
 			),
 		);
 	}
