@@ -1,6 +1,6 @@
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 // Run against a local WordPress + WooCommerce test store with the plugin connected to a local backend.
-// WP_URL / SHOTS_DIR / PLAYWRIGHT_MODULE / CHROME can be set via env.
+// WP_URL / SHOTS_DIR / PLAYWRIGHT_MODULE / CHROME / ORDER (id of the seeded buyer@example.com order) can be set via env.
 const WP = process.env.WP_URL || 'http://127.0.0.1:8088', S = (process.env.SHOTS_DIR || '/workspace/woo/shots') + '/';
 const b = await chromium.launch({ executablePath: process.env.CHROME || undefined, args: ['--no-sandbox'] });
 const errors = [], results = [];
@@ -28,7 +28,7 @@ await p.waitForFunction(() => [...document.querySelectorAll('.pc-act span, .pc-m
 const cart2 = await p.evaluate(async () => (await fetch('/index.php?rest_route=/wc/store/v1/cart', { credentials: 'same-origin' })).json());
 ok((cart2.coupons || []).some(c => c.code === 'welcome10'), 'coupon applied to cart', JSON.stringify((cart2.coupons || []).map(c => c.code)) + ' total ' + cart2.totals?.total_price);
 await p.screenshot({ path: S + '04-coupon-applied.png' });
-await ask('Where is my order #27?'); await ask('buyer@example.com');
+await ask('Where is my order #' + (process.env.ORDER || '27') + '?'); await ask('buyer@example.com');
 ok(await p.locator('.pc-oc').count() >= 2, 'order + tracking cards');
 await p.screenshot({ path: S + '05-order-tracking.png' });
 // checkout link goes to the checkout page (no payment is made)
