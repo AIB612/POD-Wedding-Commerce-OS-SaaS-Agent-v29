@@ -74,6 +74,18 @@ try {
       const h = (await getHost(p, host)).body;
       const canon = meta(h, /<link rel="canonical" href="([^"]+)"/); assert.equal(new URL(canon).host, host, `${host}${p} canonical ${canon}`);
       const og = meta(h, /<meta property="og:url" content="([^"]+)"/); if (og) assert.equal(new URL(og).host, host, `${host}${p} og:url`);
+      assert.match(h, /<meta property="og:locale" content="de_CH"\/>/, `${host}${p} og:locale`);
+      assert.match(h, /<meta property="og:locale:alternate" content="en_GB"\/>/, `${host}${p} locale en_GB`);
+      assert.match(h, /<meta property="og:locale:alternate" content="fr_CH"\/>/, `${host}${p} locale fr_CH`);
+      assert.match(h, /<meta property="og:locale:alternate" content="it_CH"\/>/, `${host}${p} locale it_CH`);
+      const ogTitle = meta(h, /<meta property="og:title" content="([^"]+)"/);
+      const ogDesc = meta(h, /<meta property="og:description" content="([^"]+)"/);
+      assert.ok(ogTitle && !ogTitle.includes("ß") && ogTitle.length <= 60, `${host}${p} og:title ${ogTitle}`);
+      assert.ok(ogDesc && !ogDesc.includes("ß") && ogDesc.length <= 155, `${host}${p} og:description length ${ogDesc.length}`);
+      const ogImg = meta(h, /<meta property="og:image" content="([^"]+)"/);
+      assert.ok(ogImg, `${host}${p} og:image`);
+      assert.equal(new URL(ogImg).host, host, `${host}${p} og:image host`);
+      assert.ok(h.includes("apple-touch-icon"), `${host}${p} apple-touch-icon`);
       for (const m of h.matchAll(/hreflang="[^"]+" href="([^"]+)"/g)) assert.equal(new URL(m[1]).host, host, `${host}${p} hreflang`);
       for (const m of h.matchAll(/"@type":"Organization","@id":"([^"]+)"/g)) assert.equal(new URL(m[1]).host, host, `${host}${p} Organization`);
       assert.ok(!new RegExp(`"@id":"https://${other.replace(/\./g, "\\.")}/#organization"`).test(h), `${host}${p} references the other business's Organization`);
@@ -101,6 +113,13 @@ try {
       assert.equal(u.host, host, loc);
       const page = await getHost(u.pathname, host);
       assert.equal(page.status, 200, loc);
+      const ogImg = (page.body.match(/<meta property="og:image" content="([^"]+)"/) || [])[1];
+      assert.ok(ogImg, loc + " og:image");
+      const iu = new URL(ogImg);
+      assert.equal(iu.host, host, ogImg);
+      const imgRes = await getHost(iu.pathname, host);
+      assert.equal(imgRes.status, 200, ogImg);
+      assert.match(page.body, /<meta property="og:locale" content="de_CH"\/>/, loc + " og:locale");
     }
     const keyFile = await getHost("/" + indexNowKey + ".txt", host);
     assert.equal(keyFile.status, 200, host + " indexnow key");
