@@ -6,6 +6,6 @@ These files go into the plugin's SVN `assets/` folder (NOT into trunk / the zip)
 |---|---|
 | banner-772x250.png, banner-1544x500.png | Plugin page header |
 | icon-128x128.png, icon-256x256.png | Plugin icon |
-| screenshot-1.png … screenshot-8.png | Matches `== Screenshots ==` 1–8 in readme.txt |
+| screenshot-1.png … screenshot-9.png | Matches `== Screenshots ==` 1–9 in readme.txt (9 = Assistant) |
 
 Regenerate the plugin zip with `node scripts/build-woo-plugin.mjs` (→ apps/woocommerce-plugin/dist/).

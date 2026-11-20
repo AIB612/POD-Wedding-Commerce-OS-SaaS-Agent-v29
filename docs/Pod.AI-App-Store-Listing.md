@@ -1,5 +1,12 @@
 # Pod.AI — Shopify App Store listing kit (draft)
 
+> **Status update 2026-11-20** (newer than the notes below):
+> - Pod.AI's own host is now **podai.swisspro.site** (admin, landing, /privacy /terms /support /security /dpa); webhooks stay on pod.swisspro.site/shopify-agent/webhooks.
+> - Billing **is configured**: Shopify Managed Pricing, Free 50 / Growth 500 / Pro 2,500 chats (server enforces limits).
+> - Encryption at rest, encrypted backups, access log, incident policy (/security) and DPA (/dpa) are **done**.
+> - New: **Assistant** tab (merchant agent). Add one screenshot of it to the listing ("Your AI assistant for the team: briefing, tickets, knowledge — every change needs your OK").
+> - Still open: real screenshots on dropkingdev, protected customer data request, fresh-store install test, App Store submission.
+
 Status: draft · **Canonical host for Pod.AI: https://pod.swisspro.site** (the only public domain since 2026-11-09; pod.swisspro.site was retired). (decisions of 4 Nov 2026 19:22 applied), prepared on 4 Nov 2026 for review by Sherry. Nothing has been submitted to Shopify and no billing is configured.
 Scope: Pod.AI (the `apps/shopify-agent` app with server `server/shopify-agent`) only. The site and the site POD Agent are unchanged.
 Everything below describes features that are implemented and deployed today (Shopify app version pod-ai-8 plus the server at commit 9496d8f and later). There are no invented metrics, ratings or reviews.
@@ -26,7 +33,8 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 2. Answers grounded in your store: products, shipping rates, policies and discount codes come straight from Shopify, not from a generic model.
 3. Speaks your customers' language: English, German, French, Italian and Chinese built in; other languages via an optional LLM.
 4. Nothing slips through: unanswerable questions become a handoff queue with the reply e-mail, and the AI keeps helping meanwhile.
-5. See the impact: dashboard with conversations, AI resolution rate, hours saved, self-served order lookups, chat-influenced revenue and first-response time.
+5. A team assistant inside the app: "What needs my attention today?", reply drafts for tickets and one-click teaching of new answers — every change waits for your OK.
+6. See the impact: dashboard with conversations, AI resolution rate, hours saved, self-served order lookups, chat-influenced revenue and first-response time.
 
 **Feature list (≤ 80 chars each):**
 - Order status card with carrier, tracking number and tracking link  [67]
@@ -42,8 +50,20 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 - Admin in English, German, French and Italian  [43]
 - Works without an AI key; optional LLM answers you can switch off  [64]
 - GDPR webhooks, signed storefront requests, payment-data filter  [61]
+- Team assistant: daily briefing, ticket reply drafts, teach answers  [66]
+- Every assistant change waits for your Confirm; full activity log  [64]
 
-**Screenshot captions** (files listed in §5):
+**Screenshot set 2026-11-20 (admin, 1600×900, ready to upload):** `apps/shopify-agent/listing/`
+1. `1-dashboard.png` — "See what your chat resolves: conversations, AI resolution, hours saved"
+2. `2-assistant-briefing.png` — "Ask your assistant what needs attention today"
+3. `3-assistant-confirm.png` — "Teach a new answer — nothing changes until you confirm"
+4. `4-assistant-reply-draft.png` — "Tickets come with a reply draft in the shopper's language"
+5. `5-tickets.png` — "Questions the AI can't answer land in your team queue"
+6. `6-knowledge.png` — "Your own answers on top of your policies and products"
+Sample data from a fictional shop; no prices in images (req. 4.2.2). Re-render: `apps/shopify-agent/listing/tools/`.
+Still recommended: 1–2 storefront shots of the chat widget on the dev store (real theme).
+
+**Older screenshot captions** (files listed in §5):
 1. Dashboard: "See what your chat resolves: conversations, AI resolution rate, hours saved, revenue"
 2. Storefront products: "Shoppers browse your products in chat and add to cart in one tap"
 3. Handoffs: "Questions the AI can't answer land in your team queue with the reply e-mail"

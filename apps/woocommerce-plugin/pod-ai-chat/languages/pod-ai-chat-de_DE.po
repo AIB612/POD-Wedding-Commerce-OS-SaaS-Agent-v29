@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Pod.AI Chat for WooCommerce 1.0.0\n"
+"Project-Id-Version: Pod.AI Chat for WooCommerce 1.2.0\n"
 "Language: de_DE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -434,3 +434,191 @@ msgstr "Pod.AI ist noch nicht verbunden."
 #: includes/class-podai-chat-plugin.php:70
 msgid "Pod.AI Chat needs WooCommerce to be installed and active."
 msgstr "Pod.AI Chat benötigt ein installiertes und aktives WooCommerce."
+
+#: includes/class-podai-chat-assistant.php
+msgid "What needs my attention today?"
+msgstr "Was steht heute an?"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Unanswered questions"
+msgstr "Unbeantwortete Fragen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Open tickets"
+msgstr "Offene Tickets"
+
+#: includes/class-podai-chat-assistant.php
+msgid "KPIs last 30 days"
+msgstr "Kennzahlen 30 Tage"
+
+#: includes/class-podai-chat-assistant.php
+msgid "What do shoppers ask about?"
+msgstr "Worüber fragen Kund:innen?"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Confirm"
+msgstr "Bestätigen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Reject"
+msgstr "Ablehnen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Nothing waiting. When the assistant prepares a change, it appears here."
+msgstr "Nichts offen. Vorbereitete Änderungen erscheinen hier."
+
+#: includes/class-podai-chat-assistant.php
+msgid "Done"
+msgstr "Erledigt"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Not done"
+msgstr "Nicht ausgeführt"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Rejected"
+msgstr "Abgelehnt"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Expired"
+msgstr "Abgelaufen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Running"
+msgstr "Läuft"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Waiting"
+msgstr "Wartet"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Copy draft"
+msgstr "Entwurf kopieren"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Open in e-mail"
+msgstr "In E-Mail öffnen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Teach answer"
+msgstr "Antwort hinterlegen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Type the answer between the last quotes, then press Enter."
+msgstr "Antwort zwischen die letzten Anführungszeichen schreiben, dann Enter drücken."
+
+#: includes/class-podai-chat-assistant.php
+msgid "Show"
+msgstr "Anzeigen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Copied"
+msgstr "Kopiert"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Rules"
+msgstr "Regeln"
+
+#: includes/class-podai-chat-assistant.php
+msgid "AI planner"
+msgstr "KI-Planer"
+
+#: includes/class-podai-chat-assistant.php
+msgid "The assistant could not answer right now."
+msgstr "Der Assistent konnte gerade nicht antworten."
+
+#: includes/class-podai-chat-assistant.php
+msgid "Add knowledge entry"
+msgstr "Wissenseintrag hinzufügen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Delete knowledge entry"
+msgstr "Wissenseintrag löschen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Change ticket status"
+msgstr "Ticketstatus ändern"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Add ticket note"
+msgstr "Ticketnotiz hinzufügen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Turn chat on / off"
+msgstr "Chat ein / aus"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Question"
+msgstr "Frage"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Prepared"
+msgstr "Vorbereitet"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Confirmed"
+msgstr "Bestätigt"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Failed"
+msgstr "Fehlgeschlagen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Pod.AI assistant"
+msgstr "Pod.AI-Assistent"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Ask about your chats, tickets and knowledge. Changes are only prepared — nothing happens until you confirm."
+msgstr "Fragen Sie zu Chats, Tickets und Wissen. Änderungen werden nur vorbereitet – es passiert nichts, bevor Sie bestätigen."
+
+#: includes/class-podai-chat-assistant.php
+msgid "Ask the assistant"
+msgstr "Assistenten fragen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "e.g. What needs my attention today?"
+msgstr "z. B. Was steht heute an?"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Ask"
+msgstr "Fragen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Waiting for your confirmation"
+msgstr "Wartet auf Ihre Bestätigung"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Recent activity"
+msgstr "Letzte Aktivität"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Pod.AI only changes its own data (knowledge, tickets, chat on/off). Your store, orders and products are never changed."
+msgstr "Pod.AI ändert nur eigene Daten (Wissen, Tickets, Chat ein/aus). Ihr Shop, Bestellungen und Produkte werden nie verändert."
+
+#: includes/class-podai-chat-assistant.php
+msgid "Answers you teach here are kept next to the FAQ in Settings; an FAQ entry with the same question replaces them."
+msgstr "Hier hinterlegte Antworten bleiben neben der FAQ in den Einstellungen erhalten; ein FAQ-Eintrag mit derselben Frage ersetzt sie."
+
+#: includes/class-podai-chat-assistant.php
+msgid "Weekly e-mail on / off"
+msgstr "Wochen-E-Mail ein / aus"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Weekly e-mail"
+msgstr "Wochen-E-Mail"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Draft answers"
+msgstr "Antworten entwerfen"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Source:"
+msgstr "Quelle:"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Now:"
+msgstr "Bisher:"

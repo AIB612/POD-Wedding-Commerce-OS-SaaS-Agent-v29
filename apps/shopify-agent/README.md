@@ -1,5 +1,7 @@
 # Pod.AI — standalone Shopify app (App Store candidate)
 
+> Full architecture, processes and maintenance guide: **`docs/PODAI_HANDBOOK.md`**.
+
 Only the POD Agent customer chat, packaged for any Shopify shop. Separate Partner app from "POD Wedding Studio".
 Server code lives in the main repo (`server/shopify-agent/`, deployed with the site; Pod.AI host podai.swisspro.site, also reachable under /shopify-agent on pod.swisspro.site);
 this folder holds the Shopify CLI project: `shopify.app.toml` + the theme app extension.
@@ -8,7 +10,7 @@ this folder holds the Shopify CLI project: `shopify.app.toml` + the theme app ex
 |---|---|---|
 | Storefront chat | `extensions/podai-chat/blocks/chat-embed.liquid` + `assets/chat.js/.css` | Theme app extension **app embed** (Customize → App embeds → Pod.AI Chat). No script tags, no theme edits. |
 | Chat API | `POST /apps/podai/chat` → App Proxy → `POST /shopify-agent/proxy/chat` | Shopify signs every request; the server verifies the signature and takes the shop from it. |
-| Embedded admin | `GET /shopify-agent` (application_url) | App Bridge + session tokens (no cookies/localStorage). Tabs: Overview KPIs, Handoffs, Knowledge, Settings, Try it, Setup. |
+| Embedded admin | `GET /shopify-agent` (application_url) | App Bridge + session tokens (no cookies/localStorage). Tabs: Overview KPIs, **Assistant** (merchant agent, see `docs/PODAI_HANDBOOK.md` §5), Handoffs, Knowledge, Settings, Try it, Setup. |
 | Install | managed install + token exchange | First admin load calls `/shopify-agent/api/bootstrap` → offline token (encrypted at rest). |
 | Webhooks | `POST /shopify-agent/webhooks` | `app/uninstalled`, `customers/data_request`, `customers/redact`, `shop/redact`; HMAC → 401 on mismatch, 200 otherwise. |
 

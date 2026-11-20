@@ -1,6 +1,7 @@
 // Routes of the Shopify Chat Agent app (mounted before express.json; each route parses its own body).
 //   GET  /shopify-agent                    embedded admin (App Bridge; KPIs, knowledge, handoffs, settings)
 //   GET|POST /shopify-agent/api/*          admin JSON API — Authorization: Bearer <session token> (shop from the token only)
+//        …/api/assistant[/actions[/:id/approve|reject]|/audit]  merchant assistant (internal agent, ./merchant)
 //   POST /shopify-agent/proxy/chat         storefront chat via App Proxy (/apps/podai/chat), Shopify signature required
 //   POST /shopify-agent/webhooks           app/uninstalled, app_subscriptions/update (billing) + GDPR topics (HMAC on the raw body)
 import express from "express";
@@ -24,6 +25,8 @@ import * as ga from "./ga.js";
 import { logAccess, readAccess, purgeAccessLog } from "./security/access-log.js";
 import { runBackup } from "./security/backup.js";
 import * as billing from "./billing.js";
+import * as merchant from "./merchant/index.js";
+import { runShopifyDigests } from "./digest-job.js";
 
 const HEX = v => /^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v) : null;
 // storefront look, editable in the app (the theme app embed can override colour / position)
@@ -51,7 +54,10 @@ export function shopifyAgentRouter() {
   if (process.env.NODE_ENV !== "test") { const run = () => gdpr.purgeExpired().catch(e => console.error("[pod.ai] retention purge failed:", e.message)); setTimeout(run, 60e3).unref?.(); setInterval(run, 864e5).unref?.();
     // encrypted daily backup (14 days) + access-log retention (12 months); hourly check, one backup per UTC day
     const bk = () => runBackup().then(r => r.created || r.leftovers ? console.log("[pod.ai] backup", JSON.stringify(r)) : null).catch(e => console.error("[pod.ai] backup failed:", e.message)).then(() => purgeAccessLog()).catch(() => {});
-    setTimeout(bk, 120e3).unref?.(); setInterval(bk, 3600e3).unref?.(); }
+    setTimeout(bk, 120e3).unref?.(); setInterval(bk, 3600e3).unref?.();
+    // weekly summary e-mail to merchants (Monday from 07:00 UTC; once per shop and week, safe with several processes)
+    const dg = () => runShopifyDigests().then(r => r.results && Object.keys(r.results).length ? console.log("[pod.ai] weekly digests", JSON.stringify(r.results)) : null).catch(e => console.error("[pod.ai] digests failed:", e.message));
+    setTimeout(dg, 180e3).unref?.(); setInterval(dg, 3600e3).unref?.(); }
   // public privacy policy (App Store listing link)
   r.get(["/shopify-agent/privacy", "/shopify-agent/privacy.html"], (req, res) => res.set("Cache-Control", "public, max-age=3600").type("html").send(ga.withPublicGa(fs.readFileSync(PRIVACY_PAGE, "utf8"))));
   const TERMS_PAGE = new URL("./terms.html", import.meta.url);
@@ -141,14 +147,30 @@ export function shopifyAgentRouter() {
   api.delete("/knowledge/:id", ah(async (req, res) => res.json(await deleteKnowledge(req.agentTenant, req.params.id))));
   // plan + chats this month + Shopify-hosted plan page (Managed Pricing); ?refresh=1 re-reads the subscription
   api.get("/billing", ah(async (req, res) => res.set("Cache-Control", "no-store").json(await billing.billingSummary(req.agentShop, { force: req.query.refresh === "1" }))));
-  api.get("/settings", ah(async (req, res) => { const s = await getSettings(req.agentTenant); const plan = await billing.getPlan(req.agentShop); res.json({ plan_llm: plan.llm, plan: plan.handle, enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours, support_email: s.support_email || "", widget: widgetOf(s), llm_enabled: s.llm_enabled !== false, llm_available: llmStatus().available, tracking_sources: await merchantTrackingSources(), agent_api: s.agent_api !== false, agent_api_url: `${String(process.env.PODAI_PUBLIC_URL || "https://podai.swisspro.site").replace(/\/+$/, "")}/agent/v1/stores/${req.agentShop}/mcp` }); }));
-  api.put("/settings", ah(async (req, res) => { const b = req.body || {}; await putAgentSettings(req.agentTenant, { enabled: b.enabled, greeting: b.greeting, human_reply_hours: b.human_reply_hours, support_email: b.support_email }); { const cur = await getSettings(req.agentTenant); await saveSettings(req.agentTenant, { widget: b.widget ? widgetOf({ widget: { ...widgetOf(cur), ...b.widget } }) : widgetOf(cur), llm_enabled: b.llm_enabled === undefined ? cur.llm_enabled !== false : b.llm_enabled !== false, agent_api: b.agent_api === undefined ? cur.agent_api !== false : b.agent_api !== false }); } clearFactsCache(req.agentShop); const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours }); }));
+  api.get("/settings", ah(async (req, res) => { const s = await getSettings(req.agentTenant); const plan = await billing.getPlan(req.agentShop); res.json({ plan_llm: plan.llm, plan: plan.handle, enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours, support_email: s.support_email || "", widget: widgetOf(s), llm_enabled: s.llm_enabled !== false, llm_available: llmStatus().available, tracking_sources: await merchantTrackingSources(), agent_api: s.agent_api !== false, weekly_digest: s.weekly_digest !== false, agent_api_url: `${String(process.env.PODAI_PUBLIC_URL || "https://podai.swisspro.site").replace(/\/+$/, "")}/agent/v1/stores/${req.agentShop}/mcp` }); }));
+  api.put("/settings", ah(async (req, res) => { const b = req.body || {}; await putAgentSettings(req.agentTenant, { enabled: b.enabled, greeting: b.greeting, human_reply_hours: b.human_reply_hours, support_email: b.support_email }); { const cur = await getSettings(req.agentTenant); await saveSettings(req.agentTenant, { widget: b.widget ? widgetOf({ widget: { ...widgetOf(cur), ...b.widget } }) : widgetOf(cur), llm_enabled: b.llm_enabled === undefined ? cur.llm_enabled !== false : b.llm_enabled !== false, agent_api: b.agent_api === undefined ? cur.agent_api !== false : b.agent_api !== false, weekly_digest: b.weekly_digest === undefined ? cur.weekly_digest !== false : b.weekly_digest !== false }); } clearFactsCache(req.agentShop); const s = await getSettings(req.agentTenant); res.json({ enabled: s.enabled, greeting: s.greeting, human_reply_hours: s.human_reply_hours }); }));
   api.get("/privacy", ah(async (req, res) => { const g = (await listForTenant("podai_gdpr", req.agentTenant)).slice(-50); audit(req, "view_gdpr_requests", { count: g.length }); res.json(g); }));
   // who accessed personal data of this shop (no data itself); viewing it is logged too
   api.get("/access-log", ah(async (req, res) => { const e = await readAccess({ tenant: req.agentTenant, limit: Math.min(500, Number(req.query.limit) || 200) }); audit(req, "view_access_log"); res.json(e); }));
   api.post("/preview", ah(async (req, res) => { const b = req.body || {}; const plan = await billing.getPlan(req.agentShop); // "Try it" follows the plan's LLM rule; not counted as a chat
     const out = await handleChat({ tenantId: req.agentTenant, profile: makeProfile(req.agentShop), message: b.message, conversation_id: b.conversation_id, lang: b.lang, gate: { canStart: true, llm: plan.llm } });
     res.json({ answer: out.answer, conversation_id: out.conversation_id, ui: out.ui, handoff: out.handoff || null, answered_by: out.answered_by || null }); }));
+  // ---- Merchant assistant (internal agent, server/shopify-agent/merchant): ask → read tools run, write tools become
+  //      proposals the merchant confirms here. Only Pod.AI data (knowledge, tickets, chat on/off) — never the shop itself.
+  const askLimit = new Map(); // per shop: 30 questions / minute
+  const limited = shop => { const t = Date.now(), e = askLimit.get(shop); if (!e || e.reset < t) { askLimit.set(shop, { n: 1, reset: t + 60e3 }); if (askLimit.size > 5000) askLimit.clear(); return false; } return ++e.n > 30; };
+  const assistantCtx = async (req, lang) => { const s = await getSettings(req.agentTenant), plan = await billing.getPlan(req.agentShop).catch(() => ({ llm: false }));
+    return { tenantId: req.agentTenant, actor: req.agentUser, source: "shopify_admin", lang: ["en", "de", "fr", "it", "zh"].includes(lang) ? lang : "en", llm: plan.llm === true && s.llm_enabled !== false, // same rule as the chat: on unless the merchant switched it off
+      shopName: req.agentShop.replace(/\.myshopify\.com$/, ""), profile: makeProfile(req.agentShop), usage: () => billing.billingSummary(req.agentShop), onPersonalData: tool => audit(req, `assistant_${tool}`) }; };
+  api.post("/assistant", ah(async (req, res) => {
+    if (limited(req.agentShop)) return res.status(429).json({ error: "rate_limited" });
+    const b = req.body || {}; if (!String(b.message || "").trim()) return res.status(400).json({ error: "message_required" });
+    res.set("Cache-Control", "no-store").json(await merchant.runAssistant(await assistantCtx(req, b.lang), b.message)); }));
+  api.get("/assistant/actions", ah(async (req, res) => res.set("Cache-Control", "no-store").json(await merchant.listActions(req.agentTenant, { status: ["proposed", "done", "failed", "rejected", "expired"].includes(req.query.status) ? req.query.status : undefined }))));
+  api.post("/assistant/actions/:id/approve", ah(async (req, res) => { if (req.body?.confirm !== true) return res.status(409).json({ error: "confirmation_required" });
+    res.json(await merchant.approve(await assistantCtx(req, req.body?.lang), req.params.id)); }));
+  api.post("/assistant/actions/:id/reject", ah(async (req, res) => res.json(await merchant.reject(await assistantCtx(req, req.body?.lang), req.params.id))));
+  api.get("/assistant/audit", ah(async (req, res) => res.set("Cache-Control", "no-store").json(await merchant.readAudit(req.agentTenant, { limit: Number(req.query.limit) || 100 }))));
   r.use("/shopify-agent/api", api);
   r.use("/shopify-agent", (_, res) => res.status(404).json({ error: "not_found" }));
   return r;

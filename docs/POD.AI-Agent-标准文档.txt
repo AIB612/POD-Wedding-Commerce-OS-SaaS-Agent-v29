@@ -1221,3 +1221,23 @@ B.3 跳过（本版没有）
     __HASH__ · 2026-11-09 · Pod.AI GA4 可选（PODAI_GA_ID / PODAI_LISTING_GA_ID）；隐私政策补充 GA；上架 upload pack 已备。计费走 Shopify App Pricing。
         影响条款：附录 D。
 
+    __HASH__ · 2026-11-20 · Pod.AI 商家助理（对内 Agent）：Shopify 内嵌后台新增「Assistant」页（EN/DE/FR/IT，理解中文）；
+        今日重点、指标、未回答问题、工单（含回复草稿）、知识库、搜索聊天；改数据（知识库、工单状态/备注、聊天开关）只生成
+        待确认操作，商家点「确认」才执行，执行前再检查一次、只执行一次，7 天过期；操作记录不含聊天内容；新集合
+        podai_merchant_actions / podai_merchant_audit 加密保存，GDPR 删除与保留期已覆盖；WooCommerce 签名接口
+        /woo-agent/v1/assistant* 同步提供（WP 后台页面待做）。代码 server/shopify-agent/merchant/；文档 docs/PODAI_HANDBOOK.md。
+        不改主站。影响条款：附录 D。
+
+    __HASH__ · 2026-11-20 · WooCommerce 插件 1.2.0：WP 后台「Pod.AI Chat → Assistant」页（admin-ajax 代理，校验 manage_woocommerce + nonce，
+        用站点密钥签名转发，密钥不进浏览器）；de/fr/it/zh 翻译；插件推送 FAQ 时保留助理添加的答案（同问题以 WP 为准）；
+        回答单复数与德/法/意小数逗号；WordPress.org 截图 9；顾客问题与商家知识库问题（几乎）相同时优先用商家答案
+        （含订单号/邮箱/运单号时仍走查单）。真实 WordPress 6.8.3 + WooCommerce 10.3.4 验证通过。不改主站。影响条款：附录 D。
+
+    __HASH__ · 2026-11-20 · Pod.AI 每周总结邮件（发给商家）：每周一 07:00 UTC 后每店一封（podai_digests 认领，多进程安全，停机补发），
+        内容 = 助理 7 天概览 + 最多 5 个未回答问题 + 超时工单号（不含顾客邮箱）；收件 = 工单邮箱，否则店铺联系邮箱；语言跟随商家最近使用
+        助理的语言；本周无活动不发。关闭：Shopify 设置开关，或对助理说“停止每周邮件”（需确认）。隐私政策已补充。不改主站。影响条款：附录 D。
+
+    __HASH__ · 2026-11-20 · Pod.AI 助理「起草答案」：对未回答问题按句子检索店铺政策（BM25，≥2 关键词且得分 ≥0.35 才起草，用政策原句并注明来源，
+        否则列给商家自己回答，绝不编造）；Pro + 开启 LLM 时模型只能改写给定的政策句子/商品，不够就返回空。每个草稿都是待确认操作
+        （确认 / 编辑 / 拒绝）。Shopify 与 WooCommerce 后台均已上线，真实 WordPress 7.1.5 验证。不改主站。影响条款：附录 D。
+

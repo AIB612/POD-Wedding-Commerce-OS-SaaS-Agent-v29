@@ -45,6 +45,14 @@ export function transcriptText(messages = []) {
   return messages.map(m => `[${String(m.at || "").replace("T", " ").slice(0, 16)}] ${m.role === "user" ? "Customer" : m.role === "team" ? "Team" : "Assistant"}: ${String(m.text || "")}`).join("\n");
 }
 
+/** Generic notification to a MERCHANT (Pod.AI weekly summary …): same transport and the same test-mode guard as tickets
+ * (outside production only TEST_EMAIL_ALLOWLIST receives mail). Never used for shoppers. */
+export async function sendMerchantMail({ tenantId, to, subject, text, html, type = "merchant_notice", related_id = null }) {
+  if (!validEmail(to)) return { status: "invalid_recipient" };
+  if (!allowedRecipient(to)) return { status: "skipped_test_mode" };
+  return sendEmail({ tenantId, to, subject, text, html, type, related_id }).catch(e => ({ status: "failed", error: String(e.message || e).slice(0, 160) }));
+}
+
 /** Send the internal notification (+ optional customer confirmation). Returns a log of results without full addresses. */
 export async function sendTicketMails({ tenantId, ticket, brand = "POD.AI", support, extra = [], confirm = true, hours = 24, adminUrl, type = "support_ticket" }) {
   const log = [];

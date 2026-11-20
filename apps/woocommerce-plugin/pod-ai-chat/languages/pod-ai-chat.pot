@@ -445,3 +445,191 @@ msgstr ""
 #: includes/class-podai-chat-plugin.php:70
 msgid "Pod.AI Chat needs WooCommerce to be installed and active."
 msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "What needs my attention today?"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Unanswered questions"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Open tickets"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "KPIs last 30 days"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "What do shoppers ask about?"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Confirm"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Reject"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Nothing waiting. When the assistant prepares a change, it appears here."
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Done"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Not done"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Rejected"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Expired"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Running"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Waiting"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Copy draft"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Open in e-mail"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Teach answer"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Type the answer between the last quotes, then press Enter."
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Show"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Copied"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Rules"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "AI planner"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "The assistant could not answer right now."
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Add knowledge entry"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Delete knowledge entry"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Change ticket status"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Add ticket note"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Turn chat on / off"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Question"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Prepared"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Confirmed"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Failed"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Pod.AI assistant"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Ask about your chats, tickets and knowledge. Changes are only prepared — nothing happens until you confirm."
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Ask the assistant"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "e.g. What needs my attention today?"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Ask"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Waiting for your confirmation"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Recent activity"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Pod.AI only changes its own data (knowledge, tickets, chat on/off). Your store, orders and products are never changed."
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Answers you teach here are kept next to the FAQ in Settings; an FAQ entry with the same question replaces them."
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Weekly e-mail on / off"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Weekly e-mail"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Draft answers"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Edit"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Source:"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Now:"
+msgstr ""
