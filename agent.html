@@ -107,8 +107,8 @@ a{color:var(--gold2)}
 .fc{border-radius:20px;padding:20px 18px;transition:transform .25s,box-shadow .25s}.fc:hover{transform:translateY(-4px);box-shadow:0 24px 50px rgba(70,48,30,.14)}
 .fc h3{margin:14px 0 4px;font-size:15px}.fc p{margin:0;font-size:13px;color:var(--ink2)}
 .kg{display:grid;grid-template-columns:340px minmax(0,1fr);gap:22px;align-items:start}
-/* Enlarge only the screenshot (~15–25% on wide desktops, same aspect ratio). KPI column and section width stay as they were. */
-@media(min-width:981px){.kg>figure.shot{width:calc(100% + min(198px,max(0px,50vw - 584px)));max-width:none}}
+/* Desktop: image right edge stays on the content column; a slightly narrower KPI column gives the screenshot a bit more width. */
+@media(min-width:981px){.kg{grid-template-columns:320px minmax(0,1fr);gap:16px}}
 .kc{border-radius:20px;padding:18px 20px;margin-bottom:14px}
 .kc .top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
 .kc b{display:block;font:600 34px/1.1 Georgia,serif;margin:8px 0 4px}
