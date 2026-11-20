@@ -162,9 +162,22 @@ test("WooCommerce: same assistant over the signed site API; disconnect removes i
   assert.equal(br.status, 200); assert.equal(br.d.results[0].tool, "briefing"); assert.match(br.d.reply, /Keine offenen Tickets/);
   const p = (await woo("POST", "/assistant", { message: 'answer "Do you gift wrap?" with "Yes, for CHF 5 per order."' })).d.proposals[0];
   assert.equal((await woo("POST", `/assistant/actions/${p.id}/approve`, { confirm: true })).d.status, "done");
+  // the shopper asking exactly the taught question gets the merchant's answer, even when the words look like another intent
+  const pick = (await woo("POST", "/assistant", { message: 'answer "Can I pick up my order in Zurich?" with "Yes, at our Zurich shop, Mon–Sat 10–18."' })).d.proposals[0];
+  assert.equal((await woo("POST", `/assistant/actions/${pick.id}/approve`, { confirm: true })).d.status, "done");
+  assert.equal((await woo("POST", "/chat", { message: "Can I pick up my order in Zurich?", lang: "en" })).d.answer, "Yes, at our Zurich shop, Mon–Sat 10–18.");
+  assert.notEqual((await woo("POST", "/chat", { message: "Where is my order #1001? buyer@example.com", lang: "en" })).d.answer, "Yes, at our Zurich shop, Mon–Sat 10–18.", "order numbers still go to order lookup");
+  await woo("POST", `/assistant`, { message: "knowledge" });
+  // the plugin's FAQ push (settings save / daily) keeps answers taught through the assistant
+  await woo("POST", "/store", { settings: { custom_faq: [{ question: "Can I pick up my order?", answer: "Yes, in our Zurich shop." }] } });
+  const kb = (await woo("POST", "/assistant", { message: "knowledge" })).d.results[0].result.entries.map(e => e.question).sort();
+  assert.deepEqual(kb, ["Can I pick up my order in Zurich?", "Can I pick up my order?", "Do you gift wrap?"]);
+  await woo("POST", "/store", { settings: { custom_faq: [{ question: "Do you gift wrap?", answer: "Yes, free of charge." }] } });
+  const kb2 = (await woo("POST", "/assistant", { message: "knowledge" })).d.results[0].result.entries;
+  assert.deepEqual(kb2.map(e => [e.question, e.answer]), [["Do you gift wrap?", "Yes, free of charge."], ["Can I pick up my order in Zurich?", "Yes, at our Zurich shop, Mon–Sat 10–18."]], "same question in WP wins; other taught answers stay");
   const audit = (await woo("GET", "/assistant/audit")).d; assert.ok(audit.some(x => x.actor === "woo_admin:anna" && x.event === "ask"));
   const T = wooCore.tenantFor(c.site_id);
-  assert.ok((await store.listForTenant("podai_merchant_actions", T)).length === 1);
+  assert.ok((await store.listForTenant("podai_merchant_actions", T)).length === 2);
   assert.equal((await woo("POST", "/disconnect", {})).status, 200);
   assert.equal((await store.listForTenant("podai_merchant_actions", T)).length, 0);
   assert.equal((await store.listForTenant("podai_merchant_audit", T)).length, 0);

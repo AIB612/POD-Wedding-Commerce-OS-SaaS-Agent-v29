@@ -50,6 +50,7 @@ final class PodAI_Chat_Plugin {
 		PodAI_Chat_Agent::init();
 		if ( is_admin() ) {
 			PodAI_Chat_Admin::init();
+			PodAI_Chat_Assistant::init();
 		}
 		add_action( self::CRON, array( 'PodAI_Chat_Sync', 'full_sync' ) );
 		add_action( self::CRON_ONE, array( 'PodAI_Chat_Sync', 'full_sync' ) );

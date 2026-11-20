@@ -3,7 +3,7 @@
  * Plugin Name:       Pod.AI Chat for WooCommerce
  * Plugin URI:        https://podai.swisspro.site/
  * Description:       AI shopping assistant for WooCommerce: answers from your store's own data (products, policies, shipping), recommends in-stock products and adds them to the cart, looks up orders and tracking, and turns "contact us" into tickets.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 6.3
  * Requires PHP:      7.4
  * Requires Plugins:  woocommerce
@@ -21,7 +21,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PODAI_CHAT_VERSION', '1.1.0' );
+define( 'PODAI_CHAT_VERSION', '1.2.0' );
 define( 'PODAI_CHAT_FILE', __FILE__ );
 define( 'PODAI_CHAT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PODAI_CHAT_URL', plugin_dir_url( __FILE__ ) );
@@ -37,6 +37,7 @@ require_once PODAI_CHAT_DIR . 'includes/class-podai-chat-rest.php';
 require_once PODAI_CHAT_DIR . 'includes/class-podai-chat-widget.php';
 require_once PODAI_CHAT_DIR . 'includes/class-podai-chat-agent.php';
 require_once PODAI_CHAT_DIR . 'includes/class-podai-chat-admin.php';
+require_once PODAI_CHAT_DIR . 'includes/class-podai-chat-assistant.php';
 require_once PODAI_CHAT_DIR . 'includes/class-podai-chat-plugin.php';
 
 register_activation_hook( __FILE__, array( 'PodAI_Chat_Plugin', 'activate' ) );

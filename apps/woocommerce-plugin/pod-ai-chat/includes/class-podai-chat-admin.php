@@ -1,6 +1,7 @@
 <?php
 /**
  * WP admin: Pod.AI menu with Settings (connect, widget, ticket e-mail, knowledge, sync, plan) and Tickets.
+ * The Assistant page lives in class-podai-chat-assistant.php.
  *
  * @package PodAIChat
  */
