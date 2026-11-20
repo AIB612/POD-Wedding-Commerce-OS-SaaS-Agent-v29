@@ -212,6 +212,16 @@ def({
   async run({ tenantId }, a) { const s = await saveSettings(tenantId, { enabled: a.enabled }); return { enabled: s.enabled !== false }; }
 });
 
+def({
+  name: "set_weekly_digest", kind: "write",
+  llm: "Turn the weekly summary e-mail to the merchant on (enabled=true) or off (enabled=false). Needs the merchant's confirmation.",
+  args: { enabled: "true | false" },
+  parse: (a = {}) => { const v = a.enabled === true || a.enabled === "true" ? true : a.enabled === false || a.enabled === "false" ? false : null; need(v !== null, "enabled_required"); return { enabled: v }; },
+  async preview({ tenantId }, a) { const s = await getSettings(tenantId); need((s.weekly_digest !== false) !== a.enabled, "already_in_status", { enabled: s.weekly_digest !== false });
+    return { summary: a.enabled ? "weekly e-mail → on" : "weekly e-mail → off", effect: a.enabled ? "digest_on" : "digest_off" }; },
+  async run({ tenantId }, a) { const s = await saveSettings(tenantId, { weekly_digest: a.enabled }); return { weekly_digest: s.weekly_digest !== false }; }
+});
+
 // ------------------------------------------------------------------------------------------------------
 // 回复草稿（规则模板，商家自己修改后从自己的邮箱发送）Reply draft — a rule template the merchant edits and sends
 // from their own mailbox. Pod.AI never e-mails the shopper from a ticket.

@@ -21,8 +21,10 @@ import { TOOLS, ToolError } from "./tools.js";
 import { plan } from "./planner.js";
 import { propose, audit } from "./actions.js";
 import { compose, suggestionChips, pick } from "./reply.js";
+import { getSettings, saveSettings } from "../engine/store.js";
 export { listActions, approve, reject, readAudit, ActionError, ACTIONS, AUDIT } from "./actions.js";
 export { TOOLS, toolCatalog } from "./tools.js";
+export { sendWeeklyDigest, buildDigest, digestHistory, weekKey, DIGESTS } from "./digest.js";
 
 /**
  * 处理商家的一句话 Handle one merchant message.
@@ -51,6 +53,8 @@ export async function runAssistant(ctx, message) {
       else failures.push({ tool: t.name, error: e.code, detail: e.detail });
     }
   }
+  // the weekly summary e-mail is written in the language the merchant uses the assistant in
+  if (ctx.lang) { const s = await getSettings(ctx.tenantId); if (s.digest_lang !== lang) await saveSettings(ctx.tenantId, { digest_lang: lang }); }
   await audit(ctx.tenantId, { actor: ctx.actor, event: "ask", detail: `${planner}: ${steps.map(s => s.tool).join(",") || "-"}` });
   return { reply: compose({ lang, results, proposals, failures }), planner, language: lang, results, proposals, failures, suggestions };
 }

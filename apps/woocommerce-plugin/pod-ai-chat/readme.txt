@@ -34,7 +34,7 @@ This plugin connects to the Pod.AI service (https://podai.swisspro.site) to answ
 * Chat messages typed by shoppers, and the e-mail a shopper leaves for a ticket.
 * AI agent access (if on): Pod.AI answers AI assistants' product searches from the synced public product data and returns links to your store. No order or customer data is used.
 * Billing (only when you upgrade): your plan choice and the admin e-mail are sent to Pod.AI and Paddle (https://www.paddle.com, merchant of record) to create the checkout. Paddle terms: https://www.paddle.com/legal/checkout-buyer-terms · Paddle privacy: https://www.paddle.com/legal/privacy
-* Assistant (admin only): the questions you type under Pod.AI Chat → Assistant, your WordPress username (for the activity log) and the changes you confirm. Pod.AI keeps the activity log without chat text or e-mail addresses.
+* Assistant (admin only): the questions you type under Pod.AI Chat → Assistant, your WordPress username (for the activity log) and the changes you confirm. Once a week Pod.AI e-mails a summary (chat counts, unanswered questions, ticket numbers — no shopper e-mail addresses) to your ticket e-mail, or the store / admin e-mail when that is empty; you can turn it off. Pod.AI keeps the activity log without chat text or e-mail addresses.
 * Order data is never synced. When a shopper gives an order number and e-mail, the service asks your site (signed request) and receives only status, items, total and tracking.
 
 All requests are signed with a per-site secret. Disconnecting or uninstalling deletes your store's data at Pod.AI.
@@ -74,6 +74,7 @@ External AI assistants can find your products and send shoppers a prefilled cart
 
 = 1.2.0 =
 * New: Pod.AI Chat → Assistant – team assistant (briefing, KPIs, unanswered questions, tickets with reply drafts, knowledge, chat search) in English, German, French, Italian and Chinese. Every change waits for your Confirm and is listed under Recent activity.
+* New: weekly summary e-mail to your ticket e-mail (chats, unanswered questions, waiting tickets). Tell the Assistant "stop the weekly e-mail" to turn it off.
 * Answers taught in the Assistant are kept when you save Settings (an FAQ entry with the same question replaces them).
 
 = 1.1.0 =
