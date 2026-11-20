@@ -617,3 +617,19 @@ msgstr ""
 #: includes/class-podai-chat-assistant.php
 msgid "Weekly e-mail"
 msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Draft answers"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Edit"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Source:"
+msgstr ""
+
+#: includes/class-podai-chat-assistant.php
+msgid "Now:"
+msgstr ""

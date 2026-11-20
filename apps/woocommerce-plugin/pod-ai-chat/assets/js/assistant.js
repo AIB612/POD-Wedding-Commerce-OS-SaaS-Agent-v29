@@ -67,14 +67,27 @@
 		c.setAttribute( 'data-act', a.id );
 		c.appendChild( el( 'strong', '', ( t.tools && t.tools[ a.tool ] ) || a.tool ) );
 		c.appendChild( el( 'div', '', ( a.preview && a.preview.summary ) || '' ) );
+		if ( a.preview && a.preview.answer ) {
+			c.appendChild( el( 'pre', 'podai-as-pre', a.preview.answer ) );
+		}
+		if ( a.preview && a.preview.source ) {
+			c.appendChild( el( 'div', 'description', t.source + ' ' + a.preview.source ) );
+		}
 		if ( a.preview && a.preview.before ) {
-			c.appendChild( el( 'div', 'description', a.preview.before ) );
+			c.appendChild( el( 'div', 'description', t.before + ' ' + a.preview.before ) );
 		}
 		var row = el( 'div', 'podai-as-btns' );
 		if ( 'proposed' === a.status ) {
 			row.appendChild( btn( t.ok, 'button-primary', function () {
 				decide( a.id, 'approve' );
 			} ) );
+			if ( 'add_knowledge' === a.tool && a.args ) {
+				row.appendChild( btn( t.edit, '', function () {
+					input.value = 'answer "' + a.args.question + '" with "' + a.args.answer + '"';
+					input.focus();
+					decide( a.id, 'reject' );
+				} ) );
+			}
 			row.appendChild( btn( t.no, '', function () {
 				decide( a.id, 'reject' );
 			} ) );
@@ -156,6 +169,19 @@
 				row.appendChild( a );
 			}
 			add( card );
+		} else if ( 'draft_answers' === r.tool && x.drafts && x.drafts.some( function ( d ) {
+			return ! d.answer;
+		} ) ) {
+			list( x.drafts.filter( function ( d ) {
+				return ! d.answer;
+			} ), function ( d ) {
+				var li = el( 'li' );
+				li.appendChild( el( 'span', 'podai-as-q', d.question ) );
+				li.appendChild( btn( t.teach, 'button-small', function () {
+					teach( d.question );
+				} ) );
+				return li;
+			} );
 		} else if ( 'knowledge_list' === r.tool && x.entries && x.entries.length ) {
 			list( x.entries, function ( e ) {
 				var li = el( 'li' );
@@ -248,7 +274,7 @@
 	}
 
 	var quick = document.getElementById( 'podai-as-quick' );
-	[ 'q1', 'q2', 'q3', 'q4', 'q5' ].forEach( function ( k ) {
+	[ 'q1', 'q2', 'draft', 'q3', 'q4', 'q5' ].forEach( function ( k ) {
 		quick.appendChild( btn( t[ k ], 'button-small', function () {
 			ask( t[ k ] );
 		} ) );

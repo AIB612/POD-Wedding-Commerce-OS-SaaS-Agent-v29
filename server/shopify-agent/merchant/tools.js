@@ -14,6 +14,9 @@ import { dashboard } from "../dashboard.js";
 import { listHandoffs, updateHandoff, listConversations, getSettings, saveSettings } from "../engine/store.js";
 import { upsertKnowledge, deleteKnowledge } from "../engine/kpis.js";
 import { findRecord } from "../../saas-store.js";
+import { BM25, sentences, pickSentences } from "../../shared/local-rag.js";
+import { detectLanguage } from "../engine/nlu.js";
+import { chatJson, llmStatus } from "../engine/llm.js";
 
 // ------------------------------------------------------------------------------------------------------
 // 小工具 Helpers
@@ -70,7 +73,8 @@ def({
     // 建议的下一步：只是可点的文字，点了才会生成操作 Suggested next commands — text only; nothing is staged.
     const suggestions = [];
     if (late.length) suggestions.push({ cmd: "tickets", n: late.length });
-    for (const u of d.unanswered.slice(0, 2)) suggestions.push({ cmd: "teach", question: str(u.text, 160) });
+    if (d.unanswered.length) suggestions.push({ cmd: "draft", n: d.unanswered.length });
+    for (const u of d.unanswered.slice(0, 1)) suggestions.push({ cmd: "teach", question: str(u.text, 160) });
     if (planPct != null && planPct >= 80) suggestions.push({ cmd: "plan", pct: planPct });
     if (!s.enabled) suggestions.push({ cmd: "resume" });
     return { days: 7, chat_enabled: s.enabled !== false, conversations: k.conversations ?? 0, resolution_rate: k.resolution_rate ?? null, hours_saved: k.hours_saved ?? 0, wismo_self: k.wismo ?? 0,
@@ -151,6 +155,56 @@ def({
   }
 });
 
+// ------------------------------------------------------------------------------------------------------
+// 答案草稿 Answer drafts for unanswered questions — evidence first, never invented.
+//   本地（默认）：在店铺政策里按句子检索（BM25）；只有足够匹配（≥2 个关键词且覆盖率够）才用政策原句做草稿，并注明来源。
+//   Local (default): sentence-level BM25 over the shop's policies; a draft is the policy's own sentences, only on a
+//   clear match (≥ 2 matched words and enough coverage), with the policy as source. Otherwise: "needs your answer".
+//   AI（Pro + 商家开启）：模型只能改写给它的事实（政策句子、商品），事实不够就返回 null。
+//   AI (Pro + LLM on): the model may only reword the given facts (policy sentences, products); null if they don't answer.
+// ✎ 可以改：MIN_NORM / MIN_MATCHED 门槛。
+// ------------------------------------------------------------------------------------------------------
+const MIN_NORM = 0.35, MIN_MATCHED = 2;
+function policyEvidence(question, policies = []) {
+  const docs = [];
+  for (const p of policies) sentences(p.text).forEach((t, i) => { if (t.length >= 12) docs.push({ id: `${p.type}_${i}`, p, fields: { t } }); });
+  if (!docs.length) return null;
+  const hit = new BM25(docs).search(question, { limit: 1 })[0];
+  if (!hit || hit.matched < MIN_MATCHED || hit.norm < MIN_NORM) return null;
+  const p = hit.doc.p;
+  return { answer: str(pickSentences(p.text, question, { max: 2 }), 600), source: p.title || p.type, score: Math.round(hit.norm * 100) / 100, snippets: docs.filter(d => d.p === p).map(d => d.fields.t) };
+}
+async function llmDraft(question, facts, products) {
+  const snippets = (facts?.policies || []).flatMap(p => sentences(p.text).map(t => `[${p.title || p.type}] ${t}`)).slice(0, 60);
+  const items = (products || []).slice(0, 5).map(x => `[Product] ${x.name}${x.unit_price ? ` — ${x.currency || ""} ${x.unit_price}` : ""}`);
+  if (!snippets.length && !items.length) return null;
+  const { data } = await chatJson({ system: "You write one FAQ answer for an online shop. Use ONLY the facts given; never invent prices, times, countries or promises. Max 3 short sentences, in the language of the question. If the facts do not answer the question, return null. Reply JSON only: {\"answer\": string|null, \"source\": short name of the fact you used}",
+    user: JSON.stringify({ question, facts: [...snippets, ...items].slice(0, 40) }) });
+  const a = str(data?.answer, 600);
+  return a.length >= 10 ? { answer: a, source: str(data?.source, 80) || "AI draft from your shop data" } : null;
+}
+
+def({
+  name: "draft_answers", kind: "read",
+  llm: "For questions the chat could not answer, draft answers from the shop's own policies (and products with the AI planner). Each draft becomes a proposal the merchant confirms; questions without evidence are listed for the merchant to answer.",
+  args: { limit: "1-5" }, parse: (a = {}) => ({ limit: Math.min(5, Math.max(1, Math.floor(Number(a.limit) || 3))) }),
+  async run(ctx, { limit }) {
+    const qs = (await board(ctx.tenantId, 90)).unanswered.slice(0, limit).map(u => str(u.text, 200)).filter(q => q.length >= 5);
+    let facts = null; try { facts = ctx.profile ? await ctx.profile.facts() : null; } catch { facts = null; }
+    const useLlm = ctx.llm === true && llmStatus().available;
+    const drafts = [];
+    for (const question of qs) {
+      let d = policyEvidence(question, facts?.policies || []), method = d ? "policy" : null;
+      if (useLlm) {
+        let products = []; try { if (ctx.profile?.searchProducts) products = (await ctx.profile.searchProducts(question, { limit: 5 }))?.products || []; } catch { /* products optional */ }
+        try { const l = await llmDraft(question, facts, products); if (l) { d = l; method = "llm"; } } catch (e) { console.warn("[pod.ai assistant] llm draft failed:", e.message); }
+      }
+      drafts.push({ question, lang: ["en", "de", "fr", "it", "zh"].includes(detectLanguage(question)) ? detectLanguage(question) : "en", answer: d?.answer || null, source: d?.source || null, method });
+    }
+    return { total: qs.length, drafted: drafts.filter(x => x.answer).length, policies: (facts?.policies || []).length, drafts };
+  }
+});
+
 // ------------------------------ write tools（需要商家确认 need the merchant's Confirm）------------------------------
 def({
   name: "add_knowledge", kind: "write",
@@ -158,13 +212,14 @@ def({
   args: { question: "5-200 chars", answer: "10-1500 chars", tags: "optional, comma separated", lang: "en|de|fr|it|zh" },
   parse: (a = {}) => { const question = str(a.question, 200), answer = str(a.answer, 1500);
     need(question.length >= 5, "question_too_short"); need(answer.length >= 10, "answer_too_short");
-    return { question, answer, ...(str(a.tags, 200) ? { tags: str(a.tags, 200) } : {}), lang: ["en", "de", "fr", "it", "zh"].includes(a.lang) ? a.lang : "en" }; },
+    return { question, answer, ...(str(a.tags, 200) ? { tags: str(a.tags, 200) } : {}), lang: ["en", "de", "fr", "it", "zh"].includes(a.lang) ? a.lang : "en", ...(str(a.source, 80) ? { source: str(a.source, 80) } : {}) }; },
   async preview({ tenantId }, a) {
     const list = (await getSettings(tenantId)).custom_faq, same = list.find(x => normQ(x.question) === normQ(a.question));
     need(same || list.length < 200, "too_many_entries");
-    return same ? { summary: `“${a.question}” (update ${same.id})`, effect: "update_entry", entry_id: same.id, before: str(same.answer, 240) } : { summary: `“${a.question}”`, effect: "new_entry" };
+    const extra = { answer: str(a.answer, 300), ...(a.source ? { source: a.source } : {}) };
+    return same ? { summary: `“${a.question}” (update ${same.id})`, effect: "update_entry", entry_id: same.id, before: str(same.answer, 240), ...extra } : { summary: `“${a.question}”`, effect: "new_entry", ...extra };
   },
-  async run({ tenantId }, a, p) { const row = await upsertKnowledge(tenantId, { ...a, ...(p?.entry_id ? { id: p.entry_id } : {}) }); return { id: row.id, question: row.question }; }
+  async run({ tenantId }, a, p) { const { source, ...entry } = a; const row = await upsertKnowledge(tenantId, { ...entry, ...(p?.entry_id ? { id: p.entry_id } : {}) }); return { id: row.id, question: row.question }; }
 });
 
 def({

@@ -6,23 +6,23 @@
 // └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
 export const LANGS = ["en", "de", "fr", "it", "zh"];
 const P = {
-  en: { unans1: "1 question the chat could not answer.", tk1: "1 open ticket ({l} past your {t} h reply target).", ticketc: "Ticket {id} is closed. A reply draft is ready to copy.", brief: "This week: {c} chats, {r}% solved by the AI, about {h} h saved.", unans: "{n} questions the chat could not answer.", unans0: "No unanswered questions.",
+  en: { drafts1: "I drafted 1 answer from your shop policies — check it below and confirm, edit or reject it.", nodraft1: "1 question needs your own answer.", drafts: "I drafted {d} answers from your shop policies — check each one below and confirm, edit or reject it.", drafts0: "I found no clear answer in your policies for these questions — please answer them yourself:", nodraft: "{n} questions need your own answer.", unans1: "1 question the chat could not answer.", tk1: "1 open ticket ({l} past your {t} h reply target).", ticketc: "Ticket {id} is closed. A reply draft is ready to copy.", brief: "This week: {c} chats, {r}% solved by the AI, about {h} h saved.", unans: "{n} questions the chat could not answer.", unans0: "No unanswered questions.",
     tk: "{n} open tickets ({l} past your {t} h reply target).", tk0: "No open tickets.", plan: "Plan {p}: {u} of {m} chats used ({x}%).", off: "The storefront chat is paused.",
     kpi: "KPIs for the last {d} days:", kb: "{n} knowledge entries.", topics: "Top topics ({d} days): {list}.", search: "{n} chats mention “{q}”.", ticket: "Ticket {id} ({s}), waiting {w} h. A reply draft is ready to copy.",
     propose: "I prepared this change — please confirm it below:", none: "Nothing to change.", fail: "I could not do this: {e}.", next: "Suggested next:", empty: "No chats yet — numbers appear after the first conversations." },
-  de: { unans1: "1 Frage konnte der Chat nicht beantworten.", tk1: "1 offenes Ticket ({l} über Ihrem Antwortziel von {t} h).", ticketc: "Ticket {id} ist geschlossen. Ein Antwortentwurf liegt bereit.", brief: "Diese Woche: {c} Chats, {r}% von der KI gelöst, ca. {h} h gespart.", unans: "{n} Fragen konnte der Chat nicht beantworten.", unans0: "Keine unbeantworteten Fragen.",
+  de: { drafts1: "Ich habe 1 Antwort aus Ihren Shop-Richtlinien entworfen – bitte unten prüfen und bestätigen, bearbeiten oder ablehnen.", nodraft1: "1 Frage braucht Ihre eigene Antwort.", drafts: "Ich habe {d} Antworten aus Ihren Shop-Richtlinien entworfen – bitte unten prüfen und bestätigen, bearbeiten oder ablehnen.", drafts0: "In Ihren Richtlinien steht keine klare Antwort auf diese Fragen – bitte selbst beantworten:", nodraft: "{n} Fragen brauchen Ihre eigene Antwort.", unans1: "1 Frage konnte der Chat nicht beantworten.", tk1: "1 offenes Ticket ({l} über Ihrem Antwortziel von {t} h).", ticketc: "Ticket {id} ist geschlossen. Ein Antwortentwurf liegt bereit.", brief: "Diese Woche: {c} Chats, {r}% von der KI gelöst, ca. {h} h gespart.", unans: "{n} Fragen konnte der Chat nicht beantworten.", unans0: "Keine unbeantworteten Fragen.",
     tk: "{n} offene Tickets ({l} über Ihrem Antwortziel von {t} h).", tk0: "Keine offenen Tickets.", plan: "Tarif {p}: {u} von {m} Chats genutzt ({x}%).", off: "Der Shop-Chat ist pausiert.",
     kpi: "Kennzahlen der letzten {d} Tage:", kb: "{n} Wissenseinträge.", topics: "Häufigste Themen ({d} Tage): {list}.", search: "{n} Chats erwähnen „{q}“.", ticket: "Ticket {id} ({s}), wartet seit {w} h. Ein Antwortentwurf liegt bereit.",
     propose: "Ich habe diese Änderung vorbereitet – bitte unten bestätigen:", none: "Nichts zu ändern.", fail: "Das ging nicht: {e}.", next: "Vorschläge:", empty: "Noch keine Chats – Zahlen erscheinen nach den ersten Gesprächen." },
-  fr: { unans1: "1 question sans réponse du chat.", tk1: "1 ticket ouvert ({l} au-delà de votre objectif de {t} h).", ticketc: "Le ticket {id} est fermé. Un brouillon de réponse est prêt.", brief: "Cette semaine : {c} conversations, {r} % résolues par l'IA, environ {h} h gagnées.", unans: "{n} questions sans réponse du chat.", unans0: "Aucune question sans réponse.",
+  fr: { drafts1: "J'ai préparé 1 réponse à partir de vos politiques — vérifiez-la ci-dessous puis confirmez, modifiez ou refusez.", nodraft1: "1 question attend votre réponse.", drafts: "J'ai préparé {d} réponses à partir de vos politiques — vérifiez-les ci-dessous puis confirmez, modifiez ou refusez.", drafts0: "Vos politiques ne répondent pas clairement à ces questions — merci d'y répondre vous-même :", nodraft: "{n} questions attendent votre réponse.", unans1: "1 question sans réponse du chat.", tk1: "1 ticket ouvert ({l} au-delà de votre objectif de {t} h).", ticketc: "Le ticket {id} est fermé. Un brouillon de réponse est prêt.", brief: "Cette semaine : {c} conversations, {r} % résolues par l'IA, environ {h} h gagnées.", unans: "{n} questions sans réponse du chat.", unans0: "Aucune question sans réponse.",
     tk: "{n} tickets ouverts ({l} au-delà de votre objectif de {t} h).", tk0: "Aucun ticket ouvert.", plan: "Offre {p} : {u} sur {m} conversations utilisées ({x} %).", off: "Le chat de la boutique est en pause.",
     kpi: "Indicateurs des {d} derniers jours :", kb: "{n} entrées de connaissances.", topics: "Sujets principaux ({d} jours) : {list}.", search: "{n} conversations mentionnent « {q} ».", ticket: "Ticket {id} ({s}), en attente depuis {w} h. Un brouillon de réponse est prêt.",
     propose: "J'ai préparé cette modification — merci de la confirmer ci-dessous :", none: "Rien à modifier.", fail: "Impossible : {e}.", next: "Suggestions :", empty: "Pas encore de conversations — les chiffres apparaîtront ensuite." },
-  it: { unans1: "1 domanda senza risposta della chat.", tk1: "1 ticket aperto ({l} oltre l'obiettivo di {t} h).", ticketc: "Il ticket {id} è chiuso. Una bozza di risposta è pronta.", brief: "Questa settimana: {c} chat, {r}% risolte dall'IA, circa {h} h risparmiate.", unans: "{n} domande senza risposta della chat.", unans0: "Nessuna domanda senza risposta.",
+  it: { drafts1: "Ho preparato 1 risposta dalle tue policy — controllala qui sotto e conferma, modifica o rifiuta.", nodraft1: "1 domanda richiede la tua risposta.", drafts: "Ho preparato {d} risposte dalle tue policy — controllale qui sotto e conferma, modifica o rifiuta.", drafts0: "Le tue policy non rispondono chiaramente a queste domande — rispondi tu:", nodraft: "{n} domande richiedono la tua risposta.", unans1: "1 domanda senza risposta della chat.", tk1: "1 ticket aperto ({l} oltre l'obiettivo di {t} h).", ticketc: "Il ticket {id} è chiuso. Una bozza di risposta è pronta.", brief: "Questa settimana: {c} chat, {r}% risolte dall'IA, circa {h} h risparmiate.", unans: "{n} domande senza risposta della chat.", unans0: "Nessuna domanda senza risposta.",
     tk: "{n} ticket aperti ({l} oltre l'obiettivo di {t} h).", tk0: "Nessun ticket aperto.", plan: "Piano {p}: {u} di {m} chat usate ({x}%).", off: "La chat del negozio è in pausa.",
     kpi: "KPI degli ultimi {d} giorni:", kb: "{n} voci di conoscenza.", topics: "Argomenti principali ({d} giorni): {list}.", search: "{n} chat menzionano «{q}».", ticket: "Ticket {id} ({s}), in attesa da {w} h. Una bozza di risposta è pronta.",
     propose: "Ho preparato questa modifica — confermala qui sotto:", none: "Niente da modificare.", fail: "Non è stato possibile: {e}.", next: "Suggerimenti:", empty: "Ancora nessuna chat — i numeri compariranno dopo le prime conversazioni." },
-  zh: { unans1: "1 个问题聊天没能回答。", tk1: "1 个未处理工单（{l} 个超过 {t} 小时回复目标）。", ticketc: "工单 {id} 已关闭。回复草稿已准备好。", brief: "本周：{c} 个对话，AI 解决 {r}%，约节省 {h} 小时。", unans: "{n} 个问题聊天没能回答。", unans0: "没有未回答的问题。",
+  zh: { drafts1: "我根据店铺政策起草了 1 个答案——请在下方确认、修改或拒绝。", nodraft1: "1 个问题需要你亲自回答。", drafts: "我根据店铺政策起草了 {d} 个答案——请在下方逐个确认、修改或拒绝。", drafts0: "店铺政策里没有这些问题的明确答案——请你亲自回答：", nodraft: "{n} 个问题需要你亲自回答。", unans1: "1 个问题聊天没能回答。", tk1: "1 个未处理工单（{l} 个超过 {t} 小时回复目标）。", ticketc: "工单 {id} 已关闭。回复草稿已准备好。", brief: "本周：{c} 个对话，AI 解决 {r}%，约节省 {h} 小时。", unans: "{n} 个问题聊天没能回答。", unans0: "没有未回答的问题。",
     tk: "{n} 个未处理工单（{l} 个超过 {t} 小时回复目标）。", tk0: "没有未处理工单。", plan: "套餐 {p}：已用 {u}/{m} 个对话（{x}%）。", off: "店铺聊天已暂停。",
     kpi: "最近 {d} 天指标：", kb: "{n} 条知识库问答。", topics: "热门话题（{d} 天）：{list}。", search: "{n} 个对话提到「{q}」。", ticket: "工单 {id}（{s}），已等待 {w} 小时。回复草稿已准备好。",
     propose: "我已准备好以下修改，请在下方确认：", none: "没有需要修改的。", fail: "无法完成：{e}。", next: "建议下一步：", empty: "还没有对话——有对话后这里会显示数据。" }
@@ -35,14 +35,14 @@ const KPI = {
   zh: { conversations: "对话", resolution_rate: "AI 解决率", hours_saved: "节省时间", wismo: "自助查单", product_clicks: "商品点击", influenced_revenue: "聊天带来收入", first_response: "首次响应" }
 };
 const SUGG = {
-  en: { tickets: "Show open tickets", teach: "Teach an answer for: “{q}”", plan: "Check plan ({p}% used)", resume: "Resume the chat" },
-  de: { tickets: "Offene Tickets zeigen", teach: "Antwort hinterlegen für: „{q}“", plan: "Tarif prüfen ({p}% genutzt)", resume: "Chat wieder einschalten" },
-  fr: { tickets: "Voir les tickets ouverts", teach: "Ajouter une réponse pour : « {q} »", plan: "Vérifier l'offre ({p} % utilisés)", resume: "Réactiver le chat" },
-  it: { tickets: "Mostra ticket aperti", teach: "Insegna una risposta per: «{q}»", plan: "Controlla il piano ({p}% usato)", resume: "Riattiva la chat" },
-  zh: { tickets: "查看未处理工单", teach: "为这个问题添加答案：「{q}」", plan: "查看套餐（已用 {p}%）", resume: "恢复聊天" }
+  en: { draft: "Draft answers from your policies", tickets: "Show open tickets", teach: "Teach an answer for: “{q}”", plan: "Check plan ({p}% used)", resume: "Resume the chat" },
+  de: { draft: "Antworten aus Ihren Richtlinien entwerfen", tickets: "Offene Tickets zeigen", teach: "Antwort hinterlegen für: „{q}“", plan: "Tarif prüfen ({p}% genutzt)", resume: "Chat wieder einschalten" },
+  fr: { draft: "Préparer des réponses depuis vos politiques", tickets: "Voir les tickets ouverts", teach: "Ajouter une réponse pour : « {q} »", plan: "Vérifier l'offre ({p} % utilisés)", resume: "Réactiver le chat" },
+  it: { draft: "Prepara risposte dalle tue policy", tickets: "Mostra ticket aperti", teach: "Insegna una risposta per: «{q}»", plan: "Controlla il piano ({p}% usato)", resume: "Riattiva la chat" },
+  zh: { draft: "根据店铺政策起草答案", tickets: "查看未处理工单", teach: "为这个问题添加答案：「{q}」", plan: "查看套餐（已用 {p}%）", resume: "恢复聊天" }
 };
 // 建议的「下一句」= 点了就发给助理的命令（英文命令所有语言都能识别）Clickable follow-up commands.
-const SUGG_CMD = { tickets: () => "open tickets", plan: () => "briefing", resume: () => "resume the chat", teach: s => `answer "${s.question}" with "…"` };
+const SUGG_CMD = { draft: () => "draft answers", tickets: () => "open tickets", plan: () => "briefing", resume: () => "resume the chat", teach: s => `answer "${s.question}" with "…"` };
 
 // 小数点按语言 decimal comma for de / fr / it
 const dec = (v, L) => v == null ? v : ["de", "fr", "it"].includes(L) ? String(v).replace(".", ",") : String(v);
@@ -59,14 +59,16 @@ const LINES = {
   open_tickets: (r, p) => [r.total ? f(r.total === 1 ? p.tk1 : p.tk, { n: r.total, l: r.tickets.filter(x => x.late).length, t: r.reply_target_h }) : p.tk0],
   ticket_detail: (r, p) => [f(r.ticket.status === "closed" ? p.ticketc : p.ticket, { id: r.ticket.ticket_id || r.ticket.id, s: r.ticket.status, w: r.ticket.waiting_h ?? "–" })],
   knowledge_list: (r, p) => [f(p.kb, { n: r.total })],
-  search_chats: (r, p) => [f(p.search, { n: r.total, q: r.query })]
+  search_chats: (r, p) => [f(p.search, { n: r.total, q: r.query })],
+  draft_answers: (r, p) => { const n = r.total - r.drafted; return !r.total ? [p.unans0] : [r.drafted ? f(r.drafted === 1 ? p.drafts1 : p.drafts, { d: r.drafted }) : p.drafts0, r.drafted && n ? (n === 1 ? p.nodraft1 : f(p.nodraft, { n })) : null]; }
 };
 
 /** 拼出整段回答 Build the full reply. */
 export function compose({ lang, results, proposals, failures }) {
   const L = pick(lang), p = P[L], out = [];
   for (const r of results) out.push(...(LINES[r.tool]?.(r.result, p, L) || []).filter(Boolean));
-  if (proposals.length) out.push(p.propose);
+  // drafted answers already say "check below"; the generic line only for other proposals
+  if (proposals.length && !results.some(r => r.tool === "draft_answers" && r.result?.drafted)) out.push(p.propose);
   for (const x of failures) out.push(f(p.fail, { e: String(x.error || "error").replace(/_/g, " ") }));
   return out.join("\n") || p.none;
 }
