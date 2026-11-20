@@ -1227,3 +1227,8 @@ B.3 跳过（本版没有）
         podai_merchant_actions / podai_merchant_audit 加密保存，GDPR 删除与保留期已覆盖；WooCommerce 签名接口
         /woo-agent/v1/assistant* 同步提供（WP 后台页面待做）。代码 server/shopify-agent/merchant/；文档 docs/PODAI_HANDBOOK.md。
         不改主站。影响条款：附录 D。
+
+    __HASH__ · 2026-11-20 · WooCommerce 插件 1.2.0：WP 后台「Pod.AI Chat → Assistant」页（admin-ajax 代理，校验 manage_woocommerce + nonce，
+        用站点密钥签名转发，密钥不进浏览器）；de/fr/it/zh 翻译；插件推送 FAQ 时保留助理添加的答案（同问题以 WP 为准）；
+        回答单复数与德/法/意小数逗号；WordPress.org 截图 9；顾客问题与商家知识库问题（几乎）相同时优先用商家答案
+        （含订单号/邮箱/运单号时仍走查单）。真实 WordPress 6.8.3 + WooCommerce 10.3.4 验证通过。不改主站。影响条款：附录 D。

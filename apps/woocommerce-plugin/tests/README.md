@@ -10,6 +10,8 @@ The files here run against a **local** WordPress + WooCommerce test store (never
 4. `WP_URL=http://127.0.0.1:8088 node e2e-local.mjs` – chat via the WP REST proxy (5 languages, recommendations, order lookup, coupon, ticket).
 5. `WP_URL=… WP_ADMIN_USER=… WP_ADMIN_PASS=… CHROME=/usr/bin/google-chrome node browser-e2e.mjs` – real browser: widget, add to cart (Store API), coupon, tracking, Chinese, ticket, admin ticket management, screenshots into `SHOTS_DIR`.
 
+Assistant (plugin 1.2.0): open *Pod.AI Chat → Assistant* as an admin — the page asks "What needs my attention today?" on load; teach an answer (`answer "…" with "…"`), click **Confirm**, then ask the storefront chat the same question. Requests to `admin-ajax.php?action=podai_chat_assistant` without the page nonce must return 403.
+
 Static checks: `php -l` on every file and `wp plugin check pod-ai-chat` (no errors in 1.0.0).
 
 AI agents: `MCP_SDK_DIR=<path to @modelcontextprotocol/sdk> WP_URL=… CHROME=… node mcp-agent-e2e.mjs` – official MCP client: discovery, initialize, tools/list, search, get_product, create_checkout_link, then opens the link in a browser and checks the prefilled cart + coupon.

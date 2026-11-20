@@ -97,6 +97,24 @@ const CHIPS = {
 };
 const maskEmail = e => { const [u, d] = String(e || "").split("@"); return d ? `${u.slice(0, 1)}***@${d}` : null; };
 const chips = (lang, list) => ({ type: "chips", items: list || CHIPS[lang] || CHIPS.en });
+// Pod.AI: the merchant's own answer wins when the shopper asks (almost) exactly one of the merchant's questions — e.g. an answer
+// taught in the Assistant for "Can I pick up my order?" must not be overridden by the order-status intent. Conservative: same
+// normalised words, or ≥ 80 % word overlap with ≥ 3 words, and never when the message carries an order number / e-mail / tracking no.
+const normQ = x => String(x || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const words = x => new Set(normQ(x).split(" ").filter(w => w.length > 1));
+export function merchantFaqMatch(text, faq = [], cls = {}) {
+  if (cls.order_number || cls.email || cls.tracking_number) return null;
+  const q = normQ(text), w = words(text); if (!q) return null;
+  let best = null, score = 0;
+  for (const e of faq) {
+    if (!e || e.active === false || !e.answer) continue;
+    if (normQ(e.question) === q) return e;
+    const ew = words(e.question); if (w.size < 3 || ew.size < 3) continue;
+    const inter = [...w].filter(x => ew.has(x)).length, s = inter / Math.max(w.size, ew.size);
+    if (s >= 0.8 && s > score) { best = e; score = s; }
+  }
+  return best;
+}
 
 /** Deterministic responder: same tools, rule-based routing. Used without an LLM key and as fallback on LLM errors. */
 // Pod.AI: the rule answers come from the shop profile (server/shopify-agent/profile.js).
@@ -198,6 +216,10 @@ export async function handleChat({ tenantId = "tenant_demo", message, conversati
       return finish(h.customer_email ? await tk(hold) : hold, { intent: "handoff", answered_by: "local", route: { path: "local", reason: "handoff", confidence: 1 } });
     };
     const early = await handoffIf(merged); if (early) return early;
+
+    // ⑦b the merchant's own answer for this exact question (Knowledge / Assistant) beats generic intents
+    const own = !followUp ? merchantFaqMatch(text, settings.custom_faq, cls) : null;
+    if (own) return finish(own.answer, { intent: "merchant_faq", mode: "rules", answered_by: "local", route: { path: "local", reason: "merchant_faq", confidence: 0.95, complexity: [] } });
 
     // ⑧ route: local (rules + shop data) unless the question is complex / unmatched
     const kb = cls.intent === "other" && !followUp ? await profile.searchKnowledge(tenantId, text, lang, { custom: settings.custom_faq }) : [];

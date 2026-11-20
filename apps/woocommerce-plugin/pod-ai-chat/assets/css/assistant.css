@@ -1,0 +1,30 @@
+/* Pod.AI Chat → Assistant (WP admin). Uses WordPress admin colours; no external fonts or images. */
+.podai-as .card { max-width: none; padding: 12px 16px; margin-top: 12px; box-sizing: border-box; }
+.podai-as h2 { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.podai-as-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.podai-as-grid > * { min-width: 0; }
+.podai-as-quick, .podai-as-chips, .podai-as-btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.podai-as-log { display: flex; flex-direction: column; gap: 8px; min-height: 240px; max-height: 560px; overflow: auto; padding: 6px 2px; }
+.podai-as-msg { max-width: 92%; padding: 8px 12px; border-radius: 12px; white-space: pre-wrap; line-height: 1.5; }
+.podai-as-msg.is-user { align-self: flex-end; background: #2271b1; color: #fff; }
+.podai-as-msg.is-ai { align-self: flex-start; background: #f0f0f1; color: #1d2327; }
+.podai-as-msg.is-wait { opacity: .6; }
+.podai-as-card, .podai-as-act { background: #fff; border: 1px solid #dcdcde; border-radius: 8px; padding: 10px 12px; }
+.podai-as-act { border-left: 4px solid #dba617; margin: 6px 0; }
+.podai-as-list { margin: 0; }
+.podai-as-list li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid #f0f0f1; margin: 0; }
+.podai-as-list li:first-child { border-top: 0; }
+.podai-as-q { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.podai-as-line { margin: 4px 0; }
+.podai-as-pre { white-space: pre-wrap; background: #f6f7f7; border: 1px solid #dcdcde; border-radius: 6px; padding: 8px; font: inherit; margin: 8px 0; }
+.podai-as-form { display: flex; gap: 8px; margin-top: 8px; }
+.podai-as-form input { flex: 1; max-width: none; }
+.podai-as-badge { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 10px; padding: 1px 8px; background: #f0f0f1; white-space: nowrap; }
+.podai-as-badge.is-done { background: #edfaef; color: #00a32a; }
+.podai-as-badge.is-failed { background: #fcf0f1; color: #d63638; }
+.podai-as-badge.is-proposed { background: #fcf9e8; color: #996800; }
+.podai-as-count { background: #dba617; color: #fff; border-radius: 10px; padding: 0 7px; font-size: 12px; }
+.podai-as-mode { font-size: 12px; font-weight: 600; background: #f0f0f1; border-radius: 10px; padding: 2px 8px; vertical-align: middle; }
+.podai-as-audit li { display: flex; gap: 8px; margin: 0; padding: 5px 0; border-top: 1px solid #f0f0f1; }
+.podai-as-audit li:first-child { border-top: 0; }
+@media (max-width: 960px) { .podai-as-grid { grid-template-columns: minmax(0, 1fr); } }

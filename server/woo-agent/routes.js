@@ -58,6 +58,12 @@ export function cleanStore(s = {}, site = {}) {
 const cleanFaq = list => (Array.isArray(list) ? list : []).slice(0, 200).map((x, i) => ({ id: `wf_${i}`, question: str(x.question, 200).trim(), answer: str(x.answer, 1500).trim(), tags: str(x.tags, 200),
   lang: ["en", "zh", "de", "fr", "it"].includes(x.lang) ? x.lang : "en", active: true })).filter(x => x.question.length >= 3 && x.answer.length >= 3);
 
+// The WP FAQ box is the source of truth for wf_* entries; answers taught through the merchant assistant (kb_*) are kept
+// when the plugin pushes its FAQ — unless the WP box now has the same question (the merchant's own text wins).
+const normQ = x => String(x || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const mergeFaq = (wp, cur = []) => { const have = new Set(wp.map(e => normQ(e.question)));
+  return [...wp, ...cur.filter(e => /^kb_/.test(String(e.id || "")) && !have.has(normQ(e.question)))].slice(0, 200); };
+
 const ticketView = h => ({ id: h.id, ticket_id: h.ticket_id || null, status: h.status === "in_progress" ? "pending" : h.status === "resolved" ? "closed" : "open", customer_email: h.customer_email || null,
   order_number: h.order_number || null, reason: h.reason || "", summary: h.summary || "", language: h.language || null, page: h.page || null, created_at: h.created_at, updated_at: h.updated_at,
   notes: h.notes || [], messages: (h.messages || []).map(m => ({ role: m.role, text: m.text, at: m.at })), test: !!h.test });
@@ -108,7 +114,7 @@ export function wooAgentRouter() {
     if (b.settings) { const x = b.settings;
       await putAgentSettings(req.wooTenant, { enabled: x.enabled, support_email: x.support_email, human_reply_hours: x.human_reply_hours, greeting: x.greeting });
       const cur = await getSettings(req.wooTenant);
-      await saveSettings(req.wooTenant, { widget: x.widget ? widgetOf({ widget: { ...widgetOf(cur), ...x.widget } }) : widgetOf(cur), ...(x.custom_faq ? { custom_faq: cleanFaq(x.custom_faq) } : {}), llm_enabled: x.llm_enabled === true, ...(typeof x.agent_api === "boolean" ? { agent_api: x.agent_api } : {}) });
+      await saveSettings(req.wooTenant, { widget: x.widget ? widgetOf({ widget: { ...widgetOf(cur), ...x.widget } }) : widgetOf(cur), ...(x.custom_faq ? { custom_faq: mergeFaq(cleanFaq(x.custom_faq), cur.custom_faq) } : {}), llm_enabled: x.llm_enabled === true, ...(typeof x.agent_api === "boolean" ? { agent_api: x.agent_api } : {}) });
     }
     const s = await getSettings(req.wooTenant);
     res.json({ ok: true, support_email: s.support_email || "", widget: widgetOf(s), faq: s.custom_faq.length, agent_api: s.agent_api !== false, agent_api_url: `${PUBLIC()}/agent/v1/stores/${site.id}` });

@@ -46,7 +46,7 @@ flowchart LR
 | Product | Status (2026-11-20) | Code | Public URL |
 |---|---|---|---|
 | **Pod.AI for Shopify** | Released app versions up to `pod-ai-10` in the Shopify Dev Dashboard; **not yet submitted to the App Store** | `server/shopify-agent/` + `apps/shopify-agent/` (Shopify CLI project, theme app extension) | Admin: `https://podai.swisspro.site/shopify-agent` (embedded in Shopify admin) |
-| **Pod.AI Chat for WooCommerce** | Plugin 1.1.0 built (zip + WordPress.org assets); **not yet in the WordPress.org directory** | `server/woo-agent/` + `apps/woocommerce-plugin/` | Download: `https://podai.swisspro.site/woocommerce/pod-ai-chat.zip` |
+| **Pod.AI Chat for WooCommerce** | Plugin 1.2.0 built (zip + WordPress.org assets, incl. the Assistant page); **not yet in the WordPress.org directory** | `server/woo-agent/` + `apps/woocommerce-plugin/` | Download: `https://podai.swisspro.site/woocommerce/pod-ai-chat.zip` |
 | **Agent API (MCP + REST)** | Live for connected stores with "AI agent access" on (default on) | `server/agent-api/` | `https://podai.swisspro.site/agent/v1/stores/<store>` |
 | **Billing** | Shopify: Managed Pricing (live). WooCommerce: Paddle (built, **off** until `PADDLE_*` is set) | `server/shopify-agent/billing.js`, `server/woo-agent/billing.js`, `server/billing/` | — |
 | **Landing + legal pages** | Live | `server/shopify-agent/*.html` | `podai.swisspro.site` · `/privacy` `/terms` `/support` `/security` `/dpa` `/woocommerce` |
@@ -74,6 +74,7 @@ flowchart TD
 
 Key rules (enforced in code, not by the AI's goodwill):
 - **Local first.** Most answers come from rules + the shop's real data — fast, free, never invented. The AI model is only for complex questions, only on Pro, only if the merchant switched it on.
+- **The merchant's own answer wins.** If a shopper asks (almost) exactly a question from the merchant's Knowledge — including answers taught in the Assistant — that answer is used, even if the words look like another topic ("Can I pick up my order?"). Messages with an order number, e-mail or tracking number still go to order lookup.
 - **Order privacy.** Order status only when order number **and** order e-mail match; 5 wrong tries → 15-minute lock.
 - **No payment data.** Card numbers are refused and never stored.
 - **Handoff → ticket.** When a person is needed and the shopper leaves an e-mail, Pod.AI creates ticket `POD-T-XXXXXX` and e-mails the transcript to the **merchant** (Reply-To = shopper). The merchant answers from their own mailbox. While a ticket is open the AI keeps answering simple questions; "Back to AI" after resolve or 24 h idle.
@@ -98,13 +99,15 @@ Endpoints: `GET /.well-known/pod-ai-agent.json`, `GET /agent/v1/openapi.json`, `
 
 ### 5.1 What the merchant sees
 
-Pod.AI admin → **Assistant** tab (Shopify: inside the embedded admin; WooCommerce: API ready, WP admin page is the next step — see §14).
+Pod.AI admin → **Assistant** (Shopify: tab in the embedded admin · WooCommerce: *Pod.AI Chat → Assistant* in WP admin, plugin 1.2.0).
 
 - A chat box with quick buttons: *What needs my attention today? · Unanswered questions · Open tickets · KPIs last 30 days · What do shoppers ask about?*
 - Answers with cards: ticket list (late tickets in red), unanswered questions with **Teach answer**, a ticket with a **reply draft** (Copy / Open in e-mail), topic bars.
 - **Waiting for your confirmation:** every change the assistant prepared, with **Confirm** / **Reject**.
 - **Recent activity:** who asked, what was prepared, confirmed, done, rejected or failed.
 - Admin languages EN / DE / FR / IT; the assistant also understands Chinese.
+
+**WooCommerce specifics:** the WP page calls `admin-ajax.php` (action `podai_chat_assistant`); PHP checks `manage_woocommerce` + a nonce and forwards the request signed with the site secret (the secret never reaches the browser). The WordPress username is sent for the activity log (anything after an `@` is dropped). Answers taught in the Assistant are kept when the plugin pushes its FAQ box; an FAQ entry with the same question replaces them.
 
 ### 5.2 What you can ask (examples)
 
@@ -203,7 +206,7 @@ Safety rules (in code):
 | `server/agent-api/` | External AI agents: REST + MCP + OpenAPI | Yes |
 | `server/billing/` | Paddle checkout page + webhook | Rarely |
 | `apps/shopify-agent/` | Shopify CLI project (`shopify.app.toml`, theme app extension) | Deploy with `shopify app deploy` |
-| `apps/woocommerce-plugin/` | WordPress plugin (PHP), translations, WP.org assets; build with `node scripts/build-woo-plugin.mjs` | Yes |
+| `apps/woocommerce-plugin/` | WordPress plugin (PHP), translations, WP.org assets; build with `node scripts/build-woo-plugin.mjs`. Assistant page: `includes/class-podai-chat-assistant.php` (capability + nonce → signed proxy) + `assets/js/assistant.js` | Yes |
 
 **Boundary rule:** files in `server/shopify-agent/` may only import Pod.AI files and a short allow-list of neutral helpers (store, crypto, carrier tracking clients). `server/shopify-agent/test/audit.test.js` fails the build otherwise. That is why the merchant assistant lives in `server/shopify-agent/merchant/`.
 
@@ -260,6 +263,7 @@ Also: encrypted daily backups (14 days, `~/podai-backups`), personal-data access
 - Pod.AI runs **inside the same Node app** as the website (cPanel / CloudLinux, Passenger). Deploy + restart: see `docs/DEPLOYMENT.md` (`git pull` + `cloudlinux-selector restart`). No database migration is needed for the assistant (new collections are created on first use).
 - Shopify config changes (scopes, webhooks, extension): `cd apps/shopify-agent && shopify app deploy`, then release the version. **The assistant needs no new scopes and no new app version** — it is server + admin page only.
 - WooCommerce plugin: `node scripts/build-woo-plugin.mjs` → `apps/woocommerce-plugin/dist/`.
+- **WordPress check (real install):** WordPress + WooCommerce on SQLite with the plugin symlinked, backend on port 3999 — see `apps/woocommerce-plugin/tests/README.md`; the Assistant was verified this way (connect → shopper ticket → briefing → teach → Confirm → chat answers with the new text → survives a settings save; no-nonce request → 403).
 - **Tests:** `npm run test:all` (44 files, all offline, mocked Shopify/WordPress). Pod.AI only: `npm run test:all -- shopify-agent woo agent-api billing`. Assistant only: `node server/shopify-agent/test/merchant-agent.test.js`.
 - After deploy check: `/shopify-agent/privacy` 200 · open the app in a Shopify dev store → Assistant tab → "What needs my attention today?" answers · Confirm a test knowledge entry and see it under Knowledge.
 
@@ -302,7 +306,7 @@ Server: `LLM_ENABLED=true` + provider key/model. Merchant: Pro plan + Settings �
 
 | # | Next | Why |
 |---|---|---|
-| 1 | **WooCommerce admin page for the assistant** (PHP page calling `/woo-agent/v1/assistant*`; plugin 1.2.0 + translations) | API is ready and tested; WP merchants get the same assistant |
+| ✓ | ~~WooCommerce admin page for the assistant~~ — done in plugin 1.2.0 (Pod.AI Chat → Assistant) | |
 | 2 | **Submit to Shopify App Store** (real screenshots incl. Assistant, protected-data request, fresh-store test) and **WordPress.org** | Distribution |
 | 3 | **Weekly assistant e-mail** (briefing + unanswered questions) to the ticket e-mail | Merchants act without opening the app |
 | 4 | **AI-drafted answers for unanswered questions** (Pro): the assistant proposes the answer text from policies + products; merchant confirms | Faster knowledge growth, higher resolution rate |
