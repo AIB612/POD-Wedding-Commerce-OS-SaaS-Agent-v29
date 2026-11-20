@@ -88,10 +88,13 @@ export function publicRouter({ root, generatedDir }) {
   const seoDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "seo");
   const AI_BOTS = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "PerplexityBot", "Perplexity-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "Google-Extended", "Applebot-Extended", "CCBot"];
   const robotsTxt = (rules, sitemap) => [["*", ...AI_BOTS].map(ua => `User-agent: ${ua}`).join("\n"), rules.join("\n"), "", `Sitemap: ${sitemap}`, ""].join("\n");
+  // lastmod is the date of the latest public-page change; bump when landing or legal URL content changes.
+  const SEO_LASTMOD = "2026-11-20";
   const sitemapXml = (origin, urls) => ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
     "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
-    ...urls.map(([u, freq, prio]) => `  <url><loc>${origin}${u}</loc><changefreq>${freq}</changefreq><priority>${prio}</priority></url>`),
+    ...urls.map(([u, freq, prio]) => `  <url><loc>${origin}${u}</loc><lastmod>${SEO_LASTMOD}</lastmod><changefreq>${freq}</changefreq><priority>${prio}</priority></url>`),
     "</urlset>", ""].join("\n");
+  const INDEXNOW_KEY = fs.readFileSync(path.join(seoDir, "indexnow.key"), "utf8").trim();
   const sendSeoText = file => (_, res) => res.set("Cache-Control", "public, max-age=3600").type("text/plain; charset=utf-8").send(fs.readFileSync(path.join(seoDir, file), "utf8"));
   const PODAI_ROBOTS = robotsTxt(["Allow: /", "Disallow: /generated/", "Disallow: /admin", "Disallow: /api/", "Disallow: /shopify-agent$", "Disallow: /shopify-agent/proxy/", "Disallow: /shopify-agent/api/"], `${PODAI_ORIGIN}/sitemap.xml`);
   const POD_ROBOTS = robotsTxt(["Allow: /", "Disallow: /generated/", "Disallow: /admin", "Disallow: /admin-app/", "Disallow: /api/admin", "Disallow: /api/account",
@@ -100,15 +103,24 @@ export function publicRouter({ root, generatedDir }) {
     ["/terms", "yearly", "0.3"], ["/privacy", "yearly", "0.3"], ["/imprint", "yearly", "0.2"]]);
   const PODAI_SITEMAP = sitemapXml(PODAI_ORIGIN, [["/", "weekly", "1.0"], ["/woocommerce", "weekly", "0.8"], ["/support", "monthly", "0.7"], ["/privacy", "yearly", "0.3"], ["/terms", "yearly", "0.3"],
     ["/security", "yearly", "0.3"], ["/dpa", "yearly", "0.3"]]);
+  const sendSeoDoc = (type, body) => (req, res, next) => {
+    if (!podHost(req) && !podSiteHost(req)) return next("route");
+    res.set("Cache-Control", "public, max-age=3600").type(type).send(body);
+  };
   router.get("/robots.txt", (req, res, next) => {
-    if (podHost(req)) return res.type("text/plain").send(PODAI_ROBOTS);
-    if (podSiteHost(req)) return res.type("text/plain").send(POD_ROBOTS);
+    if (podHost(req)) return sendSeoDoc("text/plain", PODAI_ROBOTS)(req, res, next);
+    if (podSiteHost(req)) return sendSeoDoc("text/plain", POD_ROBOTS)(req, res, next);
     return next("route");
   });
   router.get("/sitemap.xml", (req, res, next) => {
-    if (podHost(req)) return res.type("application/xml").send(PODAI_SITEMAP);
-    if (podSiteHost(req)) return res.type("application/xml").send(POD_SITEMAP);
+    if (podHost(req)) return sendSeoDoc("application/xml", PODAI_SITEMAP)(req, res, next);
+    if (podSiteHost(req)) return sendSeoDoc("application/xml", POD_SITEMAP)(req, res, next);
     return next("route");
+  });
+  // IndexNow: public key file at /{key}.txt (https://www.indexnow.org/documentation)
+  router.get(`/${INDEXNOW_KEY}.txt`, (req, res, next) => {
+    if (!podHost(req) && !podSiteHost(req)) return next("route");
+    res.set("Cache-Control", "public, max-age=86400").type("text/plain").send(INDEXNOW_KEY);
   });
   router.get("/llms.txt", (req, res, next) => podHost(req) ? sendSeoText("podai-llms.txt")(req, res) : podSiteHost(req) ? sendSeoText("pod-llms.txt")(req, res) : next("route"));
   router.get("/llms-full.txt", (req, res, next) => podHost(req) ? sendSeoText("podai-llms-full.txt")(req, res) : next("route"));

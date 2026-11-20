@@ -87,6 +87,27 @@ try {
   const zip = await getHost("/woocommerce/pod-ai-chat-for-woocommerce.zip", "podai.swisspro.site"); assert.equal(zip.status, 200); assert.match(zip.headers["content-disposition"] || "", /pod-ai-chat-for-woocommerce\.zip/);
   const oldZip = await getHost("/woocommerce/pod-ai-chat.zip", "podai.swisspro.site"); assert.equal(oldZip.status, 301); assert.equal(oldZip.headers.location, "/woocommerce/pod-ai-chat-for-woocommerce.zip");
   const wooReadme = await getHost("/woocommerce/readme.txt", "podai.swisspro.site"); assert.equal(wooReadme.status, 200); assert.match(wooReadme.body, /Stable tag: \d/);
+  // Sitemaps include lastmod; every listed URL returns 200; IndexNow key file is served on both hosts.
+  const indexNowKey = fs.readFileSync(new URL("./seo/indexnow.key", import.meta.url), "utf8").trim();
+  assert.match(indexNowKey, /^[a-f0-9]{32}$/);
+  for (const host of ["podai.swisspro.site", "pod.swisspro.site"]) {
+    const sm = await getHost("/sitemap.xml", host);
+    assert.equal(sm.status, 200, host + " sitemap");
+    assert.match(sm.body, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
+    const locs = [...sm.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
+    assert.ok(locs.length >= 5, host + " sitemap urls");
+    for (const loc of locs) {
+      const u = new URL(loc);
+      assert.equal(u.host, host, loc);
+      const page = await getHost(u.pathname, host);
+      assert.equal(page.status, 200, loc);
+    }
+    const keyFile = await getHost("/" + indexNowKey + ".txt", host);
+    assert.equal(keyFile.status, 200, host + " indexnow key");
+    assert.equal(keyFile.body.trim(), indexNowKey);
+  }
+  assert.match((await getHost("/woocommerce", "podai.swisspro.site")).body, /"@type":"SoftwareApplication"/);
+
   result.payment_methods = "pass";
 } finally { server.close(); fs.rmSync(tmp, { recursive: true, force: true }); }
 console.log(JSON.stringify({ ok: true, result }, null, 2));
