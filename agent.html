@@ -107,9 +107,8 @@ a{color:var(--gold2)}
 .fc{border-radius:20px;padding:20px 18px;transition:transform .25s,box-shadow .25s}.fc:hover{transform:translateY(-4px);box-shadow:0 24px 50px rgba(70,48,30,.14)}
 .fc h3{margin:14px 0 4px;font-size:15px}.fc p{margin:0;font-size:13px;color:var(--ink2)}
 .kg{display:grid;grid-template-columns:340px minmax(0,1fr);gap:22px;align-items:start}
-/* KPI screenshot ~25% larger on desktop: narrower KPI column, and on wide screens the row extends past the text column */
-@media(min-width:981px){.kg{grid-template-columns:280px minmax(0,1fr)}}
-@media(min-width:1340px){.kg{margin:0 -70px}}
+/* Enlarge only the screenshot (~15–25% on wide desktops, same aspect ratio). KPI column and section width stay as they were. */
+@media(min-width:981px){.kg>figure.shot{width:calc(100% + min(198px,max(0px,50vw - 584px)));max-width:none}}
 .kc{border-radius:20px;padding:18px 20px;margin-bottom:14px}
 .kc .top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
 .kc b{display:block;font:600 34px/1.1 Georgia,serif;margin:8px 0 4px}
@@ -117,7 +116,7 @@ a{color:var(--gold2)}
 .ring{display:flex;align-items:center;gap:16px}.ring svg{width:74px;height:74px;flex:none}
 .shot{border-radius:20px;overflow:hidden;background:#1d1916;box-shadow:0 30px 70px rgba(40,28,18,.25)}
 .shot .cb{display:flex;gap:6px;align-items:center;padding:10px 14px;background:#2a2420}.shot .cb span{width:10px;height:10px;border-radius:50%;background:#5b4f46}.shot .cb em{margin-left:10px;font-style:normal;font-size:11.5px;color:#cbbfb3;background:#3a322c;border-radius:6px;padding:3px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.shot img{display:block;width:100%;height:auto}
+.shot img{display:block;width:100%;height:auto;object-fit:contain}
 .cap{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:14px;font-size:12.5px;color:var(--mut)}
 .arch{display:grid;grid-template-columns:1fr 70px 1.1fr 70px 1fr;align-items:center;border-radius:28px;padding:28px}
 .col h4,.core h4{margin:0 0 10px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
