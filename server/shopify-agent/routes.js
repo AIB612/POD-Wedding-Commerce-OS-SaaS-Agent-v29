@@ -1,6 +1,7 @@
 // Routes of the Shopify Chat Agent app (mounted before express.json; each route parses its own body).
 //   GET  /shopify-agent                    embedded admin (App Bridge; KPIs, knowledge, handoffs, settings)
 //   GET|POST /shopify-agent/api/*          admin JSON API — Authorization: Bearer <session token> (shop from the token only)
+//        …/api/assistant[/actions[/:id/approve|reject]|/audit]  merchant assistant (internal agent, ./merchant)
 //   POST /shopify-agent/proxy/chat         storefront chat via App Proxy (/apps/podai/chat), Shopify signature required
 //   POST /shopify-agent/webhooks           app/uninstalled, app_subscriptions/update (billing) + GDPR topics (HMAC on the raw body)
 import express from "express";
@@ -24,6 +25,7 @@ import * as ga from "./ga.js";
 import { logAccess, readAccess, purgeAccessLog } from "./security/access-log.js";
 import { runBackup } from "./security/backup.js";
 import * as billing from "./billing.js";
+import * as merchant from "./merchant/index.js";
 
 const HEX = v => /^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v) : null;
 // storefront look, editable in the app (the theme app embed can override colour / position)
@@ -149,6 +151,22 @@ export function shopifyAgentRouter() {
   api.post("/preview", ah(async (req, res) => { const b = req.body || {}; const plan = await billing.getPlan(req.agentShop); // "Try it" follows the plan's LLM rule; not counted as a chat
     const out = await handleChat({ tenantId: req.agentTenant, profile: makeProfile(req.agentShop), message: b.message, conversation_id: b.conversation_id, lang: b.lang, gate: { canStart: true, llm: plan.llm } });
     res.json({ answer: out.answer, conversation_id: out.conversation_id, ui: out.ui, handoff: out.handoff || null, answered_by: out.answered_by || null }); }));
+  // ---- Merchant assistant (internal agent, server/shopify-agent/merchant): ask → read tools run, write tools become
+  //      proposals the merchant confirms here. Only Pod.AI data (knowledge, tickets, chat on/off) — never the shop itself.
+  const askLimit = new Map(); // per shop: 30 questions / minute
+  const limited = shop => { const t = Date.now(), e = askLimit.get(shop); if (!e || e.reset < t) { askLimit.set(shop, { n: 1, reset: t + 60e3 }); if (askLimit.size > 5000) askLimit.clear(); return false; } return ++e.n > 30; };
+  const assistantCtx = async (req, lang) => { const s = await getSettings(req.agentTenant), plan = await billing.getPlan(req.agentShop).catch(() => ({ llm: false }));
+    return { tenantId: req.agentTenant, actor: req.agentUser, source: "shopify_admin", lang: ["en", "de", "fr", "it", "zh"].includes(lang) ? lang : "en", llm: plan.llm === true && s.llm_enabled === true,
+      shopName: req.agentShop.replace(/\.myshopify\.com$/, ""), usage: () => billing.billingSummary(req.agentShop), onPersonalData: tool => audit(req, `assistant_${tool}`) }; };
+  api.post("/assistant", ah(async (req, res) => {
+    if (limited(req.agentShop)) return res.status(429).json({ error: "rate_limited" });
+    const b = req.body || {}; if (!String(b.message || "").trim()) return res.status(400).json({ error: "message_required" });
+    res.set("Cache-Control", "no-store").json(await merchant.runAssistant(await assistantCtx(req, b.lang), b.message)); }));
+  api.get("/assistant/actions", ah(async (req, res) => res.set("Cache-Control", "no-store").json(await merchant.listActions(req.agentTenant, { status: ["proposed", "done", "failed", "rejected", "expired"].includes(req.query.status) ? req.query.status : undefined }))));
+  api.post("/assistant/actions/:id/approve", ah(async (req, res) => { if (req.body?.confirm !== true) return res.status(409).json({ error: "confirmation_required" });
+    res.json(await merchant.approve(await assistantCtx(req, req.body?.lang), req.params.id)); }));
+  api.post("/assistant/actions/:id/reject", ah(async (req, res) => res.json(await merchant.reject(await assistantCtx(req, req.body?.lang), req.params.id))));
+  api.get("/assistant/audit", ah(async (req, res) => res.set("Cache-Control", "no-store").json(await merchant.readAudit(req.agentTenant, { limit: Number(req.query.limit) || 100 }))));
   r.use("/shopify-agent/api", api);
   r.use("/shopify-agent", (_, res) => res.status(404).json({ error: "not_found" }));
   return r;
