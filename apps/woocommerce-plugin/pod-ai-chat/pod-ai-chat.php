@@ -14,7 +14,7 @@
  * Text Domain:       pod-ai-chat
  * Domain Path:       /languages
  * WC requires at least: 7.0
- * WC tested up to:   10.3
+ * WC tested up to:   11.3
  *
  * @package PodAIChat
  */

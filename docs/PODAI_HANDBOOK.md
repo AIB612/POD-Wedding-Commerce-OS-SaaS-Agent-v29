@@ -307,7 +307,7 @@ Server: `LLM_ENABLED=true` + provider key/model. Merchant: Pro plan + Settings �
 | # | Next | Why |
 |---|---|---|
 | ✓ | ~~WooCommerce admin page for the assistant~~ — done in plugin 1.2.0 (Pod.AI Chat → Assistant) | |
-| 2 | **Submit to Shopify App Store** (real screenshots incl. Assistant, protected-data request, fresh-store test) and **WordPress.org** | Distribution |
+| 2 | **Submit to Shopify App Store** — submission pack ready: `docs/PODAI_SUBMISSION.md` (self-review, screenshots, reviewer instructions, screencast shot list); (real screenshots incl. Assistant, protected-data request, fresh-store test) and **WordPress.org** | Distribution |
 | 3 | **Weekly assistant e-mail** (briefing + unanswered questions) to the ticket e-mail | Merchants act without opening the app |
 | 4 | **AI-drafted answers for unanswered questions** (Pro): the assistant proposes the answer text from policies + products; merchant confirms | Faster knowledge growth, higher resolution rate |
 | 5 | **Proactive shopper agent**: abandoned-cart / back-in-stock follow-ups as merchant-approved proposals | Revenue, not just support |

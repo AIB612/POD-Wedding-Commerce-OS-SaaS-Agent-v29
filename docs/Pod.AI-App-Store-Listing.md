@@ -33,7 +33,8 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 2. Answers grounded in your store: products, shipping rates, policies and discount codes come straight from Shopify, not from a generic model.
 3. Speaks your customers' language: English, German, French, Italian and Chinese built in; other languages via an optional LLM.
 4. Nothing slips through: unanswerable questions become a handoff queue with the reply e-mail, and the AI keeps helping meanwhile.
-5. See the impact: dashboard with conversations, AI resolution rate, hours saved, self-served order lookups, chat-influenced revenue and first-response time.
+5. A team assistant inside the app: "What needs my attention today?", reply drafts for tickets and one-click teaching of new answers — every change waits for your OK.
+6. See the impact: dashboard with conversations, AI resolution rate, hours saved, self-served order lookups, chat-influenced revenue and first-response time.
 
 **Feature list (≤ 80 chars each):**
 - Order status card with carrier, tracking number and tracking link  [67]
@@ -49,8 +50,20 @@ Character limits used: app name ≤ 30, subtitle/tagline ≤ 62, introduction �
 - Admin in English, German, French and Italian  [43]
 - Works without an AI key; optional LLM answers you can switch off  [64]
 - GDPR webhooks, signed storefront requests, payment-data filter  [61]
+- Team assistant: daily briefing, ticket reply drafts, teach answers  [66]
+- Every assistant change waits for your Confirm; full activity log  [64]
 
-**Screenshot captions** (files listed in §5):
+**Screenshot set 2026-11-20 (admin, 1600×900, ready to upload):** `apps/shopify-agent/listing/`
+1. `1-dashboard.png` — "See what your chat resolves: conversations, AI resolution, hours saved"
+2. `2-assistant-briefing.png` — "Ask your assistant what needs attention today"
+3. `3-assistant-confirm.png` — "Teach a new answer — nothing changes until you confirm"
+4. `4-assistant-reply-draft.png` — "Tickets come with a reply draft in the shopper's language"
+5. `5-tickets.png` — "Questions the AI can't answer land in your team queue"
+6. `6-knowledge.png` — "Your own answers on top of your policies and products"
+Sample data from a fictional shop; no prices in images (req. 4.2.2). Re-render: `apps/shopify-agent/listing/tools/`.
+Still recommended: 1–2 storefront shots of the chat widget on the dev store (real theme).
+
+**Older screenshot captions** (files listed in §5):
 1. Dashboard: "See what your chat resolves: conversations, AI resolution rate, hours saved, revenue"
 2. Storefront products: "Shoppers browse your products in chat and add to cart in one tap"
 3. Handoffs: "Questions the AI can't answer land in your team queue with the reply e-mail"
