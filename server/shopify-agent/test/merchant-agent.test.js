@@ -129,6 +129,37 @@ test("reject, stale data guard, bad input, chat pause", async () => {
   assert.equal(both.find(r => r.status === 200).d.status, "done");
 });
 
+test("weekly summary e-mail: due Monday 07:00 UTC, once per week, can be turned off, no shopper data", async () => {
+  const { sendWeeklyDigest, buildDigest, weekKey, due } = await import("../merchant/digest.js");
+  assert.equal(weekKey(Date.parse("2026-11-20T12:00:00Z")), "2026-W47"); assert.equal(weekKey(Date.parse("2027-01-01T12:00:00Z")), "2026-W53");
+  const mon = d => { const x = new Date(Date.now() + d * 7 * 864e5); x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7)); return x; };
+  const at = (w, h) => { const x = mon(w); x.setUTCHours(h, 0, 0, 0); return x.getTime(); };
+  assert.equal(due(at(1, 6)), false); assert.equal(due(at(1, 7)), true); assert.equal(due(at(1, 7) + 3 * 864e5), true, "sent late if the server was down");
+  process.env.TEST_EMAIL_ALLOWLIST = "owner@alpine.example";
+  await call("/shopify-agent/api/settings", { method: "PUT", body: { support_email: "owner@alpine.example", enabled: true } });
+  const ctx = { tenantId: TA, shopName: "Alpine Tees", adminUrl: "https://admin.shopify.com/store/shop-a/apps/pod-ai-1" };
+  const d = await buildDigest({ ...ctx, lang: "en" });
+  assert.match(d.subject, /Alpine Tees/); assert.match(d.text, /open tickets?/); assert.match(d.html, /Open the Assistant/);
+  assert.ok(!/@example\.com/.test(d.text + d.html), "no shopper e-mail addresses in the summary");
+  assert.equal((await sendWeeklyDigest(ctx, { now: at(1, 6) })).status, "not_due");
+  const both = await Promise.all([1, 2].map(() => sendWeeklyDigest(ctx, { now: at(1, 8) })));
+  assert.deepEqual(both.map(r => r.status).sort(), ["already_sent", "not_configured"], "one send per week, even with two processes (no mail provider in tests → not_configured)");
+  assert.equal((await sendWeeklyDigest(ctx, { now: at(1, 20) })).status, "already_sent");
+  const n = (await store.listForTenant("notifications", TA)).filter(x => x.type === "podai_weekly_digest");
+  assert.equal(n.length, 1); assert.equal(n[0].to, "owner@alpine.example");
+  // the merchant turns it off through the assistant (confirm required), in German
+  const off = (await ask("Wochen-E-Mail stoppen", { lang: "de" })).d.proposals[0];
+  assert.equal(off.tool, "set_weekly_digest");
+  assert.equal((await call(`/shopify-agent/api/assistant/actions/${off.id}/approve`, { method: "POST", body: { confirm: true } })).d.status, "done");
+  assert.equal((await call("/shopify-agent/api/settings")).d.weekly_digest, false);
+  assert.equal((await sendWeeklyDigest(ctx, { now: at(2, 8) })).status, "off");
+  await call("/shopify-agent/api/settings", { method: "PUT", body: { weekly_digest: true, enabled: true } });
+  const b2 = (await store.listForTenant("podai_settings", TA))[0]; assert.equal(b2.digest_lang, "de", "summary language follows the assistant language");
+  // shop B: no chats this week → nothing to send; no recipient at all → no_recipient
+  assert.equal((await sendWeeklyDigest({ tenantId: TB, shopName: "B" }, { now: at(1, 8) })).status, "no_recipient");
+  assert.equal((await sendWeeklyDigest({ tenantId: core.tenantFor("shop-c.myshopify.com"), shopName: "C" }, { to: "owner@alpine.example", now: at(1, 8) })).status, "nothing_to_report");
+});
+
 test("audit log has events but no chat text; records are encrypted at rest; GDPR deletes them", async () => {
   const a = (await call("/shopify-agent/api/assistant/audit")).d;
   for (const ev of ["ask", "proposed", "approved", "executed", "rejected", "failed"]) assert.ok(a.some(x => x.event === ev), ev);
@@ -145,6 +176,7 @@ test("audit log has events but no chat text; records are encrypted at rest; GDPR
   await gdpr.shopRedact(A);
   assert.equal((await store.listForTenant("podai_merchant_actions", TA)).length, 0);
   assert.equal((await store.listForTenant("podai_merchant_audit", TA)).length, 0);
+  assert.equal((await store.listForTenant("podai_digests", TA)).length, 0);
   assert.ok((await store.listForTenant("podai_handoffs", TB)).length === 1, "other shops untouched");
 });
 
@@ -178,6 +210,12 @@ test("WooCommerce: same assistant over the signed site API; disconnect removes i
   const audit = (await woo("GET", "/assistant/audit")).d; assert.ok(audit.some(x => x.actor === "woo_admin:anna" && x.event === "ask"));
   const T = wooCore.tenantFor(c.site_id);
   assert.ok((await store.listForTenant("podai_merchant_actions", T)).length === 2);
+  // hourly job: the connected site is checked once the week's summary is due (no recipient e-mail in this test site)
+  const { runWooDigests } = await import("../../woo-agent/digest-job.js");
+  const mon8 = (() => { const x = new Date(Date.now() + 7 * 864e5); x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7)); x.setUTCHours(8, 0, 0, 0); return x.getTime(); })();
+  assert.equal((await runWooDigests(mon8 - 2 * 36e5)).checked, 0, "not due before Monday 07:00 UTC");
+  const jr = await runWooDigests(mon8); assert.ok(jr.checked >= 1 && jr.results[c.site_id], JSON.stringify(jr));
+  const { runShopifyDigests } = await import("../digest-job.js"); assert.ok((await runShopifyDigests(mon8)).checked >= 0);
   assert.equal((await woo("POST", "/disconnect", {})).status, 200);
   assert.equal((await store.listForTenant("podai_merchant_actions", T)).length, 0);
   assert.equal((await store.listForTenant("podai_merchant_audit", T)).length, 0);

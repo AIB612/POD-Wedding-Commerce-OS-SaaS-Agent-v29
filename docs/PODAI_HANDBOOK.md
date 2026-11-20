@@ -109,6 +109,8 @@ Pod.AI admin → **Assistant** (Shopify: tab in the embedded admin · WooCommerc
 
 **WooCommerce specifics:** the WP page calls `admin-ajax.php` (action `podai_chat_assistant`); PHP checks `manage_woocommerce` + a nonce and forwards the request signed with the site secret (the secret never reaches the browser). The WordPress username is sent for the activity log (anything after an `@` is dropped). Answers taught in the Assistant are kept when the plugin pushes its FAQ box; an FAQ entry with the same question replaces them.
 
+**Weekly summary e-mail:** every Monday from 07:00 UTC, each shop gets one e-mail with the assistant's 7-day briefing, up to five unanswered questions and the tickets past the reply target (ticket numbers only — no shopper e-mail addresses), plus a button to the Assistant. Sent to Settings → Ticket e-mail (fallback: the shop's contact e-mail / WooCommerce store or admin e-mail), written in the language the merchant last used the Assistant in. Not sent in a week without any activity; never twice in a week (claimed in `podai_digests`, safe with several server processes; sent late if the server was down on Monday). Turn off: Shopify Settings → "Weekly summary e-mail", or tell the Assistant "stop the weekly e-mail" (any language). Code: `server/shopify-agent/merchant/digest.js` + the hourly jobs `server/shopify-agent/digest-job.js` and `server/woo-agent/digest-job.js`.
+
 ### 5.2 What you can ask (examples)
 
 | You type | The assistant does | Changes data? |
@@ -126,6 +128,7 @@ Pod.AI admin → **Assistant** (Shopify: tab in the embedded admin · WooCommerc
 | `POD-T-AB12CD note: called the customer` | **Prepares** an internal ticket note | After Confirm |
 | `delete kb_1a2b3c4d` | **Prepares** removing a knowledge entry | After Confirm |
 | `pause the chat` · `resume the chat` · `暂停聊天` | **Prepares** switching the storefront chat off / on | After Confirm |
+| `stop the weekly e-mail` · `Wochen-E-Mail stoppen` · `停止每周邮件` | **Prepares** switching the weekly summary e-mail off / on | After Confirm |
 
 ### 5.3 How it works inside
 
@@ -175,6 +178,7 @@ Safety rules (in code):
 | `set_ticket_status` | write (confirm) | open / pending / closed (closed → AI answers that chat again) |
 | `add_ticket_note` | write (confirm) | Internal note |
 | `set_chat_enabled` | write (confirm) | Pause / resume storefront chat |
+| `set_weekly_digest` | write (confirm) | Weekly summary e-mail on / off |
 
 ---
 
@@ -226,6 +230,7 @@ All Pod.AI records live in the app's data store (`data/store.json` on the server
 | `podai_usage` | Chat counter for plan limits | 13 months | shop redact, disconnect |
 | `podai_merchant_actions` *(new)* | Assistant proposals + results | 13 months | shop redact, disconnect; customer redact if they quote the customer's e-mail |
 | `podai_merchant_audit` *(new)* | Assistant events (no chat text) — max 2,000 per shop | 13 months | shop redact, disconnect |
+| `podai_digests` *(new)* | One row per shop and week: summary sent / skipped (no content) | 13 months | shop redact, disconnect |
 | `podai_gdpr` | GDPR request log | 3 years | shop redact |
 
 Also: encrypted daily backups (14 days, `~/podai-backups`), personal-data access log (monthly files, 12 months). WooCommerce product catalogues are stored per site in separate files (public product data only).
@@ -308,7 +313,7 @@ Server: `LLM_ENABLED=true` + provider key/model. Merchant: Pro plan + Settings �
 |---|---|---|
 | ✓ | ~~WooCommerce admin page for the assistant~~ — done in plugin 1.2.0 (Pod.AI Chat → Assistant) | |
 | 2 | **Submit to Shopify App Store** — submission pack ready: `docs/PODAI_SUBMISSION.md` (self-review, screenshots, reviewer instructions, screencast shot list); (real screenshots incl. Assistant, protected-data request, fresh-store test) and **WordPress.org** | Distribution |
-| 3 | **Weekly assistant e-mail** (briefing + unanswered questions) to the ticket e-mail | Merchants act without opening the app |
+| ✓ | ~~Weekly assistant e-mail~~ — done (Monday summary to the ticket e-mail; off in Settings or via the Assistant) | |
 | 4 | **AI-drafted answers for unanswered questions** (Pro): the assistant proposes the answer text from policies + products; merchant confirms | Faster knowledge growth, higher resolution rate |
 | 5 | **Proactive shopper agent**: abandoned-cart / back-in-stock follow-ups as merchant-approved proposals | Revenue, not just support |
 | 6 | **Agentic checkout (ACP / UCP)** in the Agent API | AI assistants complete purchases end-to-end |

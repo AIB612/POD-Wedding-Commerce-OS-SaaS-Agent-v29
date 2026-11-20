@@ -32,18 +32,18 @@ export async function customerRedact(shop, p = {}) {
 /** shop/redact (48 h after uninstall): delete everything of the shop. */
 export async function shopRedact(shop) {
   const tenant = tenantFor(shop);
-  for (const col of ["podai_conversations", "podai_handoffs", "podai_settings", "podai_discounts", "podai_events", "podai_usage", "podai_merchant_actions", "podai_merchant_audit"]) await removeWhere(col, r => r.tenant_id === tenant);
+  for (const col of ["podai_conversations", "podai_handoffs", "podai_settings", "podai_discounts", "podai_events", "podai_usage", "podai_merchant_actions", "podai_merchant_audit", "podai_digests"]) await removeWhere(col, r => r.tenant_id === tenant);
   await removeWhere("podai_gdpr", r => r.tenant_id === tenant);
   await removeWhere("podai_shops", r => r.id === normalizeShop(shop));
   clearFactsCache(shop);
   return { ok: true };
 }
 /** Retention (privacy policy): chats + handoffs 12 months after the last activity, storefront events 13 months, GDPR log 3 years. */
-export const RETENTION_DAYS = { podai_conversations: 365, podai_handoffs: 365, podai_events: 400, podai_gdpr: 1095, podai_usage: 400, podai_merchant_actions: 400, podai_merchant_audit: 400 }; // podai_usage: chat counter rows (no personal data); merchant_* : assistant proposals + audit
+export const RETENTION_DAYS = { podai_conversations: 365, podai_handoffs: 365, podai_events: 400, podai_gdpr: 1095, podai_usage: 400, podai_merchant_actions: 400, podai_merchant_audit: 400, podai_digests: 400 }; // podai_usage: chat counter rows (no personal data); merchant_* : assistant proposals + audit
 /** Never deletes podai_shops / access tokens — only aged chats, handoffs, events, GDPR log. */
 export async function purgeExpired(nowMs = Date.now()) {
   const out = {};
-  const at = { podai_conversations: r => r.last_message_at || r.created_at, podai_handoffs: r => r.updated_at || r.created_at, podai_events: r => r.at, podai_gdpr: r => r.at, podai_usage: r => r.at, podai_merchant_actions: r => r.decided_at || r.created_at, podai_merchant_audit: r => r.at };
+  const at = { podai_conversations: r => r.last_message_at || r.created_at, podai_handoffs: r => r.updated_at || r.created_at, podai_events: r => r.at, podai_gdpr: r => r.at, podai_usage: r => r.at, podai_merchant_actions: r => r.decided_at || r.created_at, podai_merchant_audit: r => r.at, podai_digests: r => r.at };
   for (const [col, days] of Object.entries(RETENTION_DAYS)) {
     const cut = nowMs - days * 864e5;
     out[col] = (await removeWhere(col, r => /^(shopagent_|wooagent_)/.test(String(r.tenant_id || "")) && (Date.parse(at[col](r)) || nowMs) < cut)).length;

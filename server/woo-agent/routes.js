@@ -18,6 +18,7 @@ import { rateLimit } from "../http/middleware.js";
 import { removeWhere } from "../saas-store.js";
 import { logAccess } from "../shopify-agent/security/access-log.js";
 import * as merchant from "../shopify-agent/merchant/index.js";
+import { runWooDigests } from "./digest-job.js";
 
 const ah = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const HEX = v => /^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v) : null;
@@ -70,6 +71,9 @@ const ticketView = h => ({ id: h.id, ticket_id: h.ticket_id || null, status: h.s
 
 export function wooAgentRouter() {
   const r = express.Router();
+  if (process.env.NODE_ENV !== "test") { // weekly summary e-mail to merchants (logic in shopify-agent/merchant/digest.js)
+    const dg = () => runWooDigests().then(x => x.results && Object.keys(x.results).length ? console.log("[pod.ai woo] weekly digests", JSON.stringify(x.results)) : null).catch(e => console.error("[pod.ai woo] digests failed:", e.message));
+    setTimeout(dg, 200e3).unref?.(); setInterval(dg, 3600e3).unref?.(); }
   const raw = express.raw({ type: () => true, limit: "2mb" });
   r.use("/woo-agent", (req, res, next) => { req.tenantId = undefined; next(); }); // never trust x-tenant-id here
 
@@ -147,7 +151,7 @@ export function wooAgentRouter() {
   //      requests from users who can manage WooCommerce. Writes are proposals until /approve with { confirm:true }.
   const assistantCtx = async (req, lang) => { const site = req.wooSite, s = await getSettings(req.wooTenant), wp = str(req.body?.actor || req.query?.actor, 60).replace(/@.*$/, "").replace(/[^\w.-]/g, ""); // WP login, never an e-mail (audit holds no personal data)
     return { tenantId: req.wooTenant, actor: `woo_admin${wp ? ":" + wp : ""}`, source: "wp_admin", lang: ["en", "de", "fr", "it", "zh"].includes(lang) ? lang : "en",
-      llm: billing.planOf(site).llm === true && s.llm_enabled === true, shopName: str(site.name, 80), usage: () => billing.billingSummary(site),
+      llm: billing.planOf(site).llm === true && s.llm_enabled !== false, shopName: str(site.name, 80), usage: () => billing.billingSummary(site),
       onPersonalData: tool => logAccess({ actor: "woo_admin", action: `assistant_${tool}`, tenant: req.wooTenant, via: "wp_admin" }).catch?.(() => {}) }; };
   v1.post("/assistant", siteLimit("assistant", 30), ah(async (req, res) => { const b = req.body || {};
     if (!String(b.message || "").trim()) return res.status(400).json({ error: "message_required" });
@@ -160,7 +164,7 @@ export function wooAgentRouter() {
   // plugin uninstall / disconnect: every record of this site is deleted
   v1.post("/disconnect", ah(async (req, res) => { const id = req.wooSite.id, T = req.wooTenant; let removed = 0;
     const sub = req.wooSite.paddle; if (sub?.subscription_id && ["active", "trialing", "past_due", "paused"].includes(sub.status)) await cancelSubscription(sub.subscription_id);
-    for (const col of ["podai_conversations", "podai_handoffs", "podai_events", "podai_settings", "podai_usage", "podai_discounts", merchant.ACTIONS, merchant.AUDIT]) removed += (await removeWhere(col, x => x.tenant_id === T)).length;
+    for (const col of ["podai_conversations", "podai_handoffs", "podai_events", "podai_settings", "podai_usage", "podai_discounts", merchant.ACTIONS, merchant.AUDIT, merchant.DIGESTS]) removed += (await removeWhere(col, x => x.tenant_id === T)).length;
     await catalog.dropCatalog(id); removed += await core.removeSite(id);
     logAccess({ actor: "woo_plugin", action: "site_disconnected", tenant: T, count: removed, via: "disconnect" }).catch?.(() => {});
     res.json({ ok: true, removed }); }));

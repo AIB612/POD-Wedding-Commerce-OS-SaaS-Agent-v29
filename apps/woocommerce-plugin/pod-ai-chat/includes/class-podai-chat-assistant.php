@@ -107,6 +107,7 @@ class PodAI_Chat_Assistant {
 				'set_ticket_status' => __( 'Change ticket status', 'pod-ai-chat' ),
 				'add_ticket_note'   => __( 'Add ticket note', 'pod-ai-chat' ),
 				'set_chat_enabled'  => __( 'Turn chat on / off', 'pod-ai-chat' ),
+				'set_weekly_digest' => __( 'Weekly e-mail on / off', 'pod-ai-chat' ),
 			),
 			'events'    => array(
 				'ask'      => __( 'Question', 'pod-ai-chat' ),
@@ -115,6 +116,7 @@ class PodAI_Chat_Assistant {
 				'executed' => __( 'Done', 'pod-ai-chat' ),
 				'failed'   => __( 'Failed', 'pod-ai-chat' ),
 				'rejected' => __( 'Rejected', 'pod-ai-chat' ),
+				'digest'   => __( 'Weekly e-mail', 'pod-ai-chat' ),
 			),
 		);
 	}

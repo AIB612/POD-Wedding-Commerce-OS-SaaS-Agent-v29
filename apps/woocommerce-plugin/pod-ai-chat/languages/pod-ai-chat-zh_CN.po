@@ -598,3 +598,11 @@ msgstr "Pod.AI 只修改自己的数据（知识库、工单、聊天开关）�
 #: includes/class-podai-chat-assistant.php
 msgid "Answers you teach here are kept next to the FAQ in Settings; an FAQ entry with the same question replaces them."
 msgstr "在这里添加的答案会和设置中的常见问题一起保留；设置里有相同问题时以设置为准。"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Weekly e-mail on / off"
+msgstr "每周邮件 开启 / 关闭"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Weekly e-mail"
+msgstr "每周邮件"

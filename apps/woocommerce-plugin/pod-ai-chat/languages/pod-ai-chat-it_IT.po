@@ -598,3 +598,11 @@ msgstr "Pod.AI modifica solo i propri dati (conoscenze, ticket, chat on/off). Ne
 #: includes/class-podai-chat-assistant.php
 msgid "Answers you teach here are kept next to the FAQ in Settings; an FAQ entry with the same question replaces them."
 msgstr "Le risposte insegnate qui restano accanto alle FAQ delle impostazioni; una voce FAQ con la stessa domanda le sostituisce."
+
+#: includes/class-podai-chat-assistant.php
+msgid "Weekly e-mail on / off"
+msgstr "E-mail settimanale on / off"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Weekly e-mail"
+msgstr "E-mail settimanale"
