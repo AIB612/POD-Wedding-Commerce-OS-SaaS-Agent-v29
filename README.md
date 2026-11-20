@@ -299,3 +299,5 @@ See:
 - `docs/API_CREDENTIALS_MATRIX.md`
 - `docs/FLOW_TEST_REPORT.md`
 - `docs/BUILD_VALIDATION.md`
+
+<!-- Test push from Claude, 2026-11-20 -->
