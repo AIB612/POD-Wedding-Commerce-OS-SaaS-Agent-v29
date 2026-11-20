@@ -64,14 +64,16 @@ export function publicRouter({ root, generatedDir }) {
   };
 
   // Pod.AI host (podai.swisspro.site): landing is the agent intro (not the wedding homepage).
-  router.get(["/", "/index.html"], (req, res, next) => {
+  router.get("/", (req, res, next) => {
     if (!podHost(req)) return next("route");
     let html = fs.readFileSync(path.join(root, "agent.html"), "utf8"); html = html.replace("<!--__PODAI_GA_LANDING__-->", gaLandingSnippet()); return res.setHeader("Cache-Control","no-cache"), res.type("html").send(html);
   });
+  router.get("/index.html", (req, res, next) => podHost(req) ? res.redirect(301, PODAI_ORIGIN + "/") : next("route"));
   // Avoid duplicate Pod.AI landing on wed — keep wedding site intact.
   router.get(["/agent", "/agent.html"], (req, res, next) => {
-    if (!wedHost(req)) return next("route");
-    return res.redirect(301, POD_ORIGIN + "/agent.html");
+    if (podHost(req)) return res.redirect(301, PODAI_ORIGIN + "/");
+    if (wedHost(req)) return res.redirect(301, PODAI_ORIGIN + "/");
+    return next("route");
   });
   // Host-specific robots / sitemap / llms.txt (SEO + GEO). pod = wedding shop, podai = Pod.AI app.
   const POD_SITE_HOSTS = new Set(["pod.swisspro.site", "www.pod.swisspro.site"]);
@@ -89,8 +91,8 @@ export function publicRouter({ root, generatedDir }) {
     "Disallow: /account$", "Disallow: /account.html", "Disallow: /checkout$", "Disallow: /checkout.html", "Disallow: /payment-success.html", "Disallow: /proof.html"], `${POD_ORIGIN}/sitemap.xml`);
   const POD_SITEMAP = sitemapXml(POD_ORIGIN, [["/", "daily", "1.0"], ["/studio.html", "weekly", "0.8"], ["/shipping", "monthly", "0.5"], ["/returns", "monthly", "0.4"],
     ["/terms", "yearly", "0.3"], ["/privacy", "yearly", "0.3"], ["/imprint", "yearly", "0.2"]]);
-  const PODAI_SITEMAP = sitemapXml(PODAI_ORIGIN, [["/agent.html", "weekly", "1.0"], ["/support", "monthly", "0.7"], ["/privacy", "yearly", "0.3"], ["/terms", "yearly", "0.3"],
-    ["/security", "yearly", "0.3"], ["/dpa", "yearly", "0.3"], ["/woocommerce", "monthly", "0.8"]]);
+  const PODAI_SITEMAP = sitemapXml(PODAI_ORIGIN, [["/", "weekly", "1.0"], ["/woocommerce", "weekly", "0.8"], ["/support", "monthly", "0.7"], ["/privacy", "yearly", "0.3"], ["/terms", "yearly", "0.3"],
+    ["/security", "yearly", "0.3"], ["/dpa", "yearly", "0.3"]]);
   router.get("/robots.txt", (req, res, next) => {
     if (podHost(req)) return res.type("text/plain").send(PODAI_ROBOTS);
     if (podSiteHost(req)) return res.type("text/plain").send(POD_ROBOTS);
