@@ -335,9 +335,12 @@ def main():
         ty = bb[3] + 16
         draw.rectangle((tx, ty, tx + 72, ty + 3), fill=GOLD)
         ty += 28
-        draw.text((tx, ty), kicker, font=font_avenir(26, 5), fill=GOLD, anchor="lt")
-        bb = draw.textbbox((tx, ty), kicker, font=font_avenir(26, 5))
-        ty = bb[3] + 18
+        kickers = kicker if isinstance(kicker, (list, tuple)) else [kicker]
+        for line in kickers:
+            draw.text((tx, ty), line, font=font_avenir(26, 5), fill=GOLD, anchor="lt")
+            bb = draw.textbbox((tx, ty), line, font=font_avenir(26, 5))
+            ty = bb[3] + 4
+        ty += 14
         for line in headline_lines:
             draw.text((tx, ty), line, font=font_avenir(26, 7), fill=INK_SOFT, anchor="lt")
             bb = draw.textbbox((tx, ty), line, font=font_avenir(26, 7))
@@ -350,7 +353,7 @@ def main():
     save_jpeg(
         podai_product_card(
             [],
-            kicker="Agentic-Commerce-KI-Agent",
+            kicker=["KI-Agent für", "Einzelhandel und E-Commerce"],
         ),
         OUT / "og-podai-home.jpg",
     )
@@ -364,14 +367,14 @@ def main():
     )
     save_jpeg(
         podai_product_card(
-            ["Installation, Einbettung", "und häufige Fragen"],
+            ["für Einzelhandel und E-Commerce", "Installation und häufige Fragen"],
             kicker="Support und Ressourcen",
         ),
         OUT / "og-podai-support.jpg",
     )
     save_jpeg(
         podai_product_card(
-            ["Datenschutz, Bedingungen", "und Sicherheit"],
+            ["für Einzelhandel und E-Commerce", "Datenschutz, Bedingungen,", "Sicherheit"],
             kicker="Rechtliche Angaben",
         ),
         OUT / "og-podai-legal.jpg",
@@ -379,7 +382,7 @@ def main():
 
     ai_sq = square_card(
         mark, "Pod.AI",
-        ["Agentic-Commerce-KI-Agent", "Shopify · WooCommerce · mehr"],
+        ["KI-Agent für Einzelhandel", "und E-Commerce", "Shopify · WooCommerce · mehr"],
         "podai.swisspro.site",
         font_georgia(68), font_avenir(24, 7),
     )

@@ -99,7 +99,8 @@ try {
   const podaiOgHome = (await getHost("/", "podai.swisspro.site")).body;
   const podaiOgTitle = meta(podaiOgHome, /<meta property="og:title" content="([^"]+)"/);
   const podaiOgDesc = meta(podaiOgHome, /<meta property="og:description" content="([^"]+)"/);
-  assert.match(podaiOgTitle, /Agentic-Commerce-KI-Agent/);
+  assert.match(podaiOgTitle, /Einzelhandel/);
+  assert.match(podaiOgTitle, /E-Commerce/);
   assert.ok(!/WooCommerce KI-Chatbot/i.test(podaiOgTitle));
   assert.match(podaiOgDesc, /Shopify/);
   assert.match(podaiOgDesc, /WooCommerce/);
