@@ -1,10 +1,10 @@
 === Pod.AI Chat for WooCommerce ===
-Contributors: podai
+Contributors: dropkingai
 Tags: ai chat, ai agent, customer service, product recommendations, order tracking
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -72,6 +72,9 @@ External AI assistants can find your products and send shoppers a prefilled cart
 
 == Changelog ==
 
+= 1.2.1 =
+* Text domain and plugin folder renamed to pod-ai-chat-for-woocommerce (the WordPress.org slug). Settings, connection and tickets are kept. If an older copy in the folder pod-ai-chat is active, it is switched off automatically when you activate this version.
+
 = 1.2.0 =
 * New: Pod.AI Chat → Assistant – team assistant (briefing, KPIs, unanswered questions, tickets with reply drafts, knowledge, chat search) in English, German, French, Italian and Chinese. Every change waits for your Confirm and is listed under Recent activity.
 * New: "Draft answers" – the Assistant drafts answers for questions the chat could not answer, using only your own policies (with the source shown); you confirm, edit or reject each one.
@@ -86,6 +89,9 @@ External AI assistants can find your products and send shoppers a prefilled cart
 * First release.
 
 == Upgrade Notice ==
+
+= 1.2.1 =
+New folder pod-ai-chat-for-woocommerce; settings are kept. Coming from a zip install (folder pod-ai-chat)? Activate 1.2.1, then remove the old folder by FTP, not with Delete in WordPress (that disconnects the store).
 
 = 1.2.0 =
 Adds the Assistant page for your team. No action needed.

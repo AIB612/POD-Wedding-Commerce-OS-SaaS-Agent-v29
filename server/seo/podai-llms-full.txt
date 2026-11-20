@@ -12,7 +12,7 @@ Key facts:
 - Data is separated per shop and deleted after uninstall when Shopify sends its shop-deletion (GDPR) request.
 
 ## Main pages
-- [Pod.AI overview](https://podai.swisspro.site/agent.html): features, how it works, FAQ
+- [Pod.AI overview](https://podai.swisspro.site/): features, how it works, FAQ
 - [Support & resources](https://podai.swisspro.site/support): install, enable the theme embed, FAQ, contact
 - [Full text for LLMs](https://podai.swisspro.site/llms-full.txt)
 
@@ -28,7 +28,7 @@ Key facts:
 
 ---
 
-## Overview (from https://podai.swisspro.site/agent.html)
+## Overview (from https://podai.swisspro.site/)
 
 Your shop's AI assistant. Answers from real data. Quotes, orders and product ideas — instantly, in your customer's language.
 
@@ -61,7 +61,7 @@ Pod.AI · Help for merchants
 ### Contact
 
 E-mail support@swisspro.site — we aim to reply within 1 business day. —
-Product overview: podai.swisspro.site/agent.html
+Product overview: podai.swisspro.site
 
 ### Install
 - Install Pod.AI from the App Store listing (or your test install link).

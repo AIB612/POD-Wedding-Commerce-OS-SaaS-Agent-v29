@@ -61,14 +61,14 @@ final class PodAI_Chat_Plugin {
 	 */
 	public function load_textdomain() {
 		// Needed while the plugin ships its own translations (not hosted on WordPress.org).
-		load_plugin_textdomain( 'pod-ai-chat', false, dirname( plugin_basename( PODAI_CHAT_FILE ) ) . '/languages' ); // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
+		load_plugin_textdomain( 'pod-ai-chat-for-woocommerce', false, dirname( plugin_basename( PODAI_CHAT_FILE ) ) . '/languages' ); // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
 	}
 
 	/**
 	 * Notice when WooCommerce is missing.
 	 */
 	public function notice_no_woocommerce() {
-		echo '<div class="notice notice-error"><p>' . esc_html__( 'Pod.AI Chat needs WooCommerce to be installed and active.', 'pod-ai-chat' ) . '</p></div>';
+		echo '<div class="notice notice-error"><p>' . esc_html__( 'Pod.AI Chat needs WooCommerce to be installed and active.', 'pod-ai-chat-for-woocommerce' ) . '</p></div>';
 	}
 
 	/**

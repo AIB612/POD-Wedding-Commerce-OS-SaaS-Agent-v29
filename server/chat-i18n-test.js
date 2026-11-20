@@ -59,6 +59,17 @@ try {
     const sm = await getHost("/sitemap.xml", host);
     for (const loc of sm.body.match(/<loc>[^<]+/g).map(x => x.slice(5))) { const u = new URL(loc); assert.equal(u.host, host, loc); assert.equal((await getHost(u.pathname, host)).status, 200, loc); }
   }
+  // Pod.AI landing: one canonical URL (podai root); duplicates 301 there; the wedding host keeps its own homepage and /agent.html.
+  const podaiHome = await getHost("/", "podai.swisspro.site"); assert.equal(podaiHome.status, 200);
+  assert.match(podaiHome.body, /<link rel="canonical" href="https:\/\/podai\.swisspro\.site\/"\/>/);
+  for (const p of ["/agent.html", "/agent", "/index.html"]) { const r3 = await getHost(p, "podai.swisspro.site"); assert.equal(r3.status, 301, "podai " + p); assert.equal(r3.headers.location, "https://podai.swisspro.site/", "podai " + p); }
+  for (const p of ["/agent.html", "/agent"]) { const r3 = await getHost(p, "wed.swisspro.site"); assert.equal(r3.status, 301, "wed " + p); assert.equal(r3.headers.location, "https://podai.swisspro.site/", "wed " + p); }
+  const podHome = await getHost("/", "pod.swisspro.site"); assert.equal(podHome.status, 200); assert.ok(!/<link rel="canonical" href="https:\/\/podai/.test(podHome.body), "pod homepage is the wedding site");
+  assert.equal((await getHost("/agent.html", "pod.swisspro.site")).status, 200, "pod /agent.html unchanged");
+  // WooCommerce plugin download: WordPress.org slug name; the old zip name keeps working.
+  const zip = await getHost("/woocommerce/pod-ai-chat-for-woocommerce.zip", "podai.swisspro.site"); assert.equal(zip.status, 200); assert.match(zip.headers["content-disposition"] || "", /pod-ai-chat-for-woocommerce\.zip/);
+  const oldZip = await getHost("/woocommerce/pod-ai-chat.zip", "podai.swisspro.site"); assert.equal(oldZip.status, 301); assert.equal(oldZip.headers.location, "/woocommerce/pod-ai-chat-for-woocommerce.zip");
+  const wooReadme = await getHost("/woocommerce/readme.txt", "podai.swisspro.site"); assert.equal(wooReadme.status, 200); assert.match(wooReadme.body, /Stable tag: \d/);
   result.payment_methods = "pass";
 } finally { server.close(); fs.rmSync(tmp, { recursive: true, force: true }); }
 console.log(JSON.stringify({ ok: true, result }, null, 2));

@@ -5,29 +5,29 @@
 
 ---
 
-## Part A — WordPress.org: "Pod.AI Chat for WooCommerce" 1.2.0
+## Part A — WordPress.org: "Pod.AI Chat for WooCommerce" 1.2.1
 
 ### A1. What was checked (done)
 
 | Check | Result |
 |---|---|
-| Official **Plugin Check 2.2.0** (`wp plugin check pod-ai-chat` incl. experimental + low-severity checks) | ✅ No errors, no warnings |
+| Official **Plugin Check 2.2.0** (`wp plugin check pod-ai-chat-for-woocommerce` incl. experimental + low-severity checks) | ✅ No errors, no warnings |
 | Real install: **WordPress 7.1.5 + WooCommerce 11.3.1** | ✅ storefront e2e 22/22 · real-browser widget test 11/11 · Assistant page end-to-end |
 | Real install: WordPress 6.8.3 + WooCommerce 10.3.4 | ✅ Assistant page end-to-end |
 | `php -l` on every file, JS syntax | ✅ |
-| Header: Requires at least 6.3 · Tested up to 7.1 · Requires PHP 7.4 · WC tested up to 11.3 · GPLv2+ · text domain | ✅ |
+| Header: Requires at least 6.3 · Tested up to 7.1 · Requires PHP 7.4 · WC tested up to 11.3 · GPLv2+ · text domain `pod-ai-chat-for-woocommerce` = slug (1.2.1 fixes the TextDomainMismatch from the submission scan) · Plugin URI ≠ Author URI | ✅ |
 | readme: short description 148/150 chars · 5 tags · External service section (what is sent, when, terms + privacy links) · changelog · upgrade notice | ✅ |
 | Translations de / fr / it / zh_CN complete (`.po` + `.mo`) | ✅ 142/142 strings each |
 | Assets: banner 772×250 + 1544×500, icon 128 + 256, screenshots 1–9 | ✅ `apps/woocommerce-plugin/wordpress-org-assets/` |
 | Only outbound calls: the documented Pod.AI service (signed client) — no other remote calls, no tracking, nothing before the merchant clicks Connect | ✅ |
 | Name "… for WooCommerce" (trademark rule allows "for WooCommerce" at the end) | ✅ |
 
-### A2. 👤 Sherry — steps to submit
+### A2. Status
 
-1. Create (or use) a **WordPress.org account**. Its username must replace `Contributors: podai` in `apps/woocommerce-plugin/pod-ai-chat/readme.txt` if it isn't `podai` — tell me the username and I'll update + rebuild the zip.
-2. Upload `apps/woocommerce-plugin/dist/pod-ai-chat.zip` at **wordpress.org/plugins/developers/add/**. Requested slug: `pod-ai-chat`.
-3. Wait for the review e-mail (usually days to a few weeks). Reply to reviewer questions from the same e-mail thread — send me anything they ask for.
-4. After approval: commit the plugin to the SVN `trunk/` and tag `1.2.0`, and upload `wordpress-org-assets/*` into SVN `assets/` (I can prepare the exact SVN commands once the slug is confirmed).
+1. Submitted with the WordPress.org account **dropkingai** (readme `Contributors: dropkingai`); assigned slug **`pod-ai-chat-for-woocommerce`**, waiting in the review queue. The submission scan flagged `TextDomainMismatch` (1.2.0 used `pod-ai-chat`).
+2. **1.2.1** renames the text domain, the plugin folder and the main file to `pod-ai-chat-for-woocommerce` (settings are stored under the same option keys, so nothing is lost). Zip: `apps/woocommerce-plugin/dist/pod-ai-chat-for-woocommerce.zip` (served at https://podai.swisspro.site/woocommerce/pod-ai-chat-for-woocommerce.zip; the old `/woocommerce/pod-ai-chat.zip` 301s there). Give this zip to the reviewer when they reply.
+3. Upgrading a store that installed 1.2.0 or older by zip (folder `pod-ai-chat`): upload 1.2.1 and activate it — the old copy is switched off automatically and the settings / connection are kept. Then remove the old folder `wp-content/plugins/pod-ai-chat` by FTP / file manager. Do **not** use *Delete* on the old copy in WordPress: its 1.2.0 uninstall routine disconnects the store and removes the shared settings (1.2.1's own uninstall skips cleanup while the old folder still exists).
+4. After approval: commit the plugin to the SVN `trunk/` and tag `1.2.1`, and upload `wordpress-org-assets/*` into SVN `assets/`.
 
 ---
 

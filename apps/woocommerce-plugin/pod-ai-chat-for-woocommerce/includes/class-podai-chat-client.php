@@ -52,7 +52,7 @@ class PodAI_Chat_Client {
 	public static function request( $method, $path, $data = null, $timeout = 15 ) {
 		$s = PodAI_Chat_Plugin::settings();
 		if ( empty( $s['site_id'] ) || empty( $s['secret'] ) ) {
-			return new WP_Error( 'podai_not_connected', __( 'Pod.AI is not connected yet.', 'pod-ai-chat' ) );
+			return new WP_Error( 'podai_not_connected', __( 'Pod.AI is not connected yet.', 'pod-ai-chat-for-woocommerce' ) );
 		}
 		$path  = ltrim( $path, '/' );
 		$route = '/woo-agent/v1/' . strtok( $path, '?' );

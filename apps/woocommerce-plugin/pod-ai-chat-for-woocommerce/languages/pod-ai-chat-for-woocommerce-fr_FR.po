@@ -1,38 +1,38 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Pod.AI Chat for WooCommerce 1.2.0\n"
-"Language: de_DE\n"
+"Project-Id-Version: Pod.AI Chat for WooCommerce 1.2.1\n"
+"Language: fr_FR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Domain: pod-ai-chat\n"
+"X-Domain: pod-ai-chat-for-woocommerce\n"
 
 #. Plugin Name of the plugin
-#: pod-ai-chat.php
+#: pod-ai-chat-for-woocommerce.php
 msgid "Pod.AI Chat for WooCommerce"
 msgstr "Pod.AI Chat for WooCommerce"
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: pod-ai-chat.php
+#: pod-ai-chat-for-woocommerce.php
 msgid "https://podai.swisspro.site/"
 msgstr "https://podai.swisspro.site/"
 
 #. Description of the plugin
-#: pod-ai-chat.php
+#: pod-ai-chat-for-woocommerce.php
 msgid "AI shopping assistant for WooCommerce: answers from your store's own data (products, policies, shipping), recommends in-stock products and adds them to the cart, looks up orders and tracking, and turns \"contact us\" into tickets."
-msgstr "KI-Einkaufsassistent für WooCommerce: antwortet aus den eigenen Shopdaten (Produkte, Richtlinien, Versand), empfiehlt verfügbare Produkte und legt sie in den Warenkorb, findet Bestellungen und Sendungen und macht aus „Kontakt“ Tickets."
+msgstr "Assistant d'achat IA pour WooCommerce : répond à partir des données de votre boutique (produits, politiques, livraison), recommande des produits en stock et les ajoute au panier, retrouve commandes et suivis, et transforme « nous contacter » en tickets."
 
 #. Author of the plugin
-#: pod-ai-chat.php
+#: pod-ai-chat-for-woocommerce.php
 msgid "Pod.AI"
 msgstr "Pod.AI"
 
 #: includes/class-podai-chat-admin.php:40
 #: includes/class-podai-chat-admin.php:50
 msgid "Settings"
-msgstr "Einstellungen"
+msgstr "Réglages"
 
 #: includes/class-podai-chat-admin.php:49
 #: includes/class-podai-chat-admin.php:311
@@ -45,70 +45,70 @@ msgstr "Tickets"
 
 #: includes/class-podai-chat-admin.php:116
 msgid "Saved, but Pod.AI could not be updated:"
-msgstr "Gespeichert, aber Pod.AI konnte nicht aktualisiert werden:"
+msgstr "Enregistré, mais Pod.AI n'a pas pu être mis à jour :"
 
 #: includes/class-podai-chat-admin.php:127
 msgid "Sorry, you are not allowed to do that."
-msgstr "Dazu fehlt Ihnen die Berechtigung."
+msgstr "Vous n'avez pas l'autorisation de faire cela."
 
 #: includes/class-podai-chat-admin.php:269
 msgid "Connected to Pod.AI. Your products were synced and the chat is live on your store."
-msgstr "Mit Pod.AI verbunden. Ihre Produkte wurden synchronisiert und der Chat ist in Ihrem Shop aktiv."
+msgstr "Connecté à Pod.AI. Vos produits sont synchronisés et le chat est actif sur votre boutique."
 
 #: includes/class-podai-chat-admin.php:270
 msgid "Could not connect to Pod.AI:"
-msgstr "Verbindung mit Pod.AI fehlgeschlagen:"
+msgstr "Connexion à Pod.AI impossible :"
 
 #: includes/class-podai-chat-admin.php:271
 msgid "Disconnected. Your store data at Pod.AI was deleted."
-msgstr "Getrennt. Ihre Shopdaten bei Pod.AI wurden gelöscht."
+msgstr "Déconnecté. Les données de votre boutique chez Pod.AI ont été supprimées."
 
 #. translators: %d: number of products.
 #: includes/class-podai-chat-admin.php:273
 #, php-format
 msgid "Sync finished: %d products sent."
-msgstr "Synchronisierung fertig: %d Produkte gesendet."
+msgstr "Synchronisation terminée : %d produits envoyés."
 
 #: includes/class-podai-chat-admin.php:274
 msgid "Sync failed:"
-msgstr "Synchronisierung fehlgeschlagen:"
+msgstr "Échec de la synchronisation :"
 
 #: includes/class-podai-chat-admin.php:275
 msgid "Ticket updated."
-msgstr "Ticket aktualisiert."
+msgstr "Ticket mis à jour."
 
 #: includes/class-podai-chat-admin.php:276
 msgid "The ticket could not be updated."
-msgstr "Das Ticket konnte nicht aktualisiert werden."
+msgstr "Le ticket n'a pas pu être mis à jour."
 
 #: includes/class-podai-chat-admin.php:277
 msgid "Billing is not available right now:"
-msgstr "Abrechnung ist gerade nicht verfügbar:"
+msgstr "La facturation n'est pas disponible pour le moment :"
 
 #: includes/class-podai-chat-admin.php:278
 msgid "Thank you! Your plan is updated as soon as Paddle confirms the payment (usually within a minute)."
-msgstr "Danke! Ihr Tarif wird aktualisiert, sobald Paddle die Zahlung bestätigt (meist innerhalb einer Minute)."
+msgstr "Merci ! Votre forfait est mis à jour dès que Paddle confirme le paiement (en général en moins d'une minute)."
 
 #: includes/class-podai-chat-admin.php:296
 msgid "— None —"
-msgstr "— Keine —"
+msgstr "— Aucune —"
 
 #: includes/class-podai-chat-admin.php:317
 msgid "1. Connection"
-msgstr "1. Verbindung"
+msgstr "1. Connexion"
 
 #: includes/class-podai-chat-admin.php:320
 msgid "Connected"
-msgstr "Verbunden"
+msgstr "Connecté"
 
 #: includes/class-podai-chat-admin.php:320
 msgid "Site key:"
-msgstr "Site-Schlüssel:"
+msgstr "Clé du site :"
 
 #: includes/class-podai-chat-admin.php:324
 #: includes/class-podai-chat-admin.php:409
 msgid "Plan"
-msgstr "Tarif"
+msgstr "Forfait"
 
 #. translators: 1: chats used, 2: monthly limit.
 #: includes/class-podai-chat-admin.php:326
@@ -119,76 +119,76 @@ msgstr "%1$d / %2$d"
 #. translators: 1: chats used, 2: monthly limit.
 #: includes/class-podai-chat-admin.php:326
 msgid "Chats this month"
-msgstr "Chats diesen Monat"
+msgstr "Chats ce mois-ci"
 
 #: includes/class-podai-chat-admin.php:327
 msgid "Products in stock / synced"
-msgstr "Produkte verfügbar / synchronisiert"
+msgstr "Produits en stock / synchronisés"
 
 #: includes/class-podai-chat-admin.php:328
 msgid "Last full sync"
-msgstr "Letzte Vollsynchronisierung"
+msgstr "Dernière synchronisation complète"
 
 #: includes/class-podai-chat-admin.php:331
 #: includes/class-podai-chat-admin.php:470
 msgid "Pod.AI is not reachable right now."
-msgstr "Pod.AI ist gerade nicht erreichbar."
+msgstr "Pod.AI est injoignable pour le moment."
 
 #: includes/class-podai-chat-admin.php:336
 msgid "Sync products now"
-msgstr "Produkte jetzt synchronisieren"
+msgstr "Synchroniser les produits"
 
 #: includes/class-podai-chat-admin.php:337
 msgid "Disconnect and delete this store's data at Pod.AI (tickets, chats, products)?"
-msgstr "Trennen und die Daten dieses Shops bei Pod.AI löschen (Tickets, Chats, Produkte)?"
+msgstr "Déconnecter et supprimer les données de cette boutique chez Pod.AI (tickets, chats, produits) ?"
 
 #: includes/class-podai-chat-admin.php:340
 msgid "Disconnect"
-msgstr "Trennen"
+msgstr "Déconnecter"
 
 #: includes/class-podai-chat-admin.php:343
 msgid "Connect your store to the Pod.AI service. Your site gets its own key; only public product data, your policies and settings are sent. Orders stay in WooCommerce and are only read when a shopper gives the order number and e-mail."
-msgstr "Verbinden Sie Ihren Shop mit dem Pod.AI-Dienst. Ihre Website erhält einen eigenen Schlüssel; gesendet werden nur öffentliche Produktdaten, Ihre Richtlinien und Einstellungen. Bestellungen bleiben in WooCommerce und werden nur gelesen, wenn ein Kunde Bestellnummer und E-Mail angibt."
+msgstr "Connectez votre boutique au service Pod.AI. Votre site reçoit sa propre clé ; seules les données produit publiques, vos politiques et réglages sont envoyés. Les commandes restent dans WooCommerce et ne sont lues que lorsqu'un client donne le numéro de commande et l'e-mail."
 
 #: includes/class-podai-chat-admin.php:347
 msgid "Pod.AI service URL"
-msgstr "Pod.AI-Dienst-URL"
+msgstr "URL du service Pod.AI"
 
 #: includes/class-podai-chat-admin.php:348
 msgid "Connect to Pod.AI"
-msgstr "Mit Pod.AI verbinden"
+msgstr "Se connecter à Pod.AI"
 
 #: includes/class-podai-chat-admin.php:357
 msgid "2. Chat and tickets"
-msgstr "2. Chat und Tickets"
+msgstr "2. Chat et tickets"
 
 #: includes/class-podai-chat-admin.php:358
 msgid "Chat on the storefront"
-msgstr "Chat im Shop"
+msgstr "Chat sur la boutique"
 
 #: includes/class-podai-chat-admin.php:358
 msgid "Show the chat widget"
-msgstr "Chat-Widget anzeigen"
+msgstr "Afficher le widget de chat"
 
 #: includes/class-podai-chat-admin.php:359
 msgid "Ticket e-mail"
-msgstr "Ticket-E-Mail"
+msgstr "E-mail des tickets"
 
 #: includes/class-podai-chat-admin.php:359
 msgid "When a shopper clicks \"contact us\" and leaves an e-mail, a ticket is created and the chat transcript is sent here. Reply to that e-mail to answer the shopper."
-msgstr "Wenn ein Kunde auf „Kontakt“ klickt und eine E-Mail hinterlässt, wird ein Ticket erstellt und der Chatverlauf hierher gesendet. Antworten Sie auf diese E-Mail, um dem Kunden zu antworten."
+msgstr "Quand un client clique sur « nous contacter » et laisse un e-mail, un ticket est créé et la conversation est envoyée ici. Répondez à cet e-mail pour répondre au client."
 
 #: includes/class-podai-chat-admin.php:360
 msgid "Reply time (hours)"
-msgstr "Antwortzeit (Stunden)"
+msgstr "Délai de réponse (heures)"
 
 #: includes/class-podai-chat-admin.php:361
 msgid "Greeting"
-msgstr "Begrüßung"
+msgstr "Message d'accueil"
 
 #: includes/class-podai-chat-admin.php:361
 msgid "Hi! Ask me about products, shipping or your order."
-msgstr "Hallo! Fragen Sie mich zu Produkten, Versand oder Ihrer Bestellung."
+msgstr "Bonjour ! Posez-moi vos questions sur les produits, la livraison ou votre commande."
 
 #: includes/class-podai-chat-admin.php:364
 msgid "3. Widget"
@@ -196,7 +196,7 @@ msgstr "3. Widget"
 
 #: includes/class-podai-chat-admin.php:365
 msgid "Colour"
-msgstr "Farbe"
+msgstr "Couleur"
 
 #: includes/class-podai-chat-admin.php:366
 msgid "Position"
@@ -204,39 +204,39 @@ msgstr "Position"
 
 #: includes/class-podai-chat-admin.php:366
 msgid "Bottom right"
-msgstr "Unten rechts"
+msgstr "En bas à droite"
 
 #: includes/class-podai-chat-admin.php:366
 msgid "Bottom left"
-msgstr "Unten links"
+msgstr "En bas à gauche"
 
 #: includes/class-podai-chat-admin.php:368
 msgid "Automatic (shopper / store language)"
-msgstr "Automatisch (Kunden- / Shopsprache)"
+msgstr "Automatique (langue du client / de la boutique)"
 
 #: includes/class-podai-chat-admin.php:375
 msgid "Language"
-msgstr "Sprache"
+msgstr "Langue"
 
 #: includes/class-podai-chat-admin.php:380
 msgid "Header title"
-msgstr "Titel"
+msgstr "Titre"
 
 #: includes/class-podai-chat-admin.php:383
 msgid "4. Knowledge"
-msgstr "4. Wissen"
+msgstr "4. Connaissances"
 
 #: includes/class-podai-chat-admin.php:383
 msgid "The assistant answers from your refund/returns, terms and privacy pages, your shipping zones and the pages below. No external AI service is used."
-msgstr "Der Assistent antwortet aus Ihren Seiten zu Rückgabe, AGB und Datenschutz, Ihren Versandzonen und den Seiten unten. Es wird kein externer KI-Dienst verwendet."
+msgstr "L'assistant répond à partir de vos pages retours, CGV et confidentialité, de vos zones de livraison et des pages ci-dessous. Aucun service d'IA externe n'est utilisé."
 
 #: includes/class-podai-chat-admin.php:384
 msgid "Shipping information page"
-msgstr "Seite mit Versandinformationen"
+msgstr "Page d'informations de livraison"
 
 #: includes/class-podai-chat-admin.php:386
 msgid "Contact page"
-msgstr "Kontaktseite"
+msgstr "Page de contact"
 
 #: includes/class-podai-chat-admin.php:389
 msgid "FAQ"
@@ -244,129 +244,129 @@ msgstr "FAQ"
 
 #: includes/class-podai-chat-admin.php:389
 msgid "Do you offer gift wrapping?\nYes, gift wrapping is free — add a note at checkout.\n\nCan I pick up my order?\nYes, in our Zurich shop Mon–Sat."
-msgstr "Bieten Sie Geschenkverpackung an?\nJa, die Geschenkverpackung ist gratis – einfach an der Kasse vermerken.\n\nKann ich meine Bestellung abholen?\nJa, in unserem Zürcher Laden Mo–Sa."
+msgstr "Proposez-vous l'emballage cadeau ?\nOui, l'emballage cadeau est gratuit — ajoutez une note au paiement.\n\nPuis-je retirer ma commande ?\nOui, dans notre boutique de Zurich du lundi au samedi."
 
 #: includes/class-podai-chat-admin.php:389
 msgid "One question per block: first line = question, next lines = answer, blank line between blocks."
-msgstr "Eine Frage pro Block: erste Zeile = Frage, folgende Zeilen = Antwort, Leerzeile zwischen den Blöcken."
+msgstr "Une question par bloc : première ligne = question, lignes suivantes = réponse, ligne vide entre les blocs."
 
 #: includes/class-podai-chat-admin.php:390
 msgid "Public coupon (optional)"
-msgstr "Öffentlicher Gutschein (optional)"
+msgstr "Code promo public (facultatif)"
 
 #: includes/class-podai-chat-admin.php:390
 msgid "10% off your first order"
-msgstr "10 % auf die erste Bestellung"
+msgstr "10 % sur votre première commande"
 
 #: includes/class-podai-chat-admin.php:390
 msgid "When a shopper asks for a discount, the chat offers this code and can apply it to their cart. Leave empty to never offer a code."
-msgstr "Fragt ein Kunde nach Rabatt, bietet der Chat diesen Code an und kann ihn im Warenkorb einlösen. Leer lassen, um nie einen Code anzubieten."
+msgstr "Quand un client demande une réduction, le chat propose ce code et peut l'appliquer à son panier. Laissez vide pour ne jamais proposer de code."
 
 #: includes/class-podai-chat-admin.php:394
 msgid "5. AI agents"
-msgstr "5. KI-Agenten"
+msgstr "5. Agents IA"
 
 #: includes/class-podai-chat-admin.php:395
 msgid "AI agent access"
-msgstr "Zugriff für KI-Agenten"
+msgstr "Accès des agents IA"
 
 #: includes/class-podai-chat-admin.php:395
 msgid "Let AI assistants (ChatGPT, Claude, Grok, Gemini …) search your in-stock products and create a checkout link"
-msgstr "KI-Assistenten (ChatGPT, Claude, Grok, Gemini …) dürfen Ihre verfügbaren Produkte suchen und einen Checkout-Link erstellen"
+msgstr "Autoriser les assistants IA (ChatGPT, Claude, Grok, Gemini …) à rechercher vos produits en stock et à créer un lien de paiement"
 
 #: includes/class-podai-chat-admin.php:396
 msgid "Read-only: only in-stock products with their current prices. The shopper reviews the cart and pays in your normal WooCommerce checkout; AI agents never take payment or see orders."
-msgstr "Nur lesend: nur verfügbare Produkte mit aktuellen Preisen. Der Kunde prüft den Warenkorb und bezahlt im normalen WooCommerce-Checkout; KI-Agenten nehmen nie Zahlungen entgegen und sehen keine Bestellungen."
+msgstr "Lecture seule : uniquement les produits en stock avec leurs prix actuels. Le client vérifie le panier et paie dans votre checkout WooCommerce habituel ; les agents IA ne prennent jamais de paiement et ne voient pas les commandes."
 
 #: includes/class-podai-chat-admin.php:398
 msgid "MCP server:"
-msgstr "MCP-Server:"
+msgstr "Serveur MCP :"
 
 #: includes/class-podai-chat-admin.php:398
 msgid "Discovery:"
-msgstr "Auffindbarkeit:"
+msgstr "Découverte :"
 
 #: includes/class-podai-chat-admin.php:409
 msgid "6. Plan"
-msgstr "6. Tarif"
+msgstr "6. Forfait"
 
 #: includes/class-podai-chat-admin.php:409
 msgid "Chats / month"
-msgstr "Chats / Monat"
+msgstr "Chats / mois"
 
 #: includes/class-podai-chat-admin.php:409
 msgid "Price"
-msgstr "Preis"
+msgstr "Prix"
 
 #: includes/class-podai-chat-admin.php:411
 msgid "month"
-msgstr "Monat"
+msgstr "mois"
 
 #: includes/class-podai-chat-admin.php:411
 msgid "Free"
-msgstr "Kostenlos"
+msgstr "Gratuit"
 
 #. translators: %s: yearly price in USD.
 #: includes/class-podai-chat-admin.php:414
 #, php-format
 msgid "USD %s / year (−20%%)"
-msgstr "USD %s / Jahr (−20 %%)"
+msgstr "USD %s / an (−20 %%)"
 
 #: includes/class-podai-chat-admin.php:418
 msgid "Current"
-msgstr "Aktuell"
+msgstr "Actuel"
 
 #. translators: %s: date.
 #: includes/class-podai-chat-admin.php:421
 #, php-format
 msgid "Free trial until %s"
-msgstr "Kostenlos testen bis %s"
+msgstr "Essai gratuit jusqu'au %s"
 
 #: includes/class-podai-chat-admin.php:424
 msgid "Monthly"
-msgstr "Monatlich"
+msgstr "Mensuel"
 
 #: includes/class-podai-chat-admin.php:424
 msgid "Yearly"
-msgstr "Jährlich"
+msgstr "Annuel"
 
 #. translators: %d: number of trial days.
 #: includes/class-podai-chat-admin.php:437
 #, php-format
 msgid "Paid plans start with a %d-day free trial. Payment is handled by Paddle (merchant of record: invoices and VAT included); cancel any time."
-msgstr "Bezahlte Tarife beginnen mit %d Tagen kostenlosem Test. Die Zahlung läuft über Paddle (Merchant of Record: Rechnungen und MwSt. inklusive); jederzeit kündbar."
+msgstr "Les forfaits payants commencent par un essai gratuit de %d jours. Le paiement est géré par Paddle (merchant of record : factures et TVA incluses) ; résiliable à tout moment."
 
 #: includes/class-podai-chat-admin.php:442
 msgid "Manage billing (change plan, invoices, cancel)"
-msgstr "Abrechnung verwalten (Tarif ändern, Rechnungen, kündigen)"
+msgstr "Gérer la facturation (changer de forfait, factures, résilier)"
 
 #: includes/class-podai-chat-admin.php:446
 msgid "Paid plans are not on sale yet. Contact Pod.AI if you need more chats."
-msgstr "Bezahlte Tarife sind noch nicht erhältlich. Kontaktieren Sie Pod.AI, wenn Sie mehr Chats brauchen."
+msgstr "Les forfaits payants ne sont pas encore en vente. Contactez Pod.AI si vous avez besoin de plus de chats."
 
 #: includes/class-podai-chat-admin.php:460
 msgid "Pod.AI tickets"
-msgstr "Pod.AI-Tickets"
+msgstr "Tickets Pod.AI"
 
 #: includes/class-podai-chat-admin.php:463
 msgid "Connect Pod.AI first (Pod.AI Chat → Settings)."
-msgstr "Verbinden Sie zuerst Pod.AI (Pod.AI Chat → Einstellungen)."
+msgstr "Connectez d'abord Pod.AI (Pod.AI Chat → Réglages)."
 
 #: includes/class-podai-chat-admin.php:474
 msgid "All"
-msgstr "Alle"
+msgstr "Tous"
 
 #: includes/class-podai-chat-admin.php:475
 msgid "Open"
-msgstr "Offen"
+msgstr "Ouvert"
 
 #: includes/class-podai-chat-admin.php:476
 msgid "Pending"
-msgstr "In Bearbeitung"
+msgstr "En cours"
 
 #: includes/class-podai-chat-admin.php:477
 msgid "Closed"
-msgstr "Geschlossen"
+msgstr "Fermé"
 
 #: includes/class-podai-chat-admin.php:484
 msgid "Ticket"
@@ -375,250 +375,250 @@ msgstr "Ticket"
 #: includes/class-podai-chat-admin.php:484
 #: includes/class-podai-chat-admin.php:515
 msgid "Status"
-msgstr "Status"
+msgstr "Statut"
 
 #: includes/class-podai-chat-admin.php:484
 #: includes/class-podai-chat-admin.php:501
 msgid "Customer"
-msgstr "Kunde"
+msgstr "Client"
 
 #: includes/class-podai-chat-admin.php:484
 msgid "Order"
-msgstr "Bestellung"
+msgstr "Commande"
 
 #: includes/class-podai-chat-admin.php:484
 msgid "Reason"
-msgstr "Grund"
+msgstr "Motif"
 
 #: includes/class-podai-chat-admin.php:484
 msgid "Created"
-msgstr "Erstellt"
+msgstr "Créé"
 
 #: includes/class-podai-chat-admin.php:486
 msgid "No tickets yet."
-msgstr "Noch keine Tickets."
+msgstr "Aucun ticket pour l'instant."
 
 #: includes/class-podai-chat-admin.php:494
 msgid "(no e-mail yet)"
-msgstr "(noch keine E-Mail)"
+msgstr "(pas encore d'e-mail)"
 
 #: includes/class-podai-chat-admin.php:499
 msgid "Chat transcript"
-msgstr "Chatverlauf"
+msgstr "Conversation"
 
 #: includes/class-podai-chat-admin.php:501
 msgid "Assistant"
-msgstr "Assistent"
+msgstr "Assistant"
 
 #: includes/class-podai-chat-admin.php:506
 msgid "Notes"
-msgstr "Notizen"
+msgstr "Notes"
 
 #: includes/class-podai-chat-admin.php:519
 msgid "Add a note (internal)"
-msgstr "Notiz hinzufügen (intern)"
+msgstr "Ajouter une note (interne)"
 
 #: includes/class-podai-chat-admin.php:521
 msgid "Reply by e-mail"
-msgstr "Per E-Mail antworten"
+msgstr "Répondre par e-mail"
 
 #: includes/class-podai-chat-admin.php:523
 msgid "Save ticket"
-msgstr "Ticket speichern"
+msgstr "Enregistrer le ticket"
 
 #: includes/class-podai-chat-client.php:55
 #: includes/class-podai-chat-sync.php:161
 msgid "Pod.AI is not connected yet."
-msgstr "Pod.AI ist noch nicht verbunden."
+msgstr "Pod.AI n'est pas encore connecté."
 
 #: includes/class-podai-chat-plugin.php:70
 msgid "Pod.AI Chat needs WooCommerce to be installed and active."
-msgstr "Pod.AI Chat benötigt ein installiertes und aktives WooCommerce."
+msgstr "Pod.AI Chat nécessite WooCommerce installé et activé."
 
 #: includes/class-podai-chat-assistant.php
 msgid "What needs my attention today?"
-msgstr "Was steht heute an?"
+msgstr "Qu'est-ce qui m'attend aujourd'hui ?"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Unanswered questions"
-msgstr "Unbeantwortete Fragen"
+msgstr "Questions sans réponse"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Open tickets"
-msgstr "Offene Tickets"
+msgstr "Tickets ouverts"
 
 #: includes/class-podai-chat-assistant.php
 msgid "KPIs last 30 days"
-msgstr "Kennzahlen 30 Tage"
+msgstr "Indicateurs 30 jours"
 
 #: includes/class-podai-chat-assistant.php
 msgid "What do shoppers ask about?"
-msgstr "Worüber fragen Kund:innen?"
+msgstr "Sur quoi les clients posent-ils des questions ?"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Confirm"
-msgstr "Bestätigen"
+msgstr "Confirmer"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Reject"
-msgstr "Ablehnen"
+msgstr "Refuser"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Nothing waiting. When the assistant prepares a change, it appears here."
-msgstr "Nichts offen. Vorbereitete Änderungen erscheinen hier."
+msgstr "Rien en attente. Les modifications préparées apparaissent ici."
 
 #: includes/class-podai-chat-assistant.php
 msgid "Done"
-msgstr "Erledigt"
+msgstr "Fait"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Not done"
-msgstr "Nicht ausgeführt"
+msgstr "Non effectué"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Rejected"
-msgstr "Abgelehnt"
+msgstr "Refusé"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Expired"
-msgstr "Abgelaufen"
+msgstr "Expiré"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Running"
-msgstr "Läuft"
+msgstr "En cours"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Waiting"
-msgstr "Wartet"
+msgstr "En attente"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Copy draft"
-msgstr "Entwurf kopieren"
+msgstr "Copier le brouillon"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Open in e-mail"
-msgstr "In E-Mail öffnen"
+msgstr "Ouvrir dans l'e-mail"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Teach answer"
-msgstr "Antwort hinterlegen"
+msgstr "Ajouter une réponse"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Type the answer between the last quotes, then press Enter."
-msgstr "Antwort zwischen die letzten Anführungszeichen schreiben, dann Enter drücken."
+msgstr "Saisissez la réponse entre les derniers guillemets, puis appuyez sur Entrée."
 
 #: includes/class-podai-chat-assistant.php
 msgid "Show"
-msgstr "Anzeigen"
+msgstr "Afficher"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Copied"
-msgstr "Kopiert"
+msgstr "Copié"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Rules"
-msgstr "Regeln"
+msgstr "Règles"
 
 #: includes/class-podai-chat-assistant.php
 msgid "AI planner"
-msgstr "KI-Planer"
+msgstr "Planificateur IA"
 
 #: includes/class-podai-chat-assistant.php
 msgid "The assistant could not answer right now."
-msgstr "Der Assistent konnte gerade nicht antworten."
+msgstr "L'assistant n'a pas pu répondre pour le moment."
 
 #: includes/class-podai-chat-assistant.php
 msgid "Add knowledge entry"
-msgstr "Wissenseintrag hinzufügen"
+msgstr "Ajouter une entrée"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Delete knowledge entry"
-msgstr "Wissenseintrag löschen"
+msgstr "Supprimer une entrée"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Change ticket status"
-msgstr "Ticketstatus ändern"
+msgstr "Changer le statut du ticket"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Add ticket note"
-msgstr "Ticketnotiz hinzufügen"
+msgstr "Ajouter une note au ticket"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Turn chat on / off"
-msgstr "Chat ein / aus"
+msgstr "Activer / désactiver le chat"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Question"
-msgstr "Frage"
+msgstr "Question"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Prepared"
-msgstr "Vorbereitet"
+msgstr "Préparé"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Confirmed"
-msgstr "Bestätigt"
+msgstr "Confirmé"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Failed"
-msgstr "Fehlgeschlagen"
+msgstr "Échec"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Pod.AI assistant"
-msgstr "Pod.AI-Assistent"
+msgstr "Assistant Pod.AI"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Ask about your chats, tickets and knowledge. Changes are only prepared — nothing happens until you confirm."
-msgstr "Fragen Sie zu Chats, Tickets und Wissen. Änderungen werden nur vorbereitet – es passiert nichts, bevor Sie bestätigen."
+msgstr "Posez vos questions sur les conversations, tickets et connaissances. Les modifications sont seulement préparées — rien ne change avant votre confirmation."
 
 #: includes/class-podai-chat-assistant.php
 msgid "Ask the assistant"
-msgstr "Assistenten fragen"
+msgstr "Demander à l'assistant"
 
 #: includes/class-podai-chat-assistant.php
 msgid "e.g. What needs my attention today?"
-msgstr "z. B. Was steht heute an?"
+msgstr "ex. Qu'est-ce qui m'attend aujourd'hui ?"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Ask"
-msgstr "Fragen"
+msgstr "Demander"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Waiting for your confirmation"
-msgstr "Wartet auf Ihre Bestätigung"
+msgstr "En attente de votre confirmation"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Recent activity"
-msgstr "Letzte Aktivität"
+msgstr "Activité récente"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Pod.AI only changes its own data (knowledge, tickets, chat on/off). Your store, orders and products are never changed."
-msgstr "Pod.AI ändert nur eigene Daten (Wissen, Tickets, Chat ein/aus). Ihr Shop, Bestellungen und Produkte werden nie verändert."
+msgstr "Pod.AI ne modifie que ses propres données (connaissances, tickets, chat activé/désactivé). Votre boutique, vos commandes et produits ne sont jamais modifiés."
 
 #: includes/class-podai-chat-assistant.php
 msgid "Answers you teach here are kept next to the FAQ in Settings; an FAQ entry with the same question replaces them."
-msgstr "Hier hinterlegte Antworten bleiben neben der FAQ in den Einstellungen erhalten; ein FAQ-Eintrag mit derselben Frage ersetzt sie."
+msgstr "Les réponses ajoutées ici s'ajoutent à la FAQ des réglages ; une entrée de FAQ avec la même question les remplace."
 
 #: includes/class-podai-chat-assistant.php
 msgid "Weekly e-mail on / off"
-msgstr "Wochen-E-Mail ein / aus"
+msgstr "E-mail hebdomadaire activé / désactivé"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Weekly e-mail"
-msgstr "Wochen-E-Mail"
+msgstr "E-mail hebdomadaire"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Draft answers"
-msgstr "Antworten entwerfen"
+msgstr "Préparer des réponses"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Edit"
-msgstr "Bearbeiten"
+msgstr "Modifier"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Source:"
-msgstr "Quelle:"
+msgstr "Source :"
 
 #: includes/class-podai-chat-assistant.php
 msgid "Now:"
-msgstr "Bisher:"
+msgstr "Actuel :"

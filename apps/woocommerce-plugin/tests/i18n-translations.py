@@ -162,7 +162,7 @@ def unq(block, key):
     return "".join(parts).encode().decode("unicode_escape").encode("latin1").decode("utf8")
 def q(s): return '"' + s.replace("\\","\\\\").replace('"','\\"').replace("\n","\\n") + '"'
 for lang, loc in LOC.items():
-    out = [f'msgid ""\nmsgstr ""\n"Project-Id-Version: Pod.AI Chat for WooCommerce 1.0.0\\n"\n"Language: {loc}\\n"\n"MIME-Version: 1.0\\n"\n"Content-Type: text/plain; charset=UTF-8\\n"\n"Content-Transfer-Encoding: 8bit\\n"\n"Plural-Forms: nplurals={1 if lang=="zh" else 2}; plural={"0" if lang=="zh" else "(n != 1)"};\\n"\n"X-Domain: pod-ai-chat\\n"\n']
+    out = [f'msgid ""\nmsgstr ""\n"Project-Id-Version: Pod.AI Chat for WooCommerce 1.0.0\\n"\n"Language: {loc}\\n"\n"MIME-Version: 1.0\\n"\n"Content-Type: text/plain; charset=UTF-8\\n"\n"Content-Transfer-Encoding: 8bit\\n"\n"Plural-Forms: nplurals={1 if lang=="zh" else 2}; plural={"0" if lang=="zh" else "(n != 1)"};\\n"\n"X-Domain: pod-ai-chat-for-woocommerce\\n"\n']
     missing = []
     for e in entries[1:]:
         mid = unq(e, "msgid")
@@ -174,5 +174,5 @@ for lang, loc in LOC.items():
         else: missing.append(mid); continue
         refs = "\n".join(l for l in e.split("\n") if l.startswith("#"))
         out.append(f"{refs}\n" + (f"msgctxt {q(ctx)}\n" if ctx else "") + f"msgid {q(mid)}\nmsgstr {q(tr)}\n")
-    open(f"{sys.argv[2]}/pod-ai-chat-{loc}.po","w",encoding="utf8").write("\n".join(out))
+    open(f"{sys.argv[2]}/pod-ai-chat-for-woocommerce-{loc}.po","w",encoding="utf8").write("\n".join(out))
     print(loc, "missing:", missing)

@@ -122,8 +122,10 @@ export function publicRouter({ root, generatedDir }) {
   router.get(["/woocommerce", "/woocommerce.html"], sendPodPage("woocommerce.html"));
   // WooCommerce plugin readme + zip (built into apps/woocommerce-plugin/dist by scripts/build-woo-plugin.mjs)
   const wooDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "apps", "woocommerce-plugin");
-  router.get("/woocommerce/readme.txt", (req, res, next) => podHost(req) ? res.set("Cache-Control", "public, max-age=3600").type("text/plain; charset=utf-8").sendFile(path.join(wooDir, "pod-ai-chat", "readme.txt")) : next("route"));
-  router.get("/woocommerce/pod-ai-chat.zip", (req, res, next) => podHost(req) ? res.set("Cache-Control", "public, max-age=3600").download(path.join(wooDir, "dist", "pod-ai-chat.zip"), "pod-ai-chat.zip", err => { if (err && !res.headersSent) res.status(404).json({ error: "not_found" }); }) : next("route"));
+  router.get("/woocommerce/readme.txt", (req, res, next) => podHost(req) ? res.set("Cache-Control", "public, max-age=3600").type("text/plain; charset=utf-8").sendFile(path.join(wooDir, "pod-ai-chat-for-woocommerce", "readme.txt")) : next("route"));
+  router.get("/woocommerce/pod-ai-chat-for-woocommerce.zip", (req, res, next) => podHost(req) ? res.set("Cache-Control", "public, max-age=3600").download(path.join(wooDir, "dist", "pod-ai-chat-for-woocommerce.zip"), "pod-ai-chat-for-woocommerce.zip", err => { if (err && !res.headersSent) res.status(404).json({ error: "not_found" }); }) : next("route"));
+  // Until plugin 1.2.0 the zip was pod-ai-chat.zip (old links, the 1.1/1.2.0 guide) — keep it working.
+  router.get("/woocommerce/pod-ai-chat.zip", (req, res, next) => podHost(req) ? res.redirect(301, "/woocommerce/pod-ai-chat-for-woocommerce.zip") : next("route"));
   // Before the podai split (f09ff00) these Pod.AI pages lived on pod.swisspro.site and were indexed there; the wedding
   // site never had them, so they 404'd on pod. Permanently redirect to the Pod.AI host (clean URL). /privacy and /terms
   // stay the wedding site's own legal pages on pod.

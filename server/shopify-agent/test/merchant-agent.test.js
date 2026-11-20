@@ -179,6 +179,12 @@ test("weekly summary e-mail: due Monday 07:00 UTC, once per week, can be turned 
   // shop B: no chats this week → nothing to send; no recipient at all → no_recipient
   assert.equal((await sendWeeklyDigest({ tenantId: TB, shopName: "B" }, { now: at(1, 8) })).status, "no_recipient");
   assert.equal((await sendWeeklyDigest({ tenantId: core.tenantFor("shop-c.myshopify.com"), shopName: "C" }, { to: "owner@alpine.example", now: at(1, 8) })).status, "nothing_to_report");
+  // rollout guard: PODAI_DIGEST_ONLY_TO set → other recipients are skipped and their week is not used up
+  process.env.PODAI_DIGEST_ONLY_TO = "owner@test.example";
+  const sd = core.tenantFor("shop-d.myshopify.com");
+  assert.equal((await sendWeeklyDigest({ tenantId: sd, shopName: "D" }, { to: "merchant@real.example", now: at(1, 8) })).status, "skipped_rollout_guard");
+  delete process.env.PODAI_DIGEST_ONLY_TO;
+  assert.notEqual((await sendWeeklyDigest({ tenantId: sd, shopName: "D" }, { to: "merchant@real.example", now: at(1, 8) })).status, "already_sent");
 });
 
 test("audit log has events but no chat text; records are encrypted at rest; GDPR deletes them", async () => {

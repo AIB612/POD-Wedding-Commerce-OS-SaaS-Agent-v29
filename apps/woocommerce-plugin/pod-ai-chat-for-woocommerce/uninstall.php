@@ -7,6 +7,11 @@
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
+// An older copy of this plugin (folder pod-ai-chat, up to 1.2.0) shares the same settings: keep everything while it is installed.
+if ( file_exists( WP_PLUGIN_DIR . '/pod-ai-chat/pod-ai-chat.php' ) ) {
+	return;
+}
+
 $podai_chat_settings = get_option( 'podai_chat_settings', array() );
 if ( is_array( $podai_chat_settings ) && ! empty( $podai_chat_settings['site_id'] ) && ! empty( $podai_chat_settings['secret'] ) ) {
 	require_once __DIR__ . '/includes/class-podai-chat-client.php';

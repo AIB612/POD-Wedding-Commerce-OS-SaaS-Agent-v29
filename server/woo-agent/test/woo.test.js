@@ -174,3 +174,29 @@ test("disconnect deletes every record of the site; the Shopify webhook still rej
   const wh = await realFetch(`${base}/shopify-agent/webhooks`, { method: "POST", body: "{}" }); assert.equal(wh.status, 401);
   server.close();
 });
+
+test("WordPress plugin: folder, main file and every translation call use the WordPress.org slug as text domain", () => {
+  const SLUG = "pod-ai-chat-for-woocommerce";
+  const dir = new URL(`../../../apps/woocommerce-plugin/${SLUG}/`, import.meta.url).pathname;
+  const main = fs.readFileSync(path.join(dir, `${SLUG}.php`), "utf8");
+  assert.match(main, new RegExp(`Text Domain:\\s+${SLUG}\\n`));
+  const pluginUri = main.match(/Plugin URI:\s+(\S+)/)[1], authorUri = main.match(/Author URI:\s+(\S+)/)[1];
+  assert.notEqual(pluginUri, authorUri, "Plugin URI must differ from Author URI (WordPress.org review)");
+  const version = main.match(/\* Version:\s+([\d.]+)/)[1];
+  assert.match(main, new RegExp(`define\\( 'PODAI_CHAT_VERSION', '${version.replace(/\./g, "\\.")}' \\)`));
+  assert.match(fs.readFileSync(path.join(dir, "readme.txt"), "utf8"), new RegExp(`Stable tag: ${version.replace(/\./g, "\\.")}\\n`));
+  const php = []; (function walk(d) { for (const f of fs.readdirSync(d)) { const a = path.join(d, f); fs.statSync(a).isDirectory() ? walk(a) : a.endsWith(".php") && php.push(a); } })(dir);
+  const I18N = /\b(?:__|_e|_x|_ex|_n|_nx|esc_html__|esc_html_e|esc_html_x|esc_attr__|esc_attr_e|esc_attr_x|load_plugin_textdomain)\(([^;]*?)\)\s*[,.;)]/g;
+  let calls = 0;
+  for (const f of php) {
+    const src = fs.readFileSync(f, "utf8");
+    for (const m of src.matchAll(/'(pod-ai-chat[a-z-]*)'/g)) if (m[1] !== SLUG) {
+      const line = src.slice(src.lastIndexOf("\n", m.index) + 1, src.indexOf("\n", m.index));
+      assert.ok(/self::back\(|add_(sub)?menu_page\(|'page'\s*=>|SLUG\s*=/.test(line), `${path.basename(f)}: '${m[1]}' used outside an admin page slug: ${line.trim().slice(0, 120)}`);
+    }
+    calls += [...src.matchAll(I18N)].length;
+  }
+  assert.ok(calls > 100, `translation calls found: ${calls}`);
+  const langs = fs.readdirSync(path.join(dir, "languages"));
+  assert.ok(langs.length >= 9 && langs.every(f => f.startsWith(SLUG)), langs.join(", "));
+});

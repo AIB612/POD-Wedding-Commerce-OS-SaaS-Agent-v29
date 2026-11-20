@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name:       Pod.AI Chat for WooCommerce
- * Plugin URI:        https://podai.swisspro.site/
+ * Plugin URI:        https://podai.swisspro.site/woocommerce
  * Description:       AI shopping assistant for WooCommerce: answers from your store's own data (products, policies, shipping), recommends in-stock products and adds them to the cart, looks up orders and tracking, and turns "contact us" into tickets.
- * Version:           1.2.0
+ * Version:           1.2.1
  * Requires at least: 6.3
  * Requires PHP:      7.4
  * Requires Plugins:  woocommerce
@@ -11,7 +11,7 @@
  * Author URI:        https://podai.swisspro.site/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       pod-ai-chat
+ * Text Domain:       pod-ai-chat-for-woocommerce
  * Domain Path:       /languages
  * WC requires at least: 7.0
  * WC tested up to:   11.3
@@ -21,7 +21,18 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PODAI_CHAT_VERSION', '1.2.0' );
+// Until 1.2.0 the plugin lived in wp-content/plugins/pod-ai-chat/ (same settings, same classes). If that older copy is
+// already loaded (e.g. while this copy is being activated), switch the old copy off — settings and connection are kept —
+// and stop here; from the next request on only this copy runs.
+if ( defined( 'PODAI_CHAT_FILE' ) ) {
+	if ( PODAI_CHAT_FILE !== __FILE__ ) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		deactivate_plugins( plugin_basename( PODAI_CHAT_FILE ), true );
+	}
+	return;
+}
+
+define( 'PODAI_CHAT_VERSION', '1.2.1' );
 define( 'PODAI_CHAT_FILE', __FILE__ );
 define( 'PODAI_CHAT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PODAI_CHAT_URL', plugin_dir_url( __FILE__ ) );
@@ -44,6 +55,16 @@ register_activation_hook( __FILE__, array( 'PodAI_Chat_Plugin', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'PodAI_Chat_Plugin', 'deactivate' ) );
 
 add_action( 'plugins_loaded', array( 'PodAI_Chat_Plugin', 'instance' ) );
+
+// The older copy (folder pod-ai-chat) must not stay active next to this one.
+add_action(
+	'admin_init',
+	function () {
+		if ( is_plugin_active( 'pod-ai-chat/pod-ai-chat.php' ) ) {
+			deactivate_plugins( 'pod-ai-chat/pod-ai-chat.php', true );
+		}
+	}
+);
 
 // HPOS (custom order tables) compatible: orders are read only through wc_get_order() / wc_get_orders().
 add_action(

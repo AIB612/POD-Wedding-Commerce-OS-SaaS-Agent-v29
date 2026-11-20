@@ -158,7 +158,7 @@ class PodAI_Chat_Sync {
 	 */
 	public static function full_sync() {
 		if ( ! PodAI_Chat_Plugin::connected() ) {
-			return new WP_Error( 'podai_not_connected', __( 'Pod.AI is not connected yet.', 'pod-ai-chat' ) );
+			return new WP_Error( 'podai_not_connected', __( 'Pod.AI is not connected yet.', 'pod-ai-chat-for-woocommerce' ) );
 		}
 		PodAI_Chat_Store::push();
 		$sync_id = 's' . time();

@@ -11,7 +11,7 @@
 // │ 要不要改 Edit?: ✎ 可以改 — 文字在 TXT（5 种语言）、发送时间 DIGEST_HOUR_UTC。                              │
 // └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
 import { addRecordOnce, updateRecord, listForTenant } from "../../saas-store.js";
-import { sendMerchantMail, validEmail } from "../../shared/tickets-core.js";
+import { sendMerchantMail, validEmail, emailList } from "../../shared/tickets-core.js";
 import { getSettings } from "../engine/store.js";
 import { TOOLS } from "./tools.js";
 import { compose, pick } from "./reply.js";
@@ -76,7 +76,7 @@ export async function buildDigest(ctx) {
 /**
  * 发本周的总结（每周最多一次）Send this week's summary for one shop — at most once per week.
  * ctx: { tenantId, lang?, shopName, adminUrl, usage? }   opts: { to (fallback recipient), now }
- * @returns {Promise<{status:string, week?:string}>}  status: not_due | off | no_recipient | already_sent | nothing_to_report | sent | not_configured | skipped_test_mode | failed
+ * @returns {Promise<{status:string, week?:string}>}  status: not_due | off | no_recipient | skipped_rollout_guard | already_sent | nothing_to_report | sent | not_configured | skipped_test_mode | failed
  */
 export async function sendWeeklyDigest(ctx, { to = null, now = Date.now() } = {}) {
   if (!due(now)) return { status: "not_due" };
@@ -84,6 +84,10 @@ export async function sendWeeklyDigest(ctx, { to = null, now = Date.now() } = {}
   if (s.weekly_digest === false) return { status: "off" };
   const recipient = validEmail(s.support_email) ? s.support_email : validEmail(to) ? to : null;
   if (!recipient) return { status: "no_recipient" };
+  // Optional rollout guard (server .env, names only): PODAI_DIGEST_ONLY_TO = comma list. When set, the summary goes only to
+  // these addresses; other shops are skipped without using up their week (they get it once the guard is removed).
+  const only = emailList(process.env.PODAI_DIGEST_ONLY_TO).map(x => x.toLowerCase());
+  if (only.length && !only.includes(String(recipient).toLowerCase())) return { status: "skipped_rollout_guard" };
   const week = weekKey(now);
   const claim = await addRecordOnce(DIGESTS, { id: `dg_${ctx.tenantId}_${week}`, tenant_id: ctx.tenantId, week, status: "claimed", at: new Date(now).toISOString() });
   if (!claim.created) return { status: "already_sent", week };

@@ -46,7 +46,7 @@ flowchart LR
 | Product | Status (2026-11-20) | Code | Public URL |
 |---|---|---|---|
 | **Pod.AI for Shopify** | Released app versions up to `pod-ai-10` in the Shopify Dev Dashboard; **not yet submitted to the App Store** | `server/shopify-agent/` + `apps/shopify-agent/` (Shopify CLI project, theme app extension) | Admin: `https://podai.swisspro.site/shopify-agent` (embedded in Shopify admin) |
-| **Pod.AI Chat for WooCommerce** | Plugin 1.2.0 built (zip + WordPress.org assets, incl. the Assistant page); **not yet in the WordPress.org directory** | `server/woo-agent/` + `apps/woocommerce-plugin/` | Download: `https://podai.swisspro.site/woocommerce/pod-ai-chat.zip` |
+| **Pod.AI Chat for WooCommerce** | Plugin 1.2.1 built (zip + WordPress.org assets, incl. the Assistant page); submitted to WordPress.org as `pod-ai-chat-for-woocommerce`, **in review** | `server/woo-agent/` + `apps/woocommerce-plugin/` | Download: `https://podai.swisspro.site/woocommerce/pod-ai-chat-for-woocommerce.zip` |
 | **Agent API (MCP + REST)** | Live for connected stores with "AI agent access" on (default on) | `server/agent-api/` | `https://podai.swisspro.site/agent/v1/stores/<store>` |
 | **Billing** | Shopify: Managed Pricing (live). WooCommerce: Paddle (built, **off** until `PADDLE_*` is set) | `server/shopify-agent/billing.js`, `server/woo-agent/billing.js`, `server/billing/` | — |
 | **Landing + legal pages** | Live | `server/shopify-agent/*.html` | `podai.swisspro.site` · `/privacy` `/terms` `/support` `/security` `/dpa` `/woocommerce` |
@@ -194,7 +194,7 @@ Safety rules (in code):
 
 **Shopify:** install from the Dev Dashboard / App Store → open the app once (creates the offline token) → Online Store → Customize → App embeds → turn on **Pod.AI Chat** → in Pod.AI admin: Knowledge (add FAQ), Settings (ticket e-mail, colours, greeting) → Overview checklist turns green. Protected customer data (e-mail) must be approved by Shopify for order lookups.
 
-**WooCommerce:** upload `pod-ai-chat.zip` → activate → *Connect* (Pod.AI verifies the site by callback, then issues a site secret) → products sync automatically → set ticket e-mail and look in the plugin settings.
+**WooCommerce:** upload `pod-ai-chat-for-woocommerce.zip` → activate → *Connect* (Pod.AI verifies the site by callback, then issues a site secret) → products sync automatically → set ticket e-mail and look in the plugin settings.
 
 **Daily for the merchant:** open **Assistant → What needs my attention today?** and work through the suggestions (teach answers, close tickets).
 

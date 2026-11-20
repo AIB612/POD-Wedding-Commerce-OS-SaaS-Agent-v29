@@ -14,7 +14,7 @@ Key facts:
 - Data is separated per shop and deleted after uninstall when Shopify sends its shop-deletion (GDPR) request.
 
 ## Main pages
-- [Pod.AI overview](https://podai.swisspro.site/agent.html): features, how it works, FAQ
+- [Pod.AI overview](https://podai.swisspro.site/): features, how it works, FAQ
 - [Support & resources](https://podai.swisspro.site/support): install, enable the theme embed, FAQ, contact
 - [Pod.AI for WooCommerce](https://podai.swisspro.site/woocommerce): plugin install, AI agent access (MCP), plans
 - [Agent API (OpenAPI)](https://podai.swisspro.site/agent/v1/openapi.json): MCP + REST for AI agents

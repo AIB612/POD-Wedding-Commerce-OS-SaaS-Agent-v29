@@ -1,6 +1,6 @@
 # woo-agent – Pod.AI for WooCommerce (backend channel)
 
-WooCommerce stores connect through the `pod-ai-chat` WordPress plugin (`apps/woocommerce-plugin/pod-ai-chat`).
+WooCommerce stores connect through the Pod.AI Chat for WooCommerce WordPress plugin (slug and text domain `pod-ai-chat-for-woocommerce`, `apps/woocommerce-plugin/pod-ai-chat-for-woocommerce`; folder `pod-ai-chat` up to 1.2.0).
 The channel reuses the platform-agnostic commerce agent (`server/commerce-agent`) – the same NLU, local RAG,
 recommendation, ticket and dashboard engine as the Shopify app – through a Woo data adapter (`adapter.js`).
 Shopify routes, webhooks and data are untouched.
