@@ -111,6 +111,44 @@ try {
   assert.equal(wooTitle, "Pod.AI für WooCommerce");
   assert.match(wooDesc, /Shopify/);
   assert.ok(!/WooCommerce KI-Chatbot/i.test(wooTitle + wooDesc));
+  // GEO: llms.txt / llms-full.txt are German-first with French and English; FAQPage is DE/FR/EN; AI bots are allowed.
+  const i18nSrc = fs.readFileSync(new URL("../i18n.js", import.meta.url), "utf8");
+  assert.match(i18nSrc, /langs=\['zh','en','de','fr'\]/);
+  assert.match(i18nSrc, /'geo\.faq\.title'/);
+  for (const host of ["pod.swisspro.site", "podai.swisspro.site"]) {
+    const robots = (await getHost("/robots.txt", host)).body;
+    for (const bot of ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "PerplexityBot", "Perplexity-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "Google-Extended", "Applebot-Extended", "Bingbot", "CCBot"]) {
+      assert.match(robots, new RegExp(`User-agent: ${bot}`), `${host} robots ${bot}`);
+    }
+    const llms = (await getHost("/llms.txt", host)).body;
+    const full = (await getHost("/llms-full.txt", host)).body;
+    assert.equal((await getHost("/llms-full.txt", host)).status, 200, host + " llms-full");
+    for (const [label, body] of [["llms", llms], ["llms-full", full]]) {
+      assert.ok(!body.includes("ß"), `${host}/${label} eszett`);
+      assert.ok(!/51tracking/i.test(body), `${host}/${label} 51Tracking`);
+      const de = body.indexOf("## Deutsch"), fr = body.indexOf("## Français"), en = body.indexOf("## English");
+      assert.ok(de >= 0 && fr > de && en > fr, `${host}/${label} DE then FR then EN`);
+    }
+  }
+  const podFaq = (await getHost("/", "pod.swisspro.site")).body;
+  assert.match(podFaq, /id="faq"/);
+  assert.match(podFaq, /data-i18n="geo\.faq\.q1"/);
+  assert.match(podFaq, /Was ist POD\?/);
+  assert.match(podFaq, /"@type":"FAQPage"/);
+  assert.match(podFaq, /"inLanguage":"de-CH"/);
+  assert.match(podFaq, /"inLanguage":"fr-CH"/);
+  assert.match(podFaq, /Qu’est-ce que POD \?|Qu'est-ce que POD \?/);
+  assert.match(podFaq, /What is POD\?/);
+  const agentFaq = (await getHost("/", "podai.swisspro.site")).body;
+  assert.match(agentFaq, /id="faq"/);
+  assert.match(agentFaq, /Was ist Pod\.AI\?/);
+  assert.match(agentFaq, /"inLanguage":"de-CH"/);
+  assert.match(agentFaq, /"inLanguage":"fr-CH"/);
+  assert.match(agentFaq, /Qu’est-ce que Pod\.AI \?|Qu'est-ce que Pod\.AI \?/);
+  assert.match(agentFaq, /What is Pod\.AI\?/);
+  assert.match(agentFaq, /indexOf\("fr"\)===0\)return"fr"/);
+  assert.match(agentFaq, /Qu’en est-il de la protection des données et de la Suisse \?|Qu'en est-il de la protection des données et de la Suisse \?/);
+
   // WooCommerce plugin download: WordPress.org slug name; the old zip name keeps working.
   const zip = await getHost("/woocommerce/pod-ai-chat-for-woocommerce.zip", "podai.swisspro.site"); assert.equal(zip.status, 200); assert.match(zip.headers["content-disposition"] || "", /pod-ai-chat-for-woocommerce\.zip/);
   const oldZip = await getHost("/woocommerce/pod-ai-chat.zip", "podai.swisspro.site"); assert.equal(oldZip.status, 301); assert.equal(oldZip.headers.location, "/woocommerce/pod-ai-chat-for-woocommerce.zip");

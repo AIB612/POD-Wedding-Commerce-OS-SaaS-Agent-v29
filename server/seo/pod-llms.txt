@@ -1,27 +1,52 @@
-# POD.AI
+# POD — Print-on-Demand Designplattform / plateforme de design / design platform
 
-> POD.AI (pod.swisspro.site) is a print-on-demand (POD) design platform: an online design studio and shop for custom wedding stationery, signs and personalised products. Customers pick a scenario kit (for example "Wedding stationery & favours"), upload or enter their design once, and get matching invitations, table stationery, welcome signs, favours and gifts printed on demand and shipped from China via YunExpress or 4PX. Operated by Dropking AI. Support: support@swisspro.site
+> Sprachen in dieser Datei: Deutsch (zuerst), Français (Suisse), English. Ausführliche Fassung: https://pod.swisspro.site/llms-full.txt
+> Languages in this file: German first, then Swiss French, then English. Full text: https://pod.swisspro.site/llms-full.txt
+
+## Deutsch
+
+POD (pod.swisspro.site) ist eine Print-on-Demand-Designplattform: ein Online-Designstudio für personalisierte Hochzeits- und Geschenkprodukte. Kundinnen und Kunden wählen ein Szenario-Kit, laden ihr Motiv einmal hoch und erhalten passende Einladungen, Tischkarten, Willkommensschilder, Give-aways und Geschenke — auf Bestellung gedruckt und versendet. Betreiberin: Dropking AI, Schweiz. Support: support@swisspro.site
+
+Kurze Fakten:
+- Was es ist: eine Demand- und Designplattform für Print-on-Demand, nicht ein KI-Shopping-Agent.
+- So funktioniert es: Szenario → Kit → Produkte → Gestaltung → Lieferung. Ein Motiv gilt für das ganze Set.
+- Preise: Stückpreise hängen von Menge (Staffel: 1–9 Standard, 10–29 −5 %, 30–49 −10 %, 50+ −15 %), Material und Zielwährung ab. Preise exkl. MwSt.; Versand und Steuer berechnet dieselbe Server-Offerte wie an der Kasse.
+- Korrekturabzug: personalisierte Designs erhalten einen Proof per E-Mail; Produktion nach Freigabe (oder direkt nach Zahlung, wenn der Mockup an der Kasse bestätigt wird).
+- Lieferzeit: typisch 7–15 Werktage (Standardproduktion 3 Werktage plus Transit ab China mit YunExpress oder 4PX).
+- Sprachen der Website: Englisch, Deutsch, Französisch, Chinesisch.
+- Zahlung: PayPal (PayPal-Guthaben oder Karte über PayPal).
+- Zusätzlich: Baukasten für Hochzeitswebsites / digitale Einladungen mit RSVP.
+
+Seiten: [Startseite](https://pod.swisspro.site/) · [Designstudio](https://pod.swisspro.site/studio.html) · [Versand](https://pod.swisspro.site/shipping) · [Rückgaben](https://pod.swisspro.site/returns) · [Verkaufsbedingungen](https://pod.swisspro.site/terms) · [Datenschutz](https://pod.swisspro.site/privacy) · [Impressum](https://pod.swisspro.site/imprint) · [llms-full.txt](https://pod.swisspro.site/llms-full.txt) · [Sitemap](https://pod.swisspro.site/sitemap.xml)
+
+## Français
+
+POD (pod.swisspro.site) est une plateforme de design en impression à la demande: un studio de design en ligne pour des produits de mariage et des cadeaux personnalisés. On choisit un kit de scénario, on téléverse le motif une seule fois, puis on obtient invitations, cartons de table, panneaux de bienvenue et cadeaux — imprimés à la commande et expédiés. Exploitant: Dropking AI, Suisse. Support: support@swisspro.site
+
+Faits essentiels:
+- Ce que c'est: une plateforme de demande et de design en impression à la demande, pas un agent d'achat IA.
+- Fonctionnement: scénario → kit → produits → création → livraison. Un motif s'applique à tout le set.
+- Prix: prix unitaires selon la quantité (paliers: 1–9 standard, 10–29 −5 %, 30–49 −10 %, 50+ −15 %), le matériau et la devise. Prix hors TVA; les frais de port et la taxe sont calculés par la même offre serveur qu'à la caisse.
+- Épreuve: les designs personnalisés reçoivent généralement une épreuve par e-mail; la production commence après validation (ou dès le paiement si la maquette est confirmée à la caisse).
+- Délai: typiquement 7–15 jours ouvrables (production standard de 3 jours ouvrables plus transit depuis la Chine via YunExpress ou 4PX).
+- Langues du site: anglais, allemand, français, chinois.
+- Paiement: PayPal (solde PayPal ou carte via PayPal).
+- En plus: un atelier pour un site de mariage / une invitation numérique avec RSVP.
+
+Pages: [accueil](https://pod.swisspro.site/) · [studio](https://pod.swisspro.site/studio.html) · [livraison](https://pod.swisspro.site/shipping) · [retours](https://pod.swisspro.site/returns) · [conditions](https://pod.swisspro.site/terms) · [confidentialité](https://pod.swisspro.site/privacy) · [impressum](https://pod.swisspro.site/imprint) · [llms-full.txt](https://pod.swisspro.site/llms-full.txt) · [sitemap](https://pod.swisspro.site/sitemap.xml)
+
+## English
+
+POD (pod.swisspro.site) is a print-on-demand design platform: an online design studio for personalised wedding and gift products. Customers pick a scenario kit, upload their artwork once, and get matching invitations, table stationery, welcome signs, favours and gifts — printed on demand and shipped. Operated by Dropking AI, Switzerland. Support: support@swisspro.site
 
 Key facts:
-- What it sells: print-on-demand wedding and event products — cotton paper invitations, Save the Date cards, menu cards, place cards, table number cards, acrylic welcome signs, custom gift boxes, candles, mugs, photo books, apparel and more.
-- How it works: scenario → kit → products → design → delivery. One design is applied across the whole set; per-item placement, colour and material can be fine-tuned.
-- Pricing: unit prices are shown per product and depend on quantity (volume tiers: 1–9 standard, 10–29 −5%, 30–49 −10%, 50+ −15%), material and destination currency. Prices on the site exclude VAT; shipping and tax are calculated at checkout by the same server quote shown in the cart.
-- Proofs: personalised designs get a proof by e-mail; production starts after approval (or right after payment if the customer approves the mockup at checkout).
-- Delivery: 7–15 business days to all regions (production, standard 3 business days, + international transit from China via YunExpress / 4PX); tracking is provided.
-- Languages: English, Deutsch, 中文.
-- Payment: PayPal (PayPal balance or credit/debit card via PayPal) in the secure checkout.
+- What it is: a demand and design platform for print-on-demand, not an AI shopping agent.
+- How it works: scenario → kit → products → design → delivery. One design is applied across the whole set.
+- Pricing: unit prices depend on quantity (tiers: 1–9 standard, 10–29 −5%, 30–49 −10%, 50+ −15%), material and destination currency. Prices exclude VAT; shipping and tax are calculated by the same server quote as checkout.
+- Proofs: personalised designs usually get a proof by e-mail; production starts after approval (or right after payment if the mockup is approved at checkout).
+- Delivery: typically 7–15 business days (standard production 3 business days plus transit from China via YunExpress or 4PX).
+- Site languages: English, German, French, Chinese.
+- Payment: PayPal (PayPal balance or card via PayPal).
 - Also offered: a wedding website / digital invitation builder with RSVP.
 
-## Main pages
-- [Home — shop & scenario kits](https://pod.swisspro.site/): wedding & personalised gift kits with "from" prices
-- [Design studio](https://pod.swisspro.site/studio.html): all scenario kits (wedding, anniversary, new baby, corporate, creators, communities, art, holidays) and all products
-
-## Help & policies
-- [Shipping & production times](https://pod.swisspro.site/shipping): how delivery time and shipping cost are calculated, customs, tracking
-- [Returns & defects](https://pod.swisspro.site/returns): personalised items, defective/damaged items, refunds
-- [Terms of Sale](https://pod.swisspro.site/terms)
-- [Privacy Policy](https://pod.swisspro.site/privacy)
-- [Imprint](https://pod.swisspro.site/imprint)
-
-## Optional
-- [Sitemap](https://pod.swisspro.site/sitemap.xml)
+Pages: [Home](https://pod.swisspro.site/) · [Design studio](https://pod.swisspro.site/studio.html) · [Shipping](https://pod.swisspro.site/shipping) · [Returns](https://pod.swisspro.site/returns) · [Terms](https://pod.swisspro.site/terms) · [Privacy](https://pod.swisspro.site/privacy) · [Imprint](https://pod.swisspro.site/imprint) · [llms-full.txt](https://pod.swisspro.site/llms-full.txt) · [Sitemap](https://pod.swisspro.site/sitemap.xml)

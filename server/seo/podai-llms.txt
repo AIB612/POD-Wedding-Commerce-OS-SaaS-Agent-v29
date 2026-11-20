@@ -1,30 +1,51 @@
-# Pod.AI — AI Customer Chat
+# Pod.AI — Agentic-Commerce-KI-Agent / agent de commerce agentique / agentic commerce AI agent
 
-> Pod.AI (podai.swisspro.site) is an AI customer chat app for Shopify and WooCommerce stores, made by Dropking AI. It answers shoppers' product, shipping and order questions from the store's real data — exact shipping quotes, order status and tracking, product recommendations and discount codes — in the customer's language, and hands the conversation to the merchant's team when it cannot help. It works without an AI/LLM key; an optional LLM only adds answers to open questions. Support: support@swisspro.site
+> Sprachen in dieser Datei: Deutsch (zuerst), Français (Suisse), English. Ausführliche Fassung: https://podai.swisspro.site/llms-full.txt
+
+## Deutsch
+
+Pod.AI (podai.swisspro.site) ist ein Agentic-Commerce-KI-Agent für Einzelhandel und E-Commerce, betrieben von Dropking AI in der Schweiz. Er läuft auf Shopify, WooCommerce und weiteren Plattformen: Er beantwortet Fragen aus den echten Shop-Daten, empfiehlt lagernde Produkte, legt sie in den Warenkorb, erstellt Checkout-Links, prüft Bestellungen und öffnet Tickets. Die Zahlung erfolgt immer im Shop, nie bei Pod.AI. Zusätzlich gibt es eine lesende MCP-API für externe KI-Assistenten. Support: support@swisspro.site
+
+Kurze Fakten:
+- Für wen: Einzelhandel und E-Commerce, nicht nur einen Shop-Typ.
+- Plattformen: Shopify-App und das WordPress-Plugin «Pod.AI Chat for WooCommerce» Version 1.2.1; weitere Plattformen sind vorgesehen.
+- Handeln, nicht nur antworten; keine Zahlung bei Pod.AI.
+- MCP / Agent-API: öffentlicher, lesender MCP-Server und REST-API, wenn «AI agent access» eingeschaltet ist. Discovery: https://podai.swisspro.site/.well-known/pod-ai-agent.json — OpenAPI: https://podai.swisspro.site/agent/v1/openapi.json
+- Pläne (USD): Free 0 (50 Chats/Monat), Growth 19/Monat bzw. 182.40/Jahr (500 Chats), Pro 49/Monat bzw. 470.40/Jahr (2500 Chats, optionale LLM-Antworten). Bezahlte Pläne sind noch nicht im Verkauf; sobald sie öffnen, gelten 14 Tage Test und die Abrechnung über Paddle (Merchant of Record).
+- Ohne eigenen LLM-Schlüssel nutzbar. Bestellauskunft nur mit Bestellnummer und passender E-Mail.
+- Sprachen: Englisch, Deutsch, Französisch, Italienisch und Chinesisch sind eingebaut.
+- Daten je Shop getrennt; Löschung nach Deinstallation, sobald die Plattform den Auftrag sendet. Dropking AI ist in der Schweiz registriert (DSG/DSGVO).
+
+Seiten: [Übersicht](https://podai.swisspro.site/) · [Support](https://podai.swisspro.site/support) · [WooCommerce](https://podai.swisspro.site/woocommerce) · [OpenAPI](https://podai.swisspro.site/agent/v1/openapi.json) · [llms-full.txt](https://podai.swisspro.site/llms-full.txt) · [Datenschutz](https://podai.swisspro.site/privacy) · [Bedingungen](https://podai.swisspro.site/terms) · [Sicherheit](https://podai.swisspro.site/security) · [DPA](https://podai.swisspro.site/dpa) · [Sitemap](https://podai.swisspro.site/sitemap.xml)
+
+## Français
+
+Pod.AI (podai.swisspro.site) est un agent IA de commerce agentique (agentic commerce) pour le commerce de détail et l'e-commerce, exploité par Dropking AI en Suisse. Il fonctionne sur Shopify, WooCommerce et d'autres plateformes: il répond à partir des données réelles de la boutique, recommande des produits en stock, les ajoute au panier, crée des liens de caisse, suit les commandes et ouvre des tickets. Le paiement a toujours lieu dans la boutique, jamais chez Pod.AI. Une API MCP en lecture est disponible pour les assistants IA externes. Support: support@swisspro.site
+
+Faits essentiels:
+- Public: commerce de détail et e-commerce, pas un seul type de boutique.
+- Plateformes: application Shopify et extension WordPress «Pod.AI Chat for WooCommerce» version 1.2.1; d'autres plateformes sont prévues.
+- Il agit, il ne se contente pas de répondre; Pod.AI n'encaisse aucun paiement.
+- MCP / API agent: serveur MCP public en lecture et API REST si «AI agent access» est activé. Découverte: https://podai.swisspro.site/.well-known/pod-ai-agent.json — OpenAPI: https://podai.swisspro.site/agent/v1/openapi.json
+- Offres (USD): Free 0 (50 chats/mois), Growth 19/mois ou 182.40/an (500 chats), Pro 49/mois ou 470.40/an (2500 chats, réponses LLM optionnelles). Les offres payantes ne sont pas encore en vente; à l'ouverture, un essai de 14 jours s'applique, facturé par Paddle (merchant of record).
+- Utilisable sans clé LLM personnelle. Consultation de commande uniquement avec le numéro et l'e-mail correspondant.
+- Langues intégrées: anglais, allemand, français, italien et chinois.
+- Données séparées par boutique; suppression après désinstallation dès que la plateforme envoie la demande. Dropking AI est enregistré en Suisse (LPD/RGPD).
+
+Pages: [aperçu](https://podai.swisspro.site/) · [support](https://podai.swisspro.site/support) · [WooCommerce](https://podai.swisspro.site/woocommerce) · [OpenAPI](https://podai.swisspro.site/agent/v1/openapi.json) · [llms-full.txt](https://podai.swisspro.site/llms-full.txt) · [confidentialité](https://podai.swisspro.site/privacy) · [conditions](https://podai.swisspro.site/terms) · [sécurité](https://podai.swisspro.site/security) · [DPA](https://podai.swisspro.site/dpa) · [sitemap](https://podai.swisspro.site/sitemap.xml)
+
+## English
+
+Pod.AI (podai.swisspro.site) is an agentic commerce AI agent for retail and e-commerce, operated by Dropking AI in Switzerland. It runs on Shopify, WooCommerce and further platforms: it answers from the store's real data, recommends in-stock products, adds them to the cart, builds checkout links, looks up orders and opens tickets. Payment always happens in the merchant's checkout, never at Pod.AI. A read-only MCP API is available for external AI assistants. Support: support@swisspro.site
 
 Key facts:
-- Platforms: Shopify app (theme app embed + admin dashboard in Shopify Admin) and WooCommerce plugin "Pod.AI Chat for WooCommerce" (storefront chat + WordPress admin).
-- Actions: adds recommended in-stock products to the cart, applies the store's public coupon and links to checkout. It never takes payment.
-- AI agent access: each Pod.AI store can expose a read-only MCP server and REST API so AI assistants can search in-stock products and create a checkout link; the shopper pays on the store. Discovery: https://podai.swisspro.site/.well-known/pod-ai-agent.json (WooCommerce stores also publish /.well-known/pod-ai-agent.json on their own domain).
-- Plans: Free ($0), Growth ($19/month), Pro ($49/month), billed in USD.
-- Local first: rules + shop data answer most questions; quotes are the same server quote as checkout.
-- Order lookup requires the order number and the matching e-mail address.
-- Human handoff: unanswered chats are queued in the admin with the transcript; the shopper can leave a reply e-mail.
-- Languages: English, German, French, Italian and Chinese built in; more with an optional LLM.
-- Data is separated per shop and deleted after uninstall when Shopify sends its shop-deletion (GDPR) request.
+- Who it is for: retail and e-commerce, not a single shop type.
+- Platforms: Shopify app and the WordPress plugin “Pod.AI Chat for WooCommerce” version 1.2.1; further platforms are planned.
+- It acts, it does not only answer; Pod.AI never takes payment.
+- MCP / agent API: public read-only MCP server and REST API when “AI agent access” is on. Discovery: https://podai.swisspro.site/.well-known/pod-ai-agent.json — OpenAPI: https://podai.swisspro.site/agent/v1/openapi.json
+- Plans (USD): Free 0 (50 chats/month), Growth 19/month or 182.40/year (500 chats), Pro 49/month or 470.40/year (2,500 chats, optional LLM answers). Paid plans are not on sale yet; when they open they start with a 14-day trial and are billed by Paddle (merchant of record).
+- Works without your own LLM key. Order lookup requires the order number and the matching e-mail.
+- Built-in languages: English, German, French, Italian and Chinese.
+- Data is separated per shop and deleted after uninstall when the platform sends its deletion request. Dropking AI is registered in Switzerland (Swiss FADP / GDPR).
 
-## Main pages
-- [Pod.AI overview](https://podai.swisspro.site/): features, how it works, FAQ
-- [Support & resources](https://podai.swisspro.site/support): install, enable the theme embed, FAQ, contact
-- [Pod.AI for WooCommerce](https://podai.swisspro.site/woocommerce): plugin install, AI agent access (MCP), plans
-- [Agent API (OpenAPI)](https://podai.swisspro.site/agent/v1/openapi.json): MCP + REST for AI agents
-- [Full text for LLMs](https://podai.swisspro.site/llms-full.txt)
-
-## Legal
-- [Privacy Policy](https://podai.swisspro.site/privacy)
-- [Terms of Service](https://podai.swisspro.site/terms)
-- [Security & Incident Response Policy](https://podai.swisspro.site/security)
-- [Data Processing Addendum](https://podai.swisspro.site/dpa)
-
-## Optional
-- [Sitemap](https://podai.swisspro.site/sitemap.xml)
+Pages: [Overview](https://podai.swisspro.site/) · [Support](https://podai.swisspro.site/support) · [WooCommerce](https://podai.swisspro.site/woocommerce) · [OpenAPI](https://podai.swisspro.site/agent/v1/openapi.json) · [llms-full.txt](https://podai.swisspro.site/llms-full.txt) · [Privacy](https://podai.swisspro.site/privacy) · [Terms](https://podai.swisspro.site/terms) · [Security](https://podai.swisspro.site/security) · [DPA](https://podai.swisspro.site/dpa) · [Sitemap](https://podai.swisspro.site/sitemap.xml)

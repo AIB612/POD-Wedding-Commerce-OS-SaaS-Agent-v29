@@ -1,0 +1,57 @@
+# POD — Print-on-Demand Designplattform (ausführlich / complet / full)
+
+> Deutsch zuerst, puis le français (Suisse), then English. Kurzfassung: https://pod.swisspro.site/llms.txt
+
+## Deutsch
+
+POD (pod.swisspro.site) ist die Print-on-Demand-Designplattform von Dropking AI (Schweiz): Online-Designstudio und Shop für personalisierte Hochzeits- und Geschenkprodukte — nicht ein KI-Shopping-Agent. Support: support@swisspro.site
+
+Ablauf: Szenario → Kit → Produkte → Gestaltung → Lieferung. Ein Motiv gilt für das ganze Set (Einladungen, Tischkarten, Willkommensschilder, Give-aways und mehr); Platzierung, Farbe und Material sind je Artikel anpassbar. Gedruckt wird auf Bestellung.
+
+Preise: Stückpreise hängen von Menge, Material und Zielwährung ab. Staffel: 1–9 Standard, 10–29 minus 5 %, 30–49 minus 10 %, 50 und mehr minus 15 %. Preise exkl. MwSt.; Versand und Steuer berechnet dieselbe Server-Offerte wie im Warenkorb und an der Kasse.
+
+Korrekturabzug: personalisierte Designs erhalten in der Regel einen Proof per E-Mail. Produktion nach Freigabe, oder direkt nach Zahlung, wenn der Mockup an der Kasse bestätigt wird. Standardproduktion: 3 Werktage nach Zahlung oder Freigabe. Stickerei oder Holz können länger dauern.
+
+Lieferung: typisch 7–15 Werktage (3 Werktage Produktion plus Transit ab China mit YunExpress oder 4PX). Sendungsnummer per E-Mail, sobald das Paket die Produktion verlässt; Status auch unter «Bestellung finden» mit Nummer und E-Mail, ohne Konto.
+
+Für die Schweiz, die EU und andere Länder können Einfuhr-MwSt. und Zoll anfallen. Die MwSt. des Lieferlands wird an der Kasse ausgewiesen und erhoben. Allfällige Einfuhrzölle zahlt in der Regel die Empfängerin oder der Empfänger, sofern die Kasse nichts anderes ausweist.
+
+Zahlung über PayPal. Website auf Englisch, Deutsch, Französisch und Chinesisch. Zusätzlich ein Baukasten für eine Hochzeitswebsite bzw. digitale Einladung mit RSVP.
+
+Seiten: https://pod.swisspro.site/ · https://pod.swisspro.site/studio.html · https://pod.swisspro.site/shipping · https://pod.swisspro.site/returns · https://pod.swisspro.site/terms · https://pod.swisspro.site/privacy · https://pod.swisspro.site/imprint · https://pod.swisspro.site/llms.txt · https://pod.swisspro.site/sitemap.xml
+
+## Français
+
+POD (pod.swisspro.site) est la plateforme de design en impression à la demande de Dropking AI (Suisse): studio et boutique pour des produits de mariage et des cadeaux personnalisés — ce n'est pas un agent d'achat IA. Support: support@swisspro.site
+
+Déroulement: scénario → kit → produits → création → livraison. Un motif s'applique à tout le set; emplacement, couleur et matériau sont ajustables par article. L'impression a lieu à la commande.
+
+Prix: prix unitaires selon la quantité, le matériau et la devise. Paliers: 1–9 standard, 10–29 moins 5 %, 30–49 moins 10 %, 50 et plus moins 15 %. Prix hors TVA; port et taxe sont calculés par la même offre serveur qu'au panier et à la caisse.
+
+Épreuve: les designs personnalisés reçoivent en principe une épreuve par e-mail. La production commence après validation, ou dès le paiement si la maquette est confirmée à la caisse. Production standard: 3 jours ouvrables après paiement ou validation. La broderie ou le bois peuvent prendre plus longtemps.
+
+Livraison: typiquement 7–15 jours ouvrables (3 jours ouvrables de production plus le transit depuis la Chine via YunExpress ou 4PX). Le numéro de suivi est envoyé par e-mail dès que le colis quitte la production; le statut peut aussi être vérifié avec le numéro de commande et l'e-mail, sans compte.
+
+Pour la Suisse, l'UE et d'autres pays, la TVA à l'importation et la douane peuvent s'appliquer. La TVA du pays de livraison est indiquée et perçue à la caisse. D'éventuels droits d'entrée sont en principe à la charge de la personne destinataire, sauf indication contraire à la caisse.
+
+Paiement via PayPal. Site en anglais, allemand, français et chinois. En plus: un atelier pour un site de mariage ou une invitation numérique avec RSVP.
+
+Pages: https://pod.swisspro.site/ · https://pod.swisspro.site/studio.html · https://pod.swisspro.site/shipping · https://pod.swisspro.site/returns · https://pod.swisspro.site/terms · https://pod.swisspro.site/privacy · https://pod.swisspro.site/imprint · https://pod.swisspro.site/llms.txt · https://pod.swisspro.site/sitemap.xml
+
+## English
+
+POD (pod.swisspro.site) is Dropking AI's print-on-demand design platform (Switzerland): an online design studio and shop for personalised wedding and gift products — not an AI shopping agent. Support: support@swisspro.site
+
+Flow: scenario → kit → products → design → delivery. One design applies across the set; placement, colour and material can be fine-tuned per item. Items are printed on demand.
+
+Pricing: unit prices depend on quantity, material and destination currency. Tiers: 1–9 standard, 10–29 minus 5%, 30–49 minus 10%, 50+ minus 15%. Prices exclude VAT; shipping and tax use the same server quote as the cart and checkout.
+
+Proofs: personalised designs usually get a proof by e-mail. Production starts after approval, or right after payment if the mockup is approved at checkout. Standard production: 3 business days after payment or approval. Embroidery or wood can take longer.
+
+Delivery: typically 7–15 business days (3 business days of production plus transit from China via YunExpress or 4PX). A tracking number is e-mailed when the parcel leaves production; status can also be checked with order number and e-mail, no account needed.
+
+For Switzerland, the EU and other countries, import VAT and customs may apply. VAT for the delivery country is shown and collected at checkout. Any import duties are usually paid by the recipient unless checkout says otherwise.
+
+Payment via PayPal. Site languages: English, German, French and Chinese. Also offered: a wedding-website / digital-invitation builder with RSVP.
+
+Pages: https://pod.swisspro.site/ · https://pod.swisspro.site/studio.html · https://pod.swisspro.site/shipping · https://pod.swisspro.site/returns · https://pod.swisspro.site/terms · https://pod.swisspro.site/privacy · https://pod.swisspro.site/imprint · https://pod.swisspro.site/llms.txt · https://pod.swisspro.site/sitemap.xml

@@ -86,7 +86,9 @@ export function publicRouter({ root, generatedDir }) {
   const POD_SITE_HOSTS = new Set(["pod.swisspro.site", "www.pod.swisspro.site"]);
   const podSiteHost = req => POD_SITE_HOSTS.has(String(req.hostname || "").toLowerCase());
   const seoDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "seo");
-  const AI_BOTS = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "PerplexityBot", "Perplexity-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "Google-Extended", "Applebot-Extended", "CCBot"];
+  // Search/answer bots and training bots are all allowed on public pages (admin/API already disallowed).
+  // New sites need to be citable by ChatGPT, Perplexity, Google AI, Copilot and Claude; training opt-out would hide them.
+  const AI_BOTS = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "PerplexityBot", "Perplexity-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "Google-Extended", "Applebot-Extended", "Bingbot", "CCBot"];
   const robotsTxt = (rules, sitemap) => [["*", ...AI_BOTS].map(ua => `User-agent: ${ua}`).join("\n"), rules.join("\n"), "", `Sitemap: ${sitemap}`, ""].join("\n");
   // lastmod is the date of the latest public-page change; bump when landing or legal URL content changes.
   const SEO_LASTMOD = "2026-11-20";
@@ -123,7 +125,7 @@ export function publicRouter({ root, generatedDir }) {
     res.set("Cache-Control", "public, max-age=86400").type("text/plain").send(INDEXNOW_KEY);
   });
   router.get("/llms.txt", (req, res, next) => podHost(req) ? sendSeoText("podai-llms.txt")(req, res) : podSiteHost(req) ? sendSeoText("pod-llms.txt")(req, res) : next("route"));
-  router.get("/llms-full.txt", (req, res, next) => podHost(req) ? sendSeoText("podai-llms-full.txt")(req, res) : next("route"));
+  router.get("/llms-full.txt", (req, res, next) => podHost(req) ? sendSeoText("podai-llms-full.txt")(req, res) : podSiteHost(req) ? sendSeoText("pod-llms-full.txt")(req, res) : next("route"));
 
   // Pod.AI clean public URLs (listing forbids the word "Shopify" in linked URLs).
   // On wed these paths keep serving the wedding site pages via the map below.

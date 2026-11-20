@@ -1,7 +1,7 @@
 
 (function(){
 const KEY='wedding-commerce-language';
-const langs=['zh','en','de'];
+const langs=['zh','en','de','fr'];
 const M={
 '棉纹艺术纸':{en:'Cotton art paper',de:'Baumwoll-Kunstpapier'},'珠光纸':{en:'Pearlescent paper',de:'Perlglanzpapier'},'牛皮纸':{en:'Kraft paper',de:'Kraftpapier'},
 '半透明硫酸纸':{en:'Translucent vellum',de:'Transparentpapier (Vellum)'},'透明亚克力':{en:'Clear acrylic',de:'Klares Acryl'},'磨砂亚克力':{en:'Frosted acrylic',de:'Satiniertes Acryl'},
@@ -404,16 +404,18 @@ const reverse=new Map();
 function build(){
  reverse.clear();
  Object.entries(M).forEach(([zh,v])=>{
-   reverse.set(zh,{zh,en:v.en,de:v.de});
-   if(v.en)reverse.set(v.en,{zh,en:v.en,de:v.de});
-   if(v.de)reverse.set(v.de,{zh,en:v.en,de:v.de});
+   const row={zh,en:v.en,de:v.de,fr:v.fr};
+   reverse.set(zh,row);
+   if(v.en)reverse.set(v.en,row);
+   if(v.de)reverse.set(v.de,row);
+   if(v.fr)reverse.set(v.fr,row);
  });
 }
 build();
 let busy=false;
 // Default language: English (until the visitor picks one)
 function lang(){let v=null;try{v=localStorage.getItem(KEY)}catch(e){}return langs.includes(v)?v:'en'}
-function tr(s,l=lang()){const x=reverse.get(String(s).trim());if(!x)return s;const out=x[l]||x.zh;return String(s).replace(String(s).trim(),out)}
+function tr(s,l=lang()){const x=reverse.get(String(s).trim());if(!x)return s;const out=x[l]||x.en||x.zh;return String(s).replace(String(s).trim(),out)}
 function translate(root=document,l=lang()){
  if(busy)return; busy=true;
  try{
@@ -422,17 +424,17 @@ function translate(root=document,l=lang()){
   a.forEach(n=>{if(!n.parentElement||['SCRIPT','STYLE','TEXTAREA','OPTION'].includes(n.parentElement.tagName)||n.parentElement.closest('[data-no-translate]'))return;const v=tr(n.nodeValue,l);if(v!==n.nodeValue)n.nodeValue=v});
   if(root.querySelectorAll)root.querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(el=>el.closest('[data-no-translate]')||['placeholder','title','aria-label','alt'].forEach(a=>{if(el.hasAttribute(a)){const o=el.getAttribute(a),v=tr(o,l);if(v!==o)el.setAttribute(a,v)}}));
   translateKeys(root);
-  document.documentElement.lang=l==='zh'?'zh-CN':l;
+  document.documentElement.lang=({zh:'zh-CN',de:'de-CH',fr:'fr-CH'}[l]||l);
   document.querySelectorAll('[data-lang-switch] [data-lang]').forEach(b=>b.classList.toggle('active',b.dataset.lang===l));
   document.querySelectorAll('select.lang-select').forEach(x=>{if(x.value!==l)x.value=l});
  } finally{busy=false}
 }
 function setLanguage(l){if(!langs.includes(l))return;try{localStorage.setItem(KEY,l)}catch(e){}translate(document,l);window.dispatchEvent(new CustomEvent('wedding-language-change',{detail:{lang:l}}))}
-function t(zh){const x=reverse.get(zh);return x?(x[lang()]||x.zh):zh}
+function t(zh){const x=reverse.get(zh);return x?(x[lang()]||x.en||x.zh):zh}
 /** Add dictionary entries at runtime: [[zh, en, de], …] (e.g. scene names shared with POD Studio). */
 function extend(rows){(rows||[]).forEach(([zh,en,de])=>{if(!zh)return;const x={zh,en:en||zh,de:de||en||zh};[zh,x.en,x.de].forEach(v=>{if(v&&!reverse.has(v))reverse.set(v,x)})});translate(document,lang())}
 /** The language switch is a dropdown: [data-lang-switch] containers are turned into <select class="lang-select">. */
-const LANG_LABEL={zh:'中文',en:'English',de:'Deutsch'};
+const LANG_LABEL={zh:'中文',en:'English',de:'Deutsch',fr:'Français'};
 function mountSwitches(){
  document.querySelectorAll('[data-lang-switch]').forEach(box=>{
   if(box.querySelector('select.lang-select'))return;
@@ -812,12 +814,28 @@ const K={
 'pay.delivery':{en:'Estimated delivery'},
 'acct.so.title':{en:'Sign in to your account'},
 'acct.so.text':{en:'See your orders, saved designs and addresses. One tap, no password.'}
+,
+'geo.faq.title':{zh:'常见问题',en:'Frequently asked questions about the design platform',de:'Häufige Fragen zur Designplattform',fr:'Questions fréquentes sur la plateforme de design'},
+'geo.faq.lede':{zh:'POD 是面向婚礼与个性化产品的按需印刷设计平台。',en:'POD is the print-on-demand design platform for weddings and personalised products.',de:'POD ist die Print-on-Demand-Designplattform für Hochzeiten und personalisierte Produkte.',fr:'POD est la plateforme de design en impression à la demande pour les mariages et les produits personnalisés.'},
+'geo.faq.q1':{zh:'什么是 POD？',en:'What is POD?',de:'Was ist POD?',fr:'Qu’est-ce que POD ?'},
+'geo.faq.a1':{zh:'POD（pod.swisspro.site）是按需印刷设计平台和在线设计工作室，用于个性化婚礼与礼品产品。选择场景套装，一次设计，按订单印刷。运营方是瑞士的 Dropking AI。',en:'POD (pod.swisspro.site) is a print-on-demand design platform and an online design studio for personalised wedding and gift products. You pick a scenario kit, design once and have it printed on demand. It is operated by Dropking AI in Switzerland.',de:'POD (pod.swisspro.site) ist eine Print-on-Demand-Designplattform und ein Online-Designstudio für personalisierte Hochzeits- und Geschenkprodukte. Sie wählen ein Szenario-Kit, gestalten einmal und lassen auf Bestellung drucken. Betreiberin ist Dropking AI in der Schweiz.',fr:'POD (pod.swisspro.site) est une plateforme de design en impression à la demande et un studio de design en ligne pour des produits de mariage et des cadeaux personnalisés. Vous choisissez un kit de scénario, créez une fois et faites imprimer à la commande. L’exploitant est Dropking AI, en Suisse.'},
+'geo.faq.q2':{zh:'婚礼印刷的按需印刷如何运作？',en:'How does print-on-demand work for wedding stationery?',de:'Wie funktioniert Print-on-Demand für Hochzeitsdrucksachen?',fr:'Comment fonctionne l’impression à la demande pour la papeterie de mariage ?'},
+'geo.faq.a2':{zh:'流程：场景 → 套装 → 产品 → 设计 → 配送。一个图案用于整套（请柬、桌卡、欢迎牌和伴手礼等）。可按单件调整位置、颜色和材料。下单后才印刷，不备库存。',en:'The flow is scenario → kit → products → design → delivery. One design applies across the whole set — invitations, table stationery, welcome signs and favours, for example. Placement, colour and material can be adjusted per item. Items are printed after the order, not held in stock.',de:'Ablauf: Szenario → Kit → Produkte → Gestaltung → Lieferung. Ein Motiv gilt für das ganze Set — etwa Einladungen, Tischkarten, Willkommensschilder und Give-aways. Platzierung, Farbe und Material lassen sich je Artikel anpassen. Gedruckt wird erst nach der Bestellung, nicht auf Lager.',fr:'Déroulement: scénario → kit → produits → création → livraison. Un motif s’applique à tout le set — par exemple invitations, cartons de table, panneaux de bienvenue et cadeaux. L’emplacement, la couleur et le matériau se règlent par article. L’impression a lieu après la commande, pas sur stock.'},
+'geo.faq.q3':{zh:'配送需要多久？',en:'How long does delivery take?',de:'Wie lange dauert die Lieferung?',fr:'Combien de temps prend la livraison ?'},
+'geo.faq.a3':{zh:'通常 7–15 个工作日：标准生产 3 个工作日，再加上从中国经 YunExpress 或 4PX 的运输。具体区间取决于目的地和运输方式。如需校对，生产在您确认后才开始，因此可能延后。包裹离开工厂后会把运单号发到您的邮箱。',en:'Typically 7–15 business days: standard production is 3 business days plus international transit from China with YunExpress or 4PX. The exact range depends on the destination and the shipping method. A proof can delay production because it starts only after you approve it. The tracking number is e-mailed once the parcel leaves production.',de:'Typisch 7–15 Werktage: Standardproduktion 3 Werktage plus internationaler Transit ab China mit YunExpress oder 4PX. Die genaue Spanne hängt vom Zielort und vom Versandweg ab. Ein Korrekturabzug kann die Produktion verzögern, weil sie erst nach der Freigabe startet. Die Sendungsnummer kommt per E-Mail, sobald das Paket die Produktion verlässt.',fr:'Typiquement 7–15 jours ouvrables: 3 jours ouvrables de production standard plus le transit international depuis la Chine via YunExpress ou 4PX. La fourchette exacte dépend de la destination et du mode d’envoi. Une épreuve peut retarder la production, car elle ne commence qu’après validation. Le numéro de suivi est envoyé par e-mail dès que le colis quitte la production.'},
+'geo.faq.q4':{zh:'在线设计工作室如何使用？',en:'How does the online design studio work?',de:'Wie funktioniert das Online-Designstudio?',fr:'Comment fonctionne le studio de design en ligne ?'},
+'geo.faq.a4':{zh:'在工作室选择套装（婚礼、周年、宝宝、企业、创作者等），上传一次图案，即可查看整套价格和配送。单价取决于数量、材料和目标货币（10、30、50 件起有阶梯价）。展示价格不含增值税；运费和税款与结账使用同一服务器报价。',en:'In the studio you pick a kit (wedding, anniversary, baby, company, creator and more), upload your artwork once and see prices and delivery for the whole set. Unit prices depend on quantity, material and destination currency (tiers from 10, 30 and 50 pieces). Displayed prices exclude VAT; shipping and tax are calculated by the same server quote as checkout.',de:'Im Studio wählen Sie ein Kit (Hochzeit, Jubiläum, Baby, Firma, Creator und mehr), laden das Motiv einmal hoch und sehen Preise sowie Lieferung für das ganze Set. Die Stückpreise hängen von Menge, Material und Zielwährung ab (Staffel ab 10, 30 und 50 Stück). Angezeigte Preise sind exkl. MwSt.; Versand und Steuer berechnet dieselbe Server-Offerte wie an der Kasse.',fr:'Dans le studio, vous choisissez un kit (mariage, anniversaire, naissance, entreprise, créateur et plus), téléversez le motif une fois et voyez les prix ainsi que la livraison pour tout le set. Les prix unitaires dépendent de la quantité, du matériau et de la devise (paliers dès 10, 30 et 50 pièces). Les prix affichés sont hors TVA; les frais de port et la taxe sont calculés par la même offre serveur qu’à la caisse.'},
+'geo.faq.q5':{zh:'有校对稿吗？',en:'Is there a proof?',de:'Gibt es einen Korrekturabzug?',fr:'Y a-t-il une épreuve ?'},
+'geo.faq.a5':{zh:'有。个性化设计通常会通过邮件发送校对稿。生产在您确认后开始；如果您在结账时已确认效果图，则付款后直接开始生产。',en:'Yes. Personalised designs usually get a proof by e-mail. Production starts after you approve it — or right after payment if you already confirm the mockup at checkout.',de:'Ja. Personalisierte Designs erhalten in der Regel einen Proof per E-Mail. Die Produktion startet nach der Freigabe — oder direkt nach der Zahlung, wenn Sie den Mockup schon an der Kasse bestätigen.',fr:'Oui. Les designs personnalisés reçoivent en principe une épreuve par e-mail. La production commence après validation — ou dès le paiement si vous confirmez déjà la maquette à la caisse.'},
+'geo.faq.q6':{zh:'如何付款？关税怎么算？',en:'How do I pay, and what about customs?',de:'Wie bezahle ich, und was ist mit Zoll?',fr:'Comment payer, et qu’en est-il de la douane ?'},
+'geo.faq.a6':{zh:'通过 PayPal 付款（PayPal 余额或经由 PayPal 的银行卡）。瑞士、欧盟及其他国家可能征收进口增值税，结账时会列明并收取。如结账未另有说明，进口关税通常由收件人支付。',en:'Payment is via PayPal (PayPal balance or a card through PayPal). For Switzerland, the EU and other countries, import VAT may apply; it is shown and collected at checkout. Any import duties are usually paid by the recipient unless checkout says otherwise.',de:'Zahlung über PayPal (PayPal-Guthaben oder Karte über PayPal). Für die Schweiz, die EU und andere Länder kann Einfuhr-MwSt. anfallen; sie wird an der Kasse ausgewiesen und erhoben. Allfällige Einfuhrzölle zahlt in der Regel die Empfängerin oder der Empfänger, sofern die Kasse nichts anderes ausweist.',fr:'Le paiement se fait via PayPal (solde PayPal ou carte via PayPal). Pour la Suisse, l’UE et d’autres pays, la TVA à l’importation peut s’appliquer; elle est indiquée et perçue à la caisse. D’éventuels droits d’entrée sont en principe à la charge de la personne destinataire, sauf indication contraire à la caisse.'},
 };
+
 function k(key,vars){const e=K[key];let s=e?(e[lang()]||e.en):t(key);if(vars)for(const [a,b] of Object.entries(vars))s=s.split('{'+a+'}').join(String(b));return s}
 function translateKeys(root=document){if(!root.querySelectorAll)return;root.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=k(el.dataset.i18n)});root.querySelectorAll('[data-i18n-attr]').forEach(el=>el.dataset.i18nAttr.split(';').forEach(pair=>{const [a,key]=pair.split(':');if(a&&key)el.setAttribute(a.trim(),k(key.trim()))}))}
 window.WeddingI18n={lang,setLanguage,translate,t,k,extend,mountSwitches};
 // Delivery window "Nov 4–8" (locale-formatted; ISO dates from the server quote).
-window.PODDates={range(from,to){try{const L={zh:'zh-CN',en:'en-US',de:'de-CH'}[lang()]||'en-US',f=new Intl.DateTimeFormat(L,{month:'short',day:'numeric',timeZone:'UTC'}),a=new Date(from+'T12:00:00Z'),b=new Date(to+'T12:00:00Z');return f.formatRange?f.formatRange(a,b):f.format(a)+'–'+f.format(b)}catch(e){return from+' – '+to}},arrives(d){return d&&d.from?k('co.arrives',{range:this.range(d.from,d.to)}):''}};
+window.PODDates={range(from,to){try{const L={zh:'zh-CN',en:'en-US',de:'de-CH',fr:'fr-CH'}[lang()]||'en-US',f=new Intl.DateTimeFormat(L,{month:'short',day:'numeric',timeZone:'UTC'}),a=new Date(from+'T12:00:00Z'),b=new Date(to+'T12:00:00Z');return f.formatRange?f.formatRange(a,b):f.format(a)+'–'+f.format(b)}catch(e){return from+' – '+to}},arrives(d){return d&&d.from?k('co.arrives',{range:this.range(d.from,d.to)}):''}};
 // Pages with their own i18n (POD Studio) set window.WEDDING_I18N_KEYS_ONLY=true: keyed strings (cart) only, no DOM auto-translation.
 if(!window.WEDDING_I18N_KEYS_ONLY)document.addEventListener('DOMContentLoaded',()=>{
  mountSwitches();
