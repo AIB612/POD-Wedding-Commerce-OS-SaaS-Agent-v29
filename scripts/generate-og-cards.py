@@ -271,7 +271,35 @@ def main():
     save_jpeg(pod_sq, OUT / "og-pod-square.jpg")
 
     # --- Pod.AI cards: typography left, product UI in a framed window on the right
-    def podai_product_card(headline_lines, kicker="KI-Agent für den Handel"):
+
+    def draw_platform_pills(draw, x, y, highlight=None):
+        """Visible Shopify + WooCommerce + und mehr chips, readable at thumbnail size."""
+        font = font_avenir(22, 2)  # Demi Bold
+        labels = ["Shopify", "WooCommerce", "und mehr"]
+        # Lay out in one wrapping row, then fall back to a second row if needed.
+        max_w = 360
+        gap, pad_x, box_h = 10, 16, 40
+        row_x, row_y = x, y
+        for label in labels:
+            bb = draw.textbbox((0, 0), label, font=font)
+            tw = bb[2] - bb[0]
+            w = tw + pad_x * 2
+            if row_x > x and row_x + w > x + max_w:
+                row_x = x
+                row_y += box_h + 10
+            box = (row_x, row_y, row_x + w, row_y + box_h)
+            emph = highlight == label
+            if emph:
+                draw.rounded_rectangle(box, radius=20, fill=INK)
+                fill = CREAM
+            else:
+                draw.rounded_rectangle(box, radius=20, fill=WHITE, outline=GOLD, width=2)
+                fill = INK
+            draw.text((row_x + pad_x, row_y + box_h / 2), label, font=font, fill=fill, anchor="lm")
+            row_x += w + gap
+        return row_y + box_h
+
+    def podai_product_card(headline_lines, kicker="Agentic-Commerce-KI-Agent", highlight=None):
         canvas = Image.new("RGB", (W, H), CREAM)
         draw = ImageDraw.Draw(canvas)
         panel_w = 470
@@ -314,20 +342,23 @@ def main():
             draw.text((tx, ty), line, font=font_avenir(26, 7), fill=INK_SOFT, anchor="lt")
             bb = draw.textbbox((tx, ty), line, font=font_avenir(26, 7))
             ty = bb[3] + 6
+        ty += 16
+        ty = draw_platform_pills(draw, tx, ty, highlight=highlight)
         draw.text((tx, H - 56), "podai.swisspro.site", font=font_avenir(20, 5), fill=MUTED, anchor="ls")
         return canvas
 
     save_jpeg(
         podai_product_card(
-            ["Shopify · WooCommerce · MCP"],
-            kicker="KI-Agent für den Handel",
+            [],
+            kicker="Agentic-Commerce-KI-Agent",
         ),
         OUT / "og-podai-home.jpg",
     )
     save_jpeg(
         podai_product_card(
-            ["Einkaufsassistent für", "Ihren WooCommerce-Shop"],
-            kicker="WooCommerce KI-Chatbot",
+            ["Eine der unterstützten", "Plattformen"],
+            kicker="für WooCommerce",
+            highlight="WooCommerce",
         ),
         OUT / "og-podai-woo.jpg",
     )
@@ -348,9 +379,9 @@ def main():
 
     ai_sq = square_card(
         mark, "Pod.AI",
-        ["KI-Agent für den Handel"],
+        ["Agentic-Commerce-KI-Agent", "Shopify · WooCommerce · mehr"],
         "podai.swisspro.site",
-        font_georgia(68), font_avenir(26, 7),
+        font_georgia(68), font_avenir(24, 7),
     )
     save_jpeg(ai_sq, OUT / "og-podai-square.jpg")
     print("done")

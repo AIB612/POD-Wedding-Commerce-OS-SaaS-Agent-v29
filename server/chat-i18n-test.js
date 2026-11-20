@@ -95,6 +95,21 @@ try {
   }
   assert.match((await getHost("/", "podai.swisspro.site")).body, /"@type":"SoftwareApplication"/);
   assert.ok(!/"@type":"SoftwareApplication"/.test((await getHost("/", "pod.swisspro.site")).body));
+  // Pod.AI share cards present a cross-platform agent, not a WooCommerce-only product.
+  const podaiOgHome = (await getHost("/", "podai.swisspro.site")).body;
+  const podaiOgTitle = meta(podaiOgHome, /<meta property="og:title" content="([^"]+)"/);
+  const podaiOgDesc = meta(podaiOgHome, /<meta property="og:description" content="([^"]+)"/);
+  assert.match(podaiOgTitle, /Agentic-Commerce-KI-Agent/);
+  assert.ok(!/WooCommerce KI-Chatbot/i.test(podaiOgTitle));
+  assert.match(podaiOgDesc, /Shopify/);
+  assert.match(podaiOgDesc, /WooCommerce/);
+  assert.match(podaiOgDesc, /mehr/);
+  const wooOg = (await getHost("/woocommerce", "podai.swisspro.site")).body;
+  const wooTitle = meta(wooOg, /<meta property="og:title" content="([^"]+)"/);
+  const wooDesc = meta(wooOg, /<meta property="og:description" content="([^"]+)"/);
+  assert.equal(wooTitle, "Pod.AI für WooCommerce");
+  assert.match(wooDesc, /Shopify/);
+  assert.ok(!/WooCommerce KI-Chatbot/i.test(wooTitle + wooDesc));
   // WooCommerce plugin download: WordPress.org slug name; the old zip name keeps working.
   const zip = await getHost("/woocommerce/pod-ai-chat-for-woocommerce.zip", "podai.swisspro.site"); assert.equal(zip.status, 200); assert.match(zip.headers["content-disposition"] || "", /pod-ai-chat-for-woocommerce\.zip/);
   const oldZip = await getHost("/woocommerce/pod-ai-chat.zip", "podai.swisspro.site"); assert.equal(oldZip.status, 301); assert.equal(oldZip.headers.location, "/woocommerce/pod-ai-chat-for-woocommerce.zip");
