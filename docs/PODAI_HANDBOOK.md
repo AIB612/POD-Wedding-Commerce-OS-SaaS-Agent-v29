@@ -128,6 +128,7 @@ Pod.AI admin → **Assistant** (Shopify: tab in the embedded admin · WooCommerc
 | `POD-T-AB12CD note: called the customer` | **Prepares** an internal ticket note | After Confirm |
 | `delete kb_1a2b3c4d` | **Prepares** removing a knowledge entry | After Confirm |
 | `pause the chat` · `resume the chat` · `暂停聊天` | **Prepares** switching the storefront chat off / on | After Confirm |
+| `draft answers` · `Antworten entwerfen` · `起草答案` | Drafts answers for unanswered questions **from your own policies** (and products, with the AI planner) → one proposal per draft with its source; questions without evidence are listed for you | After Confirm (or Edit) |
 | `stop the weekly e-mail` · `Wochen-E-Mail stoppen` · `停止每周邮件` | **Prepares** switching the weekly summary e-mail off / on | After Confirm |
 
 ### 5.3 How it works inside
@@ -173,12 +174,19 @@ Safety rules (in code):
 | `ticket_detail` | read · personal data | Transcript, notes, reply draft |
 | `knowledge_list` | read | Merchant's FAQ entries |
 | `search_chats` | read · personal data | Find chats by phrase |
+| `draft_answers` | read → proposals | Evidence-based drafts for unanswered questions (see §5.5) |
 | `add_knowledge` | write (confirm) | New entry or update of the same question |
 | `delete_knowledge` | write (confirm) | Remove an entry |
 | `set_ticket_status` | write (confirm) | open / pending / closed (closed → AI answers that chat again) |
 | `add_ticket_note` | write (confirm) | Internal note |
 | `set_chat_enabled` | write (confirm) | Pause / resume storefront chat |
 | `set_weekly_digest` | write (confirm) | Weekly summary e-mail on / off |
+
+### 5.5 Answer drafts — how they stay truthful
+
+- **Rules (every plan):** the unanswered question is matched sentence by sentence against the shop's policies (BM25, the same search the chat uses). Only a clear match becomes a draft — at least 2 matching words and a match score ≥ 0.35 (`MIN_MATCHED`, `MIN_NORM` in `merchant/tools.js`). The draft is the policy's own 1–2 most relevant sentences, with the policy name as source. Example: "Do you ship to Iceland?" → drafted from *Shipping*; "Do you ship to Iceland **by sea freight**?" → no draft (the policy says nothing about sea freight), listed for the merchant.
+- **AI planner (Pro + "LLM answers" on):** the model gets only the policy sentences and up to 5 matching products and must answer `null` when they don't cover the question. Its draft is still a proposal.
+- **Every draft is a proposal**: Confirm adds it to Knowledge; **Edit** opens the answer for changes (Shopify: the Knowledge dialog; WooCommerce: the teach command) and rejects the original; Reject drops it.
 
 ---
 
@@ -314,7 +322,7 @@ Server: `LLM_ENABLED=true` + provider key/model. Merchant: Pro plan + Settings �
 | ✓ | ~~WooCommerce admin page for the assistant~~ — done in plugin 1.2.0 (Pod.AI Chat → Assistant) | |
 | 2 | **Submit to Shopify App Store** — submission pack ready: `docs/PODAI_SUBMISSION.md` (self-review, screenshots, reviewer instructions, screencast shot list); (real screenshots incl. Assistant, protected-data request, fresh-store test) and **WordPress.org** | Distribution |
 | ✓ | ~~Weekly assistant e-mail~~ — done (Monday summary to the ticket e-mail; off in Settings or via the Assistant) | |
-| 4 | **AI-drafted answers for unanswered questions** (Pro): the assistant proposes the answer text from policies + products; merchant confirms | Faster knowledge growth, higher resolution rate |
+| ✓ | ~~Drafted answers for unanswered questions~~ — done (rules from policies on every plan; AI wording on Pro; merchant confirms / edits) | |
 | 5 | **Proactive shopper agent**: abandoned-cart / back-in-stock follow-ups as merchant-approved proposals | Revenue, not just support |
 | 6 | **Agentic checkout (ACP / UCP)** in the Agent API | AI assistants complete purchases end-to-end |
 | 7 | **POD website as a Pod.AI customer** via a new adapter (§12.3) | Dog-food the product on our own store |

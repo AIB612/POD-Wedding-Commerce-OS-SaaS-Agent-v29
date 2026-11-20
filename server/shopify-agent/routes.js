@@ -161,7 +161,7 @@ export function shopifyAgentRouter() {
   const limited = shop => { const t = Date.now(), e = askLimit.get(shop); if (!e || e.reset < t) { askLimit.set(shop, { n: 1, reset: t + 60e3 }); if (askLimit.size > 5000) askLimit.clear(); return false; } return ++e.n > 30; };
   const assistantCtx = async (req, lang) => { const s = await getSettings(req.agentTenant), plan = await billing.getPlan(req.agentShop).catch(() => ({ llm: false }));
     return { tenantId: req.agentTenant, actor: req.agentUser, source: "shopify_admin", lang: ["en", "de", "fr", "it", "zh"].includes(lang) ? lang : "en", llm: plan.llm === true && s.llm_enabled !== false, // same rule as the chat: on unless the merchant switched it off
-      shopName: req.agentShop.replace(/\.myshopify\.com$/, ""), usage: () => billing.billingSummary(req.agentShop), onPersonalData: tool => audit(req, `assistant_${tool}`) }; };
+      shopName: req.agentShop.replace(/\.myshopify\.com$/, ""), profile: makeProfile(req.agentShop), usage: () => billing.billingSummary(req.agentShop), onPersonalData: tool => audit(req, `assistant_${tool}`) }; };
   api.post("/assistant", ah(async (req, res) => {
     if (limited(req.agentShop)) return res.status(429).json({ error: "rate_limited" });
     const b = req.body || {}; if (!String(b.message || "").trim()) return res.status(400).json({ error: "message_required" });

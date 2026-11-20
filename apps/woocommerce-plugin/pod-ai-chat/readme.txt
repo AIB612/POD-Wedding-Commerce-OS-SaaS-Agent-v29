@@ -74,6 +74,7 @@ External AI assistants can find your products and send shoppers a prefilled cart
 
 = 1.2.0 =
 * New: Pod.AI Chat → Assistant – team assistant (briefing, KPIs, unanswered questions, tickets with reply drafts, knowledge, chat search) in English, German, French, Italian and Chinese. Every change waits for your Confirm and is listed under Recent activity.
+* New: "Draft answers" – the Assistant drafts answers for questions the chat could not answer, using only your own policies (with the source shown); you confirm, edit or reject each one.
 * New: weekly summary e-mail to your ticket e-mail (chats, unanswered questions, waiting tickets). Tell the Assistant "stop the weekly e-mail" to turn it off.
 * Answers taught in the Assistant are kept when you save Settings (an FAQ entry with the same question replaces them).
 

@@ -606,3 +606,19 @@ msgstr "E-mail settimanale on / off"
 #: includes/class-podai-chat-assistant.php
 msgid "Weekly e-mail"
 msgstr "E-mail settimanale"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Draft answers"
+msgstr "Prepara risposte"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Edit"
+msgstr "Modifica"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Source:"
+msgstr "Fonte:"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Now:"
+msgstr "Attuale:"

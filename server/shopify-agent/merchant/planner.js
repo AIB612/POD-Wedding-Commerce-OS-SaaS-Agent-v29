@@ -31,6 +31,7 @@ export const WORDS = {
   pause: /\b(pause|stop|turn off|disable|deaktivier\w*|pausier\w*|ausschalten|désactiv\w*|disattiv\w*|spegn\w*|stopp\w*|arr[êe]te?r?|ferma\w*|interromp\w*)\b|暂停|停用|关掉|停止/i,
   resume: /\b(resume|restart|turn on|enable|reactivat\w*|aktivier\w*|einschalten|réactiv\w*|activer|riattiv\w*|attiva\w*)\b|恢复|开启|打开聊天/i,
   chat: /\b(chat|widget|bot)\b|聊天|客服/i,
+  draft: /\b((draft|suggest|propose|write|prepare)( me)?( the| some)? answers?|answer (the |these )?unanswered( questions)?|antworten? (vorschlagen|entwerfen|vorbereiten)|entw(u|ü)rfe?|proposer? (des |les )?réponses|préparer? (des |les )?réponses|suggerisci (le )?risposte|proponi (le )?risposte|prepara (le )?risposte)\b|antwort\w*[^.?!]{0,40}(entwerf\w*|vorschlag\w*|vorschlagen|vorbereit\w*)|réponses?[^.?!]{0,40}(prépar\w*|propos\w*)|rispost\w*[^.?!]{0,40}(prepar\w*|propon\w*)|起草|草拟|建议答案|帮我(写|回答)/i,
   digest: /\b(weekly (e-?mail|summary|digest|report)|digest|wochen-?(e-?mail|bericht|übersicht|zusammenfassung)|e-?mail hebdo\w*|résumé hebdo\w*|(e-?mail|riepilogo) settimanale)\b|每周(邮件|总结|摘要|报告)|周报/i
 };
 const TICKET_REF = /\b(ho_[a-f0-9]{6,24}|POD-T-[A-Z0-9]{4,12})\b/i;
@@ -72,6 +73,7 @@ export function rulePlan(message) {
   if (WORDS.digest.test(t) && WORDS.resume.test(t)) { add("set_weekly_digest", { enabled: true }); return { steps }; }
   if (WORDS.chat.test(t) && WORDS.pause.test(t) && !WORDS.resume.test(t)) { add("set_chat_enabled", { enabled: false }); return { steps }; }
   if (WORDS.chat.test(t) && WORDS.resume.test(t)) { add("set_chat_enabled", { enabled: true }); return { steps }; }
+  if (WORDS.draft.test(t)) { add("draft_answers", {}); return { steps }; }
   const quoted = [...t.matchAll(QUOTED)].map(m => m[1].trim());
   if (WORDS.search.test(t) && quoted[0]) add("search_chats", { query: quoted[0] });
   if (WORDS.unanswered.test(t)) add("unanswered", {});

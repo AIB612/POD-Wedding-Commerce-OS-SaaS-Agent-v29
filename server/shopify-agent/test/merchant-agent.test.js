@@ -129,6 +129,27 @@ test("reject, stale data guard, bad input, chat pause", async () => {
   assert.equal(both.find(r => r.status === 200).d.status, "done");
 });
 
+test("draft answers: evidence from the shop's policies only, one proposal per draft, nothing invented", async () => {
+  const merchant = await import("../merchant/index.js");
+  const TD = core.tenantFor("shop-d.myshopify.com");
+  for (const [i, q] of ["Do you ship to Iceland?", "Do you sell gift cards?"].entries()) await store.addRecord("podai_conversations", conv(TD, `c_dddddddddddd${i}`, q, true));
+  const policies = [{ type: "SHIPPING_POLICY", title: "Shipping policy", text: "We ship to all EU and EFTA countries, including Iceland and Norway. Delivery takes 7–15 business days. Free shipping over CHF 80." },
+    { type: "REFUND_POLICY", title: "Refund policy", text: "Returns are accepted within 30 days of delivery." }];
+  const ctx = { tenantId: TD, actor: "test", lang: "en", profile: { facts: async () => ({ shop_name: "D", policies }) } };
+  const r = await merchant.runAssistant(ctx, "draft answers");
+  const res = r.results[0].result;
+  assert.equal(r.results[0].tool, "draft_answers"); assert.equal(res.total, 2); assert.equal(res.drafted, 1);
+  assert.deepEqual(res.drafts.find(d => /gift cards/.test(d.question)).answer, null, "no evidence → no draft (never invented)");
+  assert.equal(r.proposals.length, 1); const p = r.proposals[0];
+  assert.equal(p.tool, "add_knowledge"); assert.match(p.preview.answer, /Iceland/); assert.equal(p.preview.source, "Shipping policy");
+  assert.match(r.reply, /drafted 1 answer/);
+  assert.equal((await merchant.approve(ctx, p.id)).status, "done");
+  const kb = (await store.listForTenant("podai_settings", TD))[0].custom_faq; assert.equal(kb.length, 1); assert.equal(kb[0].question, "Do you ship to Iceland?");
+  assert.ok(!("source" in kb[0]), "source is shown on the proposal, not stored in the knowledge entry");
+  const none = await merchant.runAssistant({ tenantId: TD, actor: "test", lang: "de", profile: { facts: async () => ({ policies: [] }) } }, "Antworten entwerfen");
+  assert.equal(none.proposals.length, 0); assert.match(none.reply, /keine klare Antwort|nicht/i);
+});
+
 test("weekly summary e-mail: due Monday 07:00 UTC, once per week, can be turned off, no shopper data", async () => {
   const { sendWeeklyDigest, buildDigest, weekKey, due } = await import("../merchant/digest.js");
   assert.equal(weekKey(Date.parse("2026-11-20T12:00:00Z")), "2026-W47"); assert.equal(weekKey(Date.parse("2027-01-01T12:00:00Z")), "2026-W53");
@@ -209,7 +230,12 @@ test("WooCommerce: same assistant over the signed site API; disconnect removes i
   assert.deepEqual(kb2.map(e => [e.question, e.answer]), [["Do you gift wrap?", "Yes, free of charge."], ["Can I pick up my order in Zurich?", "Yes, at our Zurich shop, Mon–Sat 10–18."]], "same question in WP wins; other taught answers stay");
   const audit = (await woo("GET", "/assistant/audit")).d; assert.ok(audit.some(x => x.actor === "woo_admin:anna" && x.event === "ask"));
   const T = wooCore.tenantFor(c.site_id);
-  assert.ok((await store.listForTenant("podai_merchant_actions", T)).length === 2);
+  const acts = await store.listForTenant("podai_merchant_actions", T); assert.equal(acts.length, 2, JSON.stringify(acts.map(a => [a.tool, a.status])));
+  // drafts on WooCommerce use the policies the plugin pushed
+  await woo("POST", "/store", { store: { name: "Woo M", policies: [{ type: "SHIPPING_POLICY", title: "Shipping", text: "We ship to Switzerland and the EU within 3–5 business days. Express delivery is available for Germany and Austria." }] } });
+  await store.addRecord("podai_conversations", conv(T, "c_wwwwwwwwwwww1", "Do you have express delivery to Austria?", true));
+  const dr = await woo("POST", "/assistant", { message: "draft answers" });
+  assert.equal(dr.d.results[0].tool, "draft_answers"); assert.equal(dr.d.proposals.length, 1, JSON.stringify(dr.d.results[0].result)); assert.match(dr.d.proposals[0].preview.answer, /Express/);
   // hourly job: the connected site is checked once the week's summary is due (no recipient e-mail in this test site)
   const { runWooDigests } = await import("../../woo-agent/digest-job.js");
   const mon8 = (() => { const x = new Date(Date.now() + 7 * 864e5); x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7)); x.setUTCHours(8, 0, 0, 0); return x.getTime(); })();

@@ -151,7 +151,7 @@ export function wooAgentRouter() {
   //      requests from users who can manage WooCommerce. Writes are proposals until /approve with { confirm:true }.
   const assistantCtx = async (req, lang) => { const site = req.wooSite, s = await getSettings(req.wooTenant), wp = str(req.body?.actor || req.query?.actor, 60).replace(/@.*$/, "").replace(/[^\w.-]/g, ""); // WP login, never an e-mail (audit holds no personal data)
     return { tenantId: req.wooTenant, actor: `woo_admin${wp ? ":" + wp : ""}`, source: "wp_admin", lang: ["en", "de", "fr", "it", "zh"].includes(lang) ? lang : "en",
-      llm: billing.planOf(site).llm === true && s.llm_enabled !== false, shopName: str(site.name, 80), usage: () => billing.billingSummary(site),
+      llm: billing.planOf(site).llm === true && s.llm_enabled !== false, shopName: str(site.name, 80), profile: profile(site), usage: () => billing.billingSummary(site),
       onPersonalData: tool => logAccess({ actor: "woo_admin", action: `assistant_${tool}`, tenant: req.wooTenant, via: "wp_admin" }).catch?.(() => {}) }; };
   v1.post("/assistant", siteLimit("assistant", 30), ah(async (req, res) => { const b = req.body || {};
     if (!String(b.message || "").trim()) return res.status(400).json({ error: "message_required" });

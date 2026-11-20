@@ -145,6 +145,10 @@ T = {
 "Answers you teach here are kept next to the FAQ in Settings; an FAQ entry with the same question replaces them.":{"de": "Hier hinterlegte Antworten bleiben neben der FAQ in den Einstellungen erhalten; ein FAQ-Eintrag mit derselben Frage ersetzt sie.", "fr": "Les réponses ajoutées ici s'ajoutent à la FAQ des réglages ; une entrée de FAQ avec la même question les remplace.", "it": "Le risposte insegnate qui restano accanto alle FAQ delle impostazioni; una voce FAQ con la stessa domanda le sostituisce.", "zh": "在这里添加的答案会和设置中的常见问题一起保留；设置里有相同问题时以设置为准。"},
 "Weekly e-mail on / off":{"de": "Wochen-E-Mail ein / aus", "fr": "E-mail hebdomadaire activé / désactivé", "it": "E-mail settimanale on / off", "zh": "每周邮件 开启 / 关闭"},
 "Weekly e-mail":{"de": "Wochen-E-Mail", "fr": "E-mail hebdomadaire", "it": "E-mail settimanale", "zh": "每周邮件"},
+"Draft answers":{"de": "Antworten entwerfen", "fr": "Préparer des réponses", "it": "Prepara risposte", "zh": "起草答案"},
+"Edit":{"de": "Bearbeiten", "fr": "Modifier", "it": "Modifica", "zh": "编辑"},
+"Source:":{"de": "Quelle:", "fr": "Source :", "it": "Fonte:", "zh": "来源："},
+"Now:":{"de": "Bisher:", "fr": "Actuel :", "it": "Attuale:", "zh": "当前："},
 }
 FAQ_PH = {"de":"Bieten Sie Geschenkverpackung an?\nJa, die Geschenkverpackung ist gratis – einfach an der Kasse vermerken.\n\nKann ich meine Bestellung abholen?\nJa, in unserem Zürcher Laden Mo–Sa.","fr":"Proposez-vous l'emballage cadeau ?\nOui, l'emballage cadeau est gratuit — ajoutez une note au paiement.\n\nPuis-je retirer ma commande ?\nOui, dans notre boutique de Zurich du lundi au samedi.","it":"Offrite la confezione regalo?\nSì, la confezione regalo è gratuita — aggiungi una nota alla cassa.\n\nPosso ritirare l'ordine?\nSì, nel nostro negozio di Zurigo da lunedì a sabato.","zh":"可以礼品包装吗？\n可以，礼品包装免费——结账时备注即可。\n\n可以自提吗？\n可以，周一到周六在苏黎世门店自提。"}
 LOC = {"de":"de_DE","fr":"fr_FR","it":"it_IT","zh":"zh_CN"}

@@ -44,6 +44,12 @@ export async function runAssistant(ctx, message) {
         const result = await t.run(ctx, s.args);
         results.push({ tool: t.name, args: s.args, result });
         if (result?.suggestions) suggestions = suggestionChips(lang, result.suggestions);
+        // drafts → one add_knowledge proposal each (the merchant confirms, edits or rejects every single one)
+        if (t.name === "draft_answers") for (const d of result.drafts.filter(x => x.answer)) {
+          let args; try { args = TOOLS.add_knowledge.parse({ question: d.question, answer: d.answer, lang: d.lang, source: d.source }); } catch { continue; }
+          const p = await propose(ctx, "add_knowledge", args, { message: text });
+          p.ok ? proposals.push(p.action) : failures.push({ tool: "add_knowledge", error: p.error, detail: p.detail || null });
+        }
       } else {
         const p = await propose(ctx, t.name, s.args, { message: text });
         p.ok ? proposals.push(p.action) : failures.push({ tool: t.name, error: p.error, detail: p.detail || null });

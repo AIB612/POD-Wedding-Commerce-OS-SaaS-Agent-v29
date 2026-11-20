@@ -606,3 +606,19 @@ msgstr "每周邮件 开启 / 关闭"
 #: includes/class-podai-chat-assistant.php
 msgid "Weekly e-mail"
 msgstr "每周邮件"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Draft answers"
+msgstr "起草答案"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Edit"
+msgstr "编辑"
+
+#: includes/class-podai-chat-assistant.php
+msgid "Source:"
+msgstr "来源："
+
+#: includes/class-podai-chat-assistant.php
+msgid "Now:"
+msgstr "当前："
