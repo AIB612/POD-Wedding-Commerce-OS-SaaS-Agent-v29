@@ -21,8 +21,8 @@ export function adminSnippet(id = measurementId()) {
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","${safe}",{anonymize_ip:true,send_page_view:false});window.__PODAI_GA="${safe}";</script>`;
 }
 
-/** GA tag for the public Pod.AI pages (privacy, terms, support/docs, security, DPA): PODAI_GA_ID when set,
- *  otherwise the same property as the podai landing page (agent.html). */
+/** GA tag for the public Pod.AI pages (privacy, terms, support/docs, security, DPA, woocommerce): PODAI_GA_ID when set
+ *  (separate Pod.AI property), otherwise the same property as the podai landing page (agent.html) until one exists. */
 export const LANDING_GA_ID = "G-GED5TST3DP";
 export function publicPageSnippet(env = process.env) {
   const safe = (measurementId(env) || LANDING_GA_ID).replace(/[^A-Z0-9-]/gi, "");

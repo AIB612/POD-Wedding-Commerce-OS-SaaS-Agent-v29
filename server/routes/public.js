@@ -56,6 +56,7 @@ export function publicRouter({ root, generatedDir }) {
   const wedHost = req => WED_HOSTS.has(String(req.hostname || "").toLowerCase());
   const POD_ORIGIN = "https://pod.swisspro.site";
   const PODAI_ORIGIN = "https://podai.swisspro.site";
+  const POD_GA_ID = "G-GED5TST3DP"; // wedding shop (pod.swisspro.site) GA4 property, hard-coded in its pages
   const gaLandingSnippet = () => {
     const id = String(process.env.PODAI_GA_ID || "").trim();
     if (!/^G-[A-Z0-9]{6,}$/i.test(id)) return "";
@@ -66,7 +67,13 @@ export function publicRouter({ root, generatedDir }) {
   // Pod.AI host (podai.swisspro.site): landing is the agent intro (not the wedding homepage).
   router.get("/", (req, res, next) => {
     if (!podHost(req)) return next("route");
-    let html = fs.readFileSync(path.join(root, "agent.html"), "utf8"); html = html.replace("<!--__PODAI_GA_LANDING__-->", gaLandingSnippet()); return res.setHeader("Cache-Control","no-cache"), res.type("html").send(html);
+    let html = fs.readFileSync(path.join(root, "agent.html"), "utf8");
+    // Separate analytics per business: with PODAI_GA_ID set, the Pod.AI landing reports only to the Pod.AI property
+    // (the page's built-in tag is the wedding shop's). Without it the built-in tag stays (shared, as before).
+    const podaiGa = gaLandingSnippet() ? String(process.env.PODAI_GA_ID).trim().toUpperCase().replace(/[^A-Z0-9-]/g, "") : "";
+    if (podaiGa) html = html.split(POD_GA_ID).join(podaiGa);
+    html = html.replace("<!--__PODAI_GA_LANDING__-->", "");
+    return res.setHeader("Cache-Control","no-cache"), res.type("html").send(html);
   });
   router.get("/index.html", (req, res, next) => podHost(req) ? res.redirect(301, PODAI_ORIGIN + "/") : next("route"));
   // Avoid duplicate Pod.AI landing on wed — keep wedding site intact.
@@ -165,7 +172,7 @@ export function publicRouter({ root, generatedDir }) {
     res.type("html").send(transform(html));
   };
   const assetOpts = (req, short) => (req.query.v ? { maxAge: "365d", immutable: true } : { maxAge: short });
-  const gaLanding = html => html.replace("<!--__PODAI_GA_LANDING__-->", gaLandingSnippet());
+  const gaLanding = html => html.replace("<!--__PODAI_GA_LANDING__-->", ""); // non-podai hosts: the page keeps the wedding shop's own tag
   const sendAgent = sendPage("agent.html", gaLanding);
   for (const [route, file] of Object.entries(pages)) {
     if (file === "agent.html") router.get(route, sendAgent);

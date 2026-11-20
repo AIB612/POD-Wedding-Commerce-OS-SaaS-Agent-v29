@@ -1,6 +1,6 @@
 # Pod.AI — AI Customer Chat
 
-> Pod.AI (podai.swisspro.site) is an AI customer chat app for Shopify stores, made by Dropking AI. It answers shoppers' product, shipping and order questions from the store's real data — exact shipping quotes, order status and tracking, product recommendations and discount codes — in the customer's language, and hands the conversation to the merchant's team when it cannot help. It works without an AI/LLM key; an optional LLM only adds answers to open questions. Support: support@swisspro.site
+> Pod.AI (podai.swisspro.site) is an AI customer chat app for Shopify and WooCommerce stores, made by Dropking AI. It answers shoppers' product, shipping and order questions from the store's real data — exact shipping quotes, order status and tracking, product recommendations and discount codes — in the customer's language, and hands the conversation to the merchant's team when it cannot help. It works without an AI/LLM key; an optional LLM only adds answers to open questions. Support: support@swisspro.site
 
 Key facts:
 - Platforms: Shopify app (theme app embed + admin dashboard in Shopify Admin) and WooCommerce plugin "Pod.AI Chat for WooCommerce" (storefront chat + WordPress admin).
@@ -27,5 +27,4 @@ Key facts:
 - [Data Processing Addendum](https://podai.swisspro.site/dpa)
 
 ## Optional
-- [POD.AI wedding shop](https://pod.swisspro.site/): a live store using the Pod.AI assistant
 - [Sitemap](https://podai.swisspro.site/sitemap.xml)

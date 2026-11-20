@@ -66,6 +66,23 @@ try {
   for (const p of ["/agent.html", "/agent"]) { const r3 = await getHost(p, "wed.swisspro.site"); assert.equal(r3.status, 301, "wed " + p); assert.equal(r3.headers.location, "https://podai.swisspro.site/", "wed " + p); }
   const podHome = await getHost("/", "pod.swisspro.site"); assert.equal(podHome.status, 200); assert.ok(!/<link rel="canonical" href="https:\/\/podai/.test(podHome.body), "pod homepage is the wedding site");
   assert.equal((await getHost("/agent.html", "pod.swisspro.site")).status, 200, "pod /agent.html unchanged");
+  // Two businesses, two SEO profiles: every podai page describes Pod.AI only and points at podai; the wedding pages at pod.
+  const meta = (h, re) => (h.match(re) || [])[1] || "";
+  for (const [host, paths, other] of [["podai.swisspro.site", ["/", "/woocommerce", "/support", "/privacy", "/terms", "/security", "/dpa"], "pod.swisspro.site"],
+                                     ["pod.swisspro.site", ["/", "/studio.html", "/shipping", "/returns", "/imprint"], "podai.swisspro.site"]]) {
+    for (const p of paths) {
+      const h = (await getHost(p, host)).body;
+      const canon = meta(h, /<link rel="canonical" href="([^"]+)"/); assert.equal(new URL(canon).host, host, `${host}${p} canonical ${canon}`);
+      const og = meta(h, /<meta property="og:url" content="([^"]+)"/); if (og) assert.equal(new URL(og).host, host, `${host}${p} og:url`);
+      for (const m of h.matchAll(/hreflang="[^"]+" href="([^"]+)"/g)) assert.equal(new URL(m[1]).host, host, `${host}${p} hreflang`);
+      for (const m of h.matchAll(/"@type":"Organization","@id":"([^"]+)"/g)) assert.equal(new URL(m[1]).host, host, `${host}${p} Organization`);
+      assert.ok(!new RegExp(`"@id":"https://${other.replace(/\./g, "\\.")}/#organization"`).test(h), `${host}${p} references the other business's Organization`);
+    }
+    const robots = (await getHost("/robots.txt", host)).body; assert.match(robots, new RegExp(`Sitemap: https://${host.replace(/\./g, "\\.")}/sitemap\\.xml`));
+    const llms = (await getHost("/llms.txt", host)).body; assert.ok(!llms.includes(other), `${host}/llms.txt mentions ${other}`);
+  }
+  assert.match((await getHost("/", "podai.swisspro.site")).body, /"@type":"SoftwareApplication"/);
+  assert.ok(!/"@type":"SoftwareApplication"/.test((await getHost("/", "pod.swisspro.site")).body));
   // WooCommerce plugin download: WordPress.org slug name; the old zip name keeps working.
   const zip = await getHost("/woocommerce/pod-ai-chat-for-woocommerce.zip", "podai.swisspro.site"); assert.equal(zip.status, 200); assert.match(zip.headers["content-disposition"] || "", /pod-ai-chat-for-woocommerce\.zip/);
   const oldZip = await getHost("/woocommerce/pod-ai-chat.zip", "podai.swisspro.site"); assert.equal(oldZip.status, 301); assert.equal(oldZip.headers.location, "/woocommerce/pod-ai-chat-for-woocommerce.zip");
