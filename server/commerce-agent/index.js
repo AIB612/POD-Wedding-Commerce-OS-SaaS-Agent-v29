@@ -20,6 +20,8 @@
 //   { type: "checkout", url }           → prefilled cart / checkout link       { type: "coupon", code } → apply a visible coupon
 import { makeProfile } from "../shopify-agent/profile.js";
 export { handleChat } from "../shopify-agent/engine/agent.js";
+// Internal agent (merchant assistant): same rule — one platform-agnostic core, each channel passes its own ctx.
+export * as merchant from "../shopify-agent/merchant/index.js";
 
 const REQUIRED = ["facts", "searchProducts", "findOrder", "shippingRates", "checkDiscount"];
 /** Validate an adapter (throws on a missing method — catches wiring mistakes at startup / in tests). */

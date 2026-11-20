@@ -1,5 +1,12 @@
 # Pod.AI — Shopify App Store listing kit (draft)
 
+> **Status update 2026-11-20** (newer than the notes below):
+> - Pod.AI's own host is now **podai.swisspro.site** (admin, landing, /privacy /terms /support /security /dpa); webhooks stay on pod.swisspro.site/shopify-agent/webhooks.
+> - Billing **is configured**: Shopify Managed Pricing, Free 50 / Growth 500 / Pro 2,500 chats (server enforces limits).
+> - Encryption at rest, encrypted backups, access log, incident policy (/security) and DPA (/dpa) are **done**.
+> - New: **Assistant** tab (merchant agent). Add one screenshot of it to the listing ("Your AI assistant for the team: briefing, tickets, knowledge — every change needs your OK").
+> - Still open: real screenshots on dropkingdev, protected customer data request, fresh-store install test, App Store submission.
+
 Status: draft · **Canonical host for Pod.AI: https://pod.swisspro.site** (the only public domain since 2026-11-09; pod.swisspro.site was retired). (decisions of 4 Nov 2026 19:22 applied), prepared on 4 Nov 2026 for review by Sherry. Nothing has been submitted to Shopify and no billing is configured.
 Scope: Pod.AI (the `apps/shopify-agent` app with server `server/shopify-agent`) only. The site and the site POD Agent are unchanged.
 Everything below describes features that are implemented and deployed today (Shopify app version pod-ai-8 plus the server at commit 9496d8f and later). There are no invented metrics, ratings or reviews.

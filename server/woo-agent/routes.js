@@ -2,6 +2,7 @@
 //   POST /woo-agent/v1/register            site registration (verified by a callback to the site), returns site key + secret once
 //   *    /woo-agent/v1/<route>             signed by the WordPress plugin (HMAC, per-site secret, ±5 min, single-use nonce)
 //        chat · config · event · preview · store · products/sync · products/delete · status · billing · tickets · tickets/:id · disconnect
+//        assistant · assistant/actions · assistant/actions/:id/approve|reject · assistant/audit   (merchant assistant, internal agent)
 // The Shopify app (/shopify-agent/*, webhooks on pod.swisspro.site/shopify-agent/webhooks) is not touched by this router.
 import express from "express";
 import * as core from "./core.js";
@@ -16,6 +17,7 @@ import { recordEvent } from "../shopify-agent/dashboard.js";
 import { rateLimit } from "../http/middleware.js";
 import { removeWhere } from "../saas-store.js";
 import { logAccess } from "../shopify-agent/security/access-log.js";
+import * as merchant from "../shopify-agent/merchant/index.js";
 
 const ah = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const HEX = v => /^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v) : null;
@@ -135,10 +137,24 @@ export function wooAgentRouter() {
     logAccess({ actor: "woo_admin", action: "update_handoff", tenant: req.wooTenant, ids: [h.id], via: "wp_admin" }).catch?.(() => {});
     res.json(ticketView(h)); });
   v1.patch("/tickets/:id", patch); v1.post("/tickets/:id", patch);
+  // ---- Merchant assistant (internal agent, server/shopify-agent/merchant). The WP plugin signs every call; it only sends
+  //      requests from users who can manage WooCommerce. Writes are proposals until /approve with { confirm:true }.
+  const assistantCtx = async (req, lang) => { const site = req.wooSite, s = await getSettings(req.wooTenant), wp = str(req.body?.actor || req.query?.actor, 60).replace(/@.*$/, "").replace(/[^\w.-]/g, ""); // WP login, never an e-mail (audit holds no personal data)
+    return { tenantId: req.wooTenant, actor: `woo_admin${wp ? ":" + wp : ""}`, source: "wp_admin", lang: ["en", "de", "fr", "it", "zh"].includes(lang) ? lang : "en",
+      llm: billing.planOf(site).llm === true && s.llm_enabled === true, shopName: str(site.name, 80), usage: () => billing.billingSummary(site),
+      onPersonalData: tool => logAccess({ actor: "woo_admin", action: `assistant_${tool}`, tenant: req.wooTenant, via: "wp_admin" }).catch?.(() => {}) }; };
+  v1.post("/assistant", siteLimit("assistant", 30), ah(async (req, res) => { const b = req.body || {};
+    if (!String(b.message || "").trim()) return res.status(400).json({ error: "message_required" });
+    res.set("Cache-Control", "no-store").json(await merchant.runAssistant(await assistantCtx(req, b.lang), b.message)); }));
+  v1.get("/assistant/actions", ah(async (req, res) => res.set("Cache-Control", "no-store").json(await merchant.listActions(req.wooTenant, { status: ["proposed", "done", "failed", "rejected", "expired"].includes(req.query.status) ? req.query.status : undefined }))));
+  v1.post("/assistant/actions/:id/approve", siteLimit("assistant_act", 60), ah(async (req, res) => { if (req.body?.confirm !== true) return res.status(409).json({ error: "confirmation_required" });
+    res.json(await merchant.approve(await assistantCtx(req, req.body?.lang), req.params.id)); }));
+  v1.post("/assistant/actions/:id/reject", siteLimit("assistant_act", 60), ah(async (req, res) => res.json(await merchant.reject(await assistantCtx(req, req.body?.lang), req.params.id))));
+  v1.get("/assistant/audit", ah(async (req, res) => res.set("Cache-Control", "no-store").json(await merchant.readAudit(req.wooTenant, { limit: Number(req.query.limit) || 100 }))));
   // plugin uninstall / disconnect: every record of this site is deleted
   v1.post("/disconnect", ah(async (req, res) => { const id = req.wooSite.id, T = req.wooTenant; let removed = 0;
     const sub = req.wooSite.paddle; if (sub?.subscription_id && ["active", "trialing", "past_due", "paused"].includes(sub.status)) await cancelSubscription(sub.subscription_id);
-    for (const col of ["podai_conversations", "podai_handoffs", "podai_events", "podai_settings", "podai_usage", "podai_discounts"]) removed += (await removeWhere(col, x => x.tenant_id === T)).length;
+    for (const col of ["podai_conversations", "podai_handoffs", "podai_events", "podai_settings", "podai_usage", "podai_discounts", merchant.ACTIONS, merchant.AUDIT]) removed += (await removeWhere(col, x => x.tenant_id === T)).length;
     await catalog.dropCatalog(id); removed += await core.removeSite(id);
     logAccess({ actor: "woo_plugin", action: "site_disconnected", tenant: T, count: removed, via: "disconnect" }).catch?.(() => {});
     res.json({ ok: true, removed }); }));
