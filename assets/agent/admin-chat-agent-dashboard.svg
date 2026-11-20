@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffdfd"/><stop offset="1" stop-color="#faf8fb"/></linearGradient>
+  <linearGradient id="p" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#7652d7"/><stop offset="1" stop-color="#6e3bd1"/></linearGradient>
+  <style>
+    .t{font-family:Inter,Arial,sans-serif;fill:#3a3f4b}.s{font-family:Inter,Arial,sans-serif;fill:#8b91a1}
+    .h{font:700 24px Inter,Arial,sans-serif;fill:#3a3f4b}.n{font:700 36px Inter,Arial,sans-serif;fill:#4b4f59}
+    .lbl{font:500 14px Inter,Arial,sans-serif;fill:#8d93a1}.mini{font:500 11px Inter,Arial,sans-serif;fill:#949aa7}
+  </style>
+</defs>
+<rect width="1600" height="1000" fill="url(#bg)"/>
+<!-- top nav -->
+<rect x="0" y="0" width="1600" height="60" fill="#fff"/>
+<text x="72" y="38" class="t" font-size="24" font-weight="700">Pod.AI</text>
+<text x="160" y="36" class="s" font-size="13">Customer support that stays grounded</text>
+<g font-family="Inter,Arial" font-size="15" fill="#6f7480">
+  <text x="520" y="36">Overview</text><text x="615" y="36">Handoffs</text><text x="708" y="36">Knowledge</text>
+  <text x="814" y="36">Settings</text><text x="897" y="36">Try it</text><text x="955" y="36">Setup</text>
+</g>
+<rect x="1285" y="16" width="168" height="30" rx="15" fill="#8f8aa6"/>
+<text x="1301" y="36" font-family="Inter,Arial" font-size="12" fill="#fff">alpine-tees.myshopify.com</text>
+<text x="1474" y="36" font-family="Inter,Arial" font-size="12" fill="#6c7380">中文</text><text x="1535" y="36" font-family="Inter,Arial" font-size="12" fill="#6c7380">DE</text>
+
+<!-- heading -->
+<text x="72" y="112" class="h">Overview</text>
+<text x="72" y="139" class="s" font-size="13">Merchant KPIs and support operations</text>
+
+<!-- period segmented -->
+<rect x="1215" y="94" width="280" height="36" rx="18" fill="#f0eef4"/>
+<rect x="1219" y="98" width="82" height="28" rx="14" fill="#fff"/>
+<g font-family="Inter,Arial" font-size="14" fill="#777d89"><text x="1246" y="117">7 days</text><text x="1330" y="117">30 days</text><text x="1425" y="117">90 days</text></g>
+
+<!-- left sidebar -->
+<rect x="72" y="175" width="220" height="590" rx="16" fill="#fff" stroke="#efedf1"/>
+<text x="94" y="214" class="t" font-size="15" font-weight="600">Today</text>
+<text x="94" y="254" class="s" font-size="14">Chats</text><text x="230" y="254" class="t" font-size="14">12</text>
+<text x="94" y="288" class="s" font-size="14">Resolved</text><text x="230" y="288" class="t" font-size="14">91%</text>
+<text x="94" y="322" class="s" font-size="14">Handoffs</text><text x="230" y="322" class="t" font-size="14">3</text>
+<line x1="94" y1="346" x2="270" y2="346" stroke="#efedf1"/>
+<text x="94" y="382" class="t" font-size="15" font-weight="600">Needs attention</text>
+<rect x="94" y="404" width="176" height="46" rx="10" fill="#fbfafc"/>
+<text x="108" y="424" class="s" font-size="12">Open tickets</text><text x="238" y="430" class="t" font-size="18" font-weight="700">2</text>
+<rect x="94" y="462" width="176" height="46" rx="10" fill="#fbfafc"/>
+<text x="108" y="482" class="s" font-size="12">Late replies</text><text x="238" y="488" class="t" font-size="18" font-weight="700">1</text>
+<rect x="94" y="520" width="176" height="46" rx="10" fill="#fbfafc"/>
+<text x="108" y="540" class="s" font-size="12">Unanswered</text><text x="238" y="546" class="t" font-size="18" font-weight="700">3</text>
+
+<!-- KPI cards -->
+<g>
+<g><rect x="330" y="175" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="348" y="205" class="lbl">Chats</text><text x="348" y="247" class="n">70</text><text x="480" y="247" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+12%</text><rect x="348" y="267" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="348" y="267" width="105" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="575" y="175" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="593" y="205" class="lbl">AI resolution</text><text x="593" y="247" class="n">93%</text><text x="725" y="247" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+4%</text><rect x="593" y="267" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="593" y="267" width="140" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="820" y="175" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="838" y="205" class="lbl">Avg reply</text><text x="838" y="247" class="n">2.8s</text><text x="970" y="247" font-family="Inter,Arial" font-size="13" fill="#4f9b72">-0.5s</text><rect x="838" y="267" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="838" y="267" width="105" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="1065" y="175" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="1083" y="205" class="lbl">Hours saved</text><text x="1083" y="247" class="n">5.6</text><text x="1215" y="247" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+0.8</text><rect x="1083" y="267" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="1083" y="267" width="140" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="330" y="315" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="348" y="345" class="lbl">Handoffs</text><text x="348" y="387" class="n">5</text><text x="480" y="387" font-family="Inter,Arial" font-size="13" fill="#4f9b72">-2</text><rect x="348" y="407" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="348" y="407" width="105" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="575" y="315" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="593" y="345" class="lbl">Unanswered</text><text x="593" y="387" class="n">3</text><text x="725" y="387" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+1</text><rect x="593" y="407" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="593" y="407" width="140" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="820" y="315" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="838" y="345" class="lbl">Open tickets</text><text x="838" y="387" class="n">2</text><text x="970" y="387" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">0</text><rect x="838" y="407" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="838" y="407" width="105" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="1065" y="315" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="1083" y="345" class="lbl">Late tickets</text><text x="1083" y="387" class="n">1</text><text x="1215" y="387" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+1</text><rect x="1083" y="407" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="1083" y="407" width="140" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="330" y="455" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="348" y="485" class="lbl">Knowledge hits</text><text x="348" y="527" class="n">87%</text><text x="480" y="527" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+5%</text><rect x="348" y="547" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="348" y="547" width="105" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="575" y="455" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="593" y="485" class="lbl">Product clicks</text><text x="593" y="527" class="n">19</text><text x="725" y="527" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+6</text><rect x="593" y="547" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="593" y="547" width="140" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="820" y="455" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="838" y="485" class="lbl">Cart adds</text><text x="838" y="527" class="n">8</text><text x="970" y="527" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+2</text><rect x="838" y="547" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="838" y="547" width="105" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="1065" y="455" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="1083" y="485" class="lbl">Languages</text><text x="1083" y="527" class="n">5</text><rect x="1083" y="547" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="1083" y="547" width="140" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="330" y="595" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="348" y="625" class="lbl">Orders found</text><text x="348" y="667" class="n">14</text><text x="480" y="667" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+3</text><rect x="348" y="687" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="348" y="687" width="105" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="575" y="595" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="593" y="625" class="lbl">Returning chats</text><text x="593" y="667" class="n">11%</text><text x="725" y="667" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+2%</text><rect x="593" y="687" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="593" y="687" width="140" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="820" y="595" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="838" y="625" class="lbl">Plan usage</text><text x="838" y="667" class="n">64%</text><text x="970" y="667" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+9%</text><rect x="838" y="687" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="838" y="687" width="105" height="4" rx="2" fill="#7b5bd5"/></g><g><rect x="1065" y="595" width="215" height="118" rx="14" fill="#fff" stroke="#efedf1"/><text x="1083" y="625" class="lbl">CSAT proxy</text><text x="1083" y="667" class="n">96%</text><text x="1215" y="667" font-family="Inter,Arial" font-size="13" fill="#7a5ad0">+1%</text><rect x="1083" y="687" width="176" height="4" rx="2" fill="#f0edf5"/><rect x="1083" y="687" width="140" height="4" rx="2" fill="#7b5bd5"/></g>
+</g>
+
+<!-- trend chart -->
+<rect x="72" y="790" width="1423" height="180" rx="16" fill="#fff" stroke="#efedf1"/>
+<text x="94" y="824" class="t" font-size="15" font-weight="600">Chat volume & resolution trend</text>
+<text x="94" y="846" class="mini">Last 30 days</text>
+<line x1="95" y1="930" x2="1460" y2="930" stroke="#eeeaf2"/>
+<line x1="95" y1="890" x2="1460" y2="890" stroke="#f3f0f5"/>
+<line x1="95" y1="850" x2="1460" y2="850" stroke="#f3f0f5"/>
+<polyline fill="none" stroke="#7753d6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"
+ points="100,922 165,910 230,915 295,898 360,904 425,882 490,887 555,870 620,876 685,850 750,858 815,840 880,846 945,824 1010,831 1075,810 1140,819 1205,800 1270,806 1335,788 1400,794 1460,778"/>
+<polyline fill="none" stroke="#c9b9f2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+ points="100,942 165,935 230,938 295,928 360,931 425,920 490,922 555,912 620,914 685,901 750,904 815,892 880,895 945,883 1010,886 1075,874 1140,878 1205,867 1270,870 1335,860 1400,863 1460,854"/>
+</svg>
