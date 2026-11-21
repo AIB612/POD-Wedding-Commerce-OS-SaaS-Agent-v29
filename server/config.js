@@ -48,6 +48,20 @@ export function whatsAppHref(host) {
   return `https://wa.me/${n}?text=${encodeURIComponent(whatsAppPrefill(host))}`;
 }
 
+const DEFAULT_PUBLIC_TELEGRAM_URL = "https://t.me/podai_agent";
+
+/** Public Telegram profile for both sites. Default is the brand account @podai_agent.
+ *  Set PUBLIC_TELEGRAM_URL to empty to hide the button and links. Invalid values fall back to the default. */
+export function publicTelegramUrl() {
+  if (process.env.PUBLIC_TELEGRAM_URL !== undefined && !String(process.env.PUBLIC_TELEGRAM_URL).trim()) return "";
+  let raw = String(process.env.PUBLIC_TELEGRAM_URL || DEFAULT_PUBLIC_TELEGRAM_URL).trim();
+  const mention = raw.match(/^@?([A-Za-z0-9_]{5,32})$/);
+  if (mention) raw = `https://t.me/${mention[1]}`;
+  const m = raw.match(/^https:\/\/t(?:elegram)?\.me\/([A-Za-z0-9_]{5,32})\/?$/i);
+  if (!m) return DEFAULT_PUBLIC_TELEGRAM_URL;
+  return `https://t.me/${m[1]}`;
+}
+
 export function applyPublicContact(text, host) {
   const email = publicContactEmail();
   let out = String(text ?? "").split("__PUBLIC_CONTACT_EMAIL__").join(email).split(DEFAULT_PUBLIC_CONTACT_EMAIL).join(email);
@@ -59,5 +73,19 @@ export function applyPublicContact(text, host) {
   const footer = href
     ? ` · <a class="wa-footer" href="${href}" target="_blank" rel="noopener noreferrer">WhatsApp</a>`
     : "";
-  return out.split("<!--__WHATSAPP_CONTACT_LINK__-->").join(contact).split("<!--__WHATSAPP_FOOTER_LINK__-->").join(footer);
+  out = out.split("<!--__WHATSAPP_CONTACT_LINK__-->").join(contact).split("<!--__WHATSAPP_FOOTER_LINK__-->").join(footer);
+  const tg = publicTelegramUrl();
+  out = out.split("__PUBLIC_TELEGRAM_URL__").join(tg);
+  if (!tg) {
+    out = out.split(`,"${DEFAULT_PUBLIC_TELEGRAM_URL}"`).join("").split(DEFAULT_PUBLIC_TELEGRAM_URL).join("");
+  } else if (tg !== DEFAULT_PUBLIC_TELEGRAM_URL) {
+    out = out.split(DEFAULT_PUBLIC_TELEGRAM_URL).join(tg);
+  }
+  const tgContact = tg
+    ? `<p class="tg-contact"><a href="${tg}" target="_blank" rel="noopener noreferrer">Telegram</a></p>`
+    : "";
+  const tgFooter = tg
+    ? ` · <a class="tg-footer" href="${tg}" target="_blank" rel="noopener noreferrer">Telegram</a>`
+    : "";
+  return out.split("<!--__TELEGRAM_CONTACT_LINK__-->").join(tgContact).split("<!--__TELEGRAM_FOOTER_LINK__-->").join(tgFooter);
 }

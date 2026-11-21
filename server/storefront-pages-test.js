@@ -104,6 +104,25 @@ try {
   delete process.env.PUBLIC_WHATSAPP_NUMBER;
   result.whatsapp_optional = "pass";
 
+  // Telegram is on by default (brand account); empty PUBLIC_TELEGRAM_URL hides it.
+  const tgJs = (await get("/telegram.js")).text;
+  assert.match(tgJs, /TG='https:\/\/t\.me\/podai_agent'/);
+  assert.match(tgJs, /aria-label="Telegram SwissPro POD"/);
+  assert.match(tgJs, /target="_blank"/);
+  assert.match(tgJs, /rel="noopener/);
+  const tgContact = (await get("/contact")).text;
+  assert.match(tgContact, /https:\/\/t\.me\/podai_agent/);
+  assert.match(tgContact, /telegram\.js/);
+  assert.match(tgContact, /target="_blank"/);
+  assert.match(tgContact, /rel="noopener/);
+  assert.match((await get("/")).text, /"https:\/\/t\.me\/podai_agent"/);
+  process.env.PUBLIC_TELEGRAM_URL = "";
+  assert.match((await get("/telegram.js")).text, /TG=''/);
+  assert.doesNotMatch((await get("/contact")).text, /t\.me\/podai_agent/);
+  assert.doesNotMatch((await get("/")).text, /t\.me\/podai_agent/);
+  delete process.env.PUBLIC_TELEGRAM_URL;
+  result.telegram = "pass";
+
 
   // Fees: public endpoint exposes the VAT display mode + delivery times for the shipping page (default excl. VAT).
   const fees = await (await fetch(base + "/api/storefront/fees")).json();

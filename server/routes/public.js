@@ -171,7 +171,7 @@ export function publicRouter({ root, generatedDir }) {
     assetHash.set(abs, { mtimeMs: st.mtimeMs, size: st.size, hash });
     return hash;
   };
-  const VERSIONED = new Set(ASSET_FILES.concat(["i18n.js", "wedding-qr.js", "admin-sections.js", "whatsapp.js"]));
+  const VERSIONED = new Set(ASSET_FILES.concat(["i18n.js", "wedding-qr.js", "admin-sections.js", "whatsapp.js", "telegram.js"]));
   const versionAssets = html => html.replace(/(<(?:script|link)\b[^>]*?\s(?:src|href)=")(\/?)([\w.-]+\.(?:js|css|svg|ico|webmanifest))(?:\?v=[^"]*)?(")/g, (m, a, slash, file, z) => {
     if (!VERSIONED.has(file)) return m;
     const h = hashOf(file); return h ? `${a}${slash}${file}?v=${h}${z}` : m;
@@ -214,6 +214,7 @@ export function publicRouter({ root, generatedDir }) {
   };
   router.get("/i18n.js", sendJsContact("i18n.js", "1h"));
   router.get("/whatsapp.js", sendJsContact("whatsapp.js", "5m"));
+  router.get("/telegram.js", sendJsContact("telegram.js", "5m"));
   router.get("/wedding-qr.js", (req, res) => res.sendFile(path.join(root, "wedding-qr.js"), assetOpts(req, "1h")));
   // Wedding sites are private links: keep them out of search engines.
   router.get("/robots.txt", (_, res) => res.type("text/plain").send("User-agent: *\nDisallow: /generated/\n"));

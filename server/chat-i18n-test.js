@@ -79,6 +79,7 @@ try {
   for (const host of ["pod.swisspro.site", "podai.swisspro.site"]) {
     const home = (await getHost("/", host)).body;
     assert.match(home, /"sameAs":\s*\[\s*"https:\/\/www\.instagram\.com\/swisspro\.pod\/"/, host+" Organization sameAs");
+    assert.match(home, /"sameAs":\s*\[\s*"https:\/\/www\.instagram\.com\/swisspro\.pod\/"\s*,\s*"https:\/\/t\.me\/podai_agent"\s*\]/, host+" sameAs Instagram + Telegram");
     assert.ok(!/ai\.softwarepro/i.test(home), host+" must not link ai.softwarepro");
   }
   assert.equal((await getHost("/agent.html", "pod.swisspro.site")).status, 200, "pod /agent.html unchanged");
@@ -104,6 +105,10 @@ try {
       assert.ok(h.includes("apple-touch-icon"), `${host}${p} apple-touch-icon`);
       for (const m of h.matchAll(/hreflang="[^"]+" href="([^"]+)"/g)) assert.equal(new URL(m[1]).host, host, `${host}${p} hreflang`);
       for (const m of h.matchAll(/"@type":"Organization","@id":"([^"]+)"/g)) assert.equal(new URL(m[1]).host, host, `${host}${p} Organization`);
+      if (/"@type":"Organization"/.test(h)) {
+        assert.match(h, /"https:\/\/t\.me\/podai_agent"/, `${host}${p} Telegram sameAs`);
+        assert.match(h, /https:\/\/www\.instagram\.com\/swisspro\.pod\//, `${host}${p} Instagram sameAs`);
+      }
       assert.ok(!new RegExp(`"@id":"https://${other.replace(/\./g, "\\.")}/#organization"`).test(h), `${host}${p} references the other business's Organization`);
     }
     const robots = (await getHost("/robots.txt", host)).body; assert.match(robots, new RegExp(`Sitemap: https://${host.replace(/\./g, "\\.")}/sitemap\\.xml`));
@@ -203,12 +208,26 @@ try {
     const home = (await getHost("/", host)).body;
     const contact = (await getHost("/contact", host)).body;
     const wa = (await getHost("/whatsapp.js", host)).body;
+    const tg = (await getHost("/telegram.js", host)).body;
     assert.match(wa, /WA=''/);
     assert.doesNotMatch(home, /wa\.me/);
     assert.doesNotMatch(contact, /wa\.me/);
     assert.match(home, /whatsapp\.js/);
     assert.match(contact, /whatsapp\.js/);
+    assert.match(tg, /TG='https:\/\/t\.me\/podai_agent'/);
+    assert.match(tg, /aria-label="Telegram SwissPro POD"/);
+    assert.match(home, /telegram\.js/);
+    assert.match(contact, /telegram\.js/);
+    assert.match(contact, /https:\/\/t\.me\/podai_agent/);
+    assert.match(home, /"https:\/\/t\.me\/podai_agent"/);
   }
+  process.env.PUBLIC_TELEGRAM_URL = "";
+  for (const host of ["pod.swisspro.site", "podai.swisspro.site"]) {
+    assert.match((await getHost("/telegram.js", host)).body, /TG=''/);
+    assert.doesNotMatch((await getHost("/contact", host)).body, /t\.me\/podai_agent/);
+    assert.doesNotMatch((await getHost("/", host)).body, /t\.me\/podai_agent/);
+  }
+  delete process.env.PUBLIC_TELEGRAM_URL;
   process.env.PUBLIC_WHATSAPP_NUMBER = "41000000000";
   const podC = (await getHost("/contact", "pod.swisspro.site")).body;
   const podaiC = (await getHost("/contact", "podai.swisspro.site")).body;
