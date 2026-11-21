@@ -76,6 +76,11 @@ try {
   assert.match(pricing.body, /USD 19/);
   assert.match(pricing.body, /USD 49/);
   assert.equal((await getHost("/contact", "podai.swisspro.site")).status, 200, "podai /contact");
+  for (const host of ["pod.swisspro.site", "podai.swisspro.site"]) {
+    const home = (await getHost("/", host)).body;
+    assert.match(home, /"sameAs":\s*\[\s*"https:\/\/www\.instagram\.com\/swisspro\.pod\/"/, host+" Organization sameAs");
+    assert.ok(!/ai\.softwarepro/i.test(home), host+" must not link ai.softwarepro");
+  }
   assert.equal((await getHost("/agent.html", "pod.swisspro.site")).status, 200, "pod /agent.html unchanged");
   // Two businesses, two SEO profiles: every podai page describes Pod.AI only and points at podai; the wedding pages at pod.
   const meta = (h, re) => (h.match(re) || [])[1] || "";
@@ -191,6 +196,30 @@ try {
     assert.equal(keyFile.body.trim(), indexNowKey);
   }
   assert.match((await getHost("/woocommerce", "podai.swisspro.site")).body, /"@type":"SoftwareApplication"/);
+
+  const podText = encodeURIComponent("Hi SwissPro POD, I have a question about a custom order");
+  const podaiText = encodeURIComponent("Hi, I'd like to know more about POD.AI Agent for my shop");
+  for (const host of ["pod.swisspro.site", "podai.swisspro.site"]) {
+    const home = (await getHost("/", host)).body;
+    const contact = (await getHost("/contact", host)).body;
+    const wa = (await getHost("/whatsapp.js", host)).body;
+    assert.match(wa, /WA=''/);
+    assert.doesNotMatch(home, /wa\.me/);
+    assert.doesNotMatch(contact, /wa\.me/);
+    assert.match(home, /whatsapp\.js/);
+    assert.match(contact, /whatsapp\.js/);
+  }
+  process.env.PUBLIC_WHATSAPP_NUMBER = "41000000000";
+  const podC = (await getHost("/contact", "pod.swisspro.site")).body;
+  const podaiC = (await getHost("/contact", "podai.swisspro.site")).body;
+  assert.ok(podC.includes("https://wa.me/41000000000?text=" + podText), "pod contact prefill");
+  assert.ok(podaiC.includes("https://wa.me/41000000000?text=" + podaiText), "podai contact prefill");
+  assert.ok(!podC.includes("POD.AI Agent for my shop"));
+  assert.ok(!podaiC.includes("SwissPro POD, I have a question"));
+  assert.match((await getHost("/whatsapp.js", "pod.swisspro.site")).body, /WA='41000000000'/);
+  assert.match(podaiC, /wa-footer|WhatsApp/);
+  delete process.env.PUBLIC_WHATSAPP_NUMBER;
+  result.whatsapp_optional = "pass";
 
   result.payment_methods = "pass";
 } finally { server.close(); fs.rmSync(tmp, { recursive: true, force: true }); }

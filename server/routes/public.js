@@ -73,7 +73,7 @@ export function publicRouter({ root, generatedDir }) {
     const podaiGa = gaLandingSnippet() ? String(process.env.PODAI_GA_ID).trim().toUpperCase().replace(/[^A-Z0-9-]/g, "") : "";
     if (podaiGa) html = html.split(POD_GA_ID).join(podaiGa);
     html = html.replace("<!--__PODAI_GA_LANDING__-->", "");
-    return res.setHeader("Cache-Control","no-cache"), res.type("html").send(applyPublicContact(html));
+    return res.setHeader("Cache-Control","no-cache"), res.type("html").send(applyPublicContact(html, req.hostname));
   });
   router.get("/index.html", (req, res, next) => podHost(req) ? res.redirect(301, PODAI_ORIGIN + "/") : next("route"));
   // Avoid duplicate Pod.AI landing on wed — keep wedding site intact.
@@ -132,7 +132,7 @@ export function publicRouter({ root, generatedDir }) {
   const podLegalDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "shopify-agent");
   const sendPodPage = (file) => (req, res, next) => {
     if (!podHost(req)) return next("route");
-    const html = applyPublicContact(withPublicGa(fs.readFileSync(path.join(podLegalDir, file), "utf8")));
+    const html = applyPublicContact(withPublicGa(fs.readFileSync(path.join(podLegalDir, file), "utf8")), req.hostname);
     res.set("Cache-Control", "public, max-age=3600").type("html").send(html);
   };
   router.get(["/privacy", "/privacy.html"], sendPodPage("privacy.html"));
@@ -171,13 +171,13 @@ export function publicRouter({ root, generatedDir }) {
     assetHash.set(abs, { mtimeMs: st.mtimeMs, size: st.size, hash });
     return hash;
   };
-  const VERSIONED = new Set(ASSET_FILES.concat(["i18n.js", "wedding-qr.js", "admin-sections.js"]));
+  const VERSIONED = new Set(ASSET_FILES.concat(["i18n.js", "wedding-qr.js", "admin-sections.js", "whatsapp.js"]));
   const versionAssets = html => html.replace(/(<(?:script|link)\b[^>]*?\s(?:src|href)=")(\/?)([\w.-]+\.(?:js|css|svg|ico|webmanifest))(?:\?v=[^"]*)?(")/g, (m, a, slash, file, z) => {
     if (!VERSIONED.has(file)) return m;
     const h = hashOf(file); return h ? `${a}${slash}${file}?v=${h}${z}` : m;
   });
   const pageCache = new Map();
-  const sendPage = (file, transform = x => x) => (_, res) => {
+  const sendPage = (file, transform = x => x) => (req, res) => {
     const abs = path.join(root, file);
     let st; try { st = fs.statSync(abs); } catch { return res.status(404).json({ error: "not_found" }); }
     const key = `${abs}`; const c = pageCache.get(key);
@@ -185,7 +185,7 @@ export function publicRouter({ root, generatedDir }) {
     if (c && c.mtimeMs === st.mtimeMs && c.size === st.size && c.transform === transform) html = c.html;
     else { html = versionAssets(fs.readFileSync(abs, "utf8")); pageCache.set(key, { mtimeMs: st.mtimeMs, size: st.size, html, transform }); }
     res.setHeader("Cache-Control", "no-cache");
-    res.type("html").send(applyPublicContact(transform(html)));
+    res.type("html").send(applyPublicContact(transform(html), req.hostname));
   };
   const assetOpts = (req, short) => (req.query.v ? { maxAge: "365d", immutable: true } : { maxAge: short });
   const gaLanding = html => html.replace("<!--__PODAI_GA_LANDING__-->", ""); // non-podai hosts: the page keeps the wedding shop's own tag
@@ -207,12 +207,13 @@ export function publicRouter({ root, generatedDir }) {
   const sendJsContact = (file, short) => (req, res) => {
     const abs = path.join(root, file);
     if (!fs.existsSync(abs)) return res.status(404).json({ error: "not_found" });
-    const body = applyPublicContact(fs.readFileSync(abs, "utf8"));
+    const body = applyPublicContact(fs.readFileSync(abs, "utf8"), req.hostname);
     const opts = assetOpts(req, short);
     if (opts.maxAge) res.setHeader("Cache-Control", opts.immutable ? "public, max-age=31536000, immutable" : `public, max-age=${typeof opts.maxAge === "string" ? 3600 : opts.maxAge}`);
     res.type("application/javascript; charset=utf-8").send(body);
   };
   router.get("/i18n.js", sendJsContact("i18n.js", "1h"));
+  router.get("/whatsapp.js", sendJsContact("whatsapp.js", "5m"));
   router.get("/wedding-qr.js", (req, res) => res.sendFile(path.join(root, "wedding-qr.js"), assetOpts(req, "1h")));
   // Wedding sites are private links: keep them out of search engines.
   router.get("/robots.txt", (_, res) => res.type("text/plain").send("User-agent: *\nDisallow: /generated/\n"));

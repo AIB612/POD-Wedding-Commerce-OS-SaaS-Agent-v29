@@ -47,6 +47,11 @@ try {
   assert.match(ft, /sf-addr/);
   assert.match(ft, /MAIL='support@swisspro\.site'/);
   assert.match(ft, /href="mailto:'\+MAIL/);
+  assert.match(ft, /https:\/\/www\.instagram\.com\/swisspro\.pod\//);
+  assert.match(ft, /aria-label="Instagram SwissPro POD"/);
+  assert.match(ft, /target="_blank"/);
+  assert.match(ft, /rel="noopener/);
+  assert.doesNotMatch(ft, /ai\.softwarepro/);
   const imp = (await get("/imprint")).text;
   // Final legal text: operator named, no template notes or [placeholders], no personal data, no ODR link.
   assert.match(imp, /Dropking AI/); assert.match(imp, /support@swisspro\.site/);
@@ -81,6 +86,23 @@ try {
   assert.match((await get("/footer.js")).text, /MAIL='hello@example\.com'/);
   delete process.env.PUBLIC_CONTACT_EMAIL;
   result.public_contact_email = "pass";
+
+  // WhatsApp Business: hidden when PUBLIC_WHATSAPP_NUMBER is empty; shown only when a valid number is set.
+  const waJs = (await get("/whatsapp.js")).text;
+  assert.match(waJs, /WA=''/);
+  assert.doesNotMatch(waJs, /wa\.me\/[1-9]/);
+  assert.doesNotMatch((await get("/contact")).text, /wa\.me/);
+  assert.doesNotMatch((await get("/contact")).text, /wa-contact/);
+  process.env.PUBLIC_WHATSAPP_NUMBER = "41000000000";
+  const waOn = (await get("/whatsapp.js")).text;
+  assert.match(waOn, /WA='41000000000'/);
+  assert.match((await get("/contact")).text, /https:\/\/wa\.me\/41000000000\?text=/);
+  assert.match((await get("/contact")).text, /target="_blank"/);
+  assert.match((await get("/contact")).text, /rel="noopener/);
+  process.env.PUBLIC_WHATSAPP_NUMBER = "00abc";
+  assert.match((await get("/whatsapp.js")).text, /WA=''/);
+  delete process.env.PUBLIC_WHATSAPP_NUMBER;
+  result.whatsapp_optional = "pass";
 
 
   // Fees: public endpoint exposes the VAT display mode + delivery times for the shipping page (default excl. VAT).

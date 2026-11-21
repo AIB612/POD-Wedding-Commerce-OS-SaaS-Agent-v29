@@ -17,7 +17,7 @@
   '.sf-badge{height:26px;padding:0 10px;border-radius:6px;background:#fff;display:inline-flex;align-items:center;font-weight:800;font-size:12px;letter-spacing:.02em}'+
   '.sf-twint{background:#000;color:#fff;border:1px solid #444}.sf-pp{color:#003087}.sf-pp i{color:#009cde;font-style:normal}'+
   '.sf-loc{display:inline-flex;gap:6px;align-items:center;border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:5px 12px}'+
-  '.sf-addr{margin-top:10px!important;color:#e9e2d9!important;font-weight:600;overflow-wrap:anywhere}'+'@media(max-width:1100px){.sf-top{grid-template-columns:repeat(3,1fr)}.sf-col-brand,.sf-contact{grid-column:span 3}}'+
+  '.sf-addr{margin-top:10px!important;color:#e9e2d9!important;font-weight:600;overflow-wrap:anywhere}.sf-social{display:inline-flex;gap:8px;align-items:center}.sf-ig{width:26px;height:26px;padding:0;border-radius:6px;background:#fff;color:#292622!important;display:inline-flex;align-items:center;justify-content:center}.sf-ig:hover{background:#f3ece4;text-decoration:none!important}.sf-ig svg{width:14px;height:14px;display:block}'+'@media(max-width:1100px){.sf-top{grid-template-columns:repeat(3,1fr)}.sf-col-brand,.sf-contact{grid-column:span 3}}'+
   '@media(max-width:900px){.sf-top{grid-template-columns:1fr 1fr}.sf-col-brand,.sf-contact{grid-column:1/-1}}'+
   '@media(max-width:520px){.sf-in{padding:40px 20px 24px}.sf-bottom{flex-direction:column;align-items:flex-start}}';
   var y=new Date().getFullYear(),MAIL='support@swisspro.site'; /* filled from PUBLIC_CONTACT_EMAIL when served */
@@ -35,6 +35,7 @@
    '<nav aria-label="Legal"><h4>Legal</h4><ul><li><a href="/privacy">Privacy policy</a></li><li><a href="/terms">Terms of sale</a></li><li><a href="/returns">Returns policy</a></li><li><a href="/imprint">Imprint / Impressum</a></li></ul></nav>'+
    '<div class="sf-contact"><h4>Questions about your order?</h4><p style="margin-top:0">We answer personally, usually within one business day.</p>'+(MAIL?'<a class="sf-mail" href="mailto:'+MAIL+'">'+MAIL+'</a>':'')+'</div>'+
   '</div><div class="sf-bottom"><div class="sf-legal"><span>&copy; 2026 POD.AI</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/imprint">Imprint</a></div>'+
+   '<div class="sf-social" aria-label="Social links"><a class="sf-ig" href="https://www.instagram.com/swisspro.pod/" target="_blank" rel="noopener noreferrer" aria-label="Instagram SwissPro POD"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.1" fill="currentColor" stroke="none"/></svg></a></div>'+
    '<span class="sf-loc" title="Market and currency (change it in the header)">'+(window.PODMarket?(PODMarket.get()+' · '+PODMarket.currency()):'CHF / EUR')+'</span>'+
    '<div class="sf-pay" aria-label="Payment methods"><span class="sf-badge sf-twint">TWINT</span><span class="sf-badge sf-pp">Pay<i>Pal</i></span></div>'+
   '</div></div></footer>';

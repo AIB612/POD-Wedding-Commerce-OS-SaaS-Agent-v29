@@ -27,8 +27,37 @@ export function publicContactEmail() {
   return raw;
 }
 
-/** Replace the default public address (and an optional placeholder) with the configured one. */
-export function applyPublicContact(text) {
+/** Replace the default public address (and an optional placeholder) with the configured one.
+ *  Also substitutes the WhatsApp number placeholder and optional contact/footer markers.
+ *  host is used to pick the pre-filled WhatsApp message (pod vs podai). */
+export function publicWhatsAppNumber() {
+  const digits = String(process.env.PUBLIC_WHATSAPP_NUMBER || "").replace(/\D+/g, "");
+  if (!/^[1-9]\d{7,14}$/.test(digits)) return "";
+  return digits;
+}
+
+export function whatsAppPrefill(host) {
+  return /(?:^|\.)podai\.swisspro\.site$/i.test(String(host || ""))
+    ? "Hi, I'd like to know more about POD.AI Agent for my shop"
+    : "Hi SwissPro POD, I have a question about a custom order";
+}
+
+export function whatsAppHref(host) {
+  const n = publicWhatsAppNumber();
+  if (!n) return "";
+  return `https://wa.me/${n}?text=${encodeURIComponent(whatsAppPrefill(host))}`;
+}
+
+export function applyPublicContact(text, host) {
   const email = publicContactEmail();
-  return String(text ?? "").split("__PUBLIC_CONTACT_EMAIL__").join(email).split(DEFAULT_PUBLIC_CONTACT_EMAIL).join(email);
+  let out = String(text ?? "").split("__PUBLIC_CONTACT_EMAIL__").join(email).split(DEFAULT_PUBLIC_CONTACT_EMAIL).join(email);
+  out = out.split("__PUBLIC_WHATSAPP_NUMBER__").join(publicWhatsAppNumber());
+  const href = whatsAppHref(host);
+  const contact = href
+    ? `<p class="wa-contact"><a href="${href}" target="_blank" rel="noopener noreferrer">WhatsApp</a></p>`
+    : "";
+  const footer = href
+    ? ` · <a class="wa-footer" href="${href}" target="_blank" rel="noopener noreferrer">WhatsApp</a>`
+    : "";
+  return out.split("<!--__WHATSAPP_CONTACT_LINK__-->").join(contact).split("<!--__WHATSAPP_FOOTER_LINK__-->").join(footer);
 }
