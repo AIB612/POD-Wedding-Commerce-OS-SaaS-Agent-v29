@@ -16,11 +16,19 @@ class PodAI_Chat_Admin {
 	const CAP = 'manage_woocommerce';
 
 	/**
+	 * When true, sanitize() accepts a trusted internal write (never set from request data).
+	 *
+	 * @var bool
+	 */
+	public static $trusted_update = false;
+
+	/**
 	 * Hooks.
 	 */
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue' ) );
 		add_action( 'admin_post_podai_chat_connect', array( __CLASS__, 'connect' ) );
 		add_action( 'admin_post_podai_chat_disconnect', array( __CLASS__, 'disconnect' ) );
 		add_action( 'admin_post_podai_chat_sync', array( __CLASS__, 'sync' ) );
@@ -68,37 +76,50 @@ class PodAI_Chat_Admin {
 	}
 
 	/**
-	 * Sanitize the form; connection fields are never taken from the form.
+	 * Enqueue admin CSS/JS on plugin screens only.
 	 *
-	 * @param array $in Input.
+	 * @param string $hook Admin page hook.
+	 */
+	public static function enqueue( $hook ) {
+		if ( false === strpos( (string) $hook, 'pod-ai-chat' ) ) {
+			return;
+		}
+		wp_register_style( 'podai-chat-admin', PODAI_CHAT_URL . 'assets/css/admin.css', array(), PODAI_CHAT_VERSION );
+		wp_enqueue_style( 'podai-chat-admin' );
+		wp_register_script( 'podai-chat-admin', PODAI_CHAT_URL . 'assets/js/admin.js', array(), PODAI_CHAT_VERSION, true );
+		wp_enqueue_script( 'podai-chat-admin' );
+	}
+
+	/**
+	 * Sanitize settings form fields. Connection fields are never accepted here,
+	 * regardless of any form marker. Internal writes use Plugin::update() / write_form_option().
+	 *
+	 * @param mixed $in Input.
 	 * @return array
 	 */
 	public static function sanitize( $in ) {
-		$cur = PodAI_Chat_Plugin::settings();
-		$in  = is_array( $in ) ? $in : array();
-		if ( empty( $in['_form'] ) ) {
-			return array_merge( $cur, $in ); // internal update_option() calls (connection, sync status).
+		if ( self::$trusted_update ) {
+			return is_array( $in ) ? $in : array();
 		}
+		$in    = is_array( $in ) ? $in : array();
 		$color = sanitize_hex_color( isset( $in['color'] ) ? $in['color'] : '' );
 		$code  = strtoupper( preg_replace( '/[^A-Za-z0-9_-]/', '', isset( $in['promo_code'] ) ? $in['promo_code'] : '' ) );
-		return array_merge(
-			$cur,
-			array(
-				'enabled'       => empty( $in['enabled'] ) ? 0 : 1,
-				'ticket_email'  => sanitize_email( isset( $in['ticket_email'] ) ? $in['ticket_email'] : '' ),
-				'color'         => $color ? $color : '#2b2520',
-				'position'      => isset( $in['position'] ) && 'left' === $in['position'] ? 'left' : 'right',
-				'language'      => isset( $in['language'] ) && in_array( $in['language'], array( 'auto', 'en', 'de', 'fr', 'it', 'zh' ), true ) ? $in['language'] : 'auto',
-				'title'         => sanitize_text_field( isset( $in['title'] ) ? $in['title'] : '' ),
-				'greeting'      => sanitize_text_field( isset( $in['greeting'] ) ? $in['greeting'] : '' ),
-				'shipping_page' => absint( isset( $in['shipping_page'] ) ? $in['shipping_page'] : 0 ),
-				'contact_page'  => absint( isset( $in['contact_page'] ) ? $in['contact_page'] : 0 ),
-				'promo_code'    => substr( $code, 0, 40 ),
-				'promo_summary' => sanitize_text_field( isset( $in['promo_summary'] ) ? $in['promo_summary'] : '' ),
-				'faq'           => sanitize_textarea_field( isset( $in['faq'] ) ? $in['faq'] : '' ),
-				'reply_hours'   => max( 1, min( 168, absint( isset( $in['reply_hours'] ) ? $in['reply_hours'] : 24 ) ) ),
-				'agent_api'     => empty( $in['agent_api'] ) ? 0 : 1,
-			)
+		return array(
+			'enabled'        => empty( $in['enabled'] ) ? 0 : 1,
+			'ticket_email'   => sanitize_email( isset( $in['ticket_email'] ) ? $in['ticket_email'] : '' ),
+			'color'          => $color ? $color : '#2b2520',
+			'position'       => isset( $in['position'] ) && 'left' === $in['position'] ? 'left' : 'right',
+			'language'       => isset( $in['language'] ) && in_array( $in['language'], array( 'auto', 'en', 'de', 'fr', 'it', 'zh' ), true ) ? $in['language'] : 'auto',
+			'title'          => sanitize_text_field( isset( $in['title'] ) ? $in['title'] : '' ),
+			'greeting'       => sanitize_text_field( isset( $in['greeting'] ) ? $in['greeting'] : '' ),
+			'shipping_page'  => absint( isset( $in['shipping_page'] ) ? $in['shipping_page'] : 0 ),
+			'contact_page'   => absint( isset( $in['contact_page'] ) ? $in['contact_page'] : 0 ),
+			'promo_code'     => substr( $code, 0, 40 ),
+			'promo_summary'  => sanitize_text_field( isset( $in['promo_summary'] ) ? $in['promo_summary'] : '' ),
+			'faq'            => sanitize_textarea_field( isset( $in['faq'] ) ? $in['faq'] : '' ),
+			'reply_hours'    => max( 1, min( 168, absint( isset( $in['reply_hours'] ) ? $in['reply_hours'] : 24 ) ) ),
+			'agent_api'      => empty( $in['agent_api'] ) ? 0 : 1,
+			'sync_sku_stock' => empty( $in['sync_sku_stock'] ) ? 0 : 1,
 		);
 	}
 
@@ -156,11 +177,14 @@ class PodAI_Chat_Admin {
 		if ( is_wp_error( $res ) || empty( $res['site_id'] ) || empty( $res['secret'] ) ) {
 			self::back( 'pod-ai-chat', 'connect_failed', array( 'podai_err' => is_wp_error( $res ) ? $res->get_error_message() : 'invalid_response' ) );
 		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified in self::guard().
+		$sync_sku_stock = empty( $_POST['sync_sku_stock'] ) ? 0 : 1;
 		PodAI_Chat_Plugin::update(
 			array(
-				'backend' => untrailingslashit( $backend ),
-				'site_id' => sanitize_text_field( $res['site_id'] ),
-				'secret'  => sanitize_text_field( $res['secret'] ),
+				'backend'        => untrailingslashit( $backend ),
+				'site_id'        => sanitize_text_field( $res['site_id'] ),
+				'secret'         => sanitize_text_field( $res['secret'] ),
+				'sync_sku_stock' => $sync_sku_stock,
 			)
 		);
 		PodAI_Chat_Sync::full_sync();
@@ -284,6 +308,49 @@ class PodAI_Chat_Admin {
 	}
 
 	/**
+	 * What is sent to Pod.AI after the admin connects, plus terms and privacy links.
+	 */
+	private static function service_disclosure() {
+		echo '<p>' . esc_html__( 'This plugin is a client for the Pod.AI hosted service. Nothing is sent until you click Connect to Pod.AI. After you connect, Pod.AI receives:', 'pod-ai-chat-for-woocommerce' ) . '</p>';
+		echo '<ul class="podai-data-list">';
+		echo '<li>' . esc_html__( 'On connect: your site URL, REST URL, store name, admin e-mail, currency, locale, and WordPress / WooCommerce / plugin versions.', 'pod-ai-chat-for-woocommerce' ) . '</li>';
+		echo '<li>' . esc_html__( 'Product sync (when you connect, when you save a product, and once a day): title, short description, prices, currency, image URL, product URL, in-stock status, type, purchasable and on-sale flags, categories, tags, and visible variations (title, price, in-stock status). SKUs and exact stock quantities are not sent unless you opt in below.', 'pod-ai-chat-for-woocommerce' ) . '</li>';
+		echo '<li>' . esc_html__( 'Store settings you configure: policy page titles and text, shipping zones and costs, ticket e-mail, widget settings, FAQ, and the public coupon (if you set one).', 'pod-ai-chat-for-woocommerce' ) . '</li>';
+		echo '<li>' . esc_html__( 'Chat messages typed by shoppers, and the e-mail a shopper leaves for a ticket.', 'pod-ai-chat-for-woocommerce' ) . '</li>';
+		echo '<li>' . esc_html__( 'Order data is never synced. When a shopper gives an order number and billing e-mail, Pod.AI asks your site and receives only status, items, total and tracking.', 'pod-ai-chat-for-woocommerce' ) . '</li>';
+		echo '</ul><p>';
+		/* translators: 1: terms URL, 2: privacy URL. */
+		$terms = __( 'Terms: <a href="%1$s" target="_blank" rel="noopener noreferrer">%1$s</a>. Privacy: <a href="%2$s" target="_blank" rel="noopener noreferrer">%2$s</a>. Disconnecting or uninstalling deletes your store\'s data at Pod.AI.', 'pod-ai-chat-for-woocommerce' );
+		printf(
+			wp_kses(
+				$terms,
+				array(
+					'a' => array(
+						'href'   => array(),
+						'target' => array(),
+						'rel'    => array(),
+					),
+				)
+			),
+			esc_url( 'https://podai.swisspro.site/terms' ),
+			esc_url( 'https://podai.swisspro.site/privacy' )
+		);
+		echo '</p>';
+	}
+
+	/**
+	 * Opt-in checkbox for SKUs and exact stock quantities (off by default).
+	 *
+	 * @param string $opt     Settings option name, or empty when the field is posted as sync_sku_stock.
+	 * @param array  $s       Current settings.
+	 * @param bool   $in_form Whether the field belongs to the Settings API form.
+	 */
+	private static function sku_stock_checkbox( $opt, $s, $in_form ) {
+		$name = $in_form ? $opt . '[sync_sku_stock]' : 'sync_sku_stock';
+		echo '<p><label><input type="checkbox" name="' . esc_attr( $name ) . '" value="1" ' . checked( ! empty( $s['sync_sku_stock'] ), true, false ) . '> ' . esc_html__( 'Also send SKUs and exact stock quantities (off by default). If this is unchecked, only in-stock status is sent.', 'pod-ai-chat-for-woocommerce' ) . '</label></p>';
+	}
+
+	/**
 	 * Page select.
 	 *
 	 * @param string $name     Field.
@@ -312,7 +379,6 @@ class PodAI_Chat_Admin {
 		echo '<div class="wrap podai-wrap"><h1>' . esc_html__( 'Pod.AI Chat', 'pod-ai-chat-for-woocommerce' ) . '</h1>';
 		self::notices();
 		settings_errors( 'podai_chat' );
-		echo '<style>.podai-wrap .card{max-width:860px}.podai-kpi{display:flex;gap:28px;flex-wrap:wrap}.podai-kpi div b{display:block;font-size:20px}.podai-plans td,.podai-plans th{padding:6px 12px}.podai-badge{display:inline-block;padding:2px 8px;border-radius:10px;background:#e7f5ee;color:#0a6b3d;font-weight:600}.podai-badge.off{background:#fbeaea;color:#8a1f1f}</style>';
 
 		// 1) connection.
 		echo '<div class="card"><h2>' . esc_html__( '1. Connection', 'pod-ai-chat-for-woocommerce' ) . '</h2>';
@@ -331,21 +397,22 @@ class PodAI_Chat_Admin {
 			} else {
 				echo '<p><span class="podai-badge off">' . esc_html__( 'Pod.AI is not reachable right now.', 'pod-ai-chat-for-woocommerce' ) . '</span> ' . esc_html( $st->get_error_message() ) . '</p>';
 			}
-			echo '<p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline">';
+			echo '<p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="podai-inline-form">';
 			wp_nonce_field( 'podai_chat_sync' );
 			echo '<input type="hidden" name="action" value="podai_chat_sync">';
 			submit_button( __( 'Sync products now', 'pod-ai-chat-for-woocommerce' ), 'secondary', 'submit', false );
-			echo '</form> <form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline" onsubmit="return confirm(\'' . esc_js( __( 'Disconnect and delete this store\'s data at Pod.AI (tickets, chats, products)?', 'pod-ai-chat-for-woocommerce' ) ) . '\')">';
+			echo '</form> <form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="podai-inline-form podai-disconnect" data-podai-confirm="' . esc_attr( __( 'Disconnect and delete this store\'s data at Pod.AI (tickets, chats, products)?', 'pod-ai-chat-for-woocommerce' ) ) . '">';
 			wp_nonce_field( 'podai_chat_disconnect' );
 			echo '<input type="hidden" name="action" value="podai_chat_disconnect">';
 			submit_button( __( 'Disconnect', 'pod-ai-chat-for-woocommerce' ), 'delete', 'submit', false );
 			echo '</form></p>';
 		} else {
-			echo '<p>' . esc_html__( 'Connect your store to the Pod.AI service. Your site gets its own key; only public product data, your policies and settings are sent. Orders stay in WooCommerce and are only read when a shopper gives the order number and e-mail.', 'pod-ai-chat-for-woocommerce' ) . '</p>';
+			self::service_disclosure();
 			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 			wp_nonce_field( 'podai_chat_connect' );
 			echo '<input type="hidden" name="action" value="podai_chat_connect">';
 			echo '<p><label>' . esc_html__( 'Pod.AI service URL', 'pod-ai-chat-for-woocommerce' ) . '<br><input type="url" class="regular-text" name="backend" value="' . esc_attr( $s['backend'] ) . '"></label></p>';
+			self::sku_stock_checkbox( '', $s, false );
 			submit_button( __( 'Connect to Pod.AI', 'pod-ai-chat-for-woocommerce' ), 'primary', 'submit', false );
 			echo '</form>';
 		}
@@ -354,7 +421,11 @@ class PodAI_Chat_Admin {
 		// 2) settings.
 		echo '<form method="post" action="options.php">';
 		settings_fields( 'podai_chat' );
-		echo '<input type="hidden" name="' . esc_attr( $opt ) . '[_form]" value="1">';
+		if ( PodAI_Chat_Plugin::connected() ) {
+			echo '<div class="card"><h2>' . esc_html__( 'Product sync', 'pod-ai-chat-for-woocommerce' ) . '</h2>';
+			self::sku_stock_checkbox( $opt, $s, true );
+			echo '<p class="description">' . esc_html__( 'After changing this, click “Sync products now” so Pod.AI updates or removes previously sent SKUs and quantities.', 'pod-ai-chat-for-woocommerce' ) . '</p></div>';
+		}
 		echo '<div class="card"><h2>' . esc_html__( '2. Chat and tickets', 'pod-ai-chat-for-woocommerce' ) . '</h2><table class="form-table" role="presentation">';
 		echo '<tr><th>' . esc_html__( 'Chat on the storefront', 'pod-ai-chat-for-woocommerce' ) . '</th><td><label><input type="checkbox" name="' . esc_attr( $opt ) . '[enabled]" value="1" ' . checked( $s['enabled'], 1, false ) . '> ' . esc_html__( 'Show the chat widget', 'pod-ai-chat-for-woocommerce' ) . '</label></td></tr>';
 		echo '<tr><th><label for="podai-te">' . esc_html__( 'Ticket e-mail', 'pod-ai-chat-for-woocommerce' ) . '</label></th><td><input id="podai-te" type="email" class="regular-text" name="' . esc_attr( $opt ) . '[ticket_email]" value="' . esc_attr( $s['ticket_email'] ) . '" placeholder="' . esc_attr( get_option( 'admin_email' ) ) . '"><p class="description">' . esc_html__( 'When a shopper clicks "contact us" and leaves an e-mail, a ticket is created and the chat transcript is sent here. Reply to that e-mail to answer the shopper.', 'pod-ai-chat-for-woocommerce' ) . '</p></td></tr>';
@@ -381,7 +452,7 @@ class PodAI_Chat_Admin {
 		echo '<tr><th><label for="podai-ti">' . esc_html__( 'Header title', 'pod-ai-chat-for-woocommerce' ) . '</label></th><td><input id="podai-ti" type="text" class="regular-text" name="' . esc_attr( $opt ) . '[title]" value="' . esc_attr( $s['title'] ) . '" placeholder="' . esc_attr( get_bloginfo( 'name' ) ) . '"></td></tr>';
 		echo '</table></div>';
 
-		echo '<div class="card"><h2>' . esc_html__( '4. Knowledge', 'pod-ai-chat-for-woocommerce' ) . '</h2><p>' . esc_html__( 'The assistant answers from your refund/returns, terms and privacy pages, your shipping zones and the pages below. No external AI service is used.', 'pod-ai-chat-for-woocommerce' ) . '</p><table class="form-table" role="presentation">';
+		echo '<div class="card"><h2>' . esc_html__( '4. Knowledge', 'pod-ai-chat-for-woocommerce' ) . '</h2><p>' . esc_html__( 'The assistant answers from your store catalogue and the pages below, through the Pod.AI service you connect in this screen. No third-party LLM API key is required. You can optionally add your own LLM key in your Pod.AI account.', 'pod-ai-chat-for-woocommerce' ) . '</p><table class="form-table" role="presentation">';
 		echo '<tr><th>' . esc_html__( 'Shipping information page', 'pod-ai-chat-for-woocommerce' ) . '</th><td>';
 		self::page_select( 'shipping_page', $s['shipping_page'] );
 		echo '</td></tr><tr><th>' . esc_html__( 'Contact page', 'pod-ai-chat-for-woocommerce' ) . '</th><td>';
@@ -423,7 +494,7 @@ class PodAI_Chat_Admin {
 					}
 				} elseif ( $on && $p['price'] && ! $sub ) {
 					foreach ( array( 'monthly' => __( 'Monthly', 'pod-ai-chat-for-woocommerce' ), 'annual' => __( 'Yearly', 'pod-ai-chat-for-woocommerce' ) ) as $cycle => $label ) {
-						echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline;margin-right:6px">';
+						echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="podai-inline-form">';
 						wp_nonce_field( 'podai_chat_upgrade' );
 						echo '<input type="hidden" name="action" value="podai_chat_upgrade"><input type="hidden" name="plan" value="' . esc_attr( $p['handle'] ) . '"><input type="hidden" name="cycle" value="' . esc_attr( $cycle ) . '">';
 						submit_button( $label, 'monthly' === $cycle ? 'primary small' : 'secondary small', 'submit', false );
@@ -482,7 +553,7 @@ class PodAI_Chat_Admin {
 		foreach ( $labels as $k => $label ) {
 			echo '<li><a href="' . esc_url( add_query_arg( array( 'page' => 'pod-ai-chat-tickets', 'status' => $k ), admin_url( 'admin.php' ) ) ) . '"' . ( $k === $status ? ' class="current"' : '' ) . '>' . esc_html( $label ) . '</a>' . ( ++$i < count( $labels ) ? ' | ' : '' ) . '</li>';
 		}
-		echo '</ul><table class="wp-list-table widefat fixed striped"><thead><tr><th style="width:130px">' . esc_html__( 'Ticket', 'pod-ai-chat-for-woocommerce' ) . '</th><th style="width:90px">' . esc_html__( 'Status', 'pod-ai-chat-for-woocommerce' ) . '</th><th>' . esc_html__( 'Customer', 'pod-ai-chat-for-woocommerce' ) . '</th><th>' . esc_html__( 'Order', 'pod-ai-chat-for-woocommerce' ) . '</th><th>' . esc_html__( 'Reason', 'pod-ai-chat-for-woocommerce' ) . '</th><th style="width:150px">' . esc_html__( 'Created', 'pod-ai-chat-for-woocommerce' ) . '</th></tr></thead><tbody>';
+		echo '</ul><table class="wp-list-table widefat fixed striped"><thead><tr><th class="podai-ticket-col-id">' . esc_html__( 'Ticket', 'pod-ai-chat-for-woocommerce' ) . '</th><th class="podai-ticket-col-status">' . esc_html__( 'Status', 'pod-ai-chat-for-woocommerce' ) . '</th><th>' . esc_html__( 'Customer', 'pod-ai-chat-for-woocommerce' ) . '</th><th>' . esc_html__( 'Order', 'pod-ai-chat-for-woocommerce' ) . '</th><th>' . esc_html__( 'Reason', 'pod-ai-chat-for-woocommerce' ) . '</th><th class="podai-ticket-col-created">' . esc_html__( 'Created', 'pod-ai-chat-for-woocommerce' ) . '</th></tr></thead><tbody>';
 		if ( ! $list ) {
 			echo '<tr><td colspan="6">' . esc_html__( 'No tickets yet.', 'pod-ai-chat-for-woocommerce' ) . '</td></tr>';
 		}
@@ -496,17 +567,17 @@ class PodAI_Chat_Admin {
 		}
 		echo '</tbody></table>';
 		if ( $current ) {
-			echo '<div class="card" style="max-width:900px;margin-top:20px"><h2>' . esc_html( $current['ticket_id'] ? $current['ticket_id'] : $current['id'] ) . ' · ' . esc_html( (string) $current['customer_email'] ) . '</h2>';
-			echo '<h3>' . esc_html__( 'Chat transcript', 'pod-ai-chat-for-woocommerce' ) . '</h3><div style="max-height:360px;overflow:auto;border:1px solid #dcdcde;padding:8px 12px;background:#fff">';
+			echo '<div class="card podai-ticket-card"><h2>' . esc_html( $current['ticket_id'] ? $current['ticket_id'] : $current['id'] ) . ' · ' . esc_html( (string) $current['customer_email'] ) . '</h2>';
+			echo '<h3>' . esc_html__( 'Chat transcript', 'pod-ai-chat-for-woocommerce' ) . '</h3><div class="podai-transcript">';
 			foreach ( $current['messages'] as $m ) {
 				$who = 'user' === $m['role'] ? __( 'Customer', 'pod-ai-chat-for-woocommerce' ) : __( 'Assistant', 'pod-ai-chat-for-woocommerce' );
-				echo '<p><b>' . esc_html( $who ) . '</b> <span style="color:#777">' . esc_html( substr( str_replace( 'T', ' ', (string) $m['at'] ), 0, 16 ) ) . '</span><br>' . nl2br( esc_html( $m['text'] ) ) . '</p>';
+				echo '<p><b>' . esc_html( $who ) . '</b> <span class="podai-muted">' . esc_html( substr( str_replace( 'T', ' ', (string) $m['at'] ), 0, 16 ) ) . '</span><br>' . nl2br( esc_html( $m['text'] ) ) . '</p>';
 			}
 			echo '</div>';
 			if ( $current['notes'] ) {
 				echo '<h3>' . esc_html__( 'Notes', 'pod-ai-chat-for-woocommerce' ) . '</h3><ul>';
 				foreach ( $current['notes'] as $n ) {
-					echo '<li><span style="color:#777">' . esc_html( substr( str_replace( 'T', ' ', (string) $n['at'] ), 0, 16 ) ) . '</span> — ' . esc_html( $n['text'] ) . '</li>';
+					echo '<li><span class="podai-muted">' . esc_html( substr( str_replace( 'T', ' ', (string) $n['at'] ), 0, 16 ) ) . '</span> — ' . esc_html( $n['text'] ) . '</li>';
 				}
 				echo '</ul>';
 			}

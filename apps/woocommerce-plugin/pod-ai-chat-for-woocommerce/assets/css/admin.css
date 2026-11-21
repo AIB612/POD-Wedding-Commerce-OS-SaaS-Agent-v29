@@ -1,0 +1,60 @@
+/* Pod.AI Chat admin (Settings and Tickets). */
+.podai-wrap .card {
+	max-width: 860px;
+}
+.podai-kpi {
+	display: flex;
+	gap: 28px;
+	flex-wrap: wrap;
+}
+.podai-kpi div b {
+	display: block;
+	font-size: 20px;
+}
+.podai-plans td,
+.podai-plans th {
+	padding: 6px 12px;
+}
+.podai-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 10px;
+	background: #e7f5ee;
+	color: #0a6b3d;
+	font-weight: 600;
+}
+.podai-badge.off {
+	background: #fbeaea;
+	color: #8a1f1f;
+}
+.podai-inline-form {
+	display: inline;
+	margin-right: 6px;
+}
+.podai-muted {
+	color: #777;
+}
+.podai-ticket-col-id {
+	width: 130px;
+}
+.podai-ticket-col-status {
+	width: 90px;
+}
+.podai-ticket-col-created {
+	width: 150px;
+}
+.podai-ticket-card {
+	max-width: 900px;
+	margin-top: 20px;
+}
+.podai-transcript {
+	max-height: 360px;
+	overflow: auto;
+	border: 1px solid #dcdcde;
+	padding: 8px 12px;
+	background: #fff;
+}
+.podai-data-list {
+	margin: 0.5em 0 1em 1.5em;
+	list-style: disc;
+}

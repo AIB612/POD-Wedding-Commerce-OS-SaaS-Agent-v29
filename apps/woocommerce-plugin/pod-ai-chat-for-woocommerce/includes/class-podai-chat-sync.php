@@ -1,7 +1,8 @@
 <?php
 /**
  * Product sync: push on save / stock change / delete, full sync daily (WP-cron) and on demand, in batches of 50.
- * Only public catalogue data is sent (title, price, currency, image, stock, URL, categories, tags, short text, variations).
+ * Public catalogue data is sent (title, price, currency, image, in-stock status, URL, categories, tags, short text, variations).
+ * SKUs and exact stock quantities are sent only when the admin opts in (sync_sku_stock).
  *
  * @package PodAIChat
  */
@@ -128,7 +129,7 @@ class PodAI_Chat_Sync {
 				$max          = max( $max, (float) $v->get_price() );
 			}
 		}
-		return array(
+		$row = array(
 			'id'                => (string) $p->get_id(),
 			'name'              => wp_strip_all_tags( $p->get_name() ),
 			'price'             => '' === $p->get_price() ? null : (float) $p->get_price(),
@@ -138,17 +139,24 @@ class PodAI_Chat_Sync {
 			'image'             => $img ? $img : '',
 			'url'               => get_permalink( $p->get_id() ),
 			'in_stock'          => $p->is_in_stock(),
-			'stock_quantity'    => $p->managing_stock() ? (int) $p->get_stock_quantity() : null,
 			'type'              => $p->get_type(),
 			'purchasable'       => $p->is_purchasable(),
 			'on_sale'           => $p->is_on_sale(),
-			'sku'               => $p->get_sku(),
 			'categories'        => $terms( 'product_cat' ),
 			'tags'              => $terms( 'product_tag' ),
 			'short_description' => wp_strip_all_tags( $p->get_short_description() ? $p->get_short_description() : wp_trim_words( $p->get_description(), 40 ) ),
 			'variations'        => $variations,
 			'updated_at'        => $p->get_date_modified() ? $p->get_date_modified()->date( 'c' ) : '',
 		);
+		// SKU and exact quantities are opt-in (off by default). Always send null when off so a previous opt-in can be cleared.
+		if ( ! empty( PodAI_Chat_Plugin::settings()['sync_sku_stock'] ) ) {
+			$row['stock_quantity'] = $p->managing_stock() ? (int) $p->get_stock_quantity() : null;
+			$row['sku']            = $p->get_sku();
+		} else {
+			$row['stock_quantity'] = null;
+			$row['sku']            = '';
+		}
+		return $row;
 	}
 
 	/**

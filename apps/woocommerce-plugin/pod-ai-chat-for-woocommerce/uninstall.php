@@ -12,8 +12,15 @@ if ( file_exists( WP_PLUGIN_DIR . '/pod-ai-chat/pod-ai-chat.php' ) ) {
 	return;
 }
 
-$podai_chat_settings = get_option( 'podai_chat_settings', array() );
-if ( is_array( $podai_chat_settings ) && ! empty( $podai_chat_settings['site_id'] ) && ! empty( $podai_chat_settings['secret'] ) ) {
+$podai_chat_connection = get_option( 'podai_chat_connection', array() );
+$podai_chat_settings   = get_option( 'podai_chat_settings', array() );
+if ( ! is_array( $podai_chat_connection ) ) {
+	$podai_chat_connection = array();
+}
+if ( ( empty( $podai_chat_connection['site_id'] ) || empty( $podai_chat_connection['secret'] ) ) && is_array( $podai_chat_settings ) ) {
+	$podai_chat_connection = array_merge( $podai_chat_connection, $podai_chat_settings );
+}
+if ( ! empty( $podai_chat_connection['site_id'] ) && ! empty( $podai_chat_connection['secret'] ) ) {
 	require_once __DIR__ . '/includes/class-podai-chat-client.php';
 	require_once __DIR__ . '/includes/class-podai-chat-plugin.php';
 	if ( ! defined( 'PODAI_CHAT_BACKEND' ) ) {
@@ -22,6 +29,7 @@ if ( is_array( $podai_chat_settings ) && ! empty( $podai_chat_settings['site_id'
 	PodAI_Chat_Client::request( 'POST', 'disconnect', array(), 10 );
 }
 delete_option( 'podai_chat_settings' );
+delete_option( 'podai_chat_connection' );
 delete_transient( 'podai_chat_config' );
 delete_transient( 'podai_chat_verify_nonce' );
 wp_clear_scheduled_hook( 'podai_chat_full_sync' );

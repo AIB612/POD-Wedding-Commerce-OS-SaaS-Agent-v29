@@ -17,7 +17,6 @@
   function el(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text != null) x.textContent = text; return x; }
   function svg(p) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>"; }
   function post(url, body, headers) { return fetch(url, { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, headers || {}), credentials: "same-origin", body: JSON.stringify(body) }); }
-  function ev(type, extra) { try { post(C.api.event, Object.assign({ type: type, conversation_id: conv }, extra || {})).catch(function () {}); } catch (e) {} }
 
   var btn = el("button", "pc-l"), win = el("div", "pc-w"), head = el("div", "pc-h"), av = el("div", "pc-av"), tt = el("div", "pc-t"), name = el("b"), sub = el("small", null, t.online), x = el("button");
   var log = el("div", "pc-log"), form = el("form", "pc-f"), ta = el("textarea"), send = el("button"), foot = el("div", "pc-ft", t.by), live = el("div", "pc-sr");
@@ -43,7 +42,6 @@
     cfg = c || {}; if (cfg.enabled === false) { btn.remove(); win.remove(); return; }
     if (cfg.widget && cfg.widget.language && cfg.widget.language !== "auto") relang(cfg.widget.language);
     apply();
-    try { var k = "podai_ping", n = Date.now(); if (!(n - (+localStorage.getItem(k) || 0) < 864e5)) { localStorage.setItem(k, n); ev("embed_ping"); } } catch (e) {}
   }).catch(function () {});
 
   function scroll() { log.scrollTop = log.scrollHeight; }
@@ -58,13 +56,13 @@
   function refreshCart() { try { if (window.jQuery) window.jQuery(document.body).trigger("wc_fragment_refresh"); document.body.dispatchEvent(new CustomEvent("wc-blocks_added_to_cart")); } catch (e) {} }
   function actions(text) {
     var a = el("div", "pc-act"); a.append(el("span", null, text));
-    var go = el("a", "pc-sm pc-pri", t.checkout + " →"); go.href = link(cfg.checkout_url || C.checkoutUrl); go.onclick = function () { ev("checkout_click"); };
+    var go = el("a", "pc-sm pc-pri", t.checkout + " →"); go.href = link(cfg.checkout_url || C.checkoutUrl);
     a.append(go); log.append(a); scroll();
   }
   function addToCart(p, b) {
     b.disabled = true;
     store(C.api.addItem, { id: Number(p.cart.product_id), quantity: 1 }).then(function () {
-      b.textContent = t.added; ev("add_to_cart", { product_id: p.id }); refreshCart(); actions(t.inCart.replace("{n}", p.name));
+      b.textContent = t.added; refreshCart(); actions(t.inCart.replace("{n}", p.name));
     }).catch(function () { b.disabled = false; msg("pc-a", t.addFail); });
   }
   function couponBlock(u) {
@@ -72,7 +70,7 @@
     if (u.summary) a.append(el("span", null, u.summary));
     a.append(cp, b); log.append(a);
     b.onclick = function () { b.disabled = true;
-      store(C.api.applyCoupon, { code: u.code }).then(function () { ev("coupon_applied"); refreshCart(); a.remove(); actions(t.applied.replace("{c}", u.code)); })
+      store(C.api.applyCoupon, { code: u.code }).then(function () { refreshCart(); a.remove(); actions(t.applied.replace("{c}", u.code)); })
         .catch(function () { b.disabled = false; msg("pc-a", t.applyFail.replace("{c}", u.code)); });
     };
   }
@@ -85,7 +83,7 @@
         u.items.forEach(function (p) {
           if (!p.link) return;
           var c = el("div", "pc-pc"); c.setAttribute("role", "listitem");
-          var im = el("a", "pc-img"); im.href = link(p.link); im.tabIndex = -1; im.onclick = function () { ev("product_click", { product_id: p.id }); };
+          var im = el("a", "pc-img"); im.href = link(p.link); im.tabIndex = -1;
           if (p.image) { var i = el("img"); i.src = p.image; i.alt = p.name; i.loading = "lazy"; i.width = 156; i.height = 156; im.append(i); }
           var b = el("div", "pc-b"); b.append(el("b", null, p.name), el("span", "pc-p", money(p.unit_price, p.currency)));
           var bt = el("div", "pc-btn"), v = el("a", null, t.view); v.href = link(p.link); v.onclick = im.onclick; bt.append(v);
@@ -139,7 +137,7 @@
   function toggle(on) {
     on = on == null ? !win.classList.contains("pc-on") : on;
     win.classList.toggle("pc-on", on); btn.setAttribute("aria-expanded", String(on)); btn.setAttribute("aria-label", on ? t.close : t.open);
-    if (on && !opened) { opened = true; ev("chat_open"); var g = cfg.greeting && cfg.greeting[LANG]; msg("pc-a", C.greeting || g || t.hi); chips(t.chips); }
+    if (on && !opened) { opened = true; var g = cfg.greeting && cfg.greeting[LANG]; msg("pc-a", C.greeting || g || t.hi); chips(t.chips); }
     if (on) setTimeout(function () { if (window.innerWidth > 520) ta.focus(); }, 250); else btn.focus();
     if (window.innerWidth <= 520) document.documentElement.style.overflow = on ? "hidden" : "";
   }

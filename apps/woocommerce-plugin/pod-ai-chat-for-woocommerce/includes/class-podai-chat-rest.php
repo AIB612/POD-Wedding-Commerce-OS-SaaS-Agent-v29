@@ -5,7 +5,6 @@
  *   POST lookup   signed callback from the Pod.AI backend: order lookup / coupon check
  *   POST chat     storefront widget → backend (signed here; the secret never reaches the browser), per-visitor rate limit
  *   GET  config   widget config (cached 60 s)
- *   POST event    widget events (chat_open, product_click, add_to_cart, coupon_applied, checkout_click)
  *
  * @package PodAIChat
  */
@@ -70,15 +69,6 @@ class PodAI_Chat_REST {
 				'methods'             => 'GET',
 				'callback'            => array( __CLASS__, 'config' ),
 				'permission_callback' => '__return_true', // Public widget configuration (colours, greeting).
-			)
-		);
-		register_rest_route(
-			self::NS,
-			'/event',
-			array(
-				'methods'             => 'POST',
-				'callback'            => array( __CLASS__, 'event' ),
-				'permission_callback' => '__return_true', // Anonymous widget analytics events, whitelisted types only.
 			)
 		);
 	}
@@ -184,29 +174,5 @@ class PodAI_Chat_REST {
 			set_transient( 'podai_chat_config', $cfg, MINUTE_IN_SECONDS );
 		}
 		return rest_ensure_response( $cfg );
-	}
-
-	/**
-	 * Widget event.
-	 *
-	 * @param WP_REST_Request $request Request.
-	 * @return WP_REST_Response
-	 */
-	public static function event( WP_REST_Request $request ) {
-		$type = sanitize_key( (string) $request->get_param( 'type' ) );
-		if ( ! in_array( $type, array( 'chat_open', 'product_click', 'add_to_cart', 'embed_ping', 'coupon_applied', 'checkout_click' ), true ) || ! self::allow( 'event', 60 ) ) {
-			return rest_ensure_response( array( 'ok' => false ) );
-		}
-		PodAI_Chat_Client::request(
-			'POST',
-			'event',
-			array(
-				'type'            => $type,
-				'product_id'      => sanitize_text_field( (string) $request->get_param( 'product_id' ) ),
-				'conversation_id' => sanitize_text_field( (string) $request->get_param( 'conversation_id' ) ),
-			),
-			5
-		);
-		return rest_ensure_response( array( 'ok' => true ) );
 	}
 }

@@ -2,6 +2,10 @@
 /**
  * Bootstrap: options, hooks, cron.
  *
+ * Form settings (widget, knowledge, sync preferences) live in podai_chat_settings and are sanitized
+ * through the Settings API. Connection credentials and sync status live in a separate option,
+ * podai_chat_connection, so the settings form cannot overwrite them.
+ *
  * @package PodAIChat
  */
 
@@ -12,9 +16,10 @@ defined( 'ABSPATH' ) || exit;
  */
 final class PodAI_Chat_Plugin {
 
-	const OPTION   = 'podai_chat_settings';
-	const CRON     = 'podai_chat_full_sync';
-	const CRON_ONE = 'podai_chat_sync_batch';
+	const OPTION     = 'podai_chat_settings';
+	const CONNECTION = 'podai_chat_connection';
+	const CRON       = 'podai_chat_full_sync';
+	const CRON_ONE   = 'podai_chat_sync_batch';
 
 	/**
 	 * Singleton.
@@ -39,7 +44,6 @@ final class PodAI_Chat_Plugin {
 	 * Hooks.
 	 */
 	private function __construct() {
-		add_action( 'init', array( $this, 'load_textdomain' ) );
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			add_action( 'admin_notices', array( $this, 'notice_no_woocommerce' ) );
 			return;
@@ -57,14 +61,6 @@ final class PodAI_Chat_Plugin {
 	}
 
 	/**
-	 * Translations (en, de, fr, it, zh_CN in /languages).
-	 */
-	public function load_textdomain() {
-		// Needed while the plugin ships its own translations (not hosted on WordPress.org).
-		load_plugin_textdomain( 'pod-ai-chat-for-woocommerce', false, dirname( plugin_basename( PODAI_CHAT_FILE ) ) . '/languages' ); // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
-	}
-
-	/**
 	 * Notice when WooCommerce is missing.
 	 */
 	public function notice_no_woocommerce() {
@@ -72,15 +68,21 @@ final class PodAI_Chat_Plugin {
 	}
 
 	/**
-	 * Default settings.
+	 * Keys stored in the connection option (never accepted from the settings form).
+	 *
+	 * @return string[]
+	 */
+	public static function connection_keys() {
+		return array( 'backend', 'site_id', 'secret', 'last_sync', 'last_sync_info' );
+	}
+
+	/**
+	 * Default form settings.
 	 *
 	 * @return array
 	 */
-	public static function defaults() {
+	public static function form_defaults() {
 		return array(
-			'backend'        => PODAI_CHAT_BACKEND,
-			'site_id'        => '',
-			'secret'         => '',
 			'enabled'        => 1,
 			'ticket_email'   => '',
 			'color'          => '#2b2520',
@@ -95,28 +97,133 @@ final class PodAI_Chat_Plugin {
 			'faq'            => '',
 			'reply_hours'    => 24,
 			'agent_api'      => 1,
+			'sync_sku_stock' => 0,
+		);
+	}
+
+	/**
+	 * Default connection values.
+	 *
+	 * @return array
+	 */
+	public static function connection_defaults() {
+		return array(
+			'backend'        => PODAI_CHAT_BACKEND,
+			'site_id'        => '',
+			'secret'         => '',
 			'last_sync'      => '',
 			'last_sync_info' => '',
 		);
 	}
 
 	/**
-	 * Settings merged with defaults.
+	 * Default settings (form + connection), for callers that expect one array.
+	 *
+	 * @return array
+	 */
+	public static function defaults() {
+		return array_merge( self::connection_defaults(), self::form_defaults() );
+	}
+
+	/**
+	 * Move credentials out of the settings option (installs from 1.2.1 and earlier).
+	 */
+	private static function migrate_connection() {
+		static $done = false;
+		if ( $done ) {
+			return;
+		}
+		$done = true;
+		if ( false !== get_option( self::CONNECTION, false ) ) {
+			return;
+		}
+		$saved = get_option( self::OPTION, array() );
+		if ( ! is_array( $saved ) ) {
+			$saved = array();
+		}
+		$has = ! empty( $saved['site_id'] ) || ! empty( $saved['secret'] ) || ! empty( $saved['last_sync'] );
+		if ( ! $has && empty( $saved['backend'] ) ) {
+			return;
+		}
+		$moved = array();
+		foreach ( self::connection_keys() as $k ) {
+			if ( isset( $saved[ $k ] ) ) {
+				$moved[ $k ] = $saved[ $k ];
+			}
+		}
+		add_option( self::CONNECTION, wp_parse_args( $moved, self::connection_defaults() ), '', false );
+		foreach ( self::connection_keys() as $k ) {
+			unset( $saved[ $k ] );
+		}
+		self::write_form_option( $saved );
+	}
+
+	/**
+	 * Write the settings option, bypassing the Settings API allowlist used for form posts.
+	 *
+	 * @param array $value Form settings only.
+	 */
+	public static function write_form_option( array $value ) {
+		if ( class_exists( 'PodAI_Chat_Admin' ) ) {
+			PodAI_Chat_Admin::$trusted_update = true;
+		}
+		update_option( self::OPTION, $value, false );
+		if ( class_exists( 'PodAI_Chat_Admin' ) ) {
+			PodAI_Chat_Admin::$trusted_update = false;
+		}
+	}
+
+	/**
+	 * Form settings merged with defaults (no connection fields).
+	 *
+	 * @return array
+	 */
+	public static function form_settings() {
+		self::migrate_connection();
+		$saved = get_option( self::OPTION, array() );
+		if ( ! is_array( $saved ) ) {
+			$saved = array();
+		}
+		foreach ( self::connection_keys() as $k ) {
+			unset( $saved[ $k ] );
+		}
+		return wp_parse_args( $saved, self::form_defaults() );
+	}
+
+	/**
+	 * Connection option merged with defaults.
+	 *
+	 * @return array
+	 */
+	public static function connection() {
+		self::migrate_connection();
+		$saved = get_option( self::CONNECTION, array() );
+		return wp_parse_args( is_array( $saved ) ? $saved : array(), self::connection_defaults() );
+	}
+
+	/**
+	 * Settings merged with defaults (form + connection).
 	 *
 	 * @return array
 	 */
 	public static function settings() {
-		$saved = get_option( self::OPTION, array() );
-		return wp_parse_args( is_array( $saved ) ? $saved : array(), self::defaults() );
+		return array_merge( self::connection(), self::form_settings() );
 	}
 
 	/**
-	 * Update some settings.
+	 * Update some settings. Connection keys are written to the connection option.
 	 *
 	 * @param array $patch Values.
 	 */
 	public static function update( array $patch ) {
-		update_option( self::OPTION, array_merge( self::settings(), $patch ), false );
+		$conn_patch = array_intersect_key( $patch, array_flip( self::connection_keys() ) );
+		$form_patch = array_diff_key( $patch, $conn_patch );
+		if ( $conn_patch ) {
+			update_option( self::CONNECTION, array_merge( self::connection(), $conn_patch ), false );
+		}
+		if ( $form_patch ) {
+			self::write_form_option( array_merge( self::form_settings(), $form_patch ) );
+		}
 	}
 
 	/**
@@ -125,8 +232,8 @@ final class PodAI_Chat_Plugin {
 	 * @return bool
 	 */
 	public static function connected() {
-		$s = self::settings();
-		return ! empty( $s['site_id'] ) && ! empty( $s['secret'] );
+		$c = self::connection();
+		return ! empty( $c['site_id'] ) && ! empty( $c['secret'] );
 	}
 
 	/**
@@ -137,7 +244,7 @@ final class PodAI_Chat_Plugin {
 			wp_schedule_event( time() + 300, 'daily', self::CRON );
 		}
 		if ( false === get_option( self::OPTION, false ) ) {
-			add_option( self::OPTION, self::defaults(), '', false );
+			add_option( self::OPTION, self::form_defaults(), '', false );
 		}
 	}
 

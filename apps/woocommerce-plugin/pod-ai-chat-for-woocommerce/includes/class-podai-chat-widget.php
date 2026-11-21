@@ -46,7 +46,6 @@ class PodAI_Chat_Widget {
 				'api'         => array(
 					'chat'        => esc_url_raw( rest_url( 'pod-ai/v1/chat' ) ),
 					'config'      => esc_url_raw( rest_url( 'pod-ai/v1/config' ) ),
-					'event'       => esc_url_raw( rest_url( 'pod-ai/v1/event' ) ),
 					'addItem'     => esc_url_raw( rest_url( 'wc/store/v1/cart/add-item' ) ),
 					'applyCoupon' => esc_url_raw( rest_url( 'wc/store/v1/cart/apply-coupon' ) ),
 				),

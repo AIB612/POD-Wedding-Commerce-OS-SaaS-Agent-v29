@@ -4,7 +4,7 @@ Tags: ai chat, ai agent, customer service, product recommendations, order tracki
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,8 @@ AI shopping assistant that answers from your own store data, recommends in-stock
 
 == Description ==
 
-Pod.AI Chat adds a shopping assistant to your WooCommerce storefront. It answers from your store's own data — no external AI service is needed:
+Pod.AI Chat is a client for the Pod.AI hosted service (https://podai.swisspro.site). It adds a shopping assistant to your WooCommerce storefront. Answers come from your store's own catalogue (products, policies, shipping) through Pod.AI. You do not need a third-party LLM API key. An optional LLM can be used only if you add your own key in your Pod.AI account.
+
 
 * **Products** – finds and recommends in-stock products with real prices (budget, recipient, colour; "cheaper", "more like this").
 * **Act, not just answer** – adds a recommended product to the shopper's cart (WooCommerce Store API), links to checkout and applies your public coupon. It never takes payment.
@@ -24,21 +25,25 @@ Pod.AI Chat adds a shopping assistant to your WooCommerce storefront. It answers
 * **Languages** – the chat answers in English, German, French, Italian and Chinese; admin translated into the same languages.
 * **Plans** – Free (50 chats / month), Growth (500 chats, USD 19 / month) and Pro (2,500 chats, USD 49 / month); yearly billing saves 20 %. Paid plans start with a 14-day free trial and are billed by Paddle, our merchant of record.
 
-= External service =
+= External services =
 
-This plugin connects to the Pod.AI service (https://podai.swisspro.site) to answer chats. What is sent and when:
+This plugin is a client for the Pod.AI hosted service (https://podai.swisspro.site). It does not send any data until an administrator clicks "Connect to Pod.AI" and explicitly connects the store. There is no analytics, telemetry or Google Analytics in wp-admin. Widget usage events are not sent.
 
-* On connect: your site URL, REST URL, store name, admin e-mail, currency, locale and WordPress / WooCommerce versions.
-* Product sync (on product save and daily): public product data — title, price, currency, image URL, stock status, product URL, categories, tags, short description, variations.
-* Store settings: names and text of your policy pages, shipping zones and costs, the ticket e-mail, widget settings, your FAQ and the public coupon you configure.
+After you connect, the following is sent to Pod.AI, and only then:
+
+* On connect: your site URL, REST URL, store name, admin e-mail, currency, locale and WordPress / WooCommerce / plugin versions.
+* Product sync (when you connect, when you save a product, and once a day): title, short description, prices, currency, image URL, product URL, in-stock status, type, purchasable and on-sale flags, categories, tags, and visible variations (title, price, in-stock status). SKUs and exact stock quantities are not sent unless you tick the optional, off-by-default checkbox "Also send SKUs and exact stock quantities" on the connect screen or under Settings.
+* Store settings you configure: policy page titles and text, shipping zones and costs, the ticket e-mail, widget settings, your FAQ and the public coupon you configure.
 * Chat messages typed by shoppers, and the e-mail a shopper leaves for a ticket.
-* AI agent access (if on): Pod.AI answers AI assistants' product searches from the synced public product data and returns links to your store. No order or customer data is used.
+* AI agent access (if on): Pod.AI answers AI assistants' product searches from the synced catalogue data and returns links to your store. No order or customer data is used.
 * Billing (only when you upgrade): your plan choice and the admin e-mail are sent to Pod.AI and Paddle (https://www.paddle.com, merchant of record) to create the checkout. Paddle terms: https://www.paddle.com/legal/checkout-buyer-terms · Paddle privacy: https://www.paddle.com/legal/privacy
 * Assistant (admin only): the questions you type under Pod.AI Chat → Assistant, your WordPress username (for the activity log) and the changes you confirm. Once a week Pod.AI e-mails a summary (chat counts, unanswered questions, ticket numbers — no shopper e-mail addresses) to your ticket e-mail, or the store / admin e-mail when that is empty; you can turn it off. Pod.AI keeps the activity log without chat text or e-mail addresses.
-* Order data is never synced. When a shopper gives an order number and e-mail, the service asks your site (signed request) and receives only status, items, total and tracking.
+* Order data is never synced. When a shopper gives an order number and billing e-mail, the service asks your site (signed request) and receives only status, items, total and tracking.
 
 All requests are signed with a per-site secret. Disconnecting or uninstalling deletes your store's data at Pod.AI.
-Terms: https://podai.swisspro.site/terms · Privacy: https://podai.swisspro.site/privacy
+
+Terms of service: https://podai.swisspro.site/terms
+Privacy policy: https://podai.swisspro.site/privacy
 
 == Installation ==
 
@@ -50,7 +55,7 @@ Terms: https://podai.swisspro.site/terms · Privacy: https://podai.swisspro.site
 == Frequently Asked Questions ==
 
 = Does it use ChatGPT or another AI API? =
-No. Answers come from your own store data with Pod.AI's local search and recommendation engine.
+The plugin is a client for the Pod.AI hosted service. Answers come from your store's own catalogue via Pod.AI. No third-party LLM API key is required. You can optionally add your own LLM key in your Pod.AI account.
 
 = Can the assistant place orders or take payments? =
 No. It can add items to the shopper's cart and apply a public coupon; the shopper checks out as usual.
@@ -72,6 +77,9 @@ External AI assistants can find your products and send shoppers a prefilled cart
 
 == Changelog ==
 
+= 1.2.2 =
+* Review fixes: accurate service description, SKUs and exact stock quantities opt-in (off by default), no widget analytics, settings sanitization separated from connection credentials, admin CSS/JS enqueued, bundled translation files removed (translations via translate.wordpress.org).
+
 = 1.2.1 =
 * Text domain and plugin folder renamed to pod-ai-chat-for-woocommerce (the WordPress.org slug). Settings, connection and tickets are kept. If an older copy in the folder pod-ai-chat is active, it is switched off automatically when you activate this version.
 
@@ -89,6 +97,9 @@ External AI assistants can find your products and send shoppers a prefilled cart
 * First release.
 
 == Upgrade Notice ==
+
+= 1.2.2 =
+SKUs and exact stock quantities are no longer sent unless you opt in under Pod.AI Chat → Settings. Widget analytics events are no longer sent.
 
 = 1.2.1 =
 New folder pod-ai-chat-for-woocommerce; settings are kept. Coming from a zip install (folder pod-ai-chat)? Activate 1.2.1, then remove the old folder by FTP, not with Delete in WordPress (that disconnects the store).
