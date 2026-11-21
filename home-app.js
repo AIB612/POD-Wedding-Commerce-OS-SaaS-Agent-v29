@@ -235,8 +235,8 @@ function renderMaterials(){
   const options=materialOptions();
   grid.innerHTML=options.map((m,i)=>`
     <button class="material-option ${i===0?"active":""}" data-index="${i}">
-      <img class="material-photo" src="${materialPhotos[m.id]}" alt="${escHtml(m.name)}" loading="lazy" decoding="async" data-preview="${i}">
-      <b>${m.name}</b>
+      <img class="material-photo" src="${materialPhotos[m.id]}" alt="${escHtml(homeT(m.name))}" loading="lazy" decoding="async" data-preview="${i}">
+      <b>${homeT(m.name)}</b>
       <span>${m.delta===0?homeT("基础价"):fmtEurDelta(m.delta)}</span>
     </button>
   `).join("");
@@ -255,9 +255,9 @@ function renderMaterials(){
       e.stopPropagation();
       const i=+img.dataset.preview;
       const m=options[i];
-      document.getElementById("materialLightboxTitle").textContent=m.name;
+      document.getElementById("materialLightboxTitle").textContent=homeT(m.name);
       document.getElementById("materialLightboxImage").src=materialPhotos[m.id];
-      document.getElementById("materialLightboxDesc").textContent=m.desc;
+      document.getElementById("materialLightboxDesc").textContent=homeT(m.desc);
       document.getElementById("materialLightbox").classList.add("open");
     });
   });
@@ -273,7 +273,7 @@ function openProduct(gi,pi,anchor){
   document.getElementById("popName").textContent=prod.name;
   document.getElementById("customText").value="";
   document.getElementById("fileInput").value="";
-  document.getElementById("fileList").textContent="尚未选择文件";
+  document.getElementById("fileList").textContent=homeT("尚未选择文件");
   document.getElementById("qty").value=1;
   renderMaterials();setMode("text");updatePrice();positionPopover(anchor);popover.classList.add("open");
 }
@@ -339,10 +339,10 @@ function priceInfo(qty){
   if(current().studio){const s=studioPriceInfo(qty);if(s)return s}
   const material=currentMaterial();
   const base=Math.max(0,current().price + (material ? material.delta : 0));
-  let discount=0,tier=0,label="1–9 件 · 标准价";
-  if(qty>=50){discount=.15;tier=3;label="50+ 件 · 85 折"}
-  else if(qty>=30){discount=.10;tier=2;label="30–49 件 · 9 折"}
-  else if(qty>=10){discount=.05;tier=1;label="10–29 件 · 95 折"}
+  let discount=0,tier=0,label=homeT("1–9 件 · 标准价");
+  if(qty>=50){discount=.15;tier=3;label=homeT("50+ 件 · 85 折")}
+  else if(qty>=30){discount=.10;tier=2;label=homeT("30–49 件 · 9 折")}
+  else if(qty>=10){discount=.05;tier=1;label=homeT("10–29 件 · 95 折")}
   const unit=base*(1-discount);
   return {unit,total:unit*qty,tier,label}
 }
@@ -385,10 +385,10 @@ document.querySelectorAll(".mode").forEach(m=>m.onclick=()=>setMode(m.dataset.mo
 document.getElementById("qty").oninput=updatePrice;
 document.getElementById("fileInput").onchange=e=>{
   const names=[...e.target.files].map(f=>f.name);
-  document.getElementById("fileList").textContent=names.length?names.join(" · "):"尚未选择文件";
+  document.getElementById("fileList").textContent=names.length?names.join(" · "):homeT("尚未选择文件");
 };
 document.getElementById("addCart").onclick=addCart;
-document.getElementById("detailBtn").onclick=()=>showToast("这里可连接 Shopify / WooCommerce / 自建商品详情");
+document.getElementById("detailBtn").onclick=()=>showToast(homeT("这里可连接 Shopify / WooCommerce / 自建商品详情"));
 document.getElementById("materialLightboxClose").onclick=()=>document.getElementById("materialLightbox").classList.remove("open");
 document.getElementById("materialLightbox").addEventListener("click",e=>{
   if(e.target.id==="materialLightbox") document.getElementById("materialLightbox").classList.remove("open");

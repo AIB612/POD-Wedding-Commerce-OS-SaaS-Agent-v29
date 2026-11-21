@@ -164,7 +164,7 @@ button{color:inherit}
 .hotspot[data-slot="3"] + .hotspot-label{left:calc(55% + 38px);top:50%}
 .hotspot:hover + .hotspot-label,.hotspot.active + .hotspot-label{opacity:1}
 
-/* 热点右下 10px 的统一弹层 */
+/* Unified popover anchored 10px below-right of the hotspot */
 .popover{
   position:fixed;z-index:40;width:360px;
   max-height:min(680px,calc(100vh - 24px));min-height:0;
@@ -249,7 +249,7 @@ button{color:inherit}
 .material-lightbox-image{width:100%;max-height:68vh;object-fit:cover;display:block;background:#eee}
 .material-lightbox-foot{padding:12px 15px;font-size:10px;color:var(--muted);line-height:1.55}
 
-/* 右侧目录 */
+/* Right-hand catalogue */
 .catalog{min-height:0;display:grid;grid-template-rows:auto 1fr;background:rgba(255,253,249,.88);border:1px solid var(--line);border-radius:26px;overflow:hidden;backdrop-filter:blur(16px)}
 .catalog-head{padding:18px;border-bottom:1px solid var(--line)}
 .catalog-head small{font-size:9px;letter-spacing:.16em;color:var(--muted)}.catalog-head h2{font:23px Georgia,serif;font-weight:500;margin:5px 0}
@@ -521,7 +521,12 @@ button{color:inherit}
 @media(max-width:900px){.showcase-grid{grid-template-columns:repeat(2,1fr)}}
 
 /* v24 focused storefront — one wedding scene, studio CTA on the first screen */
+.hero-cta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .hero-studio-card{display:block;margin-top:14px;padding:16px 16px 15px;border-radius:18px;background:#292622;color:#fff;text-decoration:none;box-shadow:0 14px 34px rgba(41,38,34,.16);transition:.18s}
+.hero-cta-row .hero-studio-card{margin-top:0;flex:1 1 140px}
+.hero-studio-card.seller{background:#fff;color:#292622;border:1px solid #292622;box-shadow:none}
+.hero-studio-card.seller:hover{box-shadow:0 8px 20px rgba(41,38,34,.12)}
+.hero-studio-card.seller small{color:#7c746c}
 .hero-studio-card:hover{transform:translateY(-1px);box-shadow:0 18px 40px rgba(41,38,34,.22)}
 .hero-studio-card small{display:block;color:rgba(255,255,255,.58);font-size:9px;letter-spacing:.14em}.hero-studio-card strong{display:block;font:21px Georgia,serif;font-weight:400;margin-top:6px}.hero-studio-card span{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:8px;font-size:10px;color:rgba(255,255,255,.72)}
 .scene-current.static{cursor:default}.scene-current.static span{display:none}
@@ -647,55 +652,55 @@ button{color:inherit}
           <button class="pop-close" id="popClose">×</button>
         </div>
         <div class="pop-body">
-          <div class="price-row"><span>单价会根据数量自动变化</span><strong id="unitPrice">—</strong></div><div class="vat-tag" data-vat-label style="text-align:right;margin-top:-4px">excl. VAT</div>
+          <div class="price-row"><span>Unit price changes with quantity</span><strong id="unitPrice">—</strong></div><div class="vat-tag" data-vat-label style="text-align:right;margin-top:-4px">excl. VAT</div>
 
-          <div class="mode-label">选择材质</div>
+          <div class="mode-label">Choose material</div>
           <div class="material-grid" id="materialGrid"></div>
-          <div class="material-hint">点击材质照片可放大查看纹理；选择材质会同步更新价格，并记录到购物车。</div>
+          <div class="material-hint">Click a material photo to enlarge it. Material selection updates price and is saved to the cart.</div>
 
-          <div class="mode-label">定制方式</div>
+          <div class="mode-label">Customization method</div>
           <div class="modes">
-            <button class="mode active" data-mode="text">直接填写内容</button>
-            <button class="mode" data-mode="upload">上传设计文件</button>
-            <button class="mode" data-mode="later">购物车后填写</button>
+            <button class="mode active" data-mode="text">Enter content</button>
+            <button class="mode" data-mode="upload">Upload design file</button>
+            <button class="mode" data-mode="later">Fill after cart</button>
           </div>
 
           <div class="config-panel" id="configPanel">
             <div class="field" id="textField">
-              <label>个性化内容</label>
-              <textarea id="customText" rows="3" placeholder="例如：Amelia & Noah / 18 June 2027 / Welcome to our wedding"></textarea>
+              <label>Personalized content</label>
+              <textarea id="customText" rows="3" placeholder="e.g. Amelia & Noah / 18 June 2027 / Welcome to our wedding"></textarea>
             </div>
             <div class="field" id="uploadField" style="display:none">
-              <label>上传设计文件</label>
+              <label>Upload design file</label>
               <label class="upload">
-                <b>点击上传设计</b>
-                <span>支持 PNG / JPG / JPEG / WEBP / SVG / PDF / AI / PSD / EPS，可多文件上传</span>
+                <b>Click to upload design</b>
+                <span>PNG / JPG / JPEG / WEBP / SVG / PDF / AI / PSD / EPS supported, multiple files allowed</span>
                 <input id="fileInput" type="file" multiple accept=".png,.jpg,.jpeg,.webp,.svg,.pdf,.ai,.psd,.eps"/>
               </label>
-              <div class="files" id="fileList">尚未选择文件</div>
+              <div class="files" id="fileList">No files selected</div>
             </div>
             <div id="laterField" style="display:none;font-size:10px;line-height:1.55;color:var(--muted)">
-              先加入购物车，结算前再填写定制文字或上传设计文件。
+              Add to cart first, then enter your text or upload your design before checkout.
             </div>
           </div>
 
           <div class="qty-row">
-            <div class="qty-box"><label>数量</label><input id="qty" type="number" min="1" value="1"/></div>
-            <div class="tier"><b>当前价格档</b><span id="tierText">1–9 件 · 标准价</span></div>
+            <div class="qty-box"><label>Quantity</label><input id="qty" type="number" min="1" value="1"/></div>
+            <div class="tier"><b>Current price tier</b><span id="tierText">1–9 pcs · standard price</span></div>
           </div>
 
           <div class="tier-list">
-            <div class="tier-pill" data-tier="0">1–9<br>标准价</div>
+            <div class="tier-pill" data-tier="0">1–9<br>Standard price</div>
             <div class="tier-pill" data-tier="1">10–29<br>-5%</div>
             <div class="tier-pill" data-tier="2">30–49<br>-10%</div>
             <div class="tier-pill" data-tier="3">50+<br>-15%</div>
             <div class="tier-pill" data-tier="4" style="display:none">100+</div>
           </div>
 
-          <div class="total"><span>商品小计</span><strong id="totalPrice">—</strong></div><div class="vat-tag" data-vat-label style="text-align:right">excl. VAT</div>
+          <div class="total"><span>Merchandise subtotal</span><strong id="totalPrice">—</strong></div><div class="vat-tag" data-vat-label style="text-align:right">excl. VAT</div>
           <div class="pop-actions">
-            <button class="add" id="addCart">加入购物车</button>
-            <button class="secondary" id="detailBtn">完整详情</button>
+            <button class="add" id="addCart">Add to cart</button>
+            <button class="secondary" id="detailBtn">Full details</button>
           </div>
         </div>
       </aside>
@@ -708,7 +713,10 @@ button{color:inherit}
         <small>PRODUCT SELECTION</small>
         <h2 id="catalogTitle">Wedding &amp; personalised gifts</h2>
         <p id="catalogAudience">★ Recommended for you · Wedding, anniversary &amp; birthday gift buyers</p>
+        <div class="hero-cta-row">
         <a class="hero-studio-card" id="studioStartBtn" href="studio.html?scenario=gifts"><strong>Start designing</strong></a>
+        <a class="hero-studio-card seller" id="sellerCtaBtn" href="/contact"><small>For merchants</small><strong>Sell with POD</strong></a>
+        </div>
       </div>
       <div class="catalog-scroll" id="catalog"></div>
     </aside>
@@ -721,118 +729,118 @@ button{color:inherit}
 <div class="site-builder" id="siteBuilder">
   <div class="site-builder-shell">
     <div class="site-builder-head">
-      <div><b>专属婚礼邀请网站生成器</b><span id="builderSceneLabel">Scene</span></div>
+      <div><b>Wedding website builder</b><span id="builderSceneLabel">Scene</span></div>
       <div class="site-builder-actions">
-        <button class="btn" id="builderSaveDraft">保存草稿</button>
-        <button class="btn" id="builderRefresh">更新预览</button>
-        <button class="btn wb-link" id="builderDownload" title="离线备份，不含 RSVP 收集">下载 HTML</button>
-        <button class="btn dark" id="builderPublish">发布网站</button>
+        <button class="btn" id="builderSaveDraft">Save draft</button>
+        <button class="btn" id="builderRefresh">Update preview</button>
+        <button class="btn wb-link" id="builderDownload" title="Offline backup, without RSVP collection">Download HTML</button>
+        <button class="btn dark" id="builderPublish">Publish site</button>
         <button class="pop-close" id="builderClose">×</button>
       </div>
     </div>
     <div class="wb-success" id="wbSuccess" hidden role="dialog" aria-modal="true" aria-labelledby="wbSuccessTitle"><div class="wb-success-card">
-      <h3 id="wbSuccessTitle">网站已发布</h3><p class="wb-sub" id="wbSuccessSub">把链接发给宾客吧。之后修改再发布，链接保持不变。</p>
-      <div class="wb-url"><input id="wbSuccessUrl" readonly aria-label="网站链接"/><button type="button" class="btn dark" id="wbCopy">复制链接</button></div>
-      <div class="wb-share"><a class="btn" id="wbWa" target="_blank" rel="noopener">WhatsApp</a><a class="btn" id="wbOpen" target="_blank" rel="noopener">打开网站</a><a class="btn" href="account.html">查看回复</a></div>
-      <div class="wb-qr"><div id="wbQr"></div><span>微信：截图或长按识别二维码，也可以直接打印邀请卡（卡片上同样有二维码）。</span></div>
-      <button type="button" class="btn" id="wbSuccessClose">完成</button>
+      <h3 id="wbSuccessTitle">Your site is live</h3><p class="wb-sub" id="wbSuccessSub">Send the link to your guests. Edits you publish later keep the same link.</p>
+      <div class="wb-url"><input id="wbSuccessUrl" readonly aria-label="Website link"/><button type="button" class="btn dark" id="wbCopy">Copy link</button></div>
+      <div class="wb-share"><a class="btn" id="wbWa" target="_blank" rel="noopener">WhatsApp</a><a class="btn" id="wbOpen" target="_blank" rel="noopener">Open site</a><a class="btn" href="account.html">View replies</a></div>
+      <div class="wb-qr"><div id="wbQr"></div><span>WeChat: share a screenshot of the QR code or print the invitation card (it has the QR code too).</span></div>
+      <button type="button" class="btn" id="wbSuccessClose">Done</button>
     </div></div>
     <div class="site-builder-body">
       <div class="site-controls" id="wbControls" data-cur="1">
-        <nav class="wb-steps" aria-label="步骤"><button type="button" data-go="1" class="on" aria-current="step">① 信息</button><button type="button" data-go="2">② 照片和风格</button><button type="button" data-go="3">③ 发布</button></nav>
+        <nav class="wb-steps" aria-label="Steps"><button type="button" data-go="1" class="on" aria-current="step">① Details</button><button type="button" data-go="2">② Photos & style</button><button type="button" data-go="3">③ Publish</button></nav>
         <div class="control-section" data-step="1">
-          <h4>新人和婚礼信息</h4>
+          <h4>Couple & wedding details</h4>
           <div class="control-grid">
-            <div class="control-field full"><label for="wbNames">新人姓名 *</label><input id="wbNames" required placeholder="例如 Amelia & Noah"/></div>
-            <div class="control-field"><label for="wbDate">婚礼日期 *</label><input id="wbDate" type="date" required/></div>
-            <div class="control-field"><label for="wbTime">开始时间</label><input id="wbTime" type="time" value="15:00"/></div>
-            <div class="control-field full"><label for="wbVenue">场地名称 *</label><input id="wbVenue" required placeholder="例如 The Garden House"/></div>
-            <div class="control-field full"><label for="wbAddress">详细地址</label><input id="wbAddress" placeholder="例如 Münsterhof 8, 8001 Zürich"/></div>
-            <div class="control-field full"><label for="wbMapUrl">地图 / 导航链接（可手动替换）</label><input id="wbMapUrl" placeholder="Google Maps / Apple Maps / 高德 / 百度地图分享链接"/></div>
-            <div class="control-field full"><label for="wbIntro">欢迎语</label><textarea id="wbIntro"></textarea></div>
+            <div class="control-field full"><label for="wbNames">Couple names *</label><input id="wbNames" required placeholder="e.g. Amelia & Noah"/></div>
+            <div class="control-field"><label for="wbDate">Wedding date *</label><input id="wbDate" type="date" required/></div>
+            <div class="control-field"><label for="wbTime">Start time</label><input id="wbTime" type="time" value="15:00"/></div>
+            <div class="control-field full"><label for="wbVenue">Venue *</label><input id="wbVenue" required placeholder="e.g. The Garden House"/></div>
+            <div class="control-field full"><label for="wbAddress">Address</label><input id="wbAddress" placeholder="e.g. Münsterhof 8, 8001 Zürich"/></div>
+            <div class="control-field full"><label for="wbMapUrl">Map / directions link (can be replaced manually)</label><input id="wbMapUrl" placeholder="Google Maps / Apple Maps share link"/></div>
+            <div class="control-field full"><label for="wbIntro">Welcome text</label><textarea id="wbIntro"></textarea></div>
           </div>
         </div>
 
         <div class="control-section" data-step="2">
-          <h4>婚纱照与图片</h4>
-          <label class="photo-upload"><b>替换主婚纱照</b><span>JPG / PNG / WEBP</span><input id="wbHeroPhoto" type="file" accept="image/*"/></label>
-          <div class="photo-status" id="wbHeroStatus">未上传，将使用极简场景占位视觉</div>
-          <div class="sample-row"><label class="feature-toggle"><input id="wbSamplePhoto" type="checkbox" checked/>预览示例照片</label><button type="button" class="sample-use" id="wbUseSample">用示例照片发布</button></div>
+          <h4>Wedding photos</h4>
+          <label class="photo-upload"><b>Replace hero photo</b><span>JPG / PNG / WEBP</span><input id="wbHeroPhoto" type="file" accept="image/*"/></label>
+          <div class="photo-status" id="wbHeroStatus">Nothing uploaded – a minimal placeholder visual will be used</div>
+          <div class="sample-row"><label class="feature-toggle"><input id="wbSamplePhoto" type="checkbox" checked/>Preview sample photo</label><button type="button" class="sample-use" id="wbUseSample">Publish with sample photo</button></div>
           <div style="height:7px"></div>
-          <label class="photo-upload"><b>添加相册图片</b><span>支持多张上传，点击相册图片可放大</span><input id="wbGallery" type="file" multiple accept="image/*"/></label>
-          <div class="photo-status" id="wbGalleryStatus">未上传相册</div>
+          <label class="photo-upload"><b>Add gallery photos</b><span>Upload several photos; click a gallery photo to enlarge it</span><input id="wbGallery" type="file" multiple accept="image/*"/></label>
+          <div class="photo-status" id="wbGalleryStatus">No gallery uploaded</div>
         </div>
 
         <div class="control-section" data-step="2">
-          <h4>风格与语言</h4>
+          <h4>Style & language</h4>
           <div class="control-grid">
-            <div class="control-field full"><label id="wbLayoutLbl" for="wbLayout">网站风格</label><select id="wbLayout" class="wb-vh" tabindex="-1" aria-hidden="true"><option value="letterpress" data-i18n-opt="凸版请柬组">凸版请柬组</option><option value="modern" data-i18n-opt="瑞士海报">瑞士海报</option><option value="garden" data-i18n-opt="植物标本">植物标本</option><option value="bloom" data-i18n-opt="花语篇章">花语篇章</option><option value="postcard" data-i18n-opt="旅行手账">旅行手账</option><option value="gallery" data-i18n-opt="杂志特刊">杂志特刊</option></select>
+            <div class="control-field full"><label id="wbLayoutLbl" for="wbLayout">Style</label><select id="wbLayout" class="wb-vh" tabindex="-1" aria-hidden="true"><option value="letterpress" data-i18n-opt="凸版请柬组">Letterpress suite</option><option value="modern" data-i18n-opt="瑞士海报">Swiss poster</option><option value="garden" data-i18n-opt="植物标本">Herbarium</option><option value="bloom" data-i18n-opt="花语篇章">Bloom chapters</option><option value="postcard" data-i18n-opt="旅行手账">Travel journal</option><option value="gallery" data-i18n-opt="杂志特刊">Magazine issue</option></select>
               <div class="wb-themes" id="wbThemes" role="radiogroup" aria-labelledby="wbLayoutLbl"></div>
-              <div class="wb-theme-opts"><span id="wbPalWrap" role="radiogroup" aria-label="配色"><button type="button" data-pal="green" data-i18n="绿叶">绿叶</button><button type="button" data-pal="olive" data-i18n="橄榄">橄榄</button></span><label id="wbPlainWrap"><input type="checkbox" id="wbPlain"/> <span data-i18n="素色（无亮色）">素色（无亮色）</span></label><input type="hidden" id="wbPalette" value="green"/></div></div>
-            <div class="control-field"><label for="wbLang">宾客默认语言</label><select id="wbLang"><option value="en">English</option><option value="zh">中文</option><option value="de">Deutsch</option></select></div>
-            <div class="control-field"><label for="wbAccent">主题强调色</label><input id="wbAccent" type="color" value="#9a6d57"/></div>
+              <div class="wb-theme-opts"><span id="wbPalWrap" role="radiogroup" aria-label="Palette"><button type="button" data-pal="green" data-i18n="绿叶">Greenery</button><button type="button" data-pal="olive" data-i18n="橄榄">Olive</button></span><label id="wbPlainWrap"><input type="checkbox" id="wbPlain"/> <span data-i18n="素色（无亮色）">Plain (no accent colour)</span></label><input type="hidden" id="wbPalette" value="green"/></div></div>
+            <div class="control-field"><label for="wbLang">Default guest language</label><select id="wbLang"><option value="en">English</option><option value="zh">中文</option><option value="de">Deutsch</option></select></div>
+            <div class="control-field"><label for="wbAccent">Accent color</label><input id="wbAccent" type="color" value="#9a6d57"/></div>
           </div>
         </div>
 
         <details class="wb-advanced" id="wbAdvanced" data-step="2">
-        <summary>高级</summary>
+        <summary>Advanced</summary>
         <div class="control-section">
-          <h4>活动流程</h4>
+          <h4>Event schedule</h4>
           <div class="control-field full">
-            <label for="wbSchedule">每行：时间 | 标题 | 说明</label>
+            <label for="wbSchedule">One per line: time | title | description</label>
             <textarea id="wbSchedule" rows="7"></textarea>
           </div>
         </div>
 
         <div class="control-section">
-          <h4>RSVP 与联系</h4>
+          <h4>RSVP & contact</h4>
           <div class="control-grid">
-            <div class="control-field full"><label for="wbRsvpMode">RSVP 方式</label><select id="wbRsvpMode"><option value="builtin" data-i18n-opt="内置回复表单（推荐）">内置回复表单（推荐）</option><option value="email" data-i18n-opt="邮件回复">邮件回复</option><option value="link" data-i18n-opt="外部链接">外部链接</option></select></div>
-            <div class="control-field full"><label for="wbRsvpEmail">RSVP 邮箱</label><input id="wbRsvpEmail" type="email" placeholder="可选：收到回复时通知此邮箱"/></div>
-            <div class="control-field full"><label for="wbRsvpUrl">外部 RSVP 链接（选择“外部链接”时使用）</label><input id="wbRsvpUrl" placeholder="https://..."/></div>
-            <label class="feature-toggle full" style="grid-column:1/-1"><input id="wbRsvpNotify" type="checkbox" checked/>收到回复时邮件通知 RSVP 邮箱（未填写邮箱则不通知）</label>
-            <div class="control-field full"><label for="wbGiftUrl">心意 / 礼金链接（可选，如 PayPal.me）</label><input id="wbGiftUrl" placeholder="https://paypal.me/..."/></div>
-            <div class="control-field full"><label for="wbNote">备注</label><textarea id="wbNote"></textarea></div>
+            <div class="control-field full"><label for="wbRsvpMode">RSVP method</label><select id="wbRsvpMode"><option value="builtin" data-i18n-opt="内置回复表单（推荐）">Built-in RSVP form (recommended)</option><option value="email" data-i18n-opt="邮件回复">Reply by e-mail</option><option value="link" data-i18n-opt="外部链接">External link</option></select></div>
+            <div class="control-field full"><label for="wbRsvpEmail">RSVP email</label><input id="wbRsvpEmail" type="email" placeholder="Optional: notify this e-mail about replies"/></div>
+            <div class="control-field full"><label for="wbRsvpUrl">External RSVP link (used with “External link”)</label><input id="wbRsvpUrl" placeholder="https://..."/></div>
+            <label class="feature-toggle full" style="grid-column:1/-1"><input id="wbRsvpNotify" type="checkbox" checked/>E-mail me about new replies (only if an e-mail is set)</label>
+            <div class="control-field full"><label for="wbGiftUrl">Gift link (optional, e.g. PayPal.me)</label><input id="wbGiftUrl" placeholder="https://paypal.me/..."/></div>
+            <div class="control-field full"><label for="wbNote">Notes</label><textarea id="wbNote"></textarea></div>
           </div>
         </div>
 
         <div class="control-section">
-          <h4>手动调整视觉</h4>
+          <h4>Manual visual settings</h4>
           <div class="control-grid">
-            <div class="control-field"><label for="wbDensity">版式密度</label><select id="wbDensity"><option value="airy">浪漫留白</option><option value="normal">标准</option><option value="compact">紧凑</option></select></div>
-            <div class="control-field"><label for="wbHeroAlign">Hero 对齐</label><select id="wbHeroAlign"><option value="center">居中</option><option value="left">左对齐</option><option value="right">右对齐</option></select></div>
-            <div class="control-field"><label for="wbRadius">圆角风格</label><select id="wbRadius"><option value="paper">纸感直角</option><option value="minimal">小圆角</option><option value="soft">柔和圆角</option><option value="pill">更圆润</option></select></div>
+            <div class="control-field"><label for="wbDensity">Layout density</label><select id="wbDensity"><option value="airy">Airy</option><option value="normal">Standard</option><option value="compact">Compact</option></select></div>
+            <div class="control-field"><label for="wbHeroAlign">Hero alignment</label><select id="wbHeroAlign"><option value="center">Center</option><option value="left">Left</option><option value="right">Right</option></select></div>
+            <div class="control-field"><label for="wbRadius">Corner style</label><select id="wbRadius"><option value="paper">Paper (square)</option><option value="minimal">Slightly rounded</option><option value="soft">Soft corners</option><option value="pill">Very rounded</option></select></div>
           </div>
         </div>
 
         <div class="control-section">
-          <h4>网站工具</h4>
+          <h4>Website tools</h4>
           <div class="feature-grid">
-            <label class="feature-toggle"><input id="ftEnvelope" type="checkbox" checked/>信封开场动画</label>
-            <label class="feature-toggle"><input id="ftCard" type="checkbox" checked/>可打印邀请卡</label>
-            <label class="feature-toggle"><input id="ftCountdown" type="checkbox" checked/>婚礼倒计时</label>
-            <label class="feature-toggle"><input id="ftTimeline" type="checkbox" checked/>活动流程</label>
-            <label class="feature-toggle"><input id="ftMap" type="checkbox" checked/>地图/导航</label>
-            <label class="feature-toggle"><input id="ftGallery" type="checkbox" checked/>婚纱照相册</label>
+            <label class="feature-toggle"><input id="ftEnvelope" type="checkbox" checked/>Envelope intro</label>
+            <label class="feature-toggle"><input id="ftCard" type="checkbox" checked/>Printable invitation card</label>
+            <label class="feature-toggle"><input id="ftCountdown" type="checkbox" checked/>Wedding countdown</label>
+            <label class="feature-toggle"><input id="ftTimeline" type="checkbox" checked/>Event schedule</label>
+            <label class="feature-toggle"><input id="ftMap" type="checkbox" checked/>Map / navigation</label>
+            <label class="feature-toggle"><input id="ftGallery" type="checkbox" checked/>Photo gallery</label>
             <label class="feature-toggle"><input id="ftRsvp" type="checkbox" checked/>RSVP</label>
-            <label class="feature-toggle"><input id="ftShare" type="checkbox" checked/>分享</label>
-            <label class="feature-toggle"><input id="ftCalendar" type="checkbox" checked/>加入日历</label>
-            <label class="feature-toggle"><input id="ftAddressCopy" type="checkbox" checked/>复制地址</label>
+            <label class="feature-toggle"><input id="ftShare" type="checkbox" checked/>Share</label>
+            <label class="feature-toggle"><input id="ftCalendar" type="checkbox" checked/>Add to calendar</label>
+            <label class="feature-toggle"><input id="ftAddressCopy" type="checkbox" checked/>Copy address</label>
           </div>
-          <div class="builder-note">生成的网站是独立 HTML。地图默认使用你填写的地图链接；如果未填写，会根据地址生成通用 Google Maps 搜索导航链接。</div>
+          <div class="builder-note">The generated website is a standalone HTML file. The map uses the link you enter; if empty, a Google Maps search link is generated from the address.</div>
         </div>
         </details>
         <div class="control-section" data-step="3">
-          <h4>发布</h4>
+          <h4>Publish</h4>
           <ul class="wb-check" id="wbCheck"></ul>
-          <div class="wb-pubstate" id="wbPubState">发布后会得到一个专属链接，宾客可在线回复 RSVP。发布需要登录，回复只有你能在「我的账户」看到。</div>
-          <button type="button" class="wb-dl" id="wbStepDownload">或下载离线 HTML（不收集 RSVP）</button>
+          <div class="wb-pubstate" id="wbPubState">Publishing gives you a personal link where guests can RSVP online. You need to sign in; only you can see replies in “My account”.</div>
+          <button type="button" class="wb-dl" id="wbStepDownload">or download offline HTML (no RSVP collection)</button>
         </div>
-        <div class="wb-next"><button type="button" class="btn" id="wbBack">上一步</button><button type="button" class="btn dark" id="wbNext">下一步</button></div>
+        <div class="wb-next"><button type="button" class="btn" id="wbBack">Back</button><button type="button" class="btn dark" id="wbNext">Next</button></div>
       </div>
 
       <div class="builder-preview-wrap">
-        <div class="preview-device" role="group"><button type="button" class="on" data-device="desktop">桌面</button><button type="button" data-device="phone">手机 390px</button></div>
+        <div class="preview-device" role="group"><button type="button" class="on" data-device="desktop">Desktop</button><button type="button" data-device="phone">Phone 390px</button></div>
         <iframe class="builder-preview" id="builderPreview" title="Wedding invitation preview"></iframe>
       </div>
     </div>
@@ -843,7 +851,7 @@ button{color:inherit}
 <div class="material-lightbox" id="materialLightbox">
   <div class="material-lightbox-card">
     <div class="material-lightbox-head">
-      <b id="materialLightboxTitle">材质预览</b>
+      <b id="materialLightboxTitle">Material preview</b>
       <button class="pop-close" id="materialLightboxClose">×</button>
     </div>
     <img class="material-lightbox-image" id="materialLightboxImage" alt="Material close-up" decoding="async"/>
@@ -884,15 +892,15 @@ button{color:inherit}
     <div class="focus-grid">
       <div class="focus-copy">
         <div class="focus-kicker">FROM SCENE TO PRODUCTS</div>
-        <h2>婚礼不是一个单品，<br>而是一整套视觉系统</h2>
-        <p>第一屏负责让你看到完整婚礼场景；第二屏只展示真正会进入生产的核心物品。邀请卡、桌面纸品、迎宾标识与伴手礼共享同一套视觉语言，不再让用户在几十个分类里迷路。</p>
-        <div class="focus-steps"><span>01 场景</span><span>02 套装</span><span>03 商品</span><span>04 设计</span><span>05 寄送</span></div>
+        <h2>A wedding is not a single product,<br>it is one visual system</h2>
+        <p>The first screen shows the complete wedding scene; the second shows only the core pieces that actually go into production. Invitations, table stationery, welcome signs and favours share one visual language, so nobody gets lost in dozens of categories.</p>
+        <div class="focus-steps"><span>01 Scene</span><span>02 Kit</span><span>03 Products</span><span>04 Design</span><span>05 Delivery</span></div>
       </div>
       <div class="product-wall">
-        <figure class="product-shot"><img src="assets/samples/thumb/wall-invitation-480.webp" srcset="assets/samples/thumb/wall-invitation-320.webp 320w, assets/samples/thumb/wall-invitation-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/invitation-monogram.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Ivory letterpress wedding invitation with logo mark"><figcaption><b>邀请卡</b><span>Stationery</span></figcaption></figure>
-        <figure class="product-shot"><img src="assets/samples/thumb/wall-tote-480.webp" srcset="assets/samples/thumb/wall-tote-320.webp 320w, assets/samples/thumb/wall-tote-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/tote-leaves.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Canvas favour tote printed with logo in leaf wreath"><figcaption><b>伴手礼包</b><span>Gift & bag</span></figcaption></figure>
-        <figure class="product-shot"><img src="assets/samples/thumb/wall-mug-480.webp" srcset="assets/samples/thumb/wall-mug-320.webp 320w, assets/samples/thumb/wall-mug-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/mug-cafe.webp'" width="480" height="480" loading="lazy" decoding="async" alt="White ceramic mug personalised with logo"><figcaption><b>纪念杯具</b><span>Drinkware</span></figcaption></figure>
-        <figure class="product-shot"><img src="assets/samples/thumb/wall-tee-480.webp" srcset="assets/samples/thumb/wall-tee-320.webp 320w, assets/samples/thumb/wall-tee-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/tee-brand.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Ivory T-shirt printed with logo"><figcaption><b>定制服饰</b><span>Apparel</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/samples/thumb/wall-invitation-480.webp" srcset="assets/samples/thumb/wall-invitation-320.webp 320w, assets/samples/thumb/wall-invitation-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/invitation-monogram.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Ivory letterpress wedding invitation with logo mark"><figcaption><b>Invitations</b><span>Stationery</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/samples/thumb/wall-tote-480.webp" srcset="assets/samples/thumb/wall-tote-320.webp 320w, assets/samples/thumb/wall-tote-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/tote-leaves.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Canvas favour tote printed with logo in leaf wreath"><figcaption><b>Favour bags</b><span>Gift & bag</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/samples/thumb/wall-mug-480.webp" srcset="assets/samples/thumb/wall-mug-320.webp 320w, assets/samples/thumb/wall-mug-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/mug-cafe.webp'" width="480" height="480" loading="lazy" decoding="async" alt="White ceramic mug personalised with logo"><figcaption><b>Keepsake mugs</b><span>Drinkware</span></figcaption></figure>
+        <figure class="product-shot"><img src="assets/samples/thumb/wall-tee-480.webp" srcset="assets/samples/thumb/wall-tee-320.webp 320w, assets/samples/thumb/wall-tee-480.webp 480w" sizes="(max-width:900px) 45vw, 240px" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='assets/showcase/thumb/tee-brand.webp'" width="480" height="480" loading="lazy" decoding="async" alt="Ivory T-shirt printed with logo"><figcaption><b>Custom apparel</b><span>Apparel</span></figcaption></figure>
       </div>
     </div>
   </div>
@@ -910,12 +918,12 @@ button{color:inherit}
       </div>
       <div class="focus-copy">
         <div class="focus-kicker">ONE DESIGN · MANY PRODUCTS</div>
-        <h2>上传一次设计，<br>整套商品同步完成</h2>
-        <p>工作室只保留六个真正有用的业务场景。选一个 Kit 后，直接进入设计、定价、寄送和确认，不再重复切换场景页或分类页。</p>
+        <h2>Upload your design once,<br>the whole set is done together</h2>
+        <p>The studio keeps just six business scenarios that really matter. Pick a kit and go straight to design, pricing, delivery and approval — no more jumping between scene and category pages.</p>
         <div class="workflow-list">
-          <div class="workflow-item"><i>1</i><div><b>选一个场景 Kit</b><span>Creator、Community、Corporate、Art、Wedding & Gifts、Seasonal。</span></div></div>
-          <div class="workflow-item"><i>2</i><div><b>统一设计整套商品</b><span>上传一次图案，逐件微调位置、颜色和材质。</span></div></div>
-          <div class="workflow-item"><i>3</i><div><b>确认利润与寄送</b><span>商家按单生产；企业支持批量与多地址；婚礼按活动日期倒推交期。</span></div></div>
+          <div class="workflow-item"><i>1</i><div><b>Pick a scenario kit</b><span>Creator、Community、Corporate、Art、Wedding & Gifts、Seasonal。</span></div></div>
+          <div class="workflow-item"><i>2</i><div><b>Design the whole set together</b><span>Upload artwork once, then fine-tune placement, colour and material per item.</span></div></div>
+          <div class="workflow-item"><i>3</i><div><b>Confirm margin & delivery</b><span>Merchants produce per order; companies get bulk and multi-address shipping; weddings are scheduled back from the event date.</span></div></div>
         </div>
       </div>
     </div>
@@ -963,8 +971,8 @@ button{color:inherit}
       <div class="price" id="productModalPrice"></div><div class="vat-tag" data-vat-label>excl. VAT</div>
       <div id="productModalColors" class="color-swatches"></div>
       <div class="product-modal-actions">
-        <button class="primary" id="productModalDesign">开始设计</button>
-        <button class="secondary" id="productModalClose2">关闭</button>
+        <button class="primary" id="productModalDesign">Start designing</button>
+        <button class="secondary" id="productModalClose2">Close</button>
       </div>
     </div>
   </div>

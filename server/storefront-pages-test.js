@@ -14,7 +14,7 @@ const get = async p => { const r = await fetch(base + p); return { status: r.sta
 const CJK = /[\u3400-\u9fff]/;
 const result = {};
 try {
-  const pages = ["/", "/studio.html", "/checkout", "/payment-success.html", "/proof.html", "/account", "/privacy", "/terms", "/shipping", "/returns", "/imprint", "/impressum", "/agent.html"];
+  const pages = ["/", "/studio.html", "/checkout", "/payment-success.html", "/proof.html", "/account", "/privacy", "/terms", "/shipping", "/returns", "/imprint", "/impressum", "/contact", "/agent.html"];
   for (const p of pages) {
     const { status, text } = await get(p);
     assert.equal(status, 200, p);
@@ -43,8 +43,10 @@ try {
 
   // Footer: shipping, returns, imprint, visible contact e-mail.
   const ft = (await get("/footer.js")).text;
-  for (const l of ["/shipping", "/returns", "/imprint", "/privacy", "/terms"]) assert.ok(ft.includes(`href="${l}"`), `footer ${l}`);
+  for (const l of ["/shipping", "/returns", "/imprint", "/privacy", "/terms", "/contact"]) assert.ok(ft.includes(`href="${l}"`), `footer ${l}`);
   assert.match(ft, /sf-addr/);
+  assert.match(ft, /MAIL='support@swisspro\.site'/);
+  assert.match(ft, /href="mailto:'\+MAIL/);
   const imp = (await get("/imprint")).text;
   // Final legal text: operator named, no template notes or [placeholders], no personal data, no ODR link.
   assert.match(imp, /Dropking AI/); assert.match(imp, /support@swisspro\.site/);
@@ -55,6 +57,31 @@ try {
   }
   const ret = (await get("/returns")).text; assert.match(ret, /Art\. 16\(c\)/); assert.match(ret, /defective/i);
   result.legal_pages = "pass";
+  // Homepage marketing/configurator source is English (crawlers / first paint).
+  const home = (await get("/")).text;
+  assert.match(home, /A wedding is not a single product,/);
+  assert.match(home, /it is one visual system/);
+  assert.match(home, /Upload your design once,/);
+  assert.match(home, /the whole set is done together/);
+  assert.match(home, /Start designing/);
+  assert.match(home, /Sell with POD/);
+  assert.match(home, /href="\/contact"/);
+  assert.doesNotMatch(home, /婚礼不是一个单品/);
+  assert.doesNotMatch(home, /上传一次设计，/);
+  const contact = (await get("/contact")).text;
+  assert.match(contact, /mailto:support@swisspro\.site/);
+  assert.match(contact, /"contactPoint"/);
+  result.en_homepage_and_contact = "pass";
+
+  // One-line env switch for the public contact address.
+  process.env.PUBLIC_CONTACT_EMAIL = "hello@example.com";
+  const switched = (await get("/imprint")).text;
+  assert.match(switched, /mailto:hello@example\.com/);
+  assert.doesNotMatch(switched, /support@swisspro\.site/);
+  assert.match((await get("/footer.js")).text, /MAIL='hello@example\.com'/);
+  delete process.env.PUBLIC_CONTACT_EMAIL;
+  result.public_contact_email = "pass";
+
 
   // Fees: public endpoint exposes the VAT display mode + delivery times for the shipping page (default excl. VAT).
   const fees = await (await fetch(base + "/api/storefront/fees")).json();

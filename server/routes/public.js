@@ -8,7 +8,7 @@ import crypto from "node:crypto";
 import { ah, rateLimit } from "../http/middleware.js";
 import { isAdminRequest, isAdminApiKey } from "../auth.js";
 import { adminAuthRoutes } from "../admin-auth.js";
-import { baseUrl } from "../config.js";
+import { baseUrl, applyPublicContact } from "../config.js";
 import { runAgent } from "../orchestrator.js";
 import { catalogOverview } from "../services/catalog-service.js";
 import { addRecord, findRecord, listForTenant, updateRecord } from "../saas-store.js";
@@ -73,7 +73,7 @@ export function publicRouter({ root, generatedDir }) {
     const podaiGa = gaLandingSnippet() ? String(process.env.PODAI_GA_ID).trim().toUpperCase().replace(/[^A-Z0-9-]/g, "") : "";
     if (podaiGa) html = html.split(POD_GA_ID).join(podaiGa);
     html = html.replace("<!--__PODAI_GA_LANDING__-->", "");
-    return res.setHeader("Cache-Control","no-cache"), res.type("html").send(html);
+    return res.setHeader("Cache-Control","no-cache"), res.type("html").send(applyPublicContact(html));
   });
   router.get("/index.html", (req, res, next) => podHost(req) ? res.redirect(301, PODAI_ORIGIN + "/") : next("route"));
   // Avoid duplicate Pod.AI landing on wed — keep wedding site intact.
@@ -91,19 +91,19 @@ export function publicRouter({ root, generatedDir }) {
   const AI_BOTS = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "PerplexityBot", "Perplexity-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "Google-Extended", "Applebot-Extended", "Bingbot", "CCBot"];
   const robotsTxt = (rules, sitemap) => [["*", ...AI_BOTS].map(ua => `User-agent: ${ua}`).join("\n"), rules.join("\n"), "", `Sitemap: ${sitemap}`, ""].join("\n");
   // lastmod is the date of the latest public-page change; bump when landing or legal URL content changes.
-  const SEO_LASTMOD = "2026-11-20";
+  const SEO_LASTMOD = "2026-11-21";
   const sitemapXml = (origin, urls) => ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
     "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
     ...urls.map(([u, freq, prio]) => `  <url><loc>${origin}${u}</loc><lastmod>${SEO_LASTMOD}</lastmod><changefreq>${freq}</changefreq><priority>${prio}</priority></url>`),
     "</urlset>", ""].join("\n");
   const INDEXNOW_KEY = fs.readFileSync(path.join(seoDir, "indexnow.key"), "utf8").trim();
-  const sendSeoText = file => (_, res) => res.set("Cache-Control", "public, max-age=3600").type("text/plain; charset=utf-8").send(fs.readFileSync(path.join(seoDir, file), "utf8"));
+  const sendSeoText = file => (_, res) => res.set("Cache-Control", "public, max-age=3600").type("text/plain; charset=utf-8").send(applyPublicContact(fs.readFileSync(path.join(seoDir, file), "utf8")));
   const PODAI_ROBOTS = robotsTxt(["Allow: /", "Disallow: /generated/", "Disallow: /admin", "Disallow: /api/", "Disallow: /shopify-agent$", "Disallow: /shopify-agent/proxy/", "Disallow: /shopify-agent/api/"], `${PODAI_ORIGIN}/sitemap.xml`);
   const POD_ROBOTS = robotsTxt(["Allow: /", "Disallow: /generated/", "Disallow: /admin", "Disallow: /admin-app/", "Disallow: /api/admin", "Disallow: /api/account",
     "Disallow: /account$", "Disallow: /account.html", "Disallow: /checkout$", "Disallow: /checkout.html", "Disallow: /payment-success.html", "Disallow: /proof.html"], `${POD_ORIGIN}/sitemap.xml`);
-  const POD_SITEMAP = sitemapXml(POD_ORIGIN, [["/", "daily", "1.0"], ["/studio.html", "weekly", "0.8"], ["/shipping", "monthly", "0.5"], ["/returns", "monthly", "0.4"],
+  const POD_SITEMAP = sitemapXml(POD_ORIGIN, [["/", "daily", "1.0"], ["/studio.html", "weekly", "0.8"], ["/contact", "monthly", "0.6"], ["/shipping", "monthly", "0.5"], ["/returns", "monthly", "0.4"],
     ["/terms", "yearly", "0.3"], ["/privacy", "yearly", "0.3"], ["/imprint", "yearly", "0.2"]]);
-  const PODAI_SITEMAP = sitemapXml(PODAI_ORIGIN, [["/", "weekly", "1.0"], ["/woocommerce", "weekly", "0.8"], ["/support", "monthly", "0.7"], ["/privacy", "yearly", "0.3"], ["/terms", "yearly", "0.3"],
+  const PODAI_SITEMAP = sitemapXml(PODAI_ORIGIN, [["/", "weekly", "1.0"], ["/pricing", "weekly", "0.8"], ["/woocommerce", "weekly", "0.8"], ["/contact", "monthly", "0.6"], ["/support", "monthly", "0.7"], ["/privacy", "yearly", "0.3"], ["/terms", "yearly", "0.3"],
     ["/security", "yearly", "0.3"], ["/dpa", "yearly", "0.3"]]);
   const sendSeoDoc = (type, body) => (req, res, next) => {
     if (!podHost(req) && !podSiteHost(req)) return next("route");
@@ -132,12 +132,14 @@ export function publicRouter({ root, generatedDir }) {
   const podLegalDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "shopify-agent");
   const sendPodPage = (file) => (req, res, next) => {
     if (!podHost(req)) return next("route");
-    const html = withPublicGa(fs.readFileSync(path.join(podLegalDir, file), "utf8"));
+    const html = applyPublicContact(withPublicGa(fs.readFileSync(path.join(podLegalDir, file), "utf8")));
     res.set("Cache-Control", "public, max-age=3600").type("html").send(html);
   };
   router.get(["/privacy", "/privacy.html"], sendPodPage("privacy.html"));
   router.get(["/terms", "/terms.html"], sendPodPage("terms.html"));
   router.get(["/support", "/support.html", "/docs", "/docs.html"], sendPodPage("support.html"));
+  router.get(["/contact", "/contact.html"], sendPodPage("contact.html"));
+  router.get(["/pricing", "/pricing.html"], sendPodPage("pricing.html"));
   router.get(["/security", "/security.html"], sendPodPage("security.html"));
   router.get(["/dpa", "/dpa.html"], sendPodPage("dpa.html"));
   router.get(["/woocommerce", "/woocommerce.html"], sendPodPage("woocommerce.html"));
@@ -154,7 +156,7 @@ export function publicRouter({ root, generatedDir }) {
     "/security": "/security", "/security.html": "/security", "/dpa": "/dpa", "/dpa.html": "/dpa", "/llms-full.txt": "/llms-full.txt" };
   router.get(Object.keys(PODAI_MOVED), (req, res, next) => podSiteHost(req) ? res.redirect(301, PODAI_ORIGIN + PODAI_MOVED[req.path]) : next("route"));
 
-  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/admin/login": "admin-login.html", "/admin-login.html": "admin-login.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html", "/shipping": "shipping.html", "/shipping.html": "shipping.html", "/returns": "returns.html", "/returns.html": "returns.html", "/imprint": "imprint.html", "/imprint.html": "imprint.html", "/impressum": "imprint.html", "/agent.html": "agent.html", "/agent": "agent.html" };
+  const pages = { "/": "index.html", "/index.html": "index.html", "/admin": "admin.html", "/admin.html": "admin.html", "/admin/login": "admin-login.html", "/admin-login.html": "admin-login.html", "/payment-success.html": "payment-success.html", "/checkout": "checkout.html", "/checkout.html": "checkout.html", "/proof.html": "proof.html", "/account.html": "account.html", "/account": "account.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/terms": "terms.html", "/terms.html": "terms.html", "/shipping": "shipping.html", "/shipping.html": "shipping.html", "/returns": "returns.html", "/returns.html": "returns.html", "/imprint": "imprint.html", "/imprint.html": "imprint.html", "/impressum": "imprint.html", "/contact": "contact.html", "/contact.html": "contact.html", "/agent.html": "agent.html", "/agent": "agent.html" };
   const noStore = { headers: { "Cache-Control": "no-cache" } };
   // ---- Static asset versioning (performance) ----
   // Pages are served no-cache; every local script / stylesheet they reference gets ?v=<content hash>, and a request that
@@ -183,7 +185,7 @@ export function publicRouter({ root, generatedDir }) {
     if (c && c.mtimeMs === st.mtimeMs && c.size === st.size && c.transform === transform) html = c.html;
     else { html = versionAssets(fs.readFileSync(abs, "utf8")); pageCache.set(key, { mtimeMs: st.mtimeMs, size: st.size, html, transform }); }
     res.setHeader("Cache-Control", "no-cache");
-    res.type("html").send(transform(html));
+    res.type("html").send(applyPublicContact(transform(html)));
   };
   const assetOpts = (req, short) => (req.query.v ? { maxAge: "365d", immutable: true } : { maxAge: short });
   const gaLanding = html => html.replace("<!--__PODAI_GA_LANDING__-->", ""); // non-podai hosts: the page keeps the wedding shop's own tag
@@ -202,13 +204,25 @@ export function publicRouter({ root, generatedDir }) {
     for (const route of routes) router.get(route, (_, res) => res.redirect(302, `/admin#${section}`));
   router.get("/admin-sections.js", (req, res) => res.sendFile(path.join(root, "admin-sections.js"), assetOpts(req, "5m")));
   // Shared front-end assets (explicit allowlist — server code and .env are never exposed).
-  router.get("/i18n.js", (req, res) => res.sendFile(path.join(root, "i18n.js"), assetOpts(req, "1h")));
+  const sendJsContact = (file, short) => (req, res) => {
+    const abs = path.join(root, file);
+    if (!fs.existsSync(abs)) return res.status(404).json({ error: "not_found" });
+    const body = applyPublicContact(fs.readFileSync(abs, "utf8"));
+    const opts = assetOpts(req, short);
+    if (opts.maxAge) res.setHeader("Cache-Control", opts.immutable ? "public, max-age=31536000, immutable" : `public, max-age=${typeof opts.maxAge === "string" ? 3600 : opts.maxAge}`);
+    res.type("application/javascript; charset=utf-8").send(body);
+  };
+  router.get("/i18n.js", sendJsContact("i18n.js", "1h"));
   router.get("/wedding-qr.js", (req, res) => res.sendFile(path.join(root, "wedding-qr.js"), assetOpts(req, "1h")));
   // Wedding sites are private links: keep them out of search engines.
   router.get("/robots.txt", (_, res) => res.type("text/plain").send("User-agent: *\nDisallow: /generated/\n"));
   // POD Studio page + its scripts (explicit allowlist, like the other pages)
   router.get(["/studio", "/studio.html"], sendPage("studio.html"));
-  for (const f of ASSET_FILES) router.get("/" + f, (req, res) => res.sendFile(path.join(root, f), assetOpts(req, "5m")));
+  const CONTACT_JS = new Set(["footer.js", "home-chat.js"]);
+  for (const f of ASSET_FILES) {
+    if (CONTACT_JS.has(f)) router.get("/" + f, sendJsContact(f, "5m"));
+    else router.get("/" + f, (req, res) => res.sendFile(path.join(root, f), assetOpts(req, "5m")));
+  }
   const assetsLong = express.static(path.join(root, "assets"), { maxAge: "365d", immutable: true, fallthrough: false });
   const assetsShort = express.static(path.join(root, "assets"), { maxAge: "7d", fallthrough: false });
   router.use("/assets", (req, res, next) => (req.query.v ? assetsLong : assetsShort)(req, res, next));

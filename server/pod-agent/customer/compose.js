@@ -2,8 +2,10 @@
 // human replies: the direct answer first, one or two relevant details, then an optional next step. Phrasing varies per
 // conversation turn (deterministic, so tests stay stable) and always stays in the shopper's language (EN / DE / FR / IT / ZH).
 import { pickSentences, vary, tokenize } from "../../shared/local-rag.js";
+import { publicContactEmail } from "../../config.js";
 
 export const SUPPORT_EMAIL = "support@swisspro.site";
+const withPublicEmail = s => String(s).split(SUPPORT_EMAIL).join(publicContactEmail());
 const money = (cur, n) => `${cur} ${Number(n || 0).toFixed(2)}`;
 const pick = (obj, lang) => obj[lang] ?? obj.en;
 const join = (list, lang) => {
@@ -180,7 +182,7 @@ const DONT_KNOW = {
   it: [`Non ho una risposta affidabile su questo. Posso aiutarla con prodotti, prezzi, spedizioni e ordini — oppure il nostro team a ${SUPPORT_EMAIL}.`],
   zh: [`这个问题我没有把握，不想乱答。我擅长产品、价格、运费和订单方面的问题；也可以发邮件到 ${SUPPORT_EMAIL} 联系团队。`]
 };
-export const dontKnow = (lang, seed) => vary(pick(DONT_KNOW, lang), seed);
+export const dontKnow = (lang, seed) => withPublicEmail(vary(pick(DONT_KNOW, lang), seed));
 const CLARIFY_CARDS = { en: "Happy to help! Which cards do you mean — invitations, menu cards, place cards or greeting cards?", de: "Gerne! Welche Karten meinen Sie – Einladungen, Menükarten, Platzkarten oder Grusskarten?",
   fr: "Avec plaisir ! De quelles cartes parlez-vous — faire-part, cartes de menu, marque-places ou cartes de vœux ?", it: "Volentieri! Quali biglietti intende — inviti, menù, segnaposto o biglietti d'auguri?", zh: "好的！请问是哪种卡片：邀请卡、菜单卡、席位卡还是贺卡？" };
 export const clarifyCards = lang => pick(CLARIFY_CARDS, lang);

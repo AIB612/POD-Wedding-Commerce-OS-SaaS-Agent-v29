@@ -16,3 +16,19 @@ export function validateConfig({ log = console } = {}) {
   for (const p of problems) log.warn(`[config] ${p} (ok for local development only)`);
   return false;
 }
+
+const DEFAULT_PUBLIC_CONTACT_EMAIL = "support@swisspro.site";
+
+/** Public contact address for both sites (footer, /contact, schema.org, legal pages).
+ *  Switch with one env line: PUBLIC_CONTACT_EMAIL=...  Invalid values fall back to the default. */
+export function publicContactEmail() {
+  const raw = String(process.env.PUBLIC_CONTACT_EMAIL || DEFAULT_PUBLIC_CONTACT_EMAIL).trim();
+  if (!/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(raw) || raw.length > 120) return DEFAULT_PUBLIC_CONTACT_EMAIL;
+  return raw;
+}
+
+/** Replace the default public address (and an optional placeholder) with the configured one. */
+export function applyPublicContact(text) {
+  const email = publicContactEmail();
+  return String(text ?? "").split("__PUBLIC_CONTACT_EMAIL__").join(email).split(DEFAULT_PUBLIC_CONTACT_EMAIL).join(email);
+}

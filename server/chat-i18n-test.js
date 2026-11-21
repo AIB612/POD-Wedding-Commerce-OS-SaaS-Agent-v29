@@ -65,11 +65,22 @@ try {
   for (const p of ["/agent.html", "/agent", "/index.html"]) { const r3 = await getHost(p, "podai.swisspro.site"); assert.equal(r3.status, 301, "podai " + p); assert.equal(r3.headers.location, "https://podai.swisspro.site/", "podai " + p); }
   for (const p of ["/agent.html", "/agent"]) { const r3 = await getHost(p, "wed.swisspro.site"); assert.equal(r3.status, 301, "wed " + p); assert.equal(r3.headers.location, "https://podai.swisspro.site/", "wed " + p); }
   const podHome = await getHost("/", "pod.swisspro.site"); assert.equal(podHome.status, 200); assert.ok(!/<link rel="canonical" href="https:\/\/podai/.test(podHome.body), "pod homepage is the wedding site");
+  assert.match(podHome.body, /A wedding is not a single product,/);
+  assert.match(podHome.body, /Sell with POD/);
+  assert.doesNotMatch(podHome.body, /婚礼不是一个单品/);
+  assert.equal((await getHost("/contact", "pod.swisspro.site")).status, 200, "pod /contact");
+  const pricing = await getHost("/pricing", "podai.swisspro.site");
+  assert.equal(pricing.status, 200, "podai /pricing");
+  assert.match(pricing.body, /Jetzt live|Live now/);
+  assert.match(pricing.body, /Kommt bald|Coming soon/);
+  assert.match(pricing.body, /USD 19/);
+  assert.match(pricing.body, /USD 49/);
+  assert.equal((await getHost("/contact", "podai.swisspro.site")).status, 200, "podai /contact");
   assert.equal((await getHost("/agent.html", "pod.swisspro.site")).status, 200, "pod /agent.html unchanged");
   // Two businesses, two SEO profiles: every podai page describes Pod.AI only and points at podai; the wedding pages at pod.
   const meta = (h, re) => (h.match(re) || [])[1] || "";
-  for (const [host, paths, other] of [["podai.swisspro.site", ["/", "/woocommerce", "/support", "/privacy", "/terms", "/security", "/dpa"], "pod.swisspro.site"],
-                                     ["pod.swisspro.site", ["/", "/studio.html", "/shipping", "/returns", "/imprint"], "podai.swisspro.site"]]) {
+  for (const [host, paths, other] of [["podai.swisspro.site", ["/", "/woocommerce", "/support", "/contact", "/pricing", "/privacy", "/terms", "/security", "/dpa"], "pod.swisspro.site"],
+                                     ["pod.swisspro.site", ["/", "/studio.html", "/contact", "/shipping", "/returns", "/imprint"], "podai.swisspro.site"]]) {
     for (const p of paths) {
       const h = (await getHost(p, host)).body;
       const canon = meta(h, /<link rel="canonical" href="([^"]+)"/); assert.equal(new URL(canon).host, host, `${host}${p} canonical ${canon}`);

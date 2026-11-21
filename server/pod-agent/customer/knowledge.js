@@ -10,6 +10,7 @@ import { currencyForCountry } from "../../services/pricing-service.js";
 import { FAQ_FR_IT, dynamicFrIt } from "./i18n-fr-it.js";
 import { BM25 } from "../../shared/local-rag.js";
 import { fixTypos } from "./nlu.js";
+import { publicContactEmail } from "../../config.js";
 
 const FAQ = [
   { id: "what_we_sell", tags: ["products", "sell", "offer", "range", "什么", "卖", "产品", "sortiment", "angebot"],
@@ -74,8 +75,8 @@ const FAQ = [
 // French / Italian answers (same entries, merged in so FR / IT shoppers are answered in their language).
 for (const e of FAQ) { const x = FAQ_FR_IT[e.id]; if (x) { Object.assign(e.q, x.q); Object.assign(e.a, x.a); } }
 // The public support address (also on the imprint page) so shoppers can always reach a person.
-{ const c = FAQ.find(e => e.id === "contact"), add = { en: " You can also e-mail us at support@swisspro.site.", zh: "也可以发邮件至 support@swisspro.site。", de: " Oder schreiben Sie an support@swisspro.site.", fr: " Vous pouvez aussi écrire à support@swisspro.site.", it: " Può anche scriverci a support@swisspro.site." };
-  for (const l of Object.keys(c.a)) if (!c.a[l].includes("support@")) c.a[l] += add[l] || add.en; }
+{ const email = publicContactEmail(), c = FAQ.find(e => e.id === "contact"), add = { en: ` You can also e-mail us at ${email}.`, zh: `也可以发邮件至 ${email}。`, de: ` Oder schreiben Sie an ${email}.`, fr: ` Vous pouvez aussi écrire à ${email}.`, it: ` Può anche scriverci a ${email}.` };
+  for (const l of Object.keys(c.a)) if (!c.a[l].includes("@")) c.a[l] += add[l] || add.en; }
 
 const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
 const fmtDays = ([a, b]) => (a === b ? `${a}` : `${a}–${b}`);
